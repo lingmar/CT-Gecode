@@ -2,9 +2,11 @@
 #include <iostream>
 #include <assert.h>
 
+#define BITS_PER_WORD 64
+
 using namespace std;
 
-typedef bool word_t;
+typedef uint64_t word_t;
 
 class SparseBitSet {
   word_t* words;
@@ -19,8 +21,11 @@ public:
     unsigned int nwords = required_words(nbits);
     /// Initialise words
     words = new word_t[nwords];
-    /// Set first n bits
-    set_bits(nbits);
+    // Fixme: How to initialise the bits?
+    for (int i = 0; i < nwords; i++) {
+      words[i] = ~0ULL; // Set all bits to 1
+    }
+
     /// Initilise mask
     mask = new word_t[nwords];
     /// Initialise index
@@ -41,7 +46,7 @@ public:
   void clear_mask() {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
-      clear_mask_word(offset);
+      mask[offset] = 0ULL;
     }
   }
 
@@ -49,7 +54,7 @@ public:
   void reverse_mask() {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
-      reverse_mask_word(offset);
+      mask[offset] = ~mask[offset];
     }
   }
 
@@ -57,7 +62,7 @@ public:
   void add_to_mask(word_t* m) {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
-      mask[offset] = (mask[offset] || m[offset]);
+      mask[offset] |= m[offset];
     }
   }
 
@@ -65,10 +70,10 @@ public:
   void intersect_with_mask() {
     for (int i = limit; i >= 0; i--) {
       int offset = index[i];
-      word_t w = words[offset] && mask[offset];
+      word_t w = (words[offset] & mask[offset]);
       if (w != words[offset]) {
         words[offset] = w;
-        if (w == false) {
+        if (w == 0ULL) {
           index[i] = index[limit];
           index[limit] = offset;
           --limit;
@@ -82,7 +87,7 @@ public:
   int intersect_index(word_t* m) const {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
-      if (words[offset] && m[offset] != false) {
+      if ((words[offset] & m[offset]) != 0ULL) {
         return offset;
       }
     }
@@ -92,15 +97,25 @@ public:
   /// Print bit-set for simple debugging
   void print() {
     cout << "words: ";
-    for (int i = 0; i < nbits; i++) {
-      cout << words[i] << " ";
+    for (int i = 0; i < required_words(nbits); i++) {
+      //cout << words[i] << endl;
+      for (int j = 0; j < BITS_PER_WORD; j++) {
+        word_t b = (words[i] >> j) & 1ULL;
+        cout << b << " ";
+      }
+      cout << endl;
     }
-    cout << endl;
+
     cout << "mask: ";
-    for (int i = 0; i < nbits; i++) {
-      cout << mask[i] << " ";
+    for (int i = 0; i < required_words(nbits); i++) {
+      //cout << mask[i] << endl;
+      for (int j = 0; j < BITS_PER_WORD; j++) {
+        word_t b = (mask[i] >> j) & 1ULL;
+        cout << b << " ";
+      }
+      cout << endl;
     }
-    cout << endl;
+   
     cout << "index: ";
     for (int i = 0; i < required_words(nbits); i++) {
       cout << index[i] << " ";
@@ -111,79 +126,27 @@ public:
       
   }
 
-
-private:
-  void set_bits(unsigned int n) {
-    assert(n <= nbits);
-    for (int i = 0; i < n; i++) {
-      words[i] = true;
-    }
-  }
-
-  void set_word(unsigned int idx, bool state) {
-    assert(idx <= limit);
-    words[idx] = state;
-  }
-
-  void clear_mask_word(unsigned int idx) {
-    assert(idx <= limit);
-    mask[idx] = false;
-  }
-
-  void reverse_mask_word(unsigned int idx) {
-    assert(idx <= limit);
-    mask[idx] = !mask[idx];
-  }
-  
   unsigned int required_words(unsigned int nbits) {
-    return nbits;
+    if (nbits == 0) {
+      return 0;
+    } else {
+      return (nbits - 1) / BITS_PER_WORD + 1;
+    }
   }
   
 };
 
 int main(int argc, char *argv[]) {
-  SparseBitSet bs(10);
-  cout << "Initial bits" << endl;
-  bs.print();
+  SparseBitSet bs(65);
   bs.clear_mask();
-  cout << "After clearing mask" << endl;
   bs.print();
-  cout << "After reversing mask" << endl;
-  bs.reverse_mask();
-  bs.print();
-  cout << "Restored mask" << endl;
-  bs.reverse_mask();
-  bs.print();
-
-  word_t* m1 = new word_t[10];
-  m1[0] = true;  m1[1] = true;  m1[2] = true;  m1[3] = true;  m1[4] = true;
-  m1[5] = true;  m1[6] = true;  m1[7] = true;  m1[8] = false;  m1[9] = true;
-  //cout << "Expected mask: 1 0 1 0 1 1 1 1 0 1" << endl;
-  bs.add_to_mask(m1); bs.print();
-
-  //cout << "Expected words: 1 0 1 0 1 1 1 1 0 1" << endl;
-  //bs.intersect_with_mask(); bs.print();
-    
-  // cout << "Expected mask: 1 1 1 0 1 1 1 1 0 1" << endl;
-  m1[1] = false;
-  bs.add_to_mask(m1); bs.print();
-
-  // cout << "Expected words: 1 0 1 0 1 1 1 1 0 1" << endl;
-  // bs.intersect_with_mask(); bs.print();
-
-  // cout << "Expected mask: 1 1 1 1 1 1 1 1 0 1" << endl;
-  // m1[3] = true;
-  // bs.add_to_mask(m1); bs.print();
   
-  // cout << "Expected words: 1 0 1 0 1 1 1 1 0 1" << endl;
-  // bs.intersect_with_mask(); bs.print();
+  word_t* m = new word_t[2];
+  m[0] = 0ULL;
+  m[1] = ~0ULL;
+  bs.add_to_mask(m);
   
-  // cout << "Exptected words: 1 0 1 0 1 1 1 1 0 1" << endl;
-  // bs.intersect_with_mask(); bs.print();
+  bs.intersect_with_mask(); bs.print();
 
-  // cout << "Exptected: 0" << endl;
-  // cout << bs.intersect_index(m1) << endl;
-
-  
   return 0;
 }

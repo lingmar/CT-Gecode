@@ -1,16 +1,15 @@
 CXX = g++
-LIBS = -L/usr/local/lib -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodedriver -lgecodeminimodel -lgecodeset  -lboost_regex #-lgecodegist
-CXX_FLAGS = -I/usr/local/include -I/usr/include/qt4 -std=c++11
+CXX_FLAGS = -std=c++11
 RM = rm -f
 
 all: bitset
 
-bitset-test: bitset
-	$(CXX) $(CXX_FLAGS) -o $@ $? $(LIBS)	
+bitset: bitset.o
+	$(CXX) $(CXX_FLAGS) -o $@ $?
 
 %.o : %.cpp
 	$(CXX) $(CXX_FLAGS) -c -o $@ $?
 
 clean:
-	$(RM) *.o bitset-test
+	$(RM) *.o bitset
 
