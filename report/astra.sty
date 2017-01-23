@@ -1,0 +1,220 @@
+%%
+%% This is file `astra.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% astra.dtx  (with options: `package')
+%% 
+%% This is a generated file.
+%% 
+%% Copyright (C) 2011 by Joseph Scott <joseph.scott@it.uu.se>
+%% 
+%% This file may be distributed and/or modified under the conditions of
+%% the LaTeX Project Public License, either version 1.2 of this license
+%% or (at your option) any later version.  The latest version of this
+%% license is in:
+%% 
+%%    http://www.latex-project.org/lppl.txt
+%% 
+%% and version 1.2 or later is part of all distributions of LaTeX version
+%% 1999/12/01 or later.
+%% 
+\NeedsTeXFormat{LaTeX2e}[1999/12/01]
+\ProvidesPackage{astra}
+    [2012/05/15 v1.4 ASTRA Group on Constraint Programming in-house style]
+\newif\if@astra@todo
+\DeclareOption{todo}{\@astra@todotrue}
+\newif\if@astra@xetex
+\DeclareOption{xetex}{\@astra@xetextrue}
+\newif\if@astra@alg
+\newif\if@astra@algiie
+\DeclareOption{alg}{\@astra@algtrue}
+\DeclareOption{noalg}{\@astra@algfalse}
+\DeclareOption{alg2e}{\@astra@algiietrue}
+\newif\if@astra@hyperref
+\DeclareOption{hyperref}{\@astra@hyperreftrue}
+\DeclareOption{nohyperref}{\@astra@hyperreffalse}
+\newif\if@astra@gets
+\DeclareOption{gets}{\@astra@getstrue}
+\DeclareOption{coloneqq}{\@astra@getsfalse}
+\DeclareOption*{\PackageWarning{astra}{Unknown option `\CurrentOption'}}
+\ExecuteOptions{alg,hyperref,gets}
+\ProcessOptions\relax
+
+\if@astra@alg
+\if@astra@algiie
+\RequirePackage[boxed,noend]{algorithm2e}
+\else
+\RequirePackage[boxed]{algorithm}
+\RequirePackage[noend]{algorithmic} % drop [noend] if endif, endwhile, etc wanted
+\renewcommand{\algorithmiccomment}[1]{\hfill // #1}
+\fi
+\fi
+\RequirePackage{alltt}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+%%\RequirePackage{amsthm} \newtheorem{notation}{Notation}
+\if@astra@xetex
+\RequirePackage{xkeyval} % omitted dependency in polyglossia as of 2011/09/20
+\RequirePackage{polyglossia}
+\setdefaultlanguage[variant=uk]{english}
+\defaultfontfeatures{Mapping=tex-text}
+\newfontinstance\astrading{Zapf Dingbats}
+\newcommand{\handpoint}{{\astrading\char"261E}}
+\newcommand{\tick}{{\astrading\char"2713}}
+\newcommand{\notick}{{\astrading\char"2717}}
+\else
+\RequirePackage[british]{babel}
+%% Fancy characters:
+\RequirePackage{pifont}
+%%\newcommand{\scissors}{\ding{36}}
+%%\newcommand{\phone}{\ding{37}}
+%%\newcommand{\aircraft}{\ding{40}}
+%%\newcommand{\envelope}{\ding{41}}
+\newcommand{\handpoint}{\ding{43}}
+%%\newcommand{\victory}{\ding{44}}
+%%\newcommand{\handwrite}{\ding{45}}
+\newcommand{\tick}{\ding{51}}
+\newcommand{\notick}{\ding{55}}
+\fi
+\RequirePackage{color}
+%%\RequirePackage{float}
+\RequirePackage{graphicx}
+%%\RequirePackage{grffile} % allows spaces in filenames
+\RequirePackage{mathtools} \mathtoolsset{showonlyrefs,showmanualtags}
+\RequirePackage{multicol}
+\RequirePackage{multirow}
+\RequirePackage{rotating}
+\RequirePackage{tikz} \usetikzlibrary{trees}
+\if@astra@hyperref
+\RequirePackage{hyperref} % should always be the last package
+\fi
+
+\tikzstyle{AstraFont}=[font=\huge\bfseries]
+\newcommand{\AstraLogo}[1][0.75]{%
+\scalebox{#1}{%
+\begin{tikzpicture}[fill=blue,draw=white,line width=2pt]
+%%\draw [help lines] (0,0) grid (4,5);
+\filldraw (0,5) -- (-1,1) -- (0,2.25) -- (1, 1) -- cycle;
+\filldraw (-2,3) -- (-.5,3) -- (0,2.75) -- (.5,3) -- (2,3) -- (0,2.25) -- cycle;
+\node[text=blue,AstraFont] at (0,.5) {ASTRA};
+\end{tikzpicture}%
+}%
+}
+\newcommand{\blue}[1]{{\color{blue}#1}}
+\newcommand{\green}[1]{{\color{Green}#1}}
+\newcommand{\red}[1]{{\color{red}#1}}
+
+\if@astra@todo
+\newcommand{\todo}[1]{\red{To do: #1}}
+\else
+\newcommand{\todo}[1]{}
+\fi
+
+\let\oldmarginpar\marginpar
+\renewcommand\marginpar[1]{\-\oldmarginpar[\raggedleft\footnotesize #1]%
+{\raggedright\footnotesize #1}}
+\newcommand{\Keyword}[1]{\textbf{#1}}
+\newcommand{\newKeyword}[2]{\newcommand{#1}{\Keyword{#2}}}
+%% Mathematics
+\newcommand{\Cardinality}[1]{\left\lvert#1\right\rvert}
+%%\newcommand{\Cardinality}[1]{\##1}
+\newcommand{\Ceiling}[1]{\left\lceil#1\right\rceil}
+\if@astra@algiie
+\else
+\newKeyword{\Else}{~else~}
+\newKeyword{\False}{false}
+\newKeyword{\If}{if~}
+\fi
+\newcommand{\Floor}[1]{\left\lfloor#1\right\rfloor}
+\newcommand{\GeqLex}{\geq_\Lex}
+\newcommand{\Iff}{\Leftrightarrow}
+\newcommand{\IfThenElse}[3]{\If#1\Then#2\Else#3}
+\newcommand{\Implies}{\Rightarrow}
+\newcommand{\Inter}{\cap}
+\newcommand{\LeqLex}{\leq_\Lex}
+\newcommand{\Let}[2]{\Keyword{let~}#1\In#2}
+\newcommand{\Lex}{\text{lex}}
+\newcommand{\LtLex}{<_\Lex}
+\newcommand{\Oh}[1]{\mathcal{O}\left(#1\right)}
+\newKeyword{\Select}{select}
+\newcommand{\Sequence}[1]{\left[#1\right]}
+\newcommand{\Set}[1]{\left\{#1\right\}}
+\newcommand{\SetComp}[2]{\Set{#1\SuchThat#2}}
+\newcommand{\SuchThat}{\mid}
+\newKeyword{\Then}{~then~}
+\newKeyword{\True}{true}
+\newcommand{\Tuple}[1]{\left\langle#1\right\rangle}
+\newcommand{\Union}{\cup}
+%% CP
+\newcommand{\AllDiff}{\Constraint{AllDiff}}
+\newcommand{\AllDifferent}{\Constraint{AllDifferent}}
+\newcommand{\AllEqual}{\Constraint{AllEqual}}
+\newcommand{\AtLeast}{\Constraint{AtLeast}}
+\newcommand{\AtMost}{\Constraint{AtMost}}
+\newcommand{\Constraint}[1]{\textsc{#1}}
+\newcommand{\Cumulative}{\Constraint{Cumulative}}
+\newcommand{\Distinct}{\Constraint{Distinct}}
+\newcommand{\Domain}[1]{\text{dom}(#1)}
+\newcommand{\Element}{\Constraint{Element}}
+\newcommand{\GlobalCardinality}{\Constraint{GCC}}
+\newcommand{\HigherOrder}[1]{\red{\left[{\color{black}#1}\right]}} % Iverson bracket
+\newcommand{\Inequalities}{\Constraint{Inequalities}}
+\newcommand{\IntValuePrecedeChain}{\Constraint{IntValuePrecedeChain}}
+\newcommand{\Linear}{\Constraint{Linear}}
+\newcommand{\NbDistinct}{\Constraint{NbDistinct}}
+\newcommand{\Reifies}[2]{#1\Leftrightarrow#2}
+\newcommand{\Sum}{\Constraint{Sum}}
+\newcommand{\Variables}[1]{\text{var}(#1)}
+%% Modelling \& Algorithms
+\if@astra@algiie
+\else
+\renewcommand{\algorithmicendfor}{\Keyword{end try}}
+\renewcommand{\algorithmicforall}{\Keyword{try all}}
+\fi
+\newKeyword{\Array}{array}
+\newKeyword{\Boolean}{boolean}
+\newcommand{\Count}[2]{\Keyword{count}(#1)~#2}
+\newKeyword{\Constant}{cst~}
+\newKeyword{\EndIf}{~end~if}
+%%\newcommand{\Endtry}{\Keyword{end try}}
+\newcommand{\Endtry}{\ENDFOR}
+\newKeyword{\Exists}{exists~}  % text variant: do not use in models!
+%%\newcommand{\Exists}{\exists}          % math variant: do not use in models!
+\if@astra@algiie
+\else
+\newKeyword{\ForAll}{for~all~} % text variant
+\fi
+%%\newcommand{\ForAll}{\forall}          % math variant
+\newKeyword{\Function}{function~}
+\newcommand{\IfThen}[2]{\If#1\Then#2\EndIf}
+\newKeyword{\In}{~in~} % text variant
+%%\newcommand{\In}{\in}          % math variant
+\newKeyword{\Integer}{int}
+\newcommand{\Invariant}[1]{\Keyword{invariant:} #1}
+\if@astra@gets
+\newcommand{\IsAssigned}{\ensuremath{\gets}}
+\else
+\newcommand{\IsAssigned}{\ensuremath{\coloneqq}}
+\fi
+\newKeyword{\Of}{~of~}
+\newKeyword{\Maximise}{maximise}
+\newKeyword{\Minimise}{minimise}
+\newcommand{\PostCond}[1]{\Keyword{post:} #1}
+\newcommand{\PreCond}[1]{\Keyword{pre:} #1}
+\newKeyword{\Procedure}{procedure~}
+\newKeyword{\SetDecl}{set~}
+\newKeyword{\SetOf}{setof}
+\newKeyword{\Size}{size}
+\newKeyword{\Solve}{solve}
+\newcommand{\SUM}[3]{\\Keyword{sum}(#1)~#3}             % text variant, ignores #2
+%%\newcommand{\SUM}[3]{\displaystyle\sum_{#1}^{#2} #3} % math variant
+%%\newcommand{\Try}[1]{\STATE {\Keyword{try}~#1}}
+%%\newcommand{\Tryall}{\Keyword{try all}}
+\newcommand{\Tryall}{\FORALL}
+\newKeyword{\Var}{var~}
+\newcommand{\Variant}[1]{\Keyword{variant:} #1}
+\endinput
+%%
+%% End of file `astra.sty'.

@@ -1,0 +1,13 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Background}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Constraint Programming}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Gecode}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{The Table Constraint}{section.2}% 5
+\BOOKMARK [1][-]{section.3}{Algorithms}{}% 6
+\BOOKMARK [1][-]{section.4}{Implementation}{}% 7
+\BOOKMARK [1][-]{section.5}{Evaluation}{}% 8
+\BOOKMARK [2][-]{subsection.5.1}{Evaluation Setup}{section.5}% 9
+\BOOKMARK [2][-]{subsection.5.2}{Results}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.3}{Discussion}{section.5}% 11
+\BOOKMARK [1][-]{section.6}{Conclusions and Future Work}{}% 12
+\BOOKMARK [1][-]{appendix.A}{Source Code}{}% 13

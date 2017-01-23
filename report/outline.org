@@ -1,0 +1,24 @@
+** Implementation and Evaluation of a Compact Table Propagator in Gecode
+
+* Abstract
+
+* Acronyms / Glossary (?)
+
+* Introduction
+
+* Background / Constraint Programming (?)
+- Constraint Programming
+- Table Constraint
+  - Definition
+  - Propagtor algorithms
+
+
+* Compact-Table Algorithm
+
+* Implementation
+
+* Experiments/Evaluation
+
+* Conclusion and Future Work
+
+* References

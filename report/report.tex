@@ -1,0 +1,83 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage{astra}
+
+%\input{macros}
+
+\newcommand{\Timeout}{600.00} % CPU seconds
+
+\title{\textbf{Implementation and Evaluation of a\\
+    Compact Table Propagator in Gecode
+  }
+}
+
+\author{Linnea Ingmar} % replace by your name(s)
+
+%\date{Month Day, Year}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+\label{intro}
+The goal of this thesis is to implement a Compact Table (CT) progatator
+algorithm for the \Constraint{Table} constraint in Gecode,
+an open-source constraint solver, and
+to evaluate its performance with respect to the existing propagators.
+
+\section{Background}
+\label{bg}
+This chapter gives an overview of preliminaries that are relevant for the
+following chapters. It is divided into three parts: Section~\ref{bg:cp}
+introduces Constraint Programming. Section~\ref{bg:gecode} gives an overview
+of Gecode, a constraint solver. Finally, Section~\ref{bg:table} introduces
+the \Constraint{Table} constraint.
+
+\subsection{Constraint Programming}
+\label{bg:cp}
+This section introduces the concept of Constraint Programming (CP).
+\subsection{Gecode}
+\label{bg:gecode}
+Gecode~\cite{Gecode} is a popular constraint programming solver written in the
+C++ programming language. 
+\subsection{The \Constraint{Table} Constraint}
+\label{bg:table}
+The \Constraint{Table} constraint?
+
+\section{Algorithms}
+\label{algorithms}
+
+\section{Implementation}
+\label{implementation}
+
+\section{Evaluation}
+\label{evaluation}
+\subsection{Evaluation Setup}
+\label{evaluation:setup}
+\subsection{Results}
+\label{evaluation:results}
+\subsection{Discussion}
+\label{evaluation:discussion}
+
+\section{Conclusions and Future Work}
+\label{conclusions}
+
+\bibliographystyle{abbrv}
+\bibliography{astra}
+
+\appendix
+\section{Source Code}
+\label{source code}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
