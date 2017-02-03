@@ -5,6 +5,33 @@
 %\input{macros}
 
 \newcommand{\Timeout}{600.00} % CPU seconds
+\newcommand{\Todo}[1]{{\color{blue}Todo: #1}}
+\newcommand{\Secref}[1]{Section~\ref{#1}}
+\newcommand{\Chapref}[1]{Chapter~\ref{#1}}
+\newcommand{\Table}{\Constraint{Table}}
+\newcommand{\Extensional}{\Constraint{Extensional}}
+
+\newcommand{\Method}[2]{\textbf{method~}\text{{#1}}({#2})}
+\newcommand{\MethodReturn}[3]{\textbf{method~}\text{{#1}}({#2})\textbf{\ : \ {#3}}}
+\newcommand{\Class}{\textbf{Class~}}
+\newcommand{\Constructor}{\textbf{constructor~}}
+
+% SparseBitSet
+\newcommand{\Words}{\texttt{words}}
+\newcommand{\Index}{\texttt{index}}
+\newcommand{\Mask}{\texttt{mask}}
+\newcommand{\Limit}{\texttt{limit}}
+\newcommand{\SparseBitSet}{\texttt{SparseBitSet}}
+
+% CT Propagator
+\newcommand{\Scp}{\texttt{scp}}
+\newcommand{\CurrTable}{\texttt{currTable}}
+\newcommand{\Sval}{\texttt{S^{val}}}
+\newcommand{\Ssup}{\texttt{S^{sup}}}
+\newcommand{\LastSizes}{\texttt{lastSizes}}
+\newcommand{\Supports}{\texttt{supports}}
+\newcommand{\Residues}{\texttt{residues}}
+
 
 \title{\textbf{Implementation and Evaluation of a\\
     Compact Table Propagator in Gecode
@@ -26,38 +53,146 @@
 
 \section{Introduction}
 \label{intro}
-The goal of this thesis is to implement a Compact Table (CT) progatator
-algorithm for the \Constraint{Table} constraint in Gecode,
-an open-source constraint solver, and
-to evaluate its performance with respect to the existing propagators.
+
+In Constraint Programming (CP), every constraint is associated with a propagator
+algorithm. The propagator algorithm filters out impossible values for the variables
+related to the constraint. For the \Table constraint, several propagator
+algorithms are known. In 2016, a new propagator algorithm for the \Table
+constraint was published~\cite{DBLP:conf/cp/DemeulenaereHLP16}, called Compact Table (CT).
+Preliminary results indicate that CT outperforms the previously known algorithms.
+There has been no attempt to implement CT in the constraint solver Gecode~\cite{Gecode}, and consequently its performance in Gecode is unknown.
+
+\subsection{Goal}
+\label{intro:goal}
+The goal of this thesis is to implement a CT progatator
+algorithm for the \Table constraint in Gecode,
+and to evaluate its performance with respect to the existing propagators.
+
+\subsection{Contributions}
+\label{intro:contributions}
+
+\Todo{State the contributions, perhaps as a bulleted list, referring to the different
+parts of the paper, as opposed to giving a traditional outline. (As suggested
+by Olle Gallmo.)}
+
+This thesis contributes with the following:
+
+\begin{itemize}
+  \item The relevant preliminaries have been covered in \Chapref{bg}.
+  \item The algorithms presented in~\cite{DBLP:conf/cp/DemeulenaereHLP16} have been modified to suit the
+    target constraint solver Gecode, and are presented and explained in 
+    \Chapref{algorithms}.
+  \item The CT algorithm has been implemented in Gecode, see \Chapref{implementation}.
+  \item The performance of the CT algorithm has been evaluated, see \Chapref{evaluation}.
+  \item ...
+\end{itemize}
 
 \section{Background}
 \label{bg}
-This chapter gives an overview of preliminaries that are relevant for the
-following chapters. It is divided into three parts: Section~\ref{bg:cp}
-introduces Constraint Programming. Section~\ref{bg:gecode} gives an overview
-of Gecode, a constraint solver. Finally, Section~\ref{bg:table} introduces
-the \Constraint{Table} constraint.
+
+This chapter provides a background that is relevant for the
+following chapters. It is divided into three parts: \Secref{bg:cp}
+introduces Constraint Programming. \Secref{bg:gecode} gives an overview
+of Gecode, a constraint solver. Finally, \Secref{bg:table} introduces
+the \Table constraint.
 
 \subsection{Constraint Programming}
 \label{bg:cp}
 This section introduces the concept of Constraint Programming (CP).
 \subsection{Gecode}
 \label{bg:gecode}
-Gecode~\cite{Gecode} is a popular constraint programming solver written in the
-C++ programming language. 
-\subsection{The \Constraint{Table} Constraint}
+Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
+\subsection{The \Table Constraint}
 \label{bg:table}
-The \Constraint{Table} constraint?
+The \Table constraint, called \Extensional in Gecode,
+explicitly expresses the possible combinations of values for the variables as a
+sequence of $n$-tuples.
 
 \section{Algorithms}
 \label{algorithms}
+This chapter presents the algorithms that are used in the implementation of the
+CT propagator in \Chapref{implementation}.
+
+\subsection{Sparse Bit-Set}
+This section describes the class~$\SparseBitSet$ which is the main datastructure
+in the CT algorithm for maintaining the supports.
+
+\begin{algorithm}[h]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \STATE $\Class$ SparseBitSet
+    \item[]
+      \STATE $\Words$: array of long \COMMENT{$\tt{\Words.length = p}$}
+      \STATE $\Index$: array of int \COMMENT{$\tt{\Index.length = p}$}
+      \STATE $\Limit$: int 
+      \STATE $\Mask$: array of long \COMMENT{$\tt{\Mask.length = p}$}
+    \item[]
+      \STATE \MethodReturn{isEmpty}{}{Boolean}
+      \RETURN $\Limit = -1$
+    \item[]
+      \STATE \Method{reverseMask}{} 
+      \STATE TBA
+      %\FORALL{i} \STATE{hej} \ENDFOR
+    \item[]
+      \STATE \Method{addToMask}{m: array of long}
+      \STATE TBA
+    \item[]
+      \STATE \Method{intersectWithMask}{}
+      \STATE TBA
+    \item[]
+      \STATE \Method{intersectWithMask}{}
+      \STATE TBA
+    \item[]
+      \STATE \MethodReturn{intersectIndex}{m: array of long}{int}
+      \STATE TBA
+            
+    \end{algorithmic}
+  \caption{Pseudo code for the class SparseBitSet.}
+  \label{algo:sparse}
+\end{algorithm}
+
+\subsection{Compact-Table (CT) Algorithm}
+This section describes the CT algorithm.
+
+\begin{algorithm}[h]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \STATE $\Class$ CT-Propagator
+    \item[]
+      \STATE $\Scp$: array of variables
+      \STATE $\CurrTable$: SparseBitSet \COMMENT{Current supported tuples}
+      \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$}
+      \STATE $\Supports$: BitSet \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
+      \STATE $\Residues$  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$}
+
+    \item[]
+      \STATE \Method{initialise}{$\tt{variables}$, $\tt{tuples}$}
+      \STATE TBA \COMMENT{Initialise global variables}
+
+    \item[]
+      \STATE \Method{updateTable}{}
+      \STATE TBA \COMMENT{Update $\CurrTable$}
+    \item[]
+      \STATE \Method{filterDomains}{} 
+      \STATE TBA \COMMENT{Filter invalidated values from domains}
+    \item[]
+      \STATE \Method{propagate}{}
+      \STATE TBA \COMMENT{Perform propagation}
+    \end{algorithmic}
+  \caption{Pseudo code for the class SparseBitSet.}
+  \label{algo:sparse}
+\end{algorithm}
 
 \section{Implementation}
 \label{implementation}
+This chapter presents an implementation of the CT propagator using the algorithms
+presented in \Chapref{algorithms}.
 
 \section{Evaluation}
 \label{evaluation}
+This chapter presents the evaluation of the implementation of the CT propagator
+presented in \Chapref{implementation}. In \Secref{evaluation:setup},
+the evaluation setup is described. In \Secref{evaluation:results} presents
+the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
+
 \subsection{Evaluation Setup}
 \label{evaluation:setup}
 \subsection{Results}
@@ -74,6 +209,8 @@ The \Constraint{Table} constraint?
 \appendix
 \section{Source Code}
 \label{source code}
+
+This appendix presents the source code for the implementation described in \Chapref{implementation}.
 
 \end{document}
 
