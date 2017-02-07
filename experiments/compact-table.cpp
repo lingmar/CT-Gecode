@@ -40,6 +40,9 @@ using namespace Gecode::Int;
 using namespace std;
 
 typedef uint64_t word_t;
+typedef string mapkey;
+typedef unordered_map<mapkey, int> rmap;
+typedef pair<mapkey, int> rmap_entry;
 
 class SparseBitSet {
   vector<word_t> words;
@@ -218,6 +221,17 @@ struct BitSet {
     return Get(atoms.at(atom_idx(r,c)), bit_idx(c)) == 1UL;
   }
 
+  void print(ostream& os=cout) const {
+    cout << "size: " << size << endl;
+    cout << "atoms_per_row: " << atoms_per_row << endl;
+    for (int i = 0; i < size/atoms_per_row; i++) {
+      for (int j = 0; j < BITS_PER_WORD; j++) {
+        os << get(i,j) << " ";
+      }
+      os << endl;
+    }
+  }
+  
 private:
   int atom_idx(int r, int c) const {
     return r*atoms_per_row + c/BITS_PER_WORD;
@@ -227,28 +241,6 @@ private:
     return c % BITS_PER_WORD;
   }
 
-  void print(ostream& os=cout) const {
-    for (int i = 0; i < size/atoms_per_row; i++) {
-      for (int j = 0; j < BITS_PER_WORD; j++) {
-        os << get(i,j) << " ";
-      }
-      os << endl;
-    }
-  }
-};
-
-struct pair_hash {
-    template <class T1, class T2>
-    std::size_t operator () (const std::pair<T1,T2> &p) const {
-        auto h1 = std::hash<T1>{}(p.first);
-        auto h2 = std::hash<T2>{}(p.second);
-
-        // Mainly for demonstration purposes, i.e. works but is overly simple
-        // In the real world, use sth. like boost.hash_combine
-        return h1 ^ h2;  
-    }
-  
-  
 };
 
 void extensional2(Home home, const IntVarArgs& x, const TupleSet& t);
@@ -259,85 +251,66 @@ protected:
   // The variables
   ViewArray<IntView> x;
   // The table with possible combinations of values
-  TupleSet t;
+  TupleSet ts;
   // Valid tuples
   SparseBitSet currTable;
   // Supported tuples
   BitSet supports;
-  unordered_map<pair<int, int>, int, pair_hash> row_map;
-  
+  // Row map for support entries
+  rmap row_map;
   
 public:
   // Create propagator and initialize
   CompactTable(Home home,
                ViewArray<IntView>& x0, 
                TupleSet t0)
-    : Propagator(home), x(x0), t(t0), currTable(t0.tuples()),
-      supports(x0[0].size() + x[1].size(), t0.tuples())
+    : Propagator(home), x(x0), ts(t0), currTable(t0.tuples()),
+      supports(x0[0].size() + x[1].size() + x[2].size(), t0.tuples())
   {
     x.subscribe(home,*this,PC_INT_DOM);
 
     fill_row_map();
+    //    print_row_map();
     init_supports();
+    //cout << "supports: " << endl;
+    //supports.print();
   }
 
-  void fill_row_map() {
-    int row_cnt = 0;
-    for (int j = 0; j < x.size(); j++) {
-      Int::ViewValues<Int::IntView> i(x[j]);
-      while (i()) {
-        cout << "val x[" << j << "] " << i.val() << " ";
-        pair<int,int> varValPair (j, i.val());
-        pair<pair<int,int>, int> entry(varValPair, i.val());
-        row_map.insert(entry);
-        ++i;
-      }
-      cout << endl;
-    }
-  }
-
-  void print_row_map() {
-    for (int j = 0; j < x.size(); j++) {
-      Int::ViewValues<Int::IntView> i(x[j]);
-      while (i()) {
-        pair<int,int> varValPair (j, i.val());
-        pair<pair<int,int>, int> entry(varValPair, i.val());
-        cout << "(" << j << ", " << i.val() << ") is at row " << row_map.at(entry) << endl;
-        
-        ++i;
-      }
-      cout << endl;
-    }
+  int rowno(int var, int val) {
+    return row_map.at(key_of(var, val));
   }
   
   void init_supports() {
-    cout << "min:" << t.min() << endl;
-    for (int i = 0; i < t.tuples(); i++) {
+    for (int i = 0; i < ts.tuples(); i++) {
       cout << "tuple[" << i << "] = ";
       bool supported = true;
-      for (int j = 0; j < t.arity(); j++) {
-        cout << t[i][j] << " ";
-        if (!x[j].in(t[i][j])) {
+      for (int j = 0; j < ts.arity(); j++) {
+        cout << ts[i][j] << " ";
+        if (!x[j].in(ts[i][j])) {
           supported = false;
-          cout << "Value " << t[i][j] << " not supported for variable " << j << endl;
+          cout << "Value " << ts[i][j] << " not supported for variable " << j << endl;
           break;
         }
       }
-      // FIXME: Stupid version of indexing the support matrix
       if (supported) {
         // Set tuple as valid
         cout << "All values supported" << endl;
-        
+        set_tuple(i);
       }
-      
     } 
-
     cout << "supports" << endl;
+  }
+
+  void set_tuple(int t) {
+    assert(t <= ts.tuples());
+    for (int i = 0; i < ts.arity(); i++) {
+      supports.set(rowno(i, ts[t][i]), t, true);
+    }
   }
   
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
-    : Propagator(home,share,p), t(p.t), currTable(p.currTable), supports(p.supports) {
+    : Propagator(home,share,p), ts(p.ts), currTable(p.currTable), supports(p.supports) {
     x.update(home,share,p.x);
   }
   
@@ -359,7 +332,6 @@ public:
     return ES_OK;
   }
     
-
   // Create copy during cloning
   virtual Propagator* copy(Space& home, bool share) {
     return new (home) CompactTable(home,share,*this);
@@ -374,6 +346,7 @@ public:
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
     //return home.ES_SUBSUMED(*this);
+    supports.print();
     currTable.print();
     return ES_NOFIX;
   }
@@ -384,6 +357,42 @@ public:
     // TODO: dispose t?
     (void) Propagator::dispose(home);
     return sizeof(*this);
+  }
+  
+private:
+  
+  void fill_row_map() {
+    int row_cnt = 0;
+    for (int j = 0; j < x.size(); j++) {
+      Int::ViewValues<Int::IntView> i(x[j]);
+      while (i()) {
+        cout << "val x[" << j << "] " << i.val() << " ";
+        rmap_entry entry(key_of(j, i.val()), row_cnt);
+        row_map.insert(entry);
+        ++i; ++row_cnt;
+      }
+      cout << endl;
+    }
+  }
+
+  void print_row_map() {
+    for (int j = 0; j < x.size(); j++) {
+      Int::ViewValues<Int::IntView> i(x[j]);
+      while (i()) {
+        cout << "(" << j << ", " << i.val() << ") with key value: " <<
+          key_of(j, i.val()) <<
+          " is at row " <<
+          row_map.at(key_of(j, i.val())) << endl;
+        ++i;
+      }
+    }
+  }
+
+  mapkey key_of(int var, int val) {
+    char buf[2048];
+    sprintf(buf, "%d%d", var, val);
+    mapkey key(buf);
+    return key;
   }
 };
 
