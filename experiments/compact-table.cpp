@@ -287,6 +287,7 @@ public:
     }
     currTable.add_to_mask(bs.get_row(0));
     currTable.intersect_with_mask();
+
   }
 
   int rowno(int var, int val) {
@@ -325,7 +326,11 @@ public:
   
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
-    : Propagator(home,share,p), ts(p.ts), currTable(p.currTable), supports(p.supports) {
+    : Propagator(home,share,p),
+      ts(p.ts),
+      currTable(p.currTable),
+      supports(p.supports),
+      row_map(p.row_map) {
     x.update(home,share,p.x);
   }
   
@@ -366,7 +371,8 @@ public:
       return ES_FAILED;
     }
     filterDomains(home);
-    return home.ES_SUBSUMED(*this);
+    return ES_FIX;
+    //return home.ES_SUBSUMED(*this);
     //return ES_NOFIX;
   }
 
@@ -385,20 +391,20 @@ public:
   ExecStatus filterDomains(Space& home) {
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<Int::IntView> it(x[i]);
-      vector<int> rvalues; //values to remove
+      vector<int> rvals; //values to remove
       while (it()) {
         int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
         if (index != -1) {
           // save residue
         } else {
-          cout << "value " << it.val() << " should be removed from domain of var " <<
-            i << endl;
-          rvalues.push_back(it.val());
+          // cout << "value " << it.val() << " should be removed from domain of var " <<
+          //   i << endl;
+          rvals.push_back(it.val());
         }
         ++it;
       }
-      Iter::Values::Array rvals(&rvalues[0], rvalues.size());
-      GECODE_ME_CHECK(x[i].minus_v(home,rvals));
+      Iter::Values::Array r(&rvals[0], rvals.size());
+      GECODE_ME_CHECK(x[i].minus_v(home,r));
     }
     return ES_OK;
   }
