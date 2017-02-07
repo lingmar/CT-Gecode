@@ -80,8 +80,7 @@ public:
     mask(sbs.mask),
     index(sbs.index),
     limit(sbs.limit),
-    nbits(sbs.limit) {
-  }
+    nbits(sbs.limit) {}
   
   /// Return true if bitset is empty, else false
   bool is_empty() const {
@@ -182,7 +181,6 @@ public:
 
 };
 
-
 struct BitSet {
 #define Toggle(a, i) (a) |= (1UL << (i))
 #define Clear(a, i) (a) &= ~(1UL << (i))
@@ -221,6 +219,14 @@ struct BitSet {
     return Get(atoms.at(atom_idx(r,c)), bit_idx(c)) == 1UL;
   }
 
+  vector<word_t> get_row(int r) {
+    vector<word_t> row;
+    for (int i = 0; i < atoms_per_row; i++) {
+      row.push_back(atoms.at(atom_idx(r,i)));
+    }
+    return row;
+  }
+  
   void print(ostream& os=cout) const {
     cout << "size: " << size << endl;
     cout << "atoms_per_row: " << atoms_per_row << endl;
@@ -261,6 +267,7 @@ protected:
   
 public:
   // Create propagator and initialize
+  // TODO: don't create a too large sparse bit set
   CompactTable(Home home,
                ViewArray<IntView>& x0, 
                TupleSet t0)
@@ -270,17 +277,24 @@ public:
     x.subscribe(home,*this,PC_INT_DOM);
 
     fill_row_map();
-    //    print_row_map();
-    init_supports();
-    //cout << "supports: " << endl;
-    //supports.print();
+    // Initalise supports
+    int no_tuples = init_supports();
+
+    // FIXME: not nice
+    BitSet bs(ts.tuples(), 1);
+    for (int i = 0; i < no_tuples; i++) {
+      bs.set(0, i, true);
+    }
+    currTable.add_to_mask(bs.get_row(0));
+    currTable.intersect_with_mask();
   }
 
   int rowno(int var, int val) {
     return row_map.at(key_of(var, val));
   }
-  
-  void init_supports() {
+
+  int init_supports() {
+    int support_cnt = 0;
     for (int i = 0; i < ts.tuples(); i++) {
       cout << "tuple[" << i << "] = ";
       bool supported = true;
@@ -295,16 +309,17 @@ public:
       if (supported) {
         // Set tuple as valid
         cout << "All values supported" << endl;
-        set_tuple(i);
+        set_tuple(i, support_cnt);
+        support_cnt++;
       }
-    } 
-    cout << "supports" << endl;
+    }
+    return support_cnt;
   }
 
-  void set_tuple(int t) {
+  void set_tuple(int t, int column) {
     assert(t <= ts.tuples());
     for (int i = 0; i < ts.arity(); i++) {
-      supports.set(rowno(i, ts[t][i]), t, true);
+      supports.set(rowno(i, ts[t][i]), column, true);
     }
   }
   
@@ -323,8 +338,6 @@ public:
       GECODE_ME_CHECK(x[i].gq(home, t.min()));
       GECODE_ME_CHECK(x[i].lq(home, t.max()));
     }
-    // Binary case
-    GECODE_ME_CHECK(x.size() == 2);
     
     // Only if there is something to propagate
     if (x.size() > 1)
@@ -342,15 +355,54 @@ public:
     // TODO: ???
     return PropCost::quadratic(PropCost::LO,2*x.size());
   }
-    
+  
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-    //return home.ES_SUBSUMED(*this);
-    supports.print();
-    currTable.print();
-    return ES_NOFIX;
-  }
     
+    //supports.print();
+    //currTable.print();
+    updateTable();
+    if (currTable.is_empty()) {
+      return ES_FAILED;
+    }
+    filterDomains(home);
+    return home.ES_SUBSUMED(*this);
+    //return ES_NOFIX;
+  }
+
+  void updateTable() {
+    for (int i = 0; i < x.size(); i++) {
+      currTable.clear_mask();
+      Int::ViewValues<Int::IntView> it(x[i]);
+      while (it()) {
+        currTable.add_to_mask(supports.get_row(rowno(i,it.val())));
+        ++it;
+      }
+    }
+    currTable.intersect_with_mask();
+  }
+
+  ExecStatus filterDomains(Space& home) {
+    for (int i = 0; i < x.size(); i++) {
+      Int::ViewValues<Int::IntView> it(x[i]);
+      vector<int> rvalues; //values to remove
+      while (it()) {
+        int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
+        if (index != -1) {
+          // save residue
+        } else {
+          cout << "value " << it.val() << " should be removed from domain of var " <<
+            i << endl;
+          rvalues.push_back(it.val());
+        }
+        ++it;
+      }
+      Iter::Values::Array rvals(&rvalues[0], rvalues.size());
+      GECODE_ME_CHECK(x[i].minus_v(home,rvals));
+    }
+    return ES_OK;
+  }
+  
   // Dispose propagator and return its size
   virtual size_t dispose(Space& home) {
     x.cancel(home,*this,PC_INT_BND);
@@ -358,6 +410,8 @@ public:
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }
+
+  
   
 private:
   
