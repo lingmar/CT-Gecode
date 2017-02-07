@@ -27,31 +27,320 @@
  */
 
 #include <gecode/int.hh>
+#include <cstdio>
+#include <stdint.h>
+#include <iostream>
+#include <assert.h>
+#include <unordered_map>
+
+#define BITS_PER_WORD 64
 
 using namespace Gecode;
 using namespace Gecode::Int;
+using namespace std;
 
-void extensional2(Home home,
-                  const IntVarArgs& x, const IntArgs& w,
-                  const IntVarArgs& y, const IntArgs& h);
+typedef uint64_t word_t;
+
+class SparseBitSet {
+  vector<word_t> words;
+  vector<word_t> mask;
+  vector<int> index; // type?
+  int limit;
+  unsigned int nbits;
+
+public:
+  SparseBitSet(unsigned int _nbits) {
+    nbits = _nbits;
+    unsigned int nwords = required_words(nbits);
+
+    // Initialise words
+    for (int i = 0; i < nwords; i++) {
+      words.push_back(~0ULL); // Set all bits to 1
+    }
+
+    // Initialise mask
+    for (int i = 0; i < nwords; i++) {
+      mask.push_back(0ULL);
+    }
+    
+    /// Initialise index
+    for (int i = 0; i < nwords; i++) {
+      index.push_back(i);
+    }
+    /// Limit is initially highest index
+    limit = nwords - 1;
+  }
+
+  /// Copy constructor
+  SparseBitSet(SparseBitSet& sbs) :
+    words(sbs.words),
+    mask(sbs.mask),
+    index(sbs.index),
+    limit(sbs.limit),
+    nbits(sbs.limit) {
+  }
+  
+  /// Return true if bitset is empty, else false
+  bool is_empty() const {
+    return limit == -1;
+  }
+  
+  /// Clear all bits in mask
+  void clear_mask() {
+    for (int i = 0; i <= limit; i++) {
+      int offset = index[i];
+      mask.at(offset) = 0ULL;
+    }
+  }
+
+  /// Reverse bits in mask
+  void reverse_mask() {
+    for (int i = 0; i <= limit; i++) {
+      int offset = index[i];
+      mask.at(offset) = ~mask.at(offset);
+    }
+  }
+
+  /// Add bits to mask
+  void add_to_mask(vector<word_t> m) {
+    for (int i = 0; i <= limit; i++) {
+      int offset = index[i];
+      mask.at(offset) |= m.at(offset);
+    }
+  }
+
+  /// Intersect words with mask
+  void intersect_with_mask() {
+    for (int i = limit; i >= 0; i--) {
+      int offset = index.at(i);
+      word_t w = (words.at(offset) & mask.at(offset));
+      if (w != words.at(offset)) {
+        words.at(offset) = w;
+        if (w == 0ULL) {
+          index.at(i) = index.at(limit);
+          index.at(limit) = offset;
+          --limit;
+        }
+      }
+    }
+  }
+
+  /* Returns the index of a word where the bit-set
+  intersects with m, -1 otherwise */
+  int intersect_index(vector<word_t> m) const {
+    for (int i = 0; i <= limit; i++) {
+      int offset = index.at(i);
+      if ((words.at(offset) & m.at(offset)) != 0ULL) {
+        return offset;
+      }
+    }
+    return -1;
+  }
+  
+  /// Print bit-set for simple debugging
+  void print() {
+    cout << "words: ";
+    for (int i = 0; i < required_words(nbits); i++) {
+      //cout << words.at(i) << endl;
+      for (int j = 0; j < BITS_PER_WORD; j++) {
+        word_t b = (words.at(i) >> j) & 1ULL;
+        cout << b << " ";
+      }
+      cout << endl;
+    }
+
+    cout << "mask: ";
+    for (int i = 0; i < required_words(nbits); i++) {
+      //cout << mask.at(i) << endl;
+      for (int j = 0; j < BITS_PER_WORD; j++) {
+        word_t b = (mask.at(i) >> j) & 1ULL;
+        cout << b << " ";
+      }
+      cout << endl;
+    }
+   
+    cout << "index: ";
+    for (int i = 0; i < required_words(nbits); i++) {
+      cout << index.at(i) << " ";
+    }
+    cout << endl;
+    cout << "limit: ";
+    cout << limit << endl;;
+      
+  }
+
+  unsigned int required_words(unsigned int nbits) {
+    if (nbits == 0) {
+      return 0;
+    } else {
+      return (nbits - 1) / BITS_PER_WORD + 1;
+    }
+  }
+
+};
+
+
+struct BitSet {
+#define Toggle(a, i) (a) |= (1UL << (i))
+#define Clear(a, i) (a) &= ~(1UL << (i))
+#define Get(a, i) (((a) >> (i)) & 1UL)
+  
+  vector<word_t> atoms;
+  size_t size;
+  size_t atoms_per_row;
+
+  BitSet(int rows, int cols)
+    : atoms_per_row(ceil((double)cols/BITS_PER_WORD)) {
+    size = required_ints(rows);
+    for (int i = 0; i < size; i++) {
+      atoms.push_back(0UL);
+    }
+  }
+  
+  BitSet(const BitSet& other)
+    : atoms(other.atoms)
+    , size(other.size)
+    , atoms_per_row(other.atoms_per_row) {}
+
+  int required_ints(int rows) {
+    return atoms_per_row*rows;
+  }
+
+  void set(int r, int c, bool state) {
+    if (state) {
+      Toggle(atoms.at(atom_idx(r,c)), bit_idx(c));
+    } else {
+      Clear(atoms.at(atom_idx(r,c)), bit_idx(c));
+    }
+  }
+
+  bool get(int r, int c) const {
+    return Get(atoms.at(atom_idx(r,c)), bit_idx(c)) == 1UL;
+  }
+
+private:
+  int atom_idx(int r, int c) const {
+    return r*atoms_per_row + c/BITS_PER_WORD;
+  }
+
+  int bit_idx(int c) const {
+    return c % BITS_PER_WORD;
+  }
+
+  void print(ostream& os=cout) const {
+    for (int i = 0; i < size/atoms_per_row; i++) {
+      for (int j = 0; j < BITS_PER_WORD; j++) {
+        os << get(i,j) << " ";
+      }
+      os << endl;
+    }
+  }
+};
+
+struct pair_hash {
+    template <class T1, class T2>
+    std::size_t operator () (const std::pair<T1,T2> &p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+
+        // Mainly for demonstration purposes, i.e. works but is overly simple
+        // In the real world, use sth. like boost.hash_combine
+        return h1 ^ h2;  
+    }
+  
+  
+};
+
+void extensional2(Home home, const IntVarArgs& x, const TupleSet& t);
 
 // The no-overlap propagator
 class CompactTable : public Propagator {
 protected:  
   // The variables
   ViewArray<IntView> x;
-  // The table
+  // The table with possible combinations of values
   TupleSet t;
-    
+  // Valid tuples
+  SparseBitSet currTable;
+  // Supported tuples
+  BitSet supports;
+  unordered_map<pair<int, int>, int, pair_hash> row_map;
+  
+  
 public:
   // Create propagator and initialize
   CompactTable(Home home,
                ViewArray<IntView>& x0, 
                TupleSet t0)
-    : Propagator(home), x(x0), t(t0)
+    : Propagator(home), x(x0), t(t0), currTable(t0.tuples()),
+      supports(x0[0].size() + x[1].size(), t0.tuples())
   {
     x.subscribe(home,*this,PC_INT_DOM);
+
+    fill_row_map();
+    init_supports();
   }
+
+  void fill_row_map() {
+    int row_cnt = 0;
+    for (int j = 0; j < x.size(); j++) {
+      Int::ViewValues<Int::IntView> i(x[j]);
+      while (i()) {
+        cout << "val x[" << j << "] " << i.val() << " ";
+        pair<int,int> varValPair (j, i.val());
+        pair<pair<int,int>, int> entry(varValPair, i.val());
+        row_map.insert(entry);
+        ++i;
+      }
+      cout << endl;
+    }
+  }
+
+  void print_row_map() {
+    for (int j = 0; j < x.size(); j++) {
+      Int::ViewValues<Int::IntView> i(x[j]);
+      while (i()) {
+        pair<int,int> varValPair (j, i.val());
+        pair<pair<int,int>, int> entry(varValPair, i.val());
+        cout << "(" << j << ", " << i.val() << ") is at row " << row_map.at(entry) << endl;
+        
+        ++i;
+      }
+      cout << endl;
+    }
+  }
+  
+  void init_supports() {
+    cout << "min:" << t.min() << endl;
+    for (int i = 0; i < t.tuples(); i++) {
+      cout << "tuple[" << i << "] = ";
+      bool supported = true;
+      for (int j = 0; j < t.arity(); j++) {
+        cout << t[i][j] << " ";
+        if (!x[j].in(t[i][j])) {
+          supported = false;
+          cout << "Value " << t[i][j] << " not supported for variable " << j << endl;
+          break;
+        }
+      }
+      // FIXME: Stupid version of indexing the support matrix
+      if (supported) {
+        // Set tuple as valid
+        cout << "All values supported" << endl;
+        
+      }
+      
+    } 
+
+    cout << "supports" << endl;
+  }
+  
+  // Copy constructor during cloning
+  CompactTable(Space& home, bool share, CompactTable& p)
+    : Propagator(home,share,p), t(p.t), currTable(p.currTable), supports(p.supports) {
+    x.update(home,share,p.x);
+  }
+  
   // Post table propagator
   static ExecStatus post(Home home,
                          ViewArray<IntView>& x,
@@ -61,17 +350,15 @@ public:
       GECODE_ME_CHECK(x[i].gq(home, t.min()));
       GECODE_ME_CHECK(x[i].lq(home, t.max()));
     }
+    // Binary case
+    GECODE_ME_CHECK(x.size() == 2);
+    
     // Only if there is something to propagate
     if (x.size() > 1)
       (void) new (home) CompactTable(home,x,t);
     return ES_OK;
   }
     
-  // Copy constructor during cloning
-  CompactTable(Space& home, bool share, CompactTable& p)
-    : Propagator(home,share,p), t(p.t) {
-    x.update(home,share,p.x);
-  }
 
   // Create copy during cloning
   virtual Propagator* copy(Space& home, bool share) {
@@ -86,11 +373,9 @@ public:
     
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-        
-    //
-    // This is what YOU have to add!
-    //
-        
+    //return home.ES_SUBSUMED(*this);
+    currTable.print();
+    return ES_NOFIX;
   }
     
   // Dispose propagator and return its size
