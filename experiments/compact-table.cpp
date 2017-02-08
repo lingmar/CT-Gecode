@@ -105,6 +105,7 @@ public:
 
   /// Add bits to mask
   void add_to_mask(vector<word_t> m) {
+    assert(m.size() == mask.size());
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
       mask.at(offset) |= m.at(offset);
@@ -191,11 +192,15 @@ struct BitSet {
   size_t atoms_per_row;
 
   BitSet(int rows, int cols)
-    : atoms_per_row(ceil((double)cols/BITS_PER_WORD)) {
+    : atoms_per_row(required_ints_per_row(cols)) {
     size = required_ints(rows);
     for (int i = 0; i < size; i++) {
       atoms.push_back(0UL);
     }
+  }
+
+  size_t required_ints_per_row(int cols) {
+    return ceil((double)cols/BITS_PER_WORD);
   }
   
   BitSet(const BitSet& other)
@@ -203,7 +208,7 @@ struct BitSet {
     , size(other.size)
     , atoms_per_row(other.atoms_per_row) {}
 
-  int required_ints(int rows) {
+  size_t required_ints(int rows) const {
     return atoms_per_row*rows;
   }
 
@@ -222,19 +227,21 @@ struct BitSet {
   vector<word_t> get_row(int r) {
     vector<word_t> row;
     for (int i = 0; i < atoms_per_row; i++) {
-      row.push_back(atoms.at(atom_idx(r,i)));
+      row.push_back(atoms.at(atom_idx(r,i*BITS_PER_WORD)));
     }
-    return row;
+    return row; 
   }
   
   void print(ostream& os=cout) const {
     cout << "size: " << size << endl;
     cout << "atoms_per_row: " << atoms_per_row << endl;
     for (int i = 0; i < size/atoms_per_row; i++) {
-      for (int j = 0; j < BITS_PER_WORD; j++) {
-        os << get(i,j) << " ";
+      for (int j = 0; j < atoms_per_row; j++) {
+        for (int k = 0; k < BITS_PER_WORD; k++) {
+          os << get(i, j*BITS_PER_WORD + k) << " ";
+        }
+        os << endl;
       }
-      os << endl;
     }
   }
   
@@ -270,9 +277,10 @@ public:
   // TODO: don't create a too large sparse bit set
   CompactTable(Home home,
                ViewArray<IntView>& x0, 
-               TupleSet t0)
+               TupleSet t0,
+               int domsum)
     : Propagator(home), x(x0), ts(t0), currTable(t0.tuples()),
-      supports(x0[0].size() + x[1].size() + x[2].size(), t0.tuples())
+      supports(domsum, t0.tuples())
   {
     x.subscribe(home,*this,PC_INT_DOM);
 
@@ -281,13 +289,16 @@ public:
     int no_tuples = init_supports();
 
     // FIXME: not nice
-    BitSet bs(ts.tuples(), 1);
+    BitSet bs(1, ts.tuples());
     for (int i = 0; i < no_tuples; i++) {
       bs.set(0, i, true);
     }
+
     currTable.add_to_mask(bs.get_row(0));
     currTable.intersect_with_mask();
 
+    cout << "Constuctor done \n Initial state:\n";
+    currTable.print();
   }
 
   int rowno(int var, int val) {
@@ -343,10 +354,17 @@ public:
       GECODE_ME_CHECK(x[i].gq(home, t.min()));
       GECODE_ME_CHECK(x[i].lq(home, t.max()));
     }
+
+    int domsum = 0;
+    for (int i = 0; i < x.size(); i++) {
+      domsum += x[i].size();
+    }
+
+    cout << "domsum: " << domsum << endl;
     
     // Only if there is something to propagate
     if (x.size() > 1)
-      (void) new (home) CompactTable(home,x,t);
+      (void) new (home) CompactTable(home,x,t,domsum);
     return ES_OK;
   }
     
@@ -416,8 +434,6 @@ public:
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }
-
-  
   
 private:
   
