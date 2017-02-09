@@ -17,7 +17,7 @@ black-hole-patience: compact-table.o black-hole-patience.o
 	$(CXX) $(CXX_FLAGS) -o $@ $? $(LIBS)	
 
 %.o: %.cpp
-	$(CXX) $< $(CXX_FLAGS) -o $@
+	$(CXX) $(CXX_FLAGS) -c -o $@ $?
 
 clean:
 	$(RM) *.o bitset swedish-drinking-protocol kakuro black-hole-patience
