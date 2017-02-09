@@ -80,7 +80,7 @@ public:
     mask(sbs.mask),
     index(sbs.index),
     limit(sbs.limit),
-    nbits(sbs.limit) {}
+    nbits(sbs.nbits) {}
   
   /// Return true if bitset is empty, else false
   bool is_empty() const {
@@ -152,15 +152,15 @@ public:
       cout << endl;
     }
 
-    cout << "mask: ";
-    for (int i = 0; i < required_words(nbits); i++) {
-      //cout << mask.at(i) << endl;
-      for (int j = 0; j < BITS_PER_WORD; j++) {
-        word_t b = (mask.at(i) >> j) & 1ULL;
-        cout << b << " ";
-      }
-      cout << endl;
-    }
+    // cout << "mask: ";
+    // for (int i = 0; i < required_words(nbits); i++) {
+    //   //cout << mask.at(i) << endl;
+    //   for (int j = 0; j < BITS_PER_WORD; j++) {
+    //     word_t b = (mask.at(i) >> j) & 1ULL;
+    //     cout << b << " ";
+    //   }
+    //   cout << endl;
+    // }
    
     cout << "index: ";
     for (int i = 0; i < required_words(nbits); i++) {
@@ -264,10 +264,8 @@ protected:
   // The variables
   ViewArray<IntView> x;
   // The table with possible combinations of values
-  TupleSet ts;
-  // Valid tuples
   SparseBitSet currTable;
-  // Supported tuples
+  // Supported tuples (static)
   BitSet supports;
   // Row map for support entries
   rmap row_map;
@@ -279,17 +277,17 @@ public:
                ViewArray<IntView>& x0, 
                TupleSet t0,
                int domsum)
-    : Propagator(home), x(x0), ts(t0), currTable(t0.tuples()),
+    : Propagator(home), x(x0), currTable(t0.tuples()),
       supports(domsum, t0.tuples())
   {
     x.subscribe(home,*this,PC_INT_DOM);
 
     fill_row_map();
     // Initalise supports
-    int no_tuples = init_supports();
+    int no_tuples = init_supports(t0);
 
     // FIXME: not nice
-    BitSet bs(1, ts.tuples());
+    BitSet bs(1, t0.tuples());
     for (int i = 0; i < no_tuples; i++) {
       bs.set(0, i, true);
     }
@@ -297,38 +295,51 @@ public:
     currTable.add_to_mask(bs.get_row(0));
     currTable.intersect_with_mask();
 
+#ifdef DEBUG
     cout << "Constuctor done \n Initial state:\n";
-    currTable.print();
+    cout << "Tuples: " << endl;
+    for (int i = 0; i < t0.tuples(); i++) {
+      for (int j = 0; j < t0.arity(); j++) {
+        cout << t0[i][j] << " ";
+      }
+      cout << endl;
+    }
+    cout << "supports: " << endl;
+    supports.print();
+    cout << "currTable: " << endl;
+    currTable.print();    
+#endif // DEBUG
   }
-
+  
   int rowno(int var, int val) {
     return row_map.at(key_of(var, val));
   }
 
-  int init_supports() {
+  int init_supports(TupleSet ts) {
     int support_cnt = 0;
     for (int i = 0; i < ts.tuples(); i++) {
-      cout << "tuple[" << i << "] = ";
       bool supported = true;
       for (int j = 0; j < ts.arity(); j++) {
-        cout << ts[i][j] << " ";
         if (!x[j].in(ts[i][j])) {
           supported = false;
+          
+#ifdef DEBUG
           cout << "Value " << ts[i][j] << " not supported for variable " << j << endl;
+#endif // DEBUG
+          
           break;
         }
       }
       if (supported) {
         // Set tuple as valid
-        cout << "All values supported" << endl;
-        set_tuple(i, support_cnt);
+        set_tuple(i, support_cnt, ts);
         support_cnt++;
       }
     }
     return support_cnt;
   }
 
-  void set_tuple(int t, int column) {
+  void set_tuple(int t, int column, TupleSet ts) {
     assert(t <= ts.tuples());
     for (int i = 0; i < ts.arity(); i++) {
       supports.set(rowno(i, ts[t][i]), column, true);
@@ -338,7 +349,6 @@ public:
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
-      ts(p.ts),
       currTable(p.currTable),
       supports(p.supports),
       row_map(p.row_map) {
@@ -359,9 +369,6 @@ public:
     for (int i = 0; i < x.size(); i++) {
       domsum += x[i].size();
     }
-
-    cout << "domsum: " << domsum << endl;
-    
     // Only if there is something to propagate
     if (x.size() > 1)
       (void) new (home) CompactTable(home,x,t,domsum);
@@ -381,15 +388,20 @@ public:
   
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
+#ifdef DEBUG
+    cout << "before update" << endl;
+    currTable.print();
+    updateTable();
+    cout << "after update" << endl;
+    currTable.print();
+#endif // DEBUG
     
-    //supports.print();
-    //currTable.print();
     updateTable();
     if (currTable.is_empty()) {
       return ES_FAILED;
     }
     filterDomains(home);
-    return ES_FIX;
+    return ES_NOFIX;
     //return home.ES_SUBSUMED(*this);
     //return ES_NOFIX;
   }
@@ -402,8 +414,8 @@ public:
         currTable.add_to_mask(supports.get_row(rowno(i,it.val())));
         ++it;
       }
+      currTable.intersect_with_mask();
     }
-    currTable.intersect_with_mask();
   }
 
   ExecStatus filterDomains(Space& home) {
@@ -415,8 +427,6 @@ public:
         if (index != -1) {
           // save residue
         } else {
-          // cout << "value " << it.val() << " should be removed from domain of var " <<
-          //   i << endl;
           rvals.push_back(it.val());
         }
         ++it;
@@ -442,12 +452,10 @@ private:
     for (int j = 0; j < x.size(); j++) {
       Int::ViewValues<Int::IntView> i(x[j]);
       while (i()) {
-        cout << "val x[" << j << "] " << i.val() << " ";
         rmap_entry entry(key_of(j, i.val()), row_cnt);
         row_map.insert(entry);
         ++i; ++row_cnt;
       }
-      cout << endl;
     }
   }
 
