@@ -1,20 +1,27 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage{fullpage}
 \usepackage{astra}
+\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
 
 %\input{macros}
+
+% Silly but saves space
+\newcommand{\T}[1]{\texttt{#1}}
+\newcommand{\Text}[1]{\text{#1}}
 
 \newcommand{\Timeout}{600.00} % CPU seconds
 \newcommand{\Todo}[1]{{\color{blue}Todo: #1}}
 \newcommand{\Secref}[1]{Section~\ref{#1}}
-\newcommand{\Chapref}[1]{Chapter~\ref{#1}}
-\newcommand{\Table}{\Constraint{Table}}
-\newcommand{\Extensional}{\Constraint{Extensional}}
+\newcommand{\Chapref}[1]{Section~\ref{#1}}
+\newcommand{\Table}{\Constraint{Table}~}
+\newcommand{\Extensional}{\Constraint{Extensional}~}
 
-\newcommand{\Method}[2]{\textbf{method~}\text{{#1}}({#2})}
-\newcommand{\MethodReturn}[3]{\textbf{method~}\text{{#1}}({#2})\textbf{\ : \ {#3}}}
+\newcommand{\Method}[2]{\textbf{method~}\mathrm{{#1}}({#2})}
+\newcommand{\MethodReturn}[3]{\textbf{method~}\mathrm{{#1}}({#2})\textbf{\ : \ {#3}}}
 \newcommand{\Class}{\textbf{Class~}}
 \newcommand{\Constructor}{\textbf{constructor~}}
+
+\newcommand{\Dom}[1]{\text{dom}({#1})}
 
 % SparseBitSet
 \newcommand{\Words}{\texttt{words}}
@@ -22,15 +29,44 @@
 \newcommand{\Mask}{\texttt{mask}}
 \newcommand{\Limit}{\texttt{limit}}
 \newcommand{\SparseBitSet}{\texttt{SparseBitSet}}
+\newcommand{\Offset}{\texttt{offset}}
 
 % CT Propagator
 \newcommand{\Scp}{\texttt{scp}}
 \newcommand{\CurrTable}{\texttt{currTable}}
 \newcommand{\Sval}{\texttt{S^{val}}}
 \newcommand{\Ssup}{\texttt{S^{sup}}}
-\newcommand{\LastSizes}{\texttt{lastSizes}}
+\newcommand{\LastSizes}{\texttt{lastSize}}
 \newcommand{\Supports}{\texttt{supports}}
 \newcommand{\Residues}{\texttt{residues}}
+
+% Pseduo code
+\newcommand{\ForEach}[1]{\textbf{foreach } {#1} \textbf{ do }}
+\newcommand{\ForEachTo}[3]{\textbf{foreach } {#1} \textbf{ from } {#2} 
+  \textbf{ to } {#3} \textbf{ do }}
+\newcommand{\ForEachDownTo}[3]{\textbf{foreach } {#1} \textbf{ from } {#2} 
+  \textbf{ downto } {#3} \textbf{ do }}
+\newcommand{\Break}{\textbf{break~}}
+\newcommand{\While}[1]{\textbf{while~} {#1} \textbf{~do~}}
+
+
+\newlength\myindent
+\setlength\myindent{2em}
+\newcommand\bindent{%
+  \begingroup
+  \setlength{\itemindent}{\myindent}
+  \addtolength{\algorithmicindent}{\myindent}
+}
+\newcommand\eindent{\endgroup}
+
+\newcommand{\INDSTATE}[1][1]{\STATE\hspace{#1\algorithmicindent}}
+\newcommand{\INDRETURN}[1][1]{\STATE\hspace{#1\algorithmicindent}\textbf{return~}}
+\newcommand{\INDIF}[2][1]{\STATE\hspace{#1\algorithmicindent}
+  \textbf{if~}{#2}\textbf{~then}}
+\newcommand{\INDELSE}[1][1]{\STATE\hspace{#1\algorithmicindent}\textbf{else~}}
+\newcommand{\INDELSEIF}[2][1]{\STATE\hspace{#1\algorithmicindent}
+  \textbf{else if~}{#2}\textbf{~then}}
+
 
 
 \title{\textbf{Implementation and Evaluation of a\\
@@ -90,6 +126,8 @@ This thesis contributes with the following:
 \section{Background}
 \label{bg}
 
+% Definiera alla begrepp som används senare
+
 This chapter provides a background that is relevant for the
 following chapters. It is divided into three parts: \Secref{bg:cp}
 introduces Constraint Programming. \Secref{bg:gecode} gives an overview
@@ -99,17 +137,32 @@ the \Table constraint.
 \subsection{Constraint Programming}
 \label{bg:cp}
 This section introduces the concept of Constraint Programming (CP).
+
 \subsection{Gecode}
 \label{bg:gecode}
 Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
+
+% definiera de delar av Gecodes API som dyker upp senare, såsom propagate(), status messages
+
 \subsection{The \Table Constraint}
 \label{bg:table}
 The \Table constraint, called \Extensional in Gecode,
 explicitly expresses the possible combinations of values for the variables as a
 sequence of $n$-tuples.
 
+\subsection{Compact-Table Propagator}
+\label{bg:ct}
+% Beskriv huvudidéerna
+
+\subsection{Sparse Bit-Set}
+\label{bg:sbc}
+% Beskriv idén
+
 \section{Algorithms}
 \label{algorithms}
+
+% Section 3 bör beskriva din design i detalj men samtidigt inte på C++-nivå. Jag gillar att se sjok av pseudokod inbäddade i text som förklarar pseudokoden. Man kan skriva text mellan sjoken och/eller i caption till algorithm-omgivningen. Något som jag också gillar är stepwise refinement, dvs. att först visa en enkel men korrekt version, och sedan en eller flera mer sofistikerade, optimerade versioner. Den pseudokod som du har skrivit passar bra i Section 3, men bryt gärna upp åtminstone Class CT-Propagator i flera stycken algorithm-omgivningar.
+
 This chapter presents the algorithms that are used in the implementation of the
 CT propagator in \Chapref{implementation}.
 
@@ -126,24 +179,49 @@ in the CT algorithm for maintaining the supports.
       \STATE $\Limit$: int 
       \STATE $\Mask$: array of long \COMMENT{$\tt{\Mask.length = p}$}
     \item[]
-      \STATE \MethodReturn{isEmpty}{}{Boolean}
-      \RETURN $\Limit = -1$
+      \STATE $\MethodReturn{isEmpty}{}{Boolean}$
+      \INDRETURN $\Limit = -1$
     \item[]
-      \STATE \Method{reverseMask}{} 
-      \STATE TBA
+      \STATE $\Method{clearMask}{}$
+        \INDSTATE $\ForEachTo{i}{0}{\Limit}$
+        \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
+        \INDSTATE[2] $\texttt{mask}[\texttt{offset}] \leftarrow 0^{64}$
+
+    \item[] 
+      \STATE $\Method{reverseMask}{}$  \COMMENT{Not currently used in CT algorithm}
+        \INDSTATE $\ForEachTo{i}{0}{\Limit}$
+        \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
+        \INDSTATE[2] $\texttt{mask}[\texttt{offset}] \leftarrow 
+        {\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
+        \texttt{mask}[\texttt{offset}]$ \COMMENT{bitwise NOT}
+        
       %\FORALL{i} \STATE{hej} \ENDFOR
     \item[]
-      \STATE \Method{addToMask}{m: array of long}
-      \STATE TBA
+      \STATE $\Method{addToMask}{m: array of long}$
+      \INDSTATE $\ForEachTo{i}{0}{\Limit}$
+      \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
+      \INDSTATE[2] $\texttt{mask}[\texttt{offset}] \leftarrow \texttt{mask}[\texttt{offset}] \ | \ 
+      \texttt{mask}[\texttt{offset}]$ \COMMENT{bitwise OR}
+        
     \item[]
-      \STATE \Method{intersectWithMask}{}
-      \STATE TBA
+      \STATE $\Method{intersectWithMask}{}$
+      \INDSTATE $\ForEachDownTo{i}{\Limit}{0}$
+      \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
+      \INDSTATE[2] $w \leftarrow \Words[\texttt{offset}] \ \& \ \Mask[\texttt{offset}]$ \COMMENT{bitwise AND}
+      \INDIF[2]{$w \neq \Words[\texttt{offset}]$}
+      \INDSTATE[3] $\Words[\texttt{offset}] \leftarrow w$
+      \INDIF[3]{$w = 0^{64}$}
+      \INDSTATE[4] $\Index[i] \leftarrow \Index[\Limit]$
+      \INDSTATE[4] $\Index[\Limit] \leftarrow \texttt{offset}$
+      \INDSTATE[4] $\Limit \leftarrow \Limit - 1$
+
     \item[]
-      \STATE \Method{intersectWithMask}{}
-      \STATE TBA
-    \item[]
-      \STATE \MethodReturn{intersectIndex}{m: array of long}{int}
-      \STATE TBA
+      \STATE $\MethodReturn{intersectIndex}{m: array of long}{int}$
+      \INDSTATE $\ForEachTo{i}{0}{\Limit}$
+      \INDSTATE[2] $\Offset \leftarrow \Index[i]$
+      \INDIF[2]{$\Words[\Offset] \ \& \ m[\Offset] \neq 0^{64}$}
+      \INDRETURN[3]{$\Offset$}
+      \INDRETURN $-1$
             
     \end{algorithmic}
   \caption{Pseudo code for the class SparseBitSet.}
@@ -159,32 +237,163 @@ This section describes the CT algorithm.
     \item[]
       \STATE $\Scp$: array of variables
       \STATE $\CurrTable$: SparseBitSet \COMMENT{Current supported tuples}
-      \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$}
-      \STATE $\Supports$: BitSet \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
-      \STATE $\Residues$  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$}
+      \STATE $\Supports$   \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
+
+      \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$.c}
+
+      \STATE $\Residues$  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$. 
+      No residues yet!}
+            
 
     \item[]
-      \STATE \Method{initialise}{$\tt{variables}$, $\tt{tuples}$}
-      \STATE TBA \COMMENT{Initialise global variables}
+      \STATE $\Method{initialise}{\tt{variables}, \tt{tuples}}$ \COMMENT{Initialise the propagator}
+      \INDSTATE $\Scp \leftarrow \texttt{variables}$
+
+      \INDSTATE $\ForEach{x \in \Scp}$ \COMMENT{Initial bounds propagation}
+      \INDSTATE[2] $\Dom{x} \leftarrow \Dom{x} \setminus  
+      \Set{a \in \Dom{x} : a > \texttt{tuples}.max()}$
+      \INDSTATE[2] $\Dom{x} \leftarrow \Dom{x} \setminus 
+      \Set{a \in \Dom{x} : a < \texttt{tuples}.min()}$
+      %\INDSTATE[2] $\LastSizes[x] \leftarrow |\Dom{x}|$
+
+      \INDSTATE $\texttt{size} \leftarrow sum\Set{|\Dom{x}| : x \in \Scp}$
+      \INDSTATE $\texttt{ntuples} \leftarrow \texttt{tuples}.size()$ \COMMENT{Number of tuples}
+      \INDSTATE $\Supports \leftarrow$ BitSets$(\texttt{size}, \texttt{ntuples})$
+      \COMMENT{bit-set matrix with \texttt{size} rows and \texttt{ntuples} columns}
+      \INDSTATE $\T{no\_supports} \leftarrow 0$
+
+      \INDSTATE $\ForEach{t \in \T{tuples}}$
+      \INDSTATE[2] $\T{supported} \leftarrow \T{true}$
+      \INDSTATE[2] $\ForEach{x \in \Scp}$
+      \INDIF[3]{$t[x] \notin \Dom{x}$}
+      \INDSTATE[4] $\T{supported} \leftarrow \T{false}$
+      \INDSTATE[4] $\textbf{continue}$ \COMMENT{Exit loop}
+      \INDIF[2]{\T{supported}} 
+      \INDSTATE[3] $\T{no\_supports} \leftarrow \T{no\_supports} + 1$
+      \INDSTATE[3] $\Supports.$setElemsInColumn($\T{no\_supports}$, $t$) 
+      \COMMENT{Mark tuple as supported}
+
+      \INDSTATE $\Supports.\text{trimToWidth}(\T{no\_supports})$ \COMMENT{Keep only the first $\T{no\_supports}$ bits for each row}
+      \INDSTATE $\CurrTable \leftarrow \SparseBitSet(\T{no\_supports})$ 
+      \COMMENT{$\SparseBitSet$ with \T{no\_supports} bits}
 
     \item[]
-      \STATE \Method{updateTable}{}
-      \STATE TBA \COMMENT{Update $\CurrTable$}
+      \STATE $\Method{updateTable}{}$
+      \INDSTATE $\ForEach{x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]}$
+      \INDSTATE[2] $\LastSizes[x] \leftarrow |\Dom{x}|$
+      \INDSTATE[2] $\CurrTable$.clearMask() 
+      \INDSTATE[2] $\ForEach{a \in \Dom{x}}$ \COMMENT{No incremental update yet!}
+      \INDSTATE[3] $\CurrTable$.addToMask($\Supports[x,a]$)
+      \INDSTATE[2] $\CurrTable$.intersectWithMask()
+      \INDIF[2]{$\CurrTable$.isEmpty()}
+      \INDSTATE[3] $\Break$
+
     \item[]
-      \STATE \Method{filterDomains}{} 
-      \STATE TBA \COMMENT{Filter invalidated values from domains}
+      \STATE $\Method{filterDomains}{}$
+      \INDSTATE $\T{msg} \leftarrow Subsumed$
+      \INDSTATE $\ForEach{x \in \Scp}$
+      \INDSTATE[2] $\ForEach{a \in \Dom{x}}$
+      \INDSTATE[3] $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
+      \INDIF[3]{$\texttt{index~} \neq -1$}
+      \INDSTATE[4] \todo{save index in residues} \COMMENT{No residues yet!}
+      \INDELSE[3]
+      \INDSTATE[4] $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$
+      \INDIF[4]{$|\Dom{x}| = 0$}
+      \INDRETURN[5]{$Failed$}
+      \INDELSEIF[4]{$|\Dom{x}| > 1$}
+      \INDSTATE[5] $\T{msg} \leftarrow Fixpoint$
+      \INDRETURN[]{$\T{msg}$}
+
     \item[]
-      \STATE \Method{propagate}{}
-      \STATE TBA \COMMENT{Perform propagation}
+      \STATE $\Method{propagate}{}$
+      \INDSTATE updateTable()
+      \INDIF{$\CurrTable$.isEmpty()}
+      \INDRETURN[2]{$Failed$}
+      \INDRETURN{filterDomains()}
+
     \end{algorithmic}
-  \caption{Pseudo code for the class SparseBitSet.}
-  \label{algo:sparse}
+  \caption{Pseudo code for CT propagator class.}
+  \label{algo:CT}
 \end{algorithm}
+
+\subsubsection{Propagator Status Messages}
+A propagtor signals a status message after propagation.
+For CT there are three possible status messages;~\emph{Fail},
+\emph{Subsumed} and~\emph{Fixpoint}.
+
+\paragraph{Fail.}
+A propagator must correctly signal failure
+if it has decided that the constraint is unsatisfiable for the input store~$S$. At the latest a propagator must be
+able to decide whether or not a~$S$ is a solution store when all
+variables have been assigned.
+CT has two ways of detecting a failure: either when all bits in~$\CurrTable$
+are set to zero -- meaning that none of the tuples are valid, or when the
+size of the domain of a variable is zero.
+
+\paragraph{Subsumption.}
+A propagator is not allowed to signal subsumption if it could propagate further
+at a later point. At the latest, a propagator must signal subsumption if all the variables
+are assigned in~$S$ and a~$S$ is a solution store.
+CT signals subsumption when at most one variable is not assigned,
+since this is the pointe where no more propagation can be made.
+
+\paragraph{Fixpoint.}
+A propagator is not allowed to claim that it has computed a fixpoint if
+it could still propagate.
+CT always computes a fixpoint if it is not subsumed or wipes out the domain of a variable.
+To understand this, consider two consequtive calls to propagate().
+Let~$T$ be the set of valid tuples and~$x$ be the set of variables.
+The first time propagate() is executed, a (possibly empty) subset~$T_r$ of~$T$
+is invalidated (that is, the corresponding bits in $\CurrTable$ are set to $0$)
+in updateTable().
+Assuming $\CurrTable$ is not empty after the return of updateTable(), which would
+cause a backtrack in the search, filterDomains() is called.
+This method removes a (possibly empty) set of values~$V_i$ from the domain 
+of each variable~$x_i$.
+Each value $v_i \in V_i$ has the property that a subset~$T_{v_i}$ 
+of the tuples in~$T_r$ are the last supports for~$(x_i,v_i)$. In other words,
+$T \setminus T_{v_i}$ does not contain a support for~$(x_i,v_i)$.
+So in the second call to updateTable(), no tuples are invalidated,
+because none of the tuples in~$T \setminus T_r$ is a support for any variable-value
+pair~$(x_i, v_i) \in \Set{x_i} \times V_i, i \in \Set{1...|x|}$.
+Hence, the second call to propagate() does not give
+any further propagation.
 
 \section{Implementation}
 \label{implementation}
-This chapter presents an implementation of the CT propagator using the algorithms
-presented in \Chapref{algorithms}.
+
+% Section 4 blir nog mindre intressant än Section 3 och 5, men där kan du skriva om sånt som är specifikt för C++ och Gecode för att algoritmerna i Section 3 ska fungera, precis som du har börjat göra. Det är också en bra plats för detaljer som sopats under mattan i pseudokoden, t.ex. exakt hur du mappar (x,a) till rätt element i supports och residues, med hashtabell eller så.
+
+This chapter describes an implementation of the CT propagator using the algorithms
+presented in \Chapref{algorithms}. The implementation was made in the C++ programming
+language in the Gecode library.
+
+The bit-set matrix $\Supports$ is static and can be shared between all solution spaces.
+
+The bit-set $\CurrTable$ changes dynamically during propagation and must therefore be copied for
+every new space. Can save memory by only copying the non-zero words.
+
+No need to save the $\T{tuples}$ as a field in the propagator class as all
+the necessary information is encoded in $\CurrTable$ and $\Supports$.
+
+
+% Can't modify the value of the variable while iterating over it
+% when using an iterator for a view, the view cannot be modified (or, in C++ lingua: modifying the variable invalidates the iterator).
+
+% The motivation to iterate over range sequences rather than individual values is efficiency:
+% as there are typically less ranges than indvidual values, iteration over ranges can be more efficient.
+
+% Sharing of domain and iterators (argument false in inter_v)
+
+%http://www.gecode.org/doc/4.4.0/reference/classGecode_1_1Iter_1_1Values_1_1BitSet.html
+
+% First perform bounds propagation
+
+% Staging p. 324
+
+% Region (memory allocation)
+
+% Multimap for hashing rows?
 
 \section{Evaluation}
 \label{evaluation}
