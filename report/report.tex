@@ -1,13 +1,13 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage{fullpage}
 \usepackage{astra}
-\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
-
+%\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
+%\usepackage{algorithm2e}
+%\usepackage{algorithmicx}
 %\input{macros}
 
 % Silly but saves space
 \newcommand{\T}[1]{\texttt{#1}}
-\newcommand{\Text}[1]{\text{#1}}
 
 \newcommand{\Timeout}{600.00} % CPU seconds
 \newcommand{\Todo}[1]{{\color{blue}Todo: #1}}
@@ -48,6 +48,20 @@
   \textbf{ downto } {#3} \textbf{ do }}
 \newcommand{\Break}{\textbf{break~}}
 \newcommand{\While}[1]{\textbf{while~} {#1} \textbf{~do~}}
+
+\renewcommand{\algorithmicforall}{\textbf{Function}}
+\renewcommand{\algorithmicdo}{}
+\renewcommand{\algorithmicwhile}{\textbf{foreach}}
+
+\newcommand{\Func}[2]{\FORALL{#1(#2)}}
+\newcommand{\FuncRet}[3]{\FORALL{#1(#2) \ : \ \textbf{#3}}}
+\newcommand{\Endfunc}{\ENDFOR}
+\newcommand{\To}{~\bf{to}~}
+\newcommand{\Downto}{~{\bf{downto}}~}
+\newcommand{\For}[3]{\FOR{${#1} \leftarrow {#2} \To {#3}$ \textbf{do}}}
+\newcommand{\ForDown}[3]{\FOR{${#1} \leftarrow {#2} \Downto {#3}$ \textbf{do}}}
+\newcommand{\FOREACH}[1]{\WHILE{{#1} \textbf{do}}}
+\newcommand{\ENDFOREACH}{\ENDWHILE}
 
 
 \newlength\myindent
@@ -138,6 +152,54 @@ the \Table constraint.
 \label{bg:cp}
 This section introduces the concept of Constraint Programming (CP).
 
+CP is a programming paradigm that is used for solving
+combinatorial problems. A problem is
+modelled as a set of \emph{constraints} and a
+set of \emph{variables} with possible values. The possible values of 
+a variable is called the \emph{domain} of the variable.
+All the variables are to be assigned a value
+from their domains, so that all the constraints of the problem
+are satisfied. There need not
+exist a solution to a given problem, and a solution need not
+be unique; zero or more assignments of values to the variables may 
+satisfy the constraints.
+One small example is the set of variables~$\Set{x,y}$ that both have
+the domain~$\Set{1,2,3}$,
+together with the constraint~$x<y$. This problem has several solutions, 
+namely~$(x,y) = (1,2), (x,y) = (1,3)$ and~$(x,y) = (2,3)$.
+If, on the other hand, the domains of~$x$ and~$y$ would have been~$\Set{2,3}$
+and~$\Set{1,2}$, respectively, then there would exist no solution since none of
+the possible assignments of~$x$ and~$y$ would have satisfied the constraint~$x<y$.
+
+Sometimes the solution should not only satisfy the set of constraints for the
+problem, but should also be optimal in some way; it should either maximise or
+minimise some given function. Take the same small example as above, with
+the domains of~$x,y$ being~$\Set{1,2,3}$, and suppose that the solution
+should maximise the sum of~$x$ and~$y$. Then the solution is~$(x,y) = (2,3)$.
+
+A constraint solver is a software that solves constraint problems.
+The solving of a problem consists of generating a search tree by branching
+on possible values for the variables. At each node in the search tree,
+the solver removes impossible values from the domains of the variables,
+that is, values that the solver detects
+would violate at least one of the constraints if the
+variables were to be assigned to any of those values. This filtering
+process is called \emph{propagation}. Each constraint that the solver supports
+is associated with at least one propagator algorithm, whose task
+is to detect impossible values for the constraint. %% This thesis...
+A solution is found when all the variables have been assigned a value
+that 
+
+% Intuition
+% Example
+% Definitions
+% - CSP
+% - 
+% Propagation
+% - Constistency levels (value-, bounds-, domain-)
+% 
+
+
 \subsection{Gecode}
 \label{bg:gecode}
 Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
@@ -153,6 +215,7 @@ sequence of $n$-tuples.
 \subsection{Compact-Table Propagator}
 \label{bg:ct}
 % Beskriv huvudidéerna
+% Komplexitet? O(r*d*t) per table constraint along a branch in the search tree
 
 \subsection{Sparse Bit-Set}
 \label{bg:sbc}
@@ -179,49 +242,62 @@ in the CT algorithm for maintaining the supports.
       \STATE $\Limit$: int 
       \STATE $\Mask$: array of long \COMMENT{$\tt{\Mask.length = p}$}
     \item[]
-      \STATE $\MethodReturn{isEmpty}{}{Boolean}$
-      \INDRETURN $\Limit = -1$
+      \FuncRet{isEmpty}{}{Boolean}
+      \RETURN{$\Limit = -1$}
+      \Endfunc
     \item[]
-      \STATE $\Method{clearMask}{}$
-        \INDSTATE $\ForEachTo{i}{0}{\Limit}$
-        \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
-        \INDSTATE[2] $\texttt{mask}[\texttt{offset}] \leftarrow 0^{64}$
+      \Func{clearMask}{}
+      \For{i}{0}{\Limit}
+        \STATE $\texttt{offset} \leftarrow \Index[i]$
+        \STATE $\texttt{mask}[\texttt{offset}] \leftarrow 0^{64}$
+      \ENDFOR
+      \Endfunc
 
-    \item[] 
-      \STATE $\Method{reverseMask}{}$  \COMMENT{Not currently used in CT algorithm}
-        \INDSTATE $\ForEachTo{i}{0}{\Limit}$
-        \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
-        \INDSTATE[2] $\texttt{mask}[\texttt{offset}] \leftarrow 
-        {\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
-        \texttt{mask}[\texttt{offset}]$ \COMMENT{bitwise NOT}
-        
-      %\FORALL{i} \STATE{hej} \ENDFOR
-    \item[]
-      \STATE $\Method{addToMask}{m: array of long}$
-      \INDSTATE $\ForEachTo{i}{0}{\Limit}$
-      \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
-      \INDSTATE[2] $\texttt{mask}[\texttt{offset}] \leftarrow \texttt{mask}[\texttt{offset}] \ | \ 
-      \texttt{mask}[\texttt{offset}]$ \COMMENT{bitwise OR}
-        
-    \item[]
-      \STATE $\Method{intersectWithMask}{}$
-      \INDSTATE $\ForEachDownTo{i}{\Limit}{0}$
-      \INDSTATE[2] $\texttt{offset} \leftarrow \Index[i]$
-      \INDSTATE[2] $w \leftarrow \Words[\texttt{offset}] \ \& \ \Mask[\texttt{offset}]$ \COMMENT{bitwise AND}
-      \INDIF[2]{$w \neq \Words[\texttt{offset}]$}
-      \INDSTATE[3] $\Words[\texttt{offset}] \leftarrow w$
-      \INDIF[3]{$w = 0^{64}$}
-      \INDSTATE[4] $\Index[i] \leftarrow \Index[\Limit]$
-      \INDSTATE[4] $\Index[\Limit] \leftarrow \texttt{offset}$
-      \INDSTATE[4] $\Limit \leftarrow \Limit - 1$
+    % \item[] 
+    %   \Func{reverseMask}{}  \COMMENT{Not currently used in CT algorithm}
+    %   \STATE $\ForEachTo{i}{0}{\Limit}$
+    %   \STATE $\texttt{offset} \leftarrow \Index[i]$
+    %   \STATE $\texttt{mask}[\texttt{offset}] \leftarrow 
+    %   {\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
+    %   \texttt{mask}[\texttt{offset}]$ \COMMENT{bitwise NOT}
+      %\Endfunc
 
     \item[]
-      \STATE $\MethodReturn{intersectIndex}{m: array of long}{int}$
-      \INDSTATE $\ForEachTo{i}{0}{\Limit}$
-      \INDSTATE[2] $\Offset \leftarrow \Index[i]$
-      \INDIF[2]{$\Words[\Offset] \ \& \ m[\Offset] \neq 0^{64}$}
-      \INDRETURN[3]{$\Offset$}
-      \INDRETURN $-1$
+      \Func{addToMask}{m: array of long}
+      \For{i}{0}{\Limit}
+      \STATE $\texttt{offset} \leftarrow \Index[i]$
+      \STATE $\texttt{mask}[\texttt{offset}] \leftarrow \texttt{mask}[\texttt{offset}] \ | \ 
+      \texttt{m}[\texttt{offset}]$ \COMMENT{bitwise OR}
+      \ENDFOR
+      \Endfunc
+
+    \item[]
+      \Func{intersectWithMask}{}
+      %\FOR{$i \leftarrow \Limit \Downto 0$}
+      \ForDown{i}{\Limit}{0}
+      \STATE $\texttt{offset} \leftarrow \Index[i]$
+      \STATE $w \leftarrow \Words[\texttt{offset}] \ \& \ \Mask[\texttt{offset}]$ \COMMENT{bitwise AND}
+      \IF{$w \neq \Words[\texttt{offset}]$}
+      \STATE $\Words[\texttt{offset}] \leftarrow w$
+      \IF{$w = 0^{64}$}
+      \STATE $\Index[i] \leftarrow \Index[\Limit]$
+      %\STATE $\Index[\Limit] \leftarrow \texttt{offset}$
+      \STATE $\Limit \leftarrow \Limit - 1$
+      \ENDIF
+      \ENDIF
+      \ENDFOR
+      \Endfunc
+
+    \item[]
+      \FuncRet{intersectIndex}{m: array of long}{int}
+      \For{i}{0}{\Limit}%{$i \leftarrow 0 \To \Limit$}
+      \STATE $\Offset \leftarrow \Index[i]$
+      \IF{$\Words[\Offset] \ \& \ m[\Offset] \neq 0^{64}$}
+      \RETURN{$\Offset$}
+      \ENDIF
+      \ENDFOR
+      \RETURN{$-1$}
+      \Endfunc
             
     \end{algorithmic}
   \caption{Pseudo code for the class SparseBitSet.}
@@ -231,90 +307,100 @@ in the CT algorithm for maintaining the supports.
 \subsection{Compact-Table (CT) Algorithm}
 This section describes the CT algorithm.
 
-\begin{algorithm}[h]
-  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-    \STATE $\Class$ CT-Propagator
-    \item[]
-      \STATE $\Scp$: array of variables
-      \STATE $\CurrTable$: SparseBitSet \COMMENT{Current supported tuples}
-      \STATE $\Supports$   \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
+% \begin{algorithm}[h]
+%   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+%     \STATE $\Class$ CT-Propagator
+%     \item[]
+%       \STATE $\Scp$: array of variables
+%       \STATE $\CurrTable$: SparseBitSet \COMMENT{Current supported tuples}
+%       \STATE $\Supports$   \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
 
-      \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$.c}
+%       \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$.c}
 
-      \STATE $\Residues$  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$. 
-      No residues yet!}
+%       \STATE $\Residues$  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$. 
+%       No residues yet!}
             
+%     \item[]
+%       \Func{initialise}{\texttt{variables}, \texttt{tuples}} %\COMMENT{Initialise the propagator}
+%       \STATE $\Scp \leftarrow \texttt{variables}$
+%       \FOREACH{$x \in \Scp$} %\COMMENT{Initial bounds propagation}
+%       \STATE $\Dom{x} \leftarrow \Dom{x} \setminus  
+%       \Set{a \in \Dom{x} : a > \texttt{tuples}.max()}$
+%       \STATE $\Dom{x} \leftarrow \Dom{x} \setminus 
+%       \Set{a \in \Dom{x} : a < \texttt{tuples}.min()}$
+%       %\STATE[2] $\LastSizes[x] \leftarrow |\Dom{x}|$
+%       \ENDFOREACH
 
-    \item[]
-      \STATE $\Method{initialise}{\tt{variables}, \tt{tuples}}$ \COMMENT{Initialise the propagator}
-      \INDSTATE $\Scp \leftarrow \texttt{variables}$
+%       \STATE $\texttt{size} \leftarrow sum\Set{|\Dom{x}| : x \in \Scp}$
+%       \STATE $\texttt{ntuples} \leftarrow \texttt{tuples}.size()$ \COMMENT{Number of tuples}
+%       \STATE $\Supports \leftarrow$ BitSets$(\texttt{size}, \texttt{ntuples})$
+%       \COMMENT{bit-set matrix with \texttt{size} rows and \texttt{ntuples} columns}
+%       \STATE $\T{no\_supports} \leftarrow 0$
+      
+%       \FOREACH{$t \in \T{tuples}$}
+%       \STATE $\T{supported} \leftarrow \T{true}$
+%       \FOREACH{$x \in \Scp$}
+%       \IF{$t[x] \notin \Dom{x}$}
+%       \STATE $\T{supported} \leftarrow \T{false}$
+%       \STATE $\textbf{break}$ \COMMENT{Exit loop}
+%       \ENDIF
+%       \ENDFOREACH
+%       \IF{$\T{supported}$} 
+%         \STATE $\T{no\_supports} \leftarrow \T{no\_supports} + 1$
+%         \STATE $\Supports.$setElemsInColumn($\T{no\_supports}$, $t$) 
+%       \ENDIF
+%       \ENDFOREACH
+%       \COMMENT{Mark tuple as supported}
 
-      \INDSTATE $\ForEach{x \in \Scp}$ \COMMENT{Initial bounds propagation}
-      \INDSTATE[2] $\Dom{x} \leftarrow \Dom{x} \setminus  
-      \Set{a \in \Dom{x} : a > \texttt{tuples}.max()}$
-      \INDSTATE[2] $\Dom{x} \leftarrow \Dom{x} \setminus 
-      \Set{a \in \Dom{x} : a < \texttt{tuples}.min()}$
-      %\INDSTATE[2] $\LastSizes[x] \leftarrow |\Dom{x}|$
+%       \STATE $\Supports.\text{trimToWidth}(\T{no\_supports})$ \COMMENT{Keep only the first $\T{no\_supports}$ bits for each row}
+%       \STATE $\CurrTable \leftarrow \SparseBitSet(\T{no\_supports})$ 
+%       \COMMENT{$\SparseBitSet$ with \T{no\_supports} bits}
+%       \Endfunc
 
-      \INDSTATE $\texttt{size} \leftarrow sum\Set{|\Dom{x}| : x \in \Scp}$
-      \INDSTATE $\texttt{ntuples} \leftarrow \texttt{tuples}.size()$ \COMMENT{Number of tuples}
-      \INDSTATE $\Supports \leftarrow$ BitSets$(\texttt{size}, \texttt{ntuples})$
-      \COMMENT{bit-set matrix with \texttt{size} rows and \texttt{ntuples} columns}
-      \INDSTATE $\T{no\_supports} \leftarrow 0$
+%     \item[]
+%       \Func{updateTable}{}   
+%       \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]$}
+%         \STATE $\LastSizes[x] \leftarrow |\Dom{x}|$
+%         \STATE $\CurrTable$.clearMask() 
+%         \FOREACH{$a \in \Dom{x}$} %\COMMENT{No incremental update yet!}
+%           \STATE $\CurrTable$.addToMask($\Supports[x,a]$)
+%           \STATE $\CurrTable$.intersectWithMask()
+%           \IF{$\CurrTable$.isEmpty()}
+%             \STATE $\Break$
+%           \ENDIF
+%         \ENDFOREACH
+%      \ENDFOREACH
 
-      \INDSTATE $\ForEach{t \in \T{tuples}}$
-      \INDSTATE[2] $\T{supported} \leftarrow \T{true}$
-      \INDSTATE[2] $\ForEach{x \in \Scp}$
-      \INDIF[3]{$t[x] \notin \Dom{x}$}
-      \INDSTATE[4] $\T{supported} \leftarrow \T{false}$
-      \INDSTATE[4] $\textbf{continue}$ \COMMENT{Exit loop}
-      \INDIF[2]{\T{supported}} 
-      \INDSTATE[3] $\T{no\_supports} \leftarrow \T{no\_supports} + 1$
-      \INDSTATE[3] $\Supports.$setElemsInColumn($\T{no\_supports}$, $t$) 
-      \COMMENT{Mark tuple as supported}
+%     \item[]
+%       \STATE $\Method{filterDomains}{}$
+%       \STATE $\T{no\_assigned} \leftarrow 0$
+%       \STATE $\ForEach{x \in \Scp}$
+%       \STATE[2] $\ForEach{a \in \Dom{x}}$
+%       \STATE[3] $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
+%       \INDIF[3]{$\texttt{index~} \neq -1$}
+%       \STATE[4] \todo{save index in residues} \COMMENT{No residues yet!}
+%       \INDELSE[3]
+%       \STATE[4] $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$
+%       \INDIF[4]{$|\Dom{x}| = 0$}
+%       \INDRETURN[5]{$Failed$}
+%       \INDELSEIF[4]{$|\Dom{x}| > 1$}
+%       \STATE[5] $\T{no\_assigned} \leftarrow no\_assigned + 1$
+%       \INDIF{$\T{no\_assinged} \leq 1$}
+%       \INDRETURN[2]{$Subsumed$}
+%       \INDELSE{}
+%       \INDRETURN[2]{$Fixpoint$}
 
-      \INDSTATE $\Supports.\text{trimToWidth}(\T{no\_supports})$ \COMMENT{Keep only the first $\T{no\_supports}$ bits for each row}
-      \INDSTATE $\CurrTable \leftarrow \SparseBitSet(\T{no\_supports})$ 
-      \COMMENT{$\SparseBitSet$ with \T{no\_supports} bits}
+%     % \item[]
+%     %   \STATE $\Method{propagate}{}$
+%     %   \STATE updateTable()
+%     %   \INDIF{$\CurrTable$.isEmpty()}
+%     %   \INDRETURN[2]{$Failed$}
+%     %   \INDRETURN{filterDomains()}
 
-    \item[]
-      \STATE $\Method{updateTable}{}$
-      \INDSTATE $\ForEach{x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]}$
-      \INDSTATE[2] $\LastSizes[x] \leftarrow |\Dom{x}|$
-      \INDSTATE[2] $\CurrTable$.clearMask() 
-      \INDSTATE[2] $\ForEach{a \in \Dom{x}}$ \COMMENT{No incremental update yet!}
-      \INDSTATE[3] $\CurrTable$.addToMask($\Supports[x,a]$)
-      \INDSTATE[2] $\CurrTable$.intersectWithMask()
-      \INDIF[2]{$\CurrTable$.isEmpty()}
-      \INDSTATE[3] $\Break$
-
-    \item[]
-      \STATE $\Method{filterDomains}{}$
-      \INDSTATE $\T{msg} \leftarrow Subsumed$
-      \INDSTATE $\ForEach{x \in \Scp}$
-      \INDSTATE[2] $\ForEach{a \in \Dom{x}}$
-      \INDSTATE[3] $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
-      \INDIF[3]{$\texttt{index~} \neq -1$}
-      \INDSTATE[4] \todo{save index in residues} \COMMENT{No residues yet!}
-      \INDELSE[3]
-      \INDSTATE[4] $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$
-      \INDIF[4]{$|\Dom{x}| = 0$}
-      \INDRETURN[5]{$Failed$}
-      \INDELSEIF[4]{$|\Dom{x}| > 1$}
-      \INDSTATE[5] $\T{msg} \leftarrow Fixpoint$
-      \INDRETURN[]{$\T{msg}$}
-
-    \item[]
-      \STATE $\Method{propagate}{}$
-      \INDSTATE updateTable()
-      \INDIF{$\CurrTable$.isEmpty()}
-      \INDRETURN[2]{$Failed$}
-      \INDRETURN{filterDomains()}
-
-    \end{algorithmic}
-  \caption{Pseudo code for CT propagator class.}
-  \label{algo:CT}
-\end{algorithm}
+%     \end{algorithmic}
+%   \caption{Pseudo code for CT propagator class.}
+%   \label{algo:CT}
+% \end{algorithm}
 
 \subsubsection{Propagator Status Messages}
 A propagtor signals a status message after propagation.
