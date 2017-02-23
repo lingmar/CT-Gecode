@@ -368,9 +368,15 @@ public:
     // TODO: ???
     return PropCost::linear(PropCost::LO,2*x.size());
   }
+
+  virtual void reschedule(Space& home) {
+    x.reschedule(home,*this,Int::PC_INT_DOM);
+  }
   
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
+    
+    //    return home.ES_SUBSUMED(*this);
 #ifdef DEBUG
     cout << "before update for prop " << nprop << endl;
     currTable.print();

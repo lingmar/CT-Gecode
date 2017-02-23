@@ -1,0 +1,7 @@
+* Kod
+- Implementera LastSize
+- Gå igenom feedback om psedokod
+- BitSets
+* Rapport
+- Feedback
+- Background

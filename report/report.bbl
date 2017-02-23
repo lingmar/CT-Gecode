@@ -1,5 +1,13 @@
 \begin{thebibliography}{1}
 
+\bibitem{DBLP:conf/cp/DemeulenaereHLP16}
+J.~Demeulenaere, R.~Hartert, C.~Lecoutre, G.~Perez, L.~Perron, J.~R{\'{e}}gin,
+  and P.~Schaus.
+\newblock {Compact-Table}: Efficiently filtering table constraints with
+  reversible sparse bit-sets.
+\newblock In M.~Rueher, editor, {\em CP}, volume 9892 of {\em Lecture Notes in
+  Computer Science}, pages 207--223. Springer, 2016.
+
 \bibitem{Gecode}
 {Gecode Team}.
 \newblock Gecode: A generic constraint development environment, 2016.

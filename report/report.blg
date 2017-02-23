@@ -3,44 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: report.aux
 The style file: abbrv.bst
 Database file #1: astra.bib
-You've used 1 entry,
+You've used 2 entries,
             2118 wiz_defined-function locations,
-            502 strings with 3787 characters,
-and the built_in function-call counts, 217 in all, are:
-= -- 17
-> -- 7
-< -- 0
-+ -- 3
-- -- 2
-* -- 8
-:= -- 41
-add.period$ -- 2
-call.type$ -- 1
-change.case$ -- 4
+            512 strings with 4153 characters,
+and the built_in function-call counts, 879 in all, are:
+= -- 80
+> -- 49
+< -- 2
++ -- 19
+- -- 17
+* -- 64
+:= -- 143
+add.period$ -- 6
+call.type$ -- 2
+change.case$ -- 14
 chr.to.int$ -- 0
-cite$ -- 1
-duplicate$ -- 7
-empty$ -- 23
-format.name$ -- 2
-if$ -- 44
+cite$ -- 2
+duplicate$ -- 31
+empty$ -- 66
+format.name$ -- 17
+if$ -- 186
 int.to.chr$ -- 0
-int.to.str$ -- 1
-missing$ -- 0
-newline$ -- 7
-num.names$ -- 2
-pop$ -- 9
+int.to.str$ -- 2
+missing$ -- 1
+newline$ -- 12
+num.names$ -- 6
+pop$ -- 20
 preamble$ -- 1
-purify$ -- 3
+purify$ -- 12
 quote$ -- 0
-skip$ -- 8
+skip$ -- 27
 stack$ -- 0
-substring$ -- 5
-swap$ -- 1
-text.length$ -- 0
+substring$ -- 42
+swap$ -- 14
+text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 4
+type$ -- 8
 warning$ -- 0
-while$ -- 2
-width$ -- 2
-write$ -- 10
+while$ -- 8
+width$ -- 3
+write$ -- 23

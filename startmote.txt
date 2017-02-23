@@ -1,0 +1,18 @@
+- Who is the reader?
+- Will the paper make sense in 10 years? Important with references that last. Introducing concepts may need references.
+- Disposition to reviewer first days.
+- Abstract does not have references
+- Introduction has prior work, but not all related works
+- Create an own chapter with "Background" (Constraint Programming)
+  if the introduction gets too long
+- State contributions in introduction -> make references to where
+  in the report those contributions are presented
+- Top-down explanations
+- Conclusions: be honest
+- "We"/"I" or passive form. "I" is good to save for the discussion
+  (to show that it is my opinion)
+- Reference list order of appearance/alphabetic order
+- avoid web references. ok with ..., see also wikipedia.com/asdf
+- figures
+- Send text with introduction/related works to reviewer within first weeks
+- Kom överrens med ämnesgranskaren hur vi ska hålla kontakt

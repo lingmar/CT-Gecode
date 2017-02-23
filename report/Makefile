@@ -10,3 +10,6 @@ bibtex:
 
 open:
 	open report.pdf
+
+clean:
+	rm *.aux *.log *.blg *.out *.toc *.bbl *.dvi

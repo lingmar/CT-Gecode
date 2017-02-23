@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++ -O3
 LIBS = -L/usr/local/lib -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodedriver -lgecodeminimodel -lgecodeset #-lgecodegist
 CXX_FLAGS = -I/usr/local/include -I/usr/include/qt4 -std=c++11 #-DDEBUG
 RM = rm -f

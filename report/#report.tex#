@@ -82,7 +82,6 @@
   \textbf{else if~}{#2}\textbf{~then}}
 
 
-
 \title{\textbf{Implementation and Evaluation of a\\
     Compact Table Propagator in Gecode
   }

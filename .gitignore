@@ -27,3 +27,13 @@
 *.exe
 *.out
 *.app
+
+# Latex
+*.log
+*.bbl
+*.aux
+*.dvi
+*.toc
+
+# Mysterious garbage files
+\#*

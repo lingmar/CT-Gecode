@@ -1,0 +1,23 @@
+9/12: Startmöte med Olle 1 h
+12/1: Startmöte med Christian Schulte 2 h
+      - 40 pages intro 
+      - 60 pages advanced
+      - iterators
+      - doxygen
+      . gthub
+      - heap provides malloc(), free() internally
+      - shared objects
+      - many ways of allocating memory
+      - shared memory
+      - questions to user mail list
+      - tests: checker
+      - tuples
+      - int.hh
+      - start out don’t worrying about memory management, most import with correct logic first
+      - multidimensional c++ array
+      - start with a fixed number of variables — no need to have dynamic variable handling
+      - don’t worry about the gecode data structures
+14-15/1: Läs igenom artikeln 2 h
+      - reversible types in Gecode?
+      - Generalized arc consistency?
+      - 

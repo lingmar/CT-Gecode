@@ -5,20 +5,21 @@
 * Acronyms / Glossary (?)
 
 * Introduction
-
-* Background / Constraint Programming (?)
+- Goal
+- Contributions
+* Background
 - Constraint Programming
+- Gecode
 - Table Constraint
   - Definition
   - Propagtor algorithms
-
-
-* Compact-Table Algorithm
-
+* Algorithms
 * Implementation
-
-* Experiments/Evaluation
+* Evaluation
+- Evaluation setup
+- Results
+- Discussion
 
 * Conclusion and Future Work
-
 * References
+* Appendix (code)
