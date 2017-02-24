@@ -1,0 +1,20 @@
+
+05.01, 5 x 5
+L:[1, 2, 1, 8, 9, 1, 1, 18, 1, 2, 19, 19, 15, 21, 12, 19, 5, 19, 19, 9, 5, 12, 5, 1, 19, 20]
+"b""a""h""i""a"
+"a""r""a""b""s"
+"s""o""u""l""s"
+"e""s""s""i""e"
+"l""e""a""s""t"
+
+----------
+%%  runtime:       0.110 (110.986 ms)
+%%  solvetime:     0.007 (7.468 ms)
+%%  solutions:     1
+%%  variables:     226
+%%  propagators:   255
+%%  propagations:  4474
+%%  nodes:         22
+%%  failures:      6
+%%  restarts:      0
+%%  peak depth:    12
