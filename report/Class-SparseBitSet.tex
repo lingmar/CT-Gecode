@@ -1,0 +1,65 @@
+    \STATE $\Class$ SparseBitSet
+    \item[]
+      \STATE $\Words$: array of long \COMMENT{$\tt{\Words.length = p}$}
+      \STATE $\Index$: array of int \COMMENT{$\tt{\Index.length = p}$}
+      \STATE $\Limit$: int 
+      \STATE $\Mask$: array of long \COMMENT{$\tt{\Mask.length = p}$}
+    \item[]
+      \FuncRet{isEmpty}{}{Boolean}
+      \RETURN{$\Limit = -1$}
+      \Endfunc
+    \item[]
+      \Func{clearMask}{}
+      \For{i}{0}{\Limit}
+        \STATE $\localvar{offset} \leftarrow \Index[i]$
+        \STATE $\texttt{mask}[\localvar{offset}] \leftarrow 0^{64}$
+      \ENDFOR
+      \Endfunc
+
+    % \item[] 
+    %   \Func{reverseMask}{}  \COMMENT{Not currently used in CT algorithm}
+    %   \STATE $\ForEachTo{i}{0}{\Limit}$
+    %   \STATE $\localvar{offset} \leftarrow \Index[i]$
+    %   \STATE $\texttt{mask}[\localvar{offset}] \leftarrow 
+    %   {\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
+    %   \texttt{mask}[\localvar{offset}]$ \COMMENT{bitwise NOT}
+      %\Endfunc
+
+    \item[]
+      \Func{addToMask}{m: array of long}
+      \For{i}{0}{\Limit}
+      \STATE $\localvar{offset} \leftarrow \Index[i]$
+      \STATE $\texttt{mask}[\localvar{offset}] \leftarrow \texttt{mask}[\localvar{offset}] \ | \ 
+      \texttt{m}[\localvar{offset}]$ \COMMENT{bitwise OR}
+      \ENDFOR
+      \Endfunc
+
+    \item[]
+      \Func{intersectWithMask}{}
+      %\FOR{$i \leftarrow \Limit \Downto 0$}
+      \ForDown{i}{\Limit}{0}
+      \STATE $\localvar{offset} \leftarrow \Index[i]$
+      \STATE $w \leftarrow \Words[\localvar{offset}] \ \& \ \Mask[\localvar{offset}]$ \COMMENT{bitwise AND}
+      \IF{$w \neq \Words[\localvar{offset}]$}
+      \STATE $\Words[\localvar{offset}] \leftarrow w$
+      \IF{$w = 0^{64}$}
+      \STATE $\Index[i] \leftarrow \Index[\Limit]$
+      %\STATE $\Index[\Limit] \leftarrow \localvar{offset}$
+      \STATE $\Limit \leftarrow \Limit - 1$
+      \ENDIF
+      \ENDIF
+      \ENDFOR
+      \Endfunc
+
+    \item[]
+      \FuncRet{intersectIndex}{m: array of long}{int}
+      \For{i}{0}{\Limit}%{$i \leftarrow 0 \To \Limit$}
+      \STATE $\Offset \leftarrow \Index[i]$
+      \IF{$\Words[\Offset] \ \& \ m[\Offset] \neq 0^{64}$}
+      \RETURN{$\Offset$}
+      \ENDIF
+      \ENDFOR
+      \RETURN{$-1$}
+      \Endfunc
+
+
