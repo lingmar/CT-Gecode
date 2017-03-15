@@ -257,19 +257,19 @@ public:
 
     fill_row_map();
     // Initalise supports
-    int no_tuples = init_supports(t0);
+    int no_tuples = init_supports(home, t0);
 
-    // Initialise lastSize with impossible sizes
+    // Initialise lastSize with dummy value -1
     for (int i = 0; i < x.size(); i++) {
       lastSize.push_back(-1);
     }
-        
+
+    // Set no_tuples bits to 1 in currTable
     // FIXME: not nice
     BitSet bs(1, t0.tuples());
     for (int i = 0; i < no_tuples; i++) {
       bs.set(0, i);
     }
-    
     currTable.add_to_mask(bs.get_row(0));
     currTable.intersect_with_mask();
 
@@ -293,7 +293,7 @@ public:
     return row_map.at(key_of(var, val));
   }
 
-  int init_supports(TupleSet ts) {
+  int init_supports(Home home, TupleSet ts) {
     int support_cnt = 0;
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
@@ -314,6 +314,28 @@ public:
         support_cnt++;
       }
     }
+
+    // Remove values corresponding to 0-rows
+    for (int i = 0; i < x.size(); i++) {
+      Int::ViewValues<Int::IntView> it(x[i]);
+      vector<int> rvals; //values to remove
+      while (it()) {
+        vector<word_t> row = supports.get_row(rowno(i,it.val()));
+        for (int j = 0; j < row.size(); j++) {
+          if (row[j] != 0ULL) {
+            break;
+          }
+          // The row is 0, remove that value
+          if (j == row.size() - 1) {
+            rvals.push_back(it.val());
+          }
+        }
+        ++it;
+      }
+      Iter::Values::Array r(&rvals[0], rvals.size());
+      GECODE_ME_CHECK(x[i].minus_v(home,r));
+    }
+   
     return support_cnt;
   }
 
@@ -420,21 +442,24 @@ public:
   ExecStatus filterDomains(Space& home) {
     int count_non_assigned = 0;
     for (int i = 0; i < x.size(); i++) {
-      Int::ViewValues<Int::IntView> it(x[i]);
-      vector<int> rvals; //values to remove
-      while (it()) {
-        int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
-        if (index != -1) {
-          // save residue
-        } else {
-          rvals.push_back(it.val());
-        }
-        ++it;
-      }
-      Iter::Values::Array r(&rvals[0], rvals.size());
-      GECODE_ME_CHECK(x[i].minus_v(home,r));
+      // only filter out values for variables with domain size > 1
       if (x[i].size() > 1) {
-        ++count_non_assigned;
+        Int::ViewValues<Int::IntView> it(x[i]);
+        vector<int> rvals; //values to remove
+        while (it()) {
+          int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
+          if (index != -1) {
+            // save residue
+          } else {
+            rvals.push_back(it.val());
+          }
+          ++it;
+        }
+        Iter::Values::Array r(&rvals[0], rvals.size());
+        GECODE_ME_CHECK(x[i].minus_v(home,r));
+        if (x[i].size() > 1) {
+          ++count_non_assigned;
+        }
       }
     }
     // Subsume if there is at most one non-assigned variable
@@ -492,6 +517,11 @@ void extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
   if (home.failed()) return;
   // Set up array of views for the coordinates
   ViewArray<IntView> vx(home,x);
+
+  //  cout << "Post extensional2" << endl;
+
+  //home.fail();
+  
   // If posting failed, fail space
   if (CompactTable::post(home,vx,t) != ES_OK)
     home.fail();
