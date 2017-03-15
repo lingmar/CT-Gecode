@@ -5,17 +5,31 @@
 #include <assert.h>
 #include <unordered_map>
 
-#define BITS_PER_WORD 64
 //#define DEBUG 1
 
 using namespace Gecode;
 using namespace Gecode::Int;
 using namespace std;
 
+typedef Support::BitSetBase BitSet;
+
 typedef uint64_t word_t;
 typedef string mapkey;
 typedef unordered_map<mapkey, int> rmap;
 typedef pair<mapkey, int> rmap_entry;
+
+#ifdef GECODE_SUPPORT_MSVC_64
+    /// Basetype for bits
+    typedef unsigned __int64 Base;
+#else
+    /// Basetype for bits
+    typedef unsigned long int Base;
+#endif
+
+static const unsigned int bpb =
+  static_cast<unsigned int>(CHAR_BIT * sizeof(Base));
+
+#define BITS_PER_WORD bpb
 
 int nprops = 0;
 
@@ -23,15 +37,24 @@ int nprops = 0;
 class SparseBitSet {
   vector<word_t> words;
   vector<word_t> mask;
+
+  BitSet* words_bs;
+  BitSet* mask_bs;
+  
   vector<int> index; // type?
   int limit;
   unsigned int nbits;
 
 public:
-  SparseBitSet(unsigned int _nbits) {
+  SparseBitSet(Home home, unsigned int _nbits) {
     nbits = _nbits;
     unsigned int nwords = required_words(nbits);
 
+    Region r(home);
+    
+    words_bs = r.alloc<BitSet>(nwords);
+    mask_bs = r.alloc<BitSet>(nwords);
+    
     // Initialise words
     for (int i = 0; i < nwords; i++) {
       words.push_back(~0ULL); // Set all bits to 1
@@ -51,7 +74,7 @@ public:
   }
 
   /// Copy constructor
-  SparseBitSet(SparseBitSet& sbs) :
+  SparseBitSet(Home home, SparseBitSet& sbs) :
     words(sbs.words),
     mask(sbs.mask),
     index(sbs.index),
@@ -158,7 +181,7 @@ public:
   }
 };
 
-struct BitSet {
+struct MyBitSet {
 #define Toggle(a, i) (a) |= (1UL << (i))
 #define Clear(a, i) (a) &= ~(1UL << (i))
 #define Get(a, i) (((a) >> (i)) & 1UL)
@@ -167,7 +190,7 @@ struct BitSet {
   size_t size;
   size_t atoms_per_row;
 
-  BitSet(int rows, int cols)
+  MyBitSet(int rows, int cols)
     : atoms_per_row(required_ints_per_row(cols)) {
     size = required_ints(rows);
     for (int i = 0; i < size; i++) {
@@ -179,7 +202,7 @@ struct BitSet {
     return ceil((double)cols/BITS_PER_WORD);
   }
   
-  BitSet(const BitSet& other)
+  MyBitSet(const MyBitSet& other)
     : atoms(other.atoms)
     , size(other.size)
     , atoms_per_row(other.atoms_per_row) {}
@@ -235,7 +258,7 @@ protected:
   // The table with possible combinations of values
   SparseBitSet currTable;
   // Supported tuples (static)
-  BitSet supports;
+  MyBitSet supports;
   // Row map for support entries
   rmap row_map;
   // Last sizes
@@ -249,9 +272,11 @@ public:
                ViewArray<IntView>& x0, 
                TupleSet t0,
                int domsum)
-    : Propagator(home), x(x0), currTable(t0.tuples()),
+    : Propagator(home), x(x0), currTable(home, t0.tuples()),
       supports(domsum, t0.tuples())
   {
+    Region r(home);
+    
     nprop = nprops++;
     x.subscribe(home,*this,PC_INT_DOM);
 
@@ -266,7 +291,7 @@ public:
 
     // Set no_tuples bits to 1 in currTable
     // FIXME: not nice
-    BitSet bs(1, t0.tuples());
+    MyBitSet bs(1, t0.tuples());
     for (int i = 0; i < no_tuples; i++) {
       bs.set(0, i);
     }
@@ -349,7 +374,7 @@ public:
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
-      currTable(p.currTable),
+      currTable(home, p.currTable),
       supports(p.supports),
       row_map(p.row_map),
       lastSize(p.lastSize) {
