@@ -8,45 +8,6 @@
       No residues yet!}
             
     \item[]
-      \Func{initialise}{\texttt{variables}, \texttt{tuples}} %\COMMENT{Initialise the propagator}
-      \STATE $\Scp \leftarrow \texttt{variables}$
-      \STATE $\LastSizes \leftarrow \text{array of  length~} \Scp.\function{length}
-      ~\text{filled with -1}$ \COMMENT{dummy value}
-      \FOREACH{$x \in \Scp$} %\COMMENT{Initial bounds propagation}
-        \STATE $\Dom{x} \leftarrow \Dom{x} \setminus  
-        \Set{a \in \Dom{x} : a > \texttt{tuples}.\function{max}()
-          ~\text{or}~a < \texttt{tuples}.\function{min}()}$
-      \ENDFOREACH
-
-      \STATE $\localvar{size} \leftarrow \function{sum}\Set{|\Dom{x}| : x \in \Scp}$
-      \STATE $\localvar{ntuples} \leftarrow \texttt{tuples}.\function{size}()$ \COMMENT{Number of tuples}
-      \STATE $\Supports \leftarrow$ BitSets$(\localvar{size}, \localvar{ntuples})$
-      \COMMENT{bit-set matrix with $\localvar{size}$ rows and $\localvar{ntuples}$ columns}
-      \STATE $\localvar{no\_supports} \leftarrow 0$
-      
-      \FOREACH{$t \in \T{tuples}$}
-        \STATE $\localvar{supported} \leftarrow \T{true}$
-        \FOREACH{$x \in \Scp$}
-          \IF{$t[x] \notin \Dom{x}$}
-            \STATE $\localvar{supported} \leftarrow \T{false}$
-            \STATE $\textbf{break}$ \COMMENT{Exit loop}
-          \ENDIF
-        \ENDFOREACH
-          \IF{$\localvar{supported}$} 
-            \STATE $\localvar{no\_supports} \leftarrow \localvar{no\_supports} + 1$
-            \STATE $\Supports.$setElemsInColumn($\localvar{no\_supports}$, $t$) 
-          \ENDIF
-      \ENDFOREACH
-      %\COMMENT{Mark tuple as supported}
-
-      \STATE $\Supports.\text{trimToWidth}(\localvar{no\_supports})$ \COMMENT{Keep only the first $\localvar{no\_supports}$ bits for each row}
-      \STATE $\CurrTable \leftarrow \SparseBitSet(\localvar{no\_supports})$ 
-      \COMMENT{$\SparseBitSet$ with $\localvar{no\_supports}$ bits}
-      \STATE $\Residues \leftarrow \text{array of size~} \localvar{size} 
-      \text{~filled with -1}$ \COMMENT{dummy value}
-      \Endfunc
-
-    \item[]
       \Func{updateTable}{}   
       \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]$}
         \STATE $\LastSizes[x] \leftarrow |\Dom{x}|$
@@ -63,23 +24,21 @@
 
     \item[]
       \Func{filterDomains}{}
-      \STATE $\localvar{no\_assigned} \leftarrow 0$
-      \FOREACH{$x \in \Scp$}
+      \STATE $\localvar{count\_unassigned} \leftarrow 0$
+      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$}
             \FOREACH{$a \in \Dom{x}$}
                   \STATE $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
                   \IF{$\texttt{index~} \neq -1$}
                         \STATE \todo{save index in residues} \COMMENT{No residues yet!}
                   \ELSE
                         \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$
-                        \IF{$|\Dom{x}| = 0$}
-                           \RETURN{$Failed$}
-                        \ELSIF{$|\Dom{x}| > 1$}
-                           \STATE $\localvar{no\_assigned} \leftarrow \localvar{no\_assigned} + 1$
+                        \IF{$|\Dom{x}| > 1$}
+                           \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$
                         \ENDIF
                   \ENDIF
              \ENDFOREACH
       \ENDFOREACH
-      \IF{$\localvar{no\_assinged} \leq 1$}
+      \IF{$\localvar{count\_unassigned} \leq 1$}
         \RETURN{$Subsumed$}
       \ELSE
         \RETURN{$Fixpoint$}
