@@ -346,6 +346,11 @@ The fields of the class \texttt{CT-Propagator} are as follows:
 
 \end{itemize}
 
+\subsubsection{Method}
+
+We now describe the methods of Class \texttt{CT-Propagator}.
+
+\paragraph{Initialisation.}
 The initialisation of the fields of Class \texttt{CT-Propagator} is described in
 \Algoref{algo:CT-initialise}. The method initialiseCT() takes two parameters:
 \texttt{variables}, that are the variables associated to the constraint~$c$,
@@ -432,7 +437,7 @@ we let~$0$ be our start guess.
   \label{algo:initialise-CT}
   \end{algorithm}
  
-  To keep down the size of~$\Supports$, one could perform simple bounds
+  To limit the size of~$\Supports$, one could perform simple bounds
   propagation in initialiseCT(). \Algoref{algo:initail-propagation}
   is inserted after line~$\ref{line:init:2}$ in initialiseCT(). It removes
   from the domain of each variable~$x$ all values that are either greater 
@@ -450,6 +455,78 @@ we let~$0$ be our start guess.
   \caption{Simple initial propagation for keeping down the size of \Supports.}
   \label{algo:initial-propagation}
 \end{algorithm}
+
+\paragraph{Performing propagation.}
+When the propagator is invoked for propagation, the method propagate() is called.
+Performing propagation consists of two steps. Firstly, the current table is
+updated to filter out (indices of) tuples that are no more supports. Thereafter
+each variable-value pair is considered to check whether these values still have
+a support. We now describe these processes in more detail:
+
+\begin{enumerate}
+\item \textit{Updating the current table.} 
+  The method updateTable() in 
+  \Linesref{line:updateTable:1}{line:updateTable:9} filters out (indices of)
+  tuples that have ceased to be supports since the last invocation of the
+  propagator. The ovarall idea is that for each variable~$x \in \Scp$, we keep 
+  only those values in~$\CurrTable$ that correspond to valid tuples for~$x$, and the
+  complement of those values are set to~$0$. We note that
+  it is only necessary to consider a variable~$x$ if its domain has changed
+  since the last invocation of the propagator, because only then
+  may the set of valid tuples have changed.~\Lineref{line:updateTable:2}
+  chooses exactly those variables.
+
+  \Lineref{line:updateTable:3} records the domain size for~$x$ in~$\LastSizes[x]$
+  and line~\ref{line:updateTable:4} clears the temporary mask (sets all bits to~$0$).
+
+  \Linesref{line:updateTable:5}{line:updateTable:6} stores the union of the
+  set of valid tuples for each value~$a \in \Domain{x}$ in the temporary mask
+  and \Lineref{line:update:table:7} intersects~$\CurrTable$ with the mask.
+  \Lineref{line:updateTable:8} checks whether the current table is empty,
+  in which case we break in line~\ref{line:currTable:9}
+  because there are no valid tuples left.
+
+\item 
+  \textit{Filtering of domains.}
+  After the current table has been updated, inconsistent values must be removed
+  from the domains of the variables.   
+  It follows from the definition of the bit-sets~$\CurrTable$ and~$\Supports[x,a]$
+  that~$(x,a)$ has a valid support if and only if 
+
+  \begin{equation}
+    \label{eq:validcond}
+    (\CurrTable \Inter \Supports[x,a]) \neq \emptyset
+  \end{equation}
+
+  Therefore, we must check this condition for every variable-value pair~$(x,a)$ and
+  remove~$a$ from the domain of~$x$ if the condition is not satisfied any more.
+  This is implemented in the method filterDomains()
+  in lines~\ref{line:filterDom:0}-\ref{line:filterDom:12}.
+
+  \Lineref{line:filterDom:1} initialises a counter for the number of unassigned
+  variables.
+
+  \Linesref{line:filterDom:2}{line:filterDom:9} performs the
+  actual filtering of the domains. We note that it is only neccessary to
+  consider a variable~$x \in \Scp$ whose domain size is larger than~$1$,
+  because we will never filter out values from the domain of an assigned
+  varible. \Todo{explain better}
+  In line~\ref{line:filterDom:4}, we search for an index in~$\CurrTable$
+  where a valid support for the variable-value pair~$(x,a)$ is found, 
+  thereby checking the condition in~\ref{eq:validcond}.
+  \Todo{equation numbers do not show up?}
+  Recall that intersectIndex($m$) in Class~$\SparseBitSet$ returns~$-1$ if
+  the intersection of the~$\SparseBitSet$-object and~$m$ is the empty set,
+  thus in line~\ref{line:filterDom:7} we remove~$a$ from~$\Dom{x}$ if that
+  is the case.~\Linesref{line:filterDom:8}{line:filterDom:9} increments the
+  counter of unassigned variables if~$|\Dom{x}| > 1$.
+
+  \Linesref{line:filterDom:10}{line:filterDom:11} return the correct
+  propagator status message. If the number of unassigned variables is
+  at most one, the propagator is subsumed. Otherwise, the propagator
+  is at fixpoint.
+  
+\end{enumerate}
 
 
  \begin{algorithm}[h]

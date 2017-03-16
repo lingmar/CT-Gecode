@@ -2,53 +2,55 @@
     \item[]
       \STATE $\Scp$: array of variables
       \STATE $\CurrTable$: SparseBitSet \COMMENT{Current supported tuples}
-      \STATE $\Supports$: array of BitSet   \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
+      \STATE $\Supports$: array of bit-set   \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
       \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$.c}
       \STATE $\Residues$: array of int  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$. 
       No residues yet!}
             
     \item[]
-      \Func{updateTable}{}   
-      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]$}
-        \STATE $\LastSizes[x] \leftarrow |\Dom{x}|$
-        \STATE $\CurrTable$.clearMask() 
-        \FOREACH{$a \in \Dom{x}$} %\COMMENT{No incremental update yet!}
-          \STATE $\CurrTable$.addToMask($\Supports[x,a]$)
-          \STATE $\CurrTable$.intersectWithMask()
-          \IF{$\CurrTable$.isEmpty()}
-            \STATE $\Break$ \COMMENT{No valid tuples left}
-          \ENDIF
-        \ENDFOREACH
-     \ENDFOREACH
-     \Endfunc
+      \Func{updateTable}{} \label{line:updateTable:1} 
+      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]$} \label{line:updateTable:2} 
+        \STATE $\LastSizes[x] \leftarrow |\Dom{x}|$ \label{line:updateTable:3} 
+        \STATE $\CurrTable$.clearMask() \label{line:updateTable:4} 
+        \FOREACH{$a \in \Dom{x}$} \label{line:updateTable:5} 
+          \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTable:6} 
+        \ENDFOREACH      
+        \STATE $\CurrTable$.intersectWithMask() \label{line:updateTable:7} 
+        \IF{$\CurrTable$.isEmpty()} \label{line:updateTable:8} 
+          \STATE $\Break$ \COMMENT{No valid tuples left} \label{line:updateTable:9} 
+        \ENDIF
+      \ENDFOREACH
+      \Endfunc
+
 
     \item[]
-      \Func{filterDomains}{}
-      \STATE $\localvar{count\_unassigned} \leftarrow 0$
-      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$}
-            \FOREACH{$a \in \Dom{x}$}
-                  \STATE $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
-                  \IF{$\texttt{index~} \neq -1$}
-                        \STATE \todo{save index in residues} \COMMENT{No residues yet!}
+      \Func{filterDomains}{} \label{line:filterDom:0}
+      \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
+      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$} \label{line:filterDom:2}
+            \FOREACH{$a \in \Dom{x}$} \label{line:filterDom:3}
+                  \STATE $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
+                  \IF{$\texttt{index~} \neq -1$} \label{line:filterDom:5}
+                        \STATE \todo{save index in residues} \COMMENT{No residues yet!} \label{line:filterDom:6}
                   \ELSE
-                        \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$
-                        \IF{$|\Dom{x}| > 1$}
-                           \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$
+                        \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$ \label{line:filterDom:7}
+                        \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
+                           \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}
                         \ENDIF
                   \ENDIF
              \ENDFOREACH
       \ENDFOREACH
-      \IF{$\localvar{count\_unassigned} \leq 1$}
-        \RETURN{$Subsumed$}
+      \IF{$\localvar{count\_unassigned} \leq 1$} \label{line:filterDom:10}
+        \RETURN{$Subsumed$} \label{line:filterDom:11}
       \ELSE
-        \RETURN{$Fixpoint$}
+        \RETURN{$Fixpoint$} \label{line:filterDom:12}
       \ENDIF
       \Endfunc
 
     \item[]
-      \STATE $\Method{propagate}{}$
-      \STATE updateTable()
-      \IF{$\CurrTable$.isEmpty()}
-        \RETURN{$Failed$}
-      \ENDIF
-      \RETURN{filterDomains()}
+        \Func{propagate}{}
+              \STATE updateTable()
+              \IF{$\CurrTable$.isEmpty()}
+                      \RETURN{$Failed$}
+              \ENDIF
+              \RETURN{filterDomains()}
+         \Endfunc
