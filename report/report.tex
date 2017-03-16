@@ -20,6 +20,8 @@
 \newcommand{\Algoref}[1]{Algorithm~\ref{#1}}
 \newcommand{\Table}{\Constraint{Table}~}
 \newcommand{\Extensional}{\Constraint{Extensional}~}
+\newcommand{\Lineref}[1]{Line~\ref{#1}}
+\newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
 
 \newcommand{\Method}[2]{\textbf{method~}\mathrm{{#1}}({#2})}
 \newcommand{\MethodReturn}[3]{\textbf{method~}\mathrm{{#1}}({#2})\textbf{\ : \ {#3}}}
@@ -262,14 +264,26 @@ in the CT algorithm for maintaining the supports.
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{Class-SparseBitSet.tex}
     \end{algorithmic}
-  \caption{Pseudo code for the class SparseBitSet.}
+  \caption{Pseudo code for Class SparseBitSet.}
   \label{algo:sparse}
 \end{algorithm}
 
 \subsection{Compact-Table (CT) Algorithm}
 This section describes the CT algorithm, a domain consistent propagation
-algorithm for any table constraint~$c$.
-It dynamically maintains a set of valid supports regarding the current domain of each variable.
+algorithm for any table constraint~$c$.~\Algoref{algo:CT} shows the interface
+for Class CT-Propagator, which implements the CT algorithm. The rest of this
+section will describe its fields and methods in detail.
+\Todo{Is this a good idea or is the pseudo code too spread out? Ugly that the
+lines of references "Algorithm x" are numbered in~\Algoref{algo:CT}.}
+%It dynamically maintains a set of valid supports regarding the current domain of each variable.
+
+ \begin{algorithm}[H]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \input{Class-CT.tex}
+    \end{algorithmic}
+  \caption{Interface for CT propagator class.}
+  \label{algo:CT}
+\end{algorithm}
 
 %This description is mainly taken from~\cite{CTpaper}.
 
@@ -291,7 +305,10 @@ It dynamically maintains a set of valid supports regarding the current domain of
 % From hereon, we let the \emph{initial valid table} for $c$,~$T_v$, be a subset of the
 % initial table~$T$ such that for all tuples~$\tau \in T_v$, $\tau$ is a
 % support on~$c$. \Todo{Define: initial table.}
-The fields of the class \texttt{CT-Propagator} are as follows:
+\Linesref{line:CTfield:start}{line:CTfield:end} of \Algoref{algo:CT}
+shows the fields of Class \texttt{CT-Propagator} and their types.
+Now follows a more detailed
+description of them.
 
 \begin{itemize}
   \item $\Scp$ represents the scope of the constraint~$c$.
@@ -361,55 +378,12 @@ and~$\localvar{tuples}$, that is a list of tuples that define the initial table 
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-      \Func{initialiseCT}{$\localvar{variables}, \localvar{tuples}$} 
-      \STATE $\localvar{npairs} \leftarrow \function{sum}\Set{|\Dom{x}| : x \in \localvar{variables}}$
-      \COMMENT{Number of variable-value pairs}\label{line:init:3}
-      \STATE $\localvar{ntuples} \leftarrow \localvar{tuples}.\function{size}()$ \COMMENT{Number of tuples}
-      \STATE $\localvar{nsupports} \leftarrow 0$ \COMMENT{Number of found supports} \label{line:init:4}
-      
-      \STATE $\Scp \leftarrow \localvar{variables}$ \label{line:init:1}
-      \STATE $\LastSizes \leftarrow \text{array of  length~} \Scp.\function{length}
-      ~\text{filled with -1}$ \COMMENT{Dummy value} \label{line:init:2}
-      \STATE $\Residues \leftarrow \text{array of length~} \localvar{npairs}$ \label{line:init:9}
-      
-      \STATE $\Supports \leftarrow$ \text{array of length~}$\localvar{npairs}$
-      \text{with bit-sets of size~}$\localvar{ntuples}$ \label{line:init:5}
-      % BitSets$(\localvar{size}, \localvar{ntuples})$ 
-      %\COMMENT{bit-set matrix with $\localvar{size}$ rows and $\localvar{ntuples}$ columns} 
-      
-
-      \FOREACH{$t \in \T{tuples}$} \label{line:init:6}
-        \STATE $\localvar{supported} \leftarrow \T{true}$
-        \FOREACH{$x \in \Scp$}
-          \IF{$t[x] \notin \Dom{x}$}
-            \STATE $\localvar{supported} \leftarrow \T{false}$
-            \STATE $\textbf{break}$ \COMMENT{Exit loop}
-          \ENDIF
-        \ENDFOREACH
-          \IF{$\localvar{supported}$} 
-            \STATE $\localvar{nsupports} \leftarrow \localvar{nsupports} + 1$
-            \FOREACH{$x \in \Scp$} \label{line:init:9}
-              \STATE $\Supports[x,t[x]][\localvar{nsupports}] \leftarrow 1$ \label{line:init:10}
-              \STATE $\Residues[x,t[x]] \leftarrow \Floor{\frac{\localvar{nsupports}}{64}}$
-              \COMMENT{Index for the support in~$\CurrTable$}\label{line:init:11}
-            \ENDFOREACH
-            %\STATE setElemsInColumn($\localvar{nsupports}$, $t$) 
-          \ENDIF
-      \ENDFOREACH \label{line:init:7}
-      %\COMMENT{Mark tuple as supported}
-
-     % \STATE $\Supports.\text{trimToWidth}(\localvar{nsupports})$ \COMMENT{Keep only the first $\localvar{nsupports}$ bits for each row}
-      \STATE $\CurrTable \leftarrow \SparseBitSet(\localvar{nsupports})$ 
-      \COMMENT{$\SparseBitSet$ with $\localvar{nsupports}$ bits} \label{line:init:8}
-      \Endfunc
-    \end{algorithmic}
+    \input{initialiseCT.tex}
+  \end{algorithmic}
   \caption{Pseudo code for initialising the CT-propagator.}
   \label{algo:initialise-CT}
-  \end{algorithm}
+\end{algorithm}
 
-
-\newcommand{\Lineref}[1]{Line~\ref{#1}}
-\newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
 
 \Linesref{line:init:3}{line:init:4}~initialise local variables that will be 
 used later.
@@ -437,8 +411,9 @@ all elements in~$\Supports$ corresponding to~$t$ are set to~$1$ in
 line \ref{line:init:10}. We also take the opportunity to store the index
 of the found support in~$\Residues[x,t[x]]$
 in line~\ref{line:init:11}.
-\Todo{Perhaps break out lines \ref{line:init:6}-\ref{line:init:7} to an own algorithm-environment?}
-
+\Todo{Perhaps break out lines \ref{line:init:6}-\ref{line:init:7} to an own algorithm-environment?
+I haven't implemented residues yet (to keep the first version as simple as possible)
+but this is how I would do it.}
 %\Todo{trimToWidth()}.
 
 \Lineref{line:init:8} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
@@ -464,19 +439,30 @@ number of tuples are initially valid supports for~$c$.
           ~\text{or}~a < \localvar{tuples}.\function{min}()}$
       \ENDFOREACH
   \end{algorithmic}
-  \caption{Simple initial propagation for keeping down the size of \Supports.}
+  \caption{Simple initial propagation for keeping down the size of \Supports,
+  to be inserted in the beginning of initialiseCT() in~\Algoref{algo:initialise-CT}.}
   \label{algo:initial-propagation}
 \end{algorithm}
 
 \paragraph{Performing propagation.}
 When the propagator is invoked for propagation, the method propagate()
-in~\Algoref{algo:CT} is called.
+in \Algoref{algo:CT} is called. Before defining this function, we need
+to define the help functions updateTable() and filterDomains().
 Performing propagation consists of two steps: updating the current
 table and filtering out inconsistent values from the domains of the variables.
 We now describe these processes in more detail.
 
 \begin{enumerate}
 \item \textit{Updating the current table.} 
+  
+  \begin{algorithm}[H]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \input{updateTable.tex}
+  \end{algorithmic}
+  \caption{Method updateTable() in Class CT-Propagator.}
+  \label{algo:updateTable}
+\end{algorithm}
+
   The method updateTable() in 
   \Linesref{line:updateTable:1}{line:updateTable:9} of~\Algoref{algo:CT}
   filters out (indices of)
@@ -514,7 +500,18 @@ We now describe these processes in more detail.
   Therefore, we must check this condition for every variable-value pair~$(x,a)$ and
   remove~$a$ from the domain of~$x$ if the condition is not satisfied any more.
   This is implemented in the method filterDomains()
-  in lines~\ref{line:filterDom:0}-\ref{line:filterDom:12}.
+  in~\Algoref{algo:filterDomains}.%lines~\ref{line:filterDom:0}-\ref{line:filterDom:12}.
+
+  \begin{algorithm}[H]
+    \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+      \input{filterDomains.tex}
+    \end{algorithmic}
+    \caption{Method filterDomains() in Class CT-Propagator.}
+    \label{algo:filterDomains}
+  \end{algorithm}
+
+  \Todo{This method would be slightly more sofisticated if residues
+  were implemented. For now, disregard the empty line in the if-statement.}
 
   \Lineref{line:filterDom:1} initialises a counter for the number of unassigned
   variables.
@@ -532,12 +529,11 @@ We now describe these processes in more detail.
   In line~\ref{line:filterDom:4}, we search for an index in~$\CurrTable$
   where a valid support for the variable-value pair~$(x,a)$ is found, 
   thereby checking the condition in~\eqref{eq:validcond}.
-  \Todo{equation numbers do not show up?}
-  Recall that intersectIndex($m$) in Class~$\SparseBitSet$ returns~$-1$ if
-  the intersection of the~$\SparseBitSet$-object and~$m$ is the empty set,
-  thus in line~\ref{line:filterDom:7} we remove~$a$ from~$\Dom{x}$ if that
-  is the case.~\Linesref{line:filterDom:8}{line:filterDom:9} increments the
-  counter of unassigned variables if~$|\Dom{x}| > 1$.
+  In line~\ref{line:filterDom:7} we remove~$a$ from~$\Dom{x}$ if~$(x,a)$
+  is not supported any more.
+
+  \Linesref{line:filterDom:8}{line:filterDom:9}
+  increments the counter of unassigned variables if~$|\Dom{x}| > 1$.
 
   \Linesref{line:filterDom:10}{line:filterDom:11} return the correct
   propagator status message. If the number of unassigned variables is
@@ -546,17 +542,20 @@ We now describe these processes in more detail.
   
 \end{enumerate}
 
-The method propagate() in lines~\ref{line:propagate:1}-\ref{line:propagate:5}
-first calls updateTable() and if the current table is empty,~$Failed$
-is returned as a status message. Then filterDomains() is called, and the
-return value of that method is returned.
+After defining updateTable() and filterDomains(), we are now ready to
+define the method propagate() in Class CT-Propagator, shown 
+in~\Algoref{algo:propagate}.
 
- \begin{algorithm}[h]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-    \input{Class-CT.tex}
-    \end{algorithmic}
-  \caption{Pseudo code for CT propagator class.}
-  \label{algo:CT}
+    \input{propagate.tex}
+  \end{algorithmic}
+  \caption{Method propagate() in Class CT-Propagator. updateTable()
+    (\Algoref{algo:updateTable}) is
+  called, and if the current table is empty, we are in a failed node.
+  Otherwise, filterDomains() (\Algoref{algo:filterDomains})
+  is called, and the return value of that method is returned.}
+  \label{algo:propagate}
 \end{algorithm}
 
 \subsubsection{Propagator Status Messages}

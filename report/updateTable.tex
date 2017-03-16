@@ -1,0 +1,13 @@
+   \Func{updateTable}{} \label{line:updateTable:1} 
+      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| \neq \LastSizes[x]$} \label{line:updateTable:2} 
+        \STATE $\LastSizes[x] \leftarrow |\Dom{x}|$ \label{line:updateTable:3} 
+        \STATE $\CurrTable$.clearMask() \label{line:updateTable:4} 
+        \FOREACH{$a \in \Dom{x}$} \label{line:updateTable:5} 
+          \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTable:6} 
+        \ENDFOREACH      
+        \STATE $\CurrTable$.intersectWithMask() \label{line:updateTable:7} 
+        \IF{$\CurrTable$.isEmpty()} \label{line:updateTable:8} 
+          \STATE $\Break$ \COMMENT{No valid tuples left} \label{line:updateTable:9} 
+        \ENDIF
+      \ENDFOREACH
+      \Endfunc
