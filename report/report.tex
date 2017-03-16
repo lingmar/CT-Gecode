@@ -257,16 +257,35 @@ This chapter presents the algorithms that are used in the implementation of the
 CT propagator in \Chapref{implementation}.
 
 \subsection{Sparse Bit-Set}
-This section describes the class~$\SparseBitSet$ which is the main datastructure
-in the CT algorithm for maintaining the supports.
+This section describes Class~$\SparseBitSet$, which is the main datastructure
+in the CT algorithm for maintaining the supports.~\Algoref{algo:sparse} shows the
+pseudo code for Class~$\SparseBitSet$. The rest of this section describes its
+fields and methods in detail.
 
-\begin{algorithm}[h]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{Class-SparseBitSet.tex}
     \end{algorithmic}
   \caption{Pseudo code for Class SparseBitSet.}
   \label{algo:sparse}
 \end{algorithm}
+
+\subsubsection{Fields}
+\Todo{It should not be neccassary to keep \Mask~as a field, as it is only used temporarily.
+Unneccessary to copy it every time.}
+
+Linesref{line:sbsfield:start}{line:sbsfield:end} of~\Algoref{algo:sparse} shows the fields
+of Class~\SparseBitSet~and their types. Now follows a more detailed description of them.
+
+\begin{itemize}
+  \item \Words 
+  \item \Index 
+  \item \Limit 
+  \item \Mask 
+\end{itemize}
+
+\subsubsection{Methods}
+
 
 \subsection{Compact-Table (CT) Algorithm}
 This section describes the CT algorithm, a domain consistent propagation
