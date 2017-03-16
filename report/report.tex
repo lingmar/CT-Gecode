@@ -420,6 +420,9 @@ but this is how I would do it.}
 $nsupports$ bits, initially with all bits set to~$1$ since~$nsupports$
 number of tuples are initially valid supports for~$c$.
 
+\Linesref{line:init:12}{line:init:14} removes values that are not supported
+by any tuple in the initial table.
+
  
   To limit the size of~$\Supports$, one could perform simple bounds
   propagation in initialiseCT(). \Algoref{algo:initial-propagation}
