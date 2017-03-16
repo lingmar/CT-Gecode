@@ -6,7 +6,7 @@
 %\usepackage{algorithmicx}
 %\input{macros}
 
-\usepackage{amsthm}
+%\usepackage{amsthm}
 
 \newtheorem{definition}{Definition}
 
@@ -89,6 +89,8 @@
   \textbf{else if~}{#2}\textbf{~then}}
 
 \newcommand{\CTpaper}[0]{DBLP:conf/cp/DemeulenaereHLP16}
+
+\numberwithin{equation}{section}
 
 \title{\textbf{Implementation and Evaluation of a\\
     Compact Table Propagator in Gecode
@@ -265,12 +267,11 @@ in the CT algorithm for maintaining the supports.
 \end{algorithm}
 
 \subsection{Compact-Table (CT) Algorithm}
-This section describes the CT algorithm.
+This section describes the CT algorithm, a domain consistent propagation
+algorithm for any table constraint~$c$.
+It dynamically maintains a set of valid supports regarding the current domain of each variable.
 
-Compact-Tablce (CT) is a domain consistent propagation algorithm 
-for a table constraint~$c$. It dynamically
-maintains a set of valid supports regarding the current domain of each variable.
-This description is mainly taken from~\cite{CTpaper}.
+%This description is mainly taken from~\cite{CTpaper}.
 
 % Beskriv övergripande?
 
@@ -283,9 +284,13 @@ This description is mainly taken from~\cite{CTpaper}.
 % the~$i$th tuple is a valid support, else the~$i$th element is~$0$.
 
 \subsubsection{Fields}
+\label{CT:fields}
 
 \Todo{Add examples with figures for describing the fields.}
 
+% From hereon, we let the \emph{initial valid table} for $c$,~$T_v$, be a subset of the
+% initial table~$T$ such that for all tuples~$\tau \in T_v$, $\tau$ is a
+% support on~$c$. \Todo{Define: initial table.}
 The fields of the class \texttt{CT-Propagator} are as follows:
 
 \begin{itemize}
@@ -296,15 +301,14 @@ The fields of the class \texttt{CT-Propagator} are as follows:
     $\SparseBitSet$ object of initial size~$p$, such that value~$i$
     is contained (is set to~$1$) if and only if the~$i$th tuple is valid:
     
-    \begin{equation}
-      \label{eq:currtable}
+    \begin{equation} \label{eq:currtable}
       i \in \CurrTable \ \Leftrightarrow \ \forall x \in scp(c): \tau_i[x] \in \Dom{x}
     \end{equation}
 
   \item $\Supports$ represents the supports for each variable-value pair~$(x,a)$,
     where~$x \in scp(c) \land a \in \Dom{x}$.
     It is a static array of words~$\Supports[x,a]$, seen as bit-sets.
-    The main idea is that the bit-set~$\Supports[x,a]$ is such that
+    The bit-set~$\Supports[x,a]$ is such that
     the bit at position~$i$ is set to~$1$ if and only if the 
     tuple~$\tau_i$ in the initial table of~$c$ is a support for~$(x,a)$:
 
@@ -314,27 +318,25 @@ The fields of the class \texttt{CT-Propagator} are as follows:
       \forall y \in scp(c): \tau_i[y] \in \Dom{y}
     \end{equation}
 
-    One can optimise this definition slighty since it is unnecessary to keep track of
-    invalid supports. Instead, only the tuples that are valid supports for~$c$
-    need to be indexed in~$\Supports[x,a]$, potentially making the bit-set shorter
-    if only a subset of the tuples in the initial table are valid supports. 
-    If the initial table 
-    is~$T = \Tuple{\tau_0, \tau_1, ..., \tau_{p-1}}$ and it turns out that
-    $\tau_0,...,\tau_{i-1}$ are valid supports and~$\tau_{i}$ is invalid, then~$\tau_{i+1}$
-    will correspond to index~$i$ instead of~$i+1$ in~$\Supports[x,a]$. So a better
-    definition reads:
+    % One can optimise this definition slighty since it is unnecessary to keep track of
+    % invalid supports. Instead, only the tuples that are valid supports for~$c$
+    % need to be indexed in~$\Supports[x,a]$, potentially making the bit-set shorter
+    % if only a subset of the tuples in the initial table are valid supports. 
+    % If the initial table 
+    % is~$T = \Tuple{\tau_0, \tau_1, ..., \tau_{p-1}}$ and it turns out that
+    % $\tau_0,...,\tau_{i-1}$ are valid supports and~$\tau_{i}$ is invalid, then~$\tau_{i+1}$
+    % will correspond to index~$i$ instead of~$i+1$ in~$\Supports[x,a]$. So a better
+    % definition reads:
 
-    \begin{equation}
-      \forall x \in scp(c): \forall a \in \Dom{x}:
-      \Supports[x,a][j] = 1 \Leftrightarrow \tau_i[x] = a \ \land \
-      \forall y \in scp(c): \tau_i[y] \in \Dom{y}
-    \end{equation}
+    % \begin{equation}
+    %   \forall x \in scp(c): \forall a \in \Dom{x}:
+    %   \Supports[x,a][j] = 1 \Leftrightarrow \tau_i[x] = a \ \land \
+    %   \forall y \in scp(c): \tau_i[y] \in \Dom{y}
+    % \end{equation}
     
-    where~$j = |\Set{\tau_k \ | \ \tau_k \in T \ \land \ \tau_k \text{~is valid} \ \land \ k < i}|$.
+    % where~$j = |\Set{\tau_k \ | \ \tau_k \in T \ \land \ \tau_k \text{~is valid} \ \land \ k < i}|$.
     Seing~$\Supports$ as a matrix, we have that the column~$\Supports[*,*][i]$ encodes
-    the~$i$th valid support for~$c$.
-
-    $\Supports$ is computed once during the initialisation of CT and then
+    the~$i$th support for~$c$. $\Supports$ is computed once during the initialisation of CT and then
     remains unchanged.
     
   \item $\LastSizes$ is an array that contains the domain size of each
@@ -347,71 +349,35 @@ The fields of the class \texttt{CT-Propagator} are as follows:
 
 \end{itemize}
 
-\subsubsection{Method}
+\subsubsection{Methods}
 
 We now describe the methods of Class \texttt{CT-Propagator}.
 
 \paragraph{Initialisation.}
 The initialisation of the fields of Class \texttt{CT-Propagator} is described in
-\Algoref{algo:CT-initialise}. The method initialiseCT() takes two parameters:
-\texttt{variables}, that are the variables associated to the constraint~$c$,
-and~\texttt{tuples}, that is a list of tuples that define the initial table for~$c$.
+\Algoref{algo:initialise-CT}. The method initialiseCT() takes two parameters:
+$\localvar{variables}$, that are the variables associated to the constraint~$c$,
+and~$\localvar{tuples}$, that is a list of tuples that define the initial table for~$c$.
 
-\newcommand{\Lineref}[1]{Line~\ref{#1}}
-\newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
-
-\Linesref{line:init:1}{line:init:2}~initialise~\Scp~and~\LastSizes.
-The array~\LastSizes~is filled with 
-the dummy value~$-1$ because we
-want to have~$|\Dom{x}| \neq \LastSizes[x]$ the first time that the propagation
-algorithm runs.
-
-\Linesref{line:init:3}{line:init:4}~initialise local variables that will be 
-used later.
-
-\Lineref{line:init:5}~initialises~\Supports~as an array of bit-sets with
-one bit-set for each variable-value pair and the size of each bit-set being
-the number of tuples in the initial table. Each bit-set is assumed to be
-initially filled with zeros.
-
-\Linesref{line:init:6}{line:init:7} set the correct bits to~$1$ in~$\Supports$.
-For each tuple~$t$, we check if~$t$ is a valid support for~$c$. Recall that~$t$ is
-a valid support for~$c$ if and only if~$t[x] \in \Dom{x}$ for all~$x \in scp(c)$.
-If~$t$ is a valid support,
-all elements in~$\Supports$ corresponding to~$t$ are to be set to~$1$.
-We keep a counter,~$no\_supports$, for the number of valid supports for~$c$.
-This is used for indexing the tuples in~$\Supports$ in the way discussed above.
-The method setElemsInColumn($i,t$) is assumed to set all values corresponding to
-the values in~$t$ in the~$i$th column in~$\Supports$ to~$1$. 
-\Todo{pseudocode for setElemsInColumn()}
-\Todo{Perhaps break out lines 8-16 to an own algorithm-environment.}
-
-\Todo{trimToWidth()}.
-
-\Lineref{line:init:8} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
-$no\_supports$ bits, initially with all bits set to~$1$ since~$i$ tuples are initially
-valid supports for~$c$.
-
-\Lineref{line:init:9} initialises~$\Residues$ as an array of ints filled with zeros.
-Recall that~$\Residues[x,a]$ is the index of the word where the last found
-support for~$(x,a)$ resides in~\CurrTable. Since we have not sought for any supports yet,
-we let~$0$ be our start guess.
-\Todo{Actually, we could initialise $\Residues[x,a]$ in the if-statement in line 14.}\\
-
- \begin{algorithm}%[h]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-      \Func{initialiseCT}{\texttt{variables}, \texttt{tuples}} %\COMMENT{Initialise the propagator}
-      \STATE $\Scp \leftarrow \texttt{variables}$ \label{line:init:1}
-      \STATE $\LastSizes \leftarrow \text{array of  length~} \Scp.\function{length}
-      ~\text{filled with -1}$ \COMMENT{dummy value} \label{line:init:2}
-
-      \STATE $\localvar{size} \leftarrow \function{sum}\Set{|\Dom{x}| : x \in \Scp}$ \label{line:init:3}
-      \STATE $\localvar{ntuples} \leftarrow \texttt{tuples}.\function{size}()$ \COMMENT{Number of tuples}
-      \STATE $\localvar{no\_supports} \leftarrow 0$ \label{line:init:4}
-      \STATE $\Supports \leftarrow$ BitSets$(\localvar{size}, \localvar{ntuples})$ 
-      \COMMENT{bit-set matrix with $\localvar{size}$ rows and $\localvar{ntuples}$ columns} \label{line:init:5}
-
+      \Func{initialiseCT}{$\localvar{variables}, \localvar{tuples}$} 
+      \STATE $\localvar{npairs} \leftarrow \function{sum}\Set{|\Dom{x}| : x \in \localvar{variables}}$
+      \COMMENT{Number of variable-value pairs}\label{line:init:3}
+      \STATE $\localvar{ntuples} \leftarrow \localvar{tuples}.\function{size}()$ \COMMENT{Number of tuples}
+      \STATE $\localvar{nsupports} \leftarrow 0$ \COMMENT{Number of found supports} \label{line:init:4}
       
+      \STATE $\Scp \leftarrow \localvar{variables}$ \label{line:init:1}
+      \STATE $\LastSizes \leftarrow \text{array of  length~} \Scp.\function{length}
+      ~\text{filled with -1}$ \COMMENT{Dummy value} \label{line:init:2}
+      \STATE $\Residues \leftarrow \text{array of length~} \localvar{npairs}$ \label{line:init:9}
+      
+      \STATE $\Supports \leftarrow$ \text{array of length~}$\localvar{npairs}$
+      \text{with bit-sets of size~}$\localvar{ntuples}$ \label{line:init:5}
+      % BitSets$(\localvar{size}, \localvar{ntuples})$ 
+      %\COMMENT{bit-set matrix with $\localvar{size}$ rows and $\localvar{ntuples}$ columns} 
+      
+
       \FOREACH{$t \in \T{tuples}$} \label{line:init:6}
         \STATE $\localvar{supported} \leftarrow \T{true}$
         \FOREACH{$x \in \Scp$}
@@ -421,36 +387,81 @@ we let~$0$ be our start guess.
           \ENDIF
         \ENDFOREACH
           \IF{$\localvar{supported}$} 
-            \STATE $\localvar{no\_supports} \leftarrow \localvar{no\_supports} + 1$
-            \STATE $\Supports.$setElemsInColumn($\localvar{no\_supports}$, $t$) 
+            \STATE $\localvar{nsupports} \leftarrow \localvar{nsupports} + 1$
+            \FOREACH{$x \in \Scp$} \label{line:init:9}
+              \STATE $\Supports[x,t[x]][\localvar{nsupports}] \leftarrow 1$ \label{line:init:10}
+              \STATE $\Residues[x,t[x]] \leftarrow \Floor{\frac{\localvar{nsupports}}{64}}$
+              \COMMENT{Index for the support in~$\CurrTable$}\label{line:init:11}
+            \ENDFOREACH
+            %\STATE setElemsInColumn($\localvar{nsupports}$, $t$) 
           \ENDIF
       \ENDFOREACH \label{line:init:7}
       %\COMMENT{Mark tuple as supported}
 
-      \STATE $\Supports.\text{trimToWidth}(\localvar{no\_supports})$ \COMMENT{Keep only the first $\localvar{no\_supports}$ bits for each row}
-      \STATE $\CurrTable \leftarrow \SparseBitSet(\localvar{no\_supports})$ 
-      \COMMENT{$\SparseBitSet$ with $\localvar{no\_supports}$ bits} \label{line:init:8}
-      \STATE $\Residues \leftarrow \text{array of size~} \localvar{size}
-      \text{~filled with 0}$ \label{line:init:9}
+     % \STATE $\Supports.\text{trimToWidth}(\localvar{nsupports})$ \COMMENT{Keep only the first $\localvar{nsupports}$ bits for each row}
+      \STATE $\CurrTable \leftarrow \SparseBitSet(\localvar{nsupports})$ 
+      \COMMENT{$\SparseBitSet$ with $\localvar{nsupports}$ bits} \label{line:init:8}
       \Endfunc
     \end{algorithmic}
   \caption{Pseudo code for initialising the CT-propagator.}
   \label{algo:initialise-CT}
   \end{algorithm}
+
+
+\newcommand{\Lineref}[1]{Line~\ref{#1}}
+\newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
+
+\Linesref{line:init:3}{line:init:4}~initialise local variables that will be 
+used later.
+
+\Linesref{line:init:1}{line:init:5}~initialise the fields~\Scp~,~\LastSizes,
+~\Residues~and~\Supports.
+The array~\LastSizes~is filled with 
+the dummy value~$-1$ because we
+want to have~$|\Dom{x}| \neq \LastSizes[x]$ the first time that the propagation
+algorithm runs. The field \Residues~will be filled with values later, 
+in line \ref{line:init:11}.
+The field \Supports~is initalised as an array of bit-sets, with one bit-set for each
+variable-value pair, and the size of each
+bit-set being the number of tuples in~$\localvar{tuples}$. Each bit-set is assumed
+to be initially filled with zeros.
+
+\Linesref{line:init:6}{line:init:7} set the correct bits to~$1$ in~$\Supports$.
+For each tuple~$t$, we check if~$t$ is a valid support for~$c$. Recall that~$t$ is
+a valid support for~$c$ if and only if~$t[x] \in \Dom{x}$ for all~$x \in scp(c)$.
+We keep a counter,~$nsupports$, for the number of valid supports for~$c$.
+This is used for indexing the tuples in~$\Supports$ (we only index the tuples
+that are valid supports).
+If~$t$ is a valid support,
+all elements in~$\Supports$ corresponding to~$t$ are set to~$1$ in
+line \ref{line:init:10}. We also take the opportunity to store the index
+of the found support in~$\Residues[x,t[x]]$
+in line~\ref{line:init:11}.
+\Todo{Perhaps break out lines \ref{line:init:6}-\ref{line:init:7} to an own algorithm-environment?}
+
+%\Todo{trimToWidth()}.
+
+\Lineref{line:init:8} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
+$nsupports$ bits, initially with all bits set to~$1$ since~$nsupports$
+number of tuples are initially valid supports for~$c$.
+
  
   To limit the size of~$\Supports$, one could perform simple bounds
-  propagation in initialiseCT(). \Algoref{algo:initail-propagation}
-  is inserted after line~$\ref{line:init:2}$ in initialiseCT(). It removes
+  propagation in initialiseCT(). \Algoref{algo:initial-propagation}
+  is inserted in the beginning of initialiseCT(), in line~\ref{line:init:3}
+  in~\Algoref{algo:initialise-CT}. It removes
   from the domain of each variable~$x$ all values that are either greater 
   than the largest element or smaller than the smallest element in the
-  initial table.
+  initial table. \Todo{Might change later to take the intersection of the 
+  values in the tupleset with the domain of the variables, but this is cheaper
+  since it is very cheap to find min and max for tuplesets.}
 
-\begin{algorithm}[h]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-    \FOREACH{$x \in \Scp$} %\COMMENT{Initial bounds propagation}
+    \FOREACH{$x \in \localvar{variables}$} %\COMMENT{Initial bounds propagation}
         \STATE $\Dom{x} \leftarrow \Dom{x} \setminus  
-        \Set{a \in \Dom{x} : a > \texttt{tuples}.\function{max}()
-          ~\text{or}~a < \texttt{tuples}.\function{min}()}$
+        \Set{a \in \Dom{x} : a > \localvar{tuples}.\function{max}()
+          ~\text{or}~a < \localvar{tuples}.\function{min}()}$
       \ENDFOREACH
   \end{algorithmic}
   \caption{Simple initial propagation for keeping down the size of \Supports.}
@@ -458,7 +469,8 @@ we let~$0$ be our start guess.
 \end{algorithm}
 
 \paragraph{Performing propagation.}
-When the propagator is invoked for propagation, the method propagate() is called.
+When the propagator is invoked for propagation, the method propagate()
+in~\Algoref{algo:CT} is called.
 Performing propagation consists of two steps: updating the current
 table and filtering out inconsistent values from the domains of the variables.
 We now describe these processes in more detail.
@@ -466,7 +478,8 @@ We now describe these processes in more detail.
 \begin{enumerate}
 \item \textit{Updating the current table.} 
   The method updateTable() in 
-  \Linesref{line:updateTable:1}{line:updateTable:9} filters out (indices of)
+  \Linesref{line:updateTable:1}{line:updateTable:9} of~\Algoref{algo:CT}
+  filters out (indices of)
   tuples that have ceased to be supports since the last invocation of the
   propagator. The ovarall idea is that for each variable~$x \in \Scp$, we keep 
   only those values in~$\CurrTable$ that correspond to valid tuples for~$x$, and the
@@ -511,14 +524,14 @@ We now describe these processes in more detail.
   consider a variable~$x \in \Scp$ whose domain size is larger than~$1$,
   because we will never filter out values from the domain of an assigned
   varible. To see this, assume we removed the last value for a variable~$x$,
-  causing a wipe-out for~$x$. Then by the definition in equation~\ref{eq:currtable}
+  causing a wipe-out for~$x$. Then by the definition in equation~\eqref{eq:currtable}
   \CurrTable~must be empty,
   which it will not be upon invocation of filterDomains(). Hence, we need
   only consider~$x \in \Scp$ such that~$|\Dom{x} > 1|$.
 
   In line~\ref{line:filterDom:4}, we search for an index in~$\CurrTable$
   where a valid support for the variable-value pair~$(x,a)$ is found, 
-  thereby checking the condition in~\ref{eq:validcond}.
+  thereby checking the condition in~\eqref{eq:validcond}.
   \Todo{equation numbers do not show up?}
   Recall that intersectIndex($m$) in Class~$\SparseBitSet$ returns~$-1$ if
   the intersection of the~$\SparseBitSet$-object and~$m$ is the empty set,
