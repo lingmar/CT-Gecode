@@ -28,8 +28,8 @@
       \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
       \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$} \label{line:filterDom:2}
             \FOREACH{$a \in \Dom{x}$} \label{line:filterDom:3}
-                  \STATE $\texttt{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
-                  \IF{$\texttt{index~} \neq -1$} \label{line:filterDom:5}
+                  \STATE $\localvar{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
+                  \IF{$\localvar{index~} \neq -1$} \label{line:filterDom:5}
                         \STATE \todo{save index in residues} \COMMENT{No residues yet!} \label{line:filterDom:6}
                   \ELSE
                         \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$ \label{line:filterDom:7}
@@ -47,10 +47,10 @@
       \Endfunc
 
     \item[]
-        \Func{propagate}{}
-              \STATE updateTable()
-              \IF{$\CurrTable$.isEmpty()}
-                      \RETURN{$Failed$}
+        \Func{propagate}{} \label{line:propagate:1}
+              \STATE updateTable() \label{line:propagate:2}
+              \IF{$\CurrTable$.isEmpty()} \label{line:propagate:3}
+                      \RETURN{$Failed$} \label{line:propagate:4}
               \ENDIF
-              \RETURN{filterDomains()}
+              \RETURN{filterDomains()} \label{line:propagate:5}
          \Endfunc

@@ -297,6 +297,7 @@ The fields of the class \texttt{CT-Propagator} are as follows:
     is contained (is set to~$1$) if and only if the~$i$th tuple is valid:
     
     \begin{equation}
+      \label{eq:currtable}
       i \in \CurrTable \ \Leftrightarrow \ \forall x \in scp(c): \tau_i[x] \in \Dom{x}
     \end{equation}
 
@@ -458,10 +459,9 @@ we let~$0$ be our start guess.
 
 \paragraph{Performing propagation.}
 When the propagator is invoked for propagation, the method propagate() is called.
-Performing propagation consists of two steps. Firstly, the current table is
-updated to filter out (indices of) tuples that are no more supports. Thereafter
-each variable-value pair is considered to check whether these values still have
-a support. We now describe these processes in more detail:
+Performing propagation consists of two steps: updating the current
+table and filtering out inconsistent values from the domains of the variables.
+We now describe these processes in more detail.
 
 \begin{enumerate}
 \item \textit{Updating the current table.} 
@@ -510,7 +510,12 @@ a support. We now describe these processes in more detail:
   actual filtering of the domains. We note that it is only neccessary to
   consider a variable~$x \in \Scp$ whose domain size is larger than~$1$,
   because we will never filter out values from the domain of an assigned
-  varible. \Todo{explain better}
+  varible. To see this, assume we removed the last value for a variable~$x$,
+  causing a wipe-out for~$x$. Then by the definition in equation~\ref{eq:currtable}
+  \CurrTable~must be empty,
+  which it will not be upon invocation of filterDomains(). Hence, we need
+  only consider~$x \in \Scp$ such that~$|\Dom{x} > 1|$.
+
   In line~\ref{line:filterDom:4}, we search for an index in~$\CurrTable$
   where a valid support for the variable-value pair~$(x,a)$ is found, 
   thereby checking the condition in~\ref{eq:validcond}.
@@ -528,6 +533,10 @@ a support. We now describe these processes in more detail:
   
 \end{enumerate}
 
+The method propagate() in lines~\ref{line:propagate:1}-\ref{line:propagate:5}
+first calls updateTable() and if the current table is empty,~$Failed$
+is returned as a status message. Then filterDomains() is called, and the
+return value of that method is returned.
 
  \begin{algorithm}[h]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
