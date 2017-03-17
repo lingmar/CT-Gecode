@@ -14,7 +14,7 @@
 \newcommand{\T}[1]{\texttt{#1}}
 
 \newcommand{\Timeout}{600.00} % CPU seconds
-\newcommand{\Todo}[1]{{\color{blue}Todo: #1}}
+\newcommand{\Todo}[1]{{\color{blue}#1}}
 \newcommand{\Secref}[1]{Section~\ref{#1}}
 \newcommand{\Chapref}[1]{Section~\ref{#1}}
 \newcommand{\Algoref}[1]{Algorithm~\ref{#1}}
@@ -254,7 +254,12 @@ sequence of $n$-tuples.
 % Section 3 bör beskriva din design i detalj men samtidigt inte på C++-nivå. Jag gillar att se sjok av pseudokod inbäddade i text som förklarar pseudokoden. Man kan skriva text mellan sjoken och/eller i caption till algorithm-omgivningen. Något som jag också gillar är stepwise refinement, dvs. att först visa en enkel men korrekt version, och sedan en eller flera mer sofistikerade, optimerade versioner. Den pseudokod som du har skrivit passar bra i Section 3, men bryt gärna upp åtminstone Class CT-Propagator i flera stycken algorithm-omgivningar.
 
 This chapter presents the algorithms that are used in the implementation of the
-CT propagator in \Chapref{implementation}.
+CT propagator in \Chapref{implementation}. In what follows, when we refer to
+an array~$a$,~$a[0]$ denotes the first element (indexing starts from~$0$),
+$a$.length() the number of its cells and~$a[i:j]$ all its cells in the closed
+interval~$[i,j]$, where~$0 \leq i \leq j \leq a.\function{length}() - 1$.
+When we refer to a two-dimensional array~$m$,~$m[i][*]$ denotes
+row~$i$ and~$m[*][j]$ column~$j$, seing~$m$ as a matrix.
 
 \subsection{Sparse Bit-Set}
 This section describes Class~$\SparseBitSet$, which is the main datastructure
@@ -274,18 +279,56 @@ fields and methods in detail.
 \Todo{It should not be neccassary to keep \Mask~as a field, as it is only used temporarily.
 Unneccessary to copy it every time.}
 
+\Todo{Todo: Add examples.}
+
 Linesref{line:sbsfield:start}{line:sbsfield:end} of~\Algoref{algo:sparse} shows the fields
 of Class~\SparseBitSet~and their types. Now follows a more detailed description of them.
 
 \begin{itemize}
-  \item \Words 
-  \item \Index 
-  \item \Limit 
-  \item \Mask 
+  \item \Words~is an array of~$p$ 64-bit words which defines the current value of the bit-set:
+    the~$i$th bit of the~$j$th word is 1 if and only if the $(j-1) \cdot 64 + i$th element of
+    the set is present. Initially, all words in this array have all their bits set to~$1$,
+    except the last word that may have a suffix of bits set to~$0$. \Todo{Example.}
+  \item \Index~is an array that manages the indices of the words in~\Words. The
+    indices of all the non-zero words are in~\Index~at positions less than or
+    equal to the value of the field~\Limit.
+    The indices of the zero-words will be overwritten by indices of non-zero words
+    because only non-zero words are relevant. \Todo{In the paper, they switch place
+    of the indices of the zero-word and the non-zero word. But since we implement this
+    in Gecode, which is copy-based, we
+    can overwrite it instead. Explain this difference?}
+  \item \Limit~is the largest index of~\Index~corresponding to a non-zero word
+    in~\Words.
+    \Todo{Not entirely true, because the indices of the non-zero words will be
+      still be "lying around" at indices $> \Limit$.
+      But the point is that we only \emph{care} about indices 0...\Limit~in~\Index.
+    Should think of a better formulation.}
+  \item \Mask~is a local temporary array that is used to modify the bits in~\Words.
+    
+    % collect elements with
+    % the method addToMask(). It can be cleared with method clearMask(). 
+    % A~\SparseBitSet can only be modified by means of the method intersectWithMask().
 \end{itemize}
 
-\subsubsection{Methods}
+\noindent
+The class invariant describing the state of the class is as follows:
+\begin{alignat}{1}
+  &\Index[0:\Limit]~\text{is a permutation of a subset of~} [0,\dots,p-1],\text{~and} \\
+  &\forall i \in \Set{0,\dots,\Limit}: \Words[\Index[i]] \neq 0^{64}
+\end{alignat}
 
+\Todo{In the paper, the invariant looks like this:
+\begin{alignat}{1}
+  &\Index~\text{is a permutation of~} [0,\dots,p-1],\text{~and} \\
+  &\forall i \in \Set{0,\dots,p-1}: i \leq \Limit \Leftrightarrow \Words[\Index[i]] \neq 0^{64}
+\end{alignat}
+
+but for us it is different because we overwrite the indices of the zero-words.
+}
+
+\subsubsection{Methods}
+\Todo{Add method initialiseSparseBitSet() to show the initialisation of the 
+  object?}
 
 \subsection{Compact-Table (CT) Algorithm}
 This section describes the CT algorithm, a domain consistent propagation
@@ -371,7 +414,7 @@ description of them.
     % \end{equation}
     
     % where~$j = |\Set{\tau_k \ | \ \tau_k \in T \ \land \ \tau_k \text{~is valid} \ \land \ k < i}|$.
-    Seing~$\Supports$ as a matrix, we have that the column~$\Supports[*,*][i]$ encodes
+    Seing~$\Supports$ as a matrix, we have that the column~$\Supports[*][i]$ encodes
     the~$i$th support for~$c$. $\Supports$ is computed once during the initialisation of CT and then
     remains unchanged.
     
@@ -437,10 +480,12 @@ but this is how I would do it.}
 
 \Lineref{line:init:8} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
 $nsupports$ bits, initially with all bits set to~$1$ since~$nsupports$
-number of tuples are initially valid supports for~$c$.
+number of tuples are initially valid supports for~$c$. \Todo{We assume that 
+\SparseBitSet~has a constructor that takes nr of bits as arguments.}
 
 \Linesref{line:init:12}{line:init:14} removes values that are not supported
-by any tuple in the initial table.
+by any tuple in the initial table. \Todo{Optimisation, not neccassary
+  as these values will be removed upon the first propagation otherwise.}
 
  
   To limit the size of~$\Supports$, one could perform simple bounds
@@ -449,7 +494,8 @@ by any tuple in the initial table.
   in~\Algoref{algo:initialise-CT}. It removes
   from the domain of each variable~$x$ all values that are either greater 
   than the largest element or smaller than the smallest element in the
-  initial table. \Todo{Might change later to take the intersection of the 
+  initial table. \Todo{This is not neccassary, only an optimisation.
+  Might change later to take the intersection of the 
   values in the tupleset with the domain of the variables, but this is cheaper
   since it is very cheap to find min and max for tuplesets.}
 

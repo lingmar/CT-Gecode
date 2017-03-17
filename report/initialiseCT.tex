@@ -23,11 +23,11 @@
           \ENDIF
         \ENDFOREACH
           \IF{$\localvar{supported}$} 
-            \STATE $\localvar{nsupports} \leftarrow \localvar{nsupports} + 1$
             \FOREACH{$x \in \Scp$} \label{line:init:9}
               \STATE $\Supports[x,t[x]][\localvar{nsupports}] \leftarrow 1$ \label{line:init:10}
               \STATE $\Residues[x,t[x]] \leftarrow \Floor{\frac{\localvar{nsupports}}{64}}$
               \COMMENT{Index for the support in~$\CurrTable$}\label{line:init:11}
+              \STATE $\localvar{nsupports} \leftarrow \localvar{nsupports} + 1$
             \ENDFOREACH
             %\STATE setElemsInColumn($\localvar{nsupports}$, $t$) 
           \ENDIF
@@ -36,7 +36,7 @@
 
      % \STATE $\Supports.\text{trimToWidth}(\localvar{nsupports})$ \COMMENT{Keep only the first $\localvar{nsupports}$ bits for each row}
       \FOREACH{$x \in \Scp$} \label{line:init:12}
-          \STATE{$\Dom{x} \leftarrow \Dom{x} \setminus \Set{a \in \Dom{x} : \Supports[x,a] = 0^{64}}$}\label{line:init:14}
+          \STATE{$\Dom{x} \leftarrow \Dom{x} \setminus \Set{a \in \Dom{x} : \Supports[x,a] = 0}$}\label{line:init:14}
       \ENDFOREACH
       \STATE $\CurrTable \leftarrow \SparseBitSet(\localvar{nsupports})$ 
       \COMMENT{$\SparseBitSet$ with $\localvar{nsupports}$ bits} \label{line:init:15}

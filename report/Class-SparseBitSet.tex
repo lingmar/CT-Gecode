@@ -1,9 +1,9 @@
     \STATE $\Class$ SparseBitSet
     \item[]
-      \STATE $\Words$: array of long \COMMENT{$\tt{\Words.length = p}$}
-      \STATE $\Index$: array of int \COMMENT{$\tt{\Index.length = p}$}
+      \STATE $\Words$: array of long \COMMENT{$\Words.\function{length}() = p$} \label{line:sbsfield:start}
+      \STATE $\Index$: array of int \COMMENT{$\Index.\function{length}() = p$}
       \STATE $\Limit$: int 
-      \STATE $\Mask$: array of long \COMMENT{$\tt{\Mask.length = p}$}
+      \STATE $\Mask$: array of long \COMMENT{$\Mask.\function{length}() = p$} \label{line:sbsfield:end}
     \item[]
       \FuncRet{isEmpty}{}{Boolean}
       \RETURN{$\Limit = -1$}
@@ -26,11 +26,11 @@
       %\Endfunc
 
     \item[]
-      \Func{addToMask}{m: array of long}
+      \Func{addToMask}{$\localvar{m}$: array of long}
       \For{i}{0}{\Limit}
       \STATE $\localvar{offset} \leftarrow \Index[i]$
       \STATE $\texttt{mask}[\localvar{offset}] \leftarrow \texttt{mask}[\localvar{offset}] \ | \ 
-      \texttt{m}[\localvar{offset}]$ \COMMENT{bitwise OR}
+      \localvar{m}[\localvar{offset}]$ \COMMENT{bitwise OR}
       \ENDFOR
       \Endfunc
 
@@ -52,7 +52,7 @@
       \Endfunc
 
     \item[]
-      \FuncRet{intersectIndex}{m: array of long}{int}
+      \FuncRet{intersectIndex}{$\localvar{m}$: array of long}{int}
       \For{i}{0}{\Limit}%{$i \leftarrow 0 \To \Limit$}
       \STATE $\Offset \leftarrow \Index[i]$
       \IF{$\Words[\Offset] \ \& \ m[\Offset] \neq 0^{64}$}
