@@ -544,7 +544,7 @@ I haven't implemented residues yet (to keep the first version as simple as possi
 but this is how I would do it.}
 %\Todo{trimToWidth()}.
 
-\Lineref{line:init:8} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
+\Lineref{line:init:15} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
 $nsupports$ bits, initially with all bits set to~$1$ since~$nsupports$
 number of tuples are initially valid supports for~$c$.
 
@@ -613,9 +613,9 @@ We now describe these processes in more detail.
 
   \Linesref{line:updateTable:5}{line:updateTable:6} stores the union of the
   set of valid tuples for each value~$a \in \Domain{x}$ in the temporary mask
-  and \Lineref{line:update:table:7} intersects~$\CurrTable$ with the mask.
+  and \Lineref{line:updateTable:7} intersects~$\CurrTable$ with the mask.
   \Lineref{line:updateTable:8} checks whether the current table is empty,
-  in which case we break in line~\ref{line:currTable:9}
+  in which case we break in line~\ref{line:updateTable:9}
   because there are no valid tuples left.
 
 \item 
