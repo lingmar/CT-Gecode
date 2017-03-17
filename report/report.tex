@@ -22,6 +22,9 @@
 \newcommand{\Extensional}{\Constraint{Extensional}~}
 \newcommand{\Lineref}[1]{Line~\ref{#1}}
 \newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
+\newcommand{\lineref}[1]{line~\ref{#1}}
+\newcommand{\linesref}[2]{lines~\ref{#1}-\ref{#2}}
+
 
 \newcommand{\Method}[2]{\textbf{method~}\mathrm{{#1}}({#2})}
 \newcommand{\MethodReturn}[3]{\textbf{method~}\mathrm{{#1}}({#2})\textbf{\ : \ {#3}}}
@@ -153,11 +156,14 @@ This thesis contributes with the following:
 
 % Definiera alla begrepp som används senare
 
-This chapter provides a background that is relevant for the
-following chapters. It is divided into three parts: \Secref{bg:cp}
+This section provides a background that is relevant for the
+following sections. It is divided into five parts: \Secref{bg:cp}
 introduces Constraint Programming. \Secref{bg:gecode} gives an overview
-of Gecode, a constraint solver. Finally, \Secref{bg:table} introduces
-the \Table constraint.
+of Gecode, a constraint solver. \Secref{bg:table} introduces the~\Table
+constraint. \Secref{bg:ct} describes the main concepts of the Compact
+Table (CT) algorithm. Finally, \Secref{bg:sbs} describes the main
+idea of \Todo{Reversible?} Sparse Bit-Sets,
+a data structure that is used in the CT algorithm.
 
 \subsection{Constraint Programming}
 \label{bg:cp}
@@ -170,24 +176,27 @@ set of \emph{variables} with possible values. The possible values of
 a variable is called the \emph{domain} of the variable.
 All the variables are to be assigned a value
 from their domains, so that all the constraints of the problem
-are satisfied.
+are satisfied. Sometimes the solution should not only satisfy the set of constraints for the
+problem, but should also maximise or minimise some given function.
+
+\Todo{Perhaps add an example somewhere here.}
+
 %  There need not
 % exist a solution to a given problem, and a solution need not
 % be unique; zero or more assignments of values to the variables may 
 % satisfy the constraints.
-One small example is the set of variables~$\Set{x,y}$ with
-domain~$\Set{1,2,3}$,
-together with the constraint~$x<y$. This problem has two solutions, 
-namely~$(x,y) = (1,2), (x,y) = (1,3)$ and~$(x,y) = (2,3)$.
-If, on the other hand, the domains of~$x$ and~$y$ would have been~$\Set{2,3}$
-and~$\Set{1,2}$, respectively, then there would exist no solution since none of
-the possible assignments of~$x$ and~$y$ would have satisfied the constraint~$x<y$.
+% One small example is the set of variables~$\Set{x,y}$ with
+% domain~$\Set{1,2,3}$,
+% together with the constraint~$x<y$. This problem has two solutions, 
+% namely~$(x,y) = (1,2), (x,y) = (1,3)$ and~$(x,y) = (2,3)$.
+% If, on the other hand, the domains of~$x$ and~$y$ would have been~$\Set{2,3}$
+% and~$\Set{1,2}$, respectively, then there would exist no solution since none of
+% the possible assignments of~$x$ and~$y$ would have satisfied the constraint~$x<y$.
 
-Sometimes the solution should not only satisfy the set of constraints for the
-problem, but should also maximise or minimise some given function.
-Take the same small example as above, with
-the domains of~$x,y$ being~$\Set{1,2,3}$, and suppose that the solution
-should maximise the sum of~$x$ and~$y$. Then the solution is~$(x,y) = (2,3)$.
+
+% Take the same small example as above, with
+% the domains of~$x,y$ being~$\Set{1,2,3}$, and suppose that the solution
+% should maximise the sum of~$x$ and~$y$. Then the solution is~$(x,y) = (2,3)$.
 
 A constraint solver is a software that solves constraint problems.
 The solving of a problem consists of generating a search tree by branching
@@ -196,7 +205,7 @@ the solver removes impossible values from the domains of the variables.
 This filtering process is called \emph{propagation}. Each constraint is
 associated with at least one propagator algorithm, whose task is to detect
 values that would violate the constraint if the variables were to be assigned
-any of those values, and remove those values from the domain of the variable.
+any of those values, and remove those values from the domain of the variables.
 
 After this intuitive description we are ready to define some concepts.
 
@@ -209,21 +218,40 @@ After this intuitive description we are ready to define some concepts.
 % - Constistency levels (value-, bounds-, domain-)
 % 
 
+\Todo{Todo: Define concepts
+\begin{itemize}
+  \item CSP
+  % \item Assignment
+  % \item Assignments as Constraint Solution
+  \item Valid tuple for a variable
+  \item Tuples that are supports for a constraint
+  \item Value-, bounds-, and domain-consistency
+  \item Constraint store
+\end{itemize}
+}
+
 \paragraph{Propagation}
 % From chap14
 
-\begin{definition}
-  A domain~$D$ is a complete mapping from a fixed (countable) set of 
-  variables~$V$ to finite sets of integers. A domain~$D$ is failed,
-  if $D(x) = \emptyset$ for some $x \in V$. A variable~$x \in V$
-  is fixed by a domain D, if $|D(x)| = 1$. The intersection of domains~$D1$ and~$D2$,
-  denoted~$D1 \sqcap D2$, is defined by the domain
-  $D(x) = D1(x) \Union D2(x)$ for all $x \in V$.
-  A domain~$D1$ is stronger than a domain~$D2$, written $D1 \sqsubseteq D2$,
-  if~$D1(x) \subset D2(x)$ for all $x \in V$.
-\end{definition}
+% \begin{definition}
+%   A domain~$D$ is a complete mapping from a fixed (countable) set of 
+%   variables~$V$ to finite sets of integers. A domain~$D$ is failed,
+%   if $D(x) = \emptyset$ for some $x \in V$. A variable~$x \in V$
+%   is fixed by a domain D, if $|D(x)| = 1$. The intersection of domains~$D1$ and~$D2$,
+%   denoted~$D1 \sqcap D2$, is defined by the domain
+%   $D(x) = D1(x) \Union D2(x)$ for all $x \in V$.
+%   A domain~$D1$ is stronger than a domain~$D2$, written $D1 \sqsubseteq D2$,
+%   if~$D1(x) \subset D2(x)$ for all $x \in V$.
+% \end{definition}
 
-A propagator~$p$ is a function that maps domains to domains.
+% \begin{definition}
+%   A constraint store is a function mapping variables to sets of values.
+% \end{definition}
+
+A propagator~$p$ is a function from constraint stores to constraint stores
+that performs constraint propagation. 
+
+\Todo{Define what a propagator must fulfill. (Contracting, monotonic...)}
 
 \subsection{Gecode}
 \label{bg:gecode}
@@ -238,6 +266,9 @@ The \Table constraint, called \Extensional in Gecode,
 explicitly expresses the possible combinations of values for the variables as a
 sequence of $n$-tuples.
 
+\Todo{Define the parts of the Gecode API that is used later (propagate(), status
+  messages...)}
+
 \subsection{Compact-Table Propagator}
 \label{bg:ct}
 % Beskriv huvudidéerna
@@ -245,7 +276,7 @@ sequence of $n$-tuples.
 % O(r*d*t) per table constraint along a branch in the search tree (artikeln om bakgrund)
 
 \subsection{Sparse Bit-Set}
-\label{bg:sbc}
+\label{bg:sbs}
 % Beskriv idén
 
 \section{Algorithms}
@@ -276,12 +307,12 @@ fields and methods in detail.
 \end{algorithm}
 
 \subsubsection{Fields}
-\Todo{It should not be neccassary to keep \Mask~as a field, as it is only used temporarily.
-Unneccessary to copy it every time.}
+% \Todo{It should not be neccassary to keep \Mask~as a field, as it is only used temporarily.
+% Unneccessary to copy it every time.}
 
 \Todo{Todo: Add examples.}
 
-Linesref{line:sbsfield:start}{line:sbsfield:end} of~\Algoref{algo:sparse} shows the fields
+\Linesref{line:sbsfield:start}{line:sbsfield:end} of~\Algoref{algo:sparse} shows the fields
 of Class~\SparseBitSet~and their types. Now follows a more detailed description of them.
 
 \begin{itemize}
@@ -297,12 +328,14 @@ of Class~\SparseBitSet~and their types. Now follows a more detailed description 
     of the indices of the zero-word and the non-zero word. But since we implement this
     in Gecode, which is copy-based, we
     can overwrite it instead. Explain this difference?}
-  \item \Limit~is the largest index of~\Index~corresponding to a non-zero word
-    in~\Words.
-    \Todo{Not entirely true, because the indices of the non-zero words will be
-      still be "lying around" at indices $> \Limit$.
-      But the point is that we only \emph{care} about indices 0...\Limit~in~\Index.
-    Should think of a better formulation.}
+  \item \Limit~is the number of non-zero words in~\Words.
+
+    % \Limit~is the largest index of~\Index~corresponding to a non-zero word
+    % in~\Words.
+    % \Todo{Not entirely true, because the indices of the non-zero words will
+    %   still be "lying around" at indices $> \Limit$.
+    %   But the point is that we only \emph{care} about indices 0..\Limit~in~\Index.
+    % Should think of a better formulation.}
   \item \Mask~is a local temporary array that is used to modify the bits in~\Words.
     
     % collect elements with
@@ -330,13 +363,46 @@ but for us it is different because we overwrite the indices of the zero-words.
 \Todo{Add method initialiseSparseBitSet() to show the initialisation of the 
   object?}
 
+We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
+
+\begin{itemize}
+  \item isEmpty() in lines~\ref{line:isEmpty:1}-\ref{line:isEmpty:2} checks
+    if the number of non-zero words is different from zero. If the limit is
+    set to~$-1$, that means that all words are zero-words.
+
+  \item clearMask() in lines~\ref{line:clearMask:1}-\ref{line:clearMask:4}
+    clears the temporary mask. This means setting to~$0$ all words of~$\Mask$
+    corresponding to non-zero words of~\Words.
+
+  \item addToMask() in~\linesref{line:addToMask:1}{line:addToMask:4} collects
+    elements to the temporary mask by applying a word-by-word logical bit-wise
+    \emph{or} operation with a given bit-set (array of long).
+    Once again, this operation is only applied to indices corresponding to
+    non-zero words in~\Words.
+
+  \item intersectWithMask() in~\linesref{line:intersect:1}{line:intersect:9}
+    considers each non-zero word of~\Words~in turn
+    and replaces it by its intersection with the corresponding word of~\Mask.
+    In case the resulting new word is~$0$, it (its index) is replaced
+    by (the index of) the last non-zero word, and~\Limit~is
+    decreased by one.
+    
+  \item intersectIndex() in~\linesref{line:interIdx:1}{line:interIdx:7}.
+    checks whether the instersection of~\Words~and a given bit-set
+    (array of long) is empty or not. For all non-zero words in~\Words,
+    we perform a logical bit-wise \emph{and} operation 
+    in line~\ref{line:interIdx:5} and return
+    the index of the word if the intersection is non-empty. If the
+    intersection is empty for all words,~$-1$ is returned.
+\end{itemize}
+
 \subsection{Compact-Table (CT) Algorithm}
 This section describes the CT algorithm, a domain consistent propagation
 algorithm for any table constraint~$c$.~\Algoref{algo:CT} shows the interface
 for Class CT-Propagator, which implements the CT algorithm. The rest of this
 section will describe its fields and methods in detail.
-\Todo{Is this a good idea or is the pseudo code too spread out? Ugly that the
-lines of references "Algorithm x" are numbered in~\Algoref{algo:CT}.}
+\Todo{Is this a good idea or is the pseudo code too spread out?}
+%Ugly that the lines of references "Algorithm x" are numbered in~\Algoref{algo:CT}.}
 %It dynamically maintains a set of valid supports regarding the current domain of each variable.
 
  \begin{algorithm}[H]
@@ -627,6 +693,11 @@ in~\Algoref{algo:propagate}.
 \end{algorithm}
 
 \subsubsection{Propagator Status Messages}
+\Todo{Not really sure where to put this text or whether it fits
+here. I will need to modify it and I know that I need
+to define all the concepts properly in the background.
+I will just let it "lie around" here for now.}
+
 A propagtor signals a status message after propagation.
 For CT there are three possible status messages;~\emph{Fail},
 \emph{Subsumed} and~\emph{Fixpoint}.
@@ -675,18 +746,17 @@ any further propagation.
 
 % Section 4 blir nog mindre intressant än Section 3 och 5, men där kan du skriva om sånt som är specifikt för C++ och Gecode för att algoritmerna i Section 3 ska fungera, precis som du har börjat göra. Det är också en bra plats för detaljer som sopats under mattan i pseudokoden, t.ex. exakt hur du mappar (x,a) till rätt element i supports och residues, med hashtabell eller så.
 
-This chapter describes an implementation of the CT propagator using the algorithms
+This section describes an implementation of the CT propagator using the algorithms
 presented in \Chapref{algorithms}. The implementation was made in the C++ programming
 language in the Gecode library.
 
-The bit-set matrix $\Supports$ is static and can be shared between all solution spaces.
+The bit-set matrix $\Supports$ is static and could be shared between all solution spaces.
 
 The bit-set $\CurrTable$ changes dynamically during propagation and must therefore be copied for
 every new space. Can save memory by only copying the non-zero words.
 
 No need to save the $\T{tuples}$ as a field in the propagator class as all
 the necessary information is encoded in $\CurrTable$ and $\Supports$.
-
 
 % Can't modify the value of the variable while iterating over it
 % when using an iterator for a view, the view cannot be modified (or, in C++ lingua: modifying the variable invalidates the iterator).
@@ -743,4 +813,5 @@ This appendix presents the source code for the implementation described in \Chap
 % https://bitbucket.org/oscarlib/oscar/src/40e25aafba8f9b0ab06029449350a2a9d1614854/oscar-algo/src/main/scala/oscar/algo/reversible/ReversibleSparseBitSet.scala?at=dev&fileviewer=file-view-default
 % https://bitbucket.org/oscarlib/oscar/src/40e25aafba8f9b0ab06029449350a2a9d1614854/oscar-cp/src/main/scala/oscar/cp/constraints/tables/TableCT.scala?at=dev&fileviewer=file-view-default3
 
-% 
+% course note in constraint programming
+% http://user.it.uu.se/~pierref/courses/COCP/slides/CourseNotes.pdf
