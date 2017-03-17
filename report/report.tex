@@ -128,7 +128,7 @@ There has been no attempt to implement CT in the constraint solver Gecode~\cite{
 
 \subsection{Goal}
 \label{intro:goal}
-The goal of this thesis is to implement a CT progatator
+The goal of this thesis is to implement a CT propagator
 algorithm for the \Table constraint in Gecode,
 and to evaluate its performance with respect to the existing propagators.
 
@@ -290,10 +290,10 @@ an array~$a$,~$a[0]$ denotes the first element (indexing starts from~$0$),
 $a$.length() the number of its cells and~$a[i:j]$ all its cells in the closed
 interval~$[i,j]$, where~$0 \leq i \leq j \leq a.\function{length}() - 1$.
 When we refer to a two-dimensional array~$m$,~$m[i][*]$ denotes
-row~$i$ and~$m[*][j]$ column~$j$, seing~$m$ as a matrix.
+row~$i$ and~$m[*][j]$ column~$j$, seeing~$m$ as a matrix.
 
 \subsection{Sparse Bit-Set}
-This section describes Class~$\SparseBitSet$, which is the main datastructure
+This section describes Class~$\SparseBitSet$, which is the main data-structure
 in the CT algorithm for maintaining the supports.~\Algoref{algo:sparse} shows the
 pseudo code for Class~$\SparseBitSet$. The rest of this section describes its
 fields and methods in detail.
@@ -388,7 +388,7 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
     decreased by one.
     
   \item intersectIndex() in~\linesref{line:interIdx:1}{line:interIdx:7}.
-    checks whether the instersection of~\Words~and a given bit-set
+    checks whether the intersection of~\Words~and a given bit-set
     (array of long) is empty or not. For all non-zero words in~\Words,
     we perform a logical bit-wise \emph{and} operation 
     in line~\ref{line:interIdx:5} and return
@@ -480,7 +480,7 @@ description of them.
     % \end{equation}
     
     % where~$j = |\Set{\tau_k \ | \ \tau_k \in T \ \land \ \tau_k \text{~is valid} \ \land \ k < i}|$.
-    Seing~$\Supports$ as a matrix, we have that the column~$\Supports[*][i]$ encodes
+    Seeing~$\Supports$ as a matrix, we have that the column~$\Supports[*][i]$ encodes
     the~$i$th support for~$c$. $\Supports$ is computed once during the initialisation of CT and then
     remains unchanged.
     
@@ -488,7 +488,7 @@ description of them.
     variable~$x$ right before the previous invocation of CT on~$c$.
     % Not upon initialisation though
 
-  \item $\Residues$ is an array such that for each variable-value pari~$(x,a)$,
+  \item $\Residues$ is an array such that for each variable-value pair~$(x,a)$,
     $\Residues[x,a]$ denotes the index of the word in~$\CurrTable$ where a support
     was found for~$(x,a)$ the last time it was sought for.
 
@@ -523,7 +523,7 @@ the dummy value~$-1$ because we
 want to have~$|\Dom{x}| \neq \LastSizes[x]$ the first time that the propagation
 algorithm runs. The field \Residues~will be filled with values later, 
 in line \ref{line:init:11}.
-The field \Supports~is initalised as an array of bit-sets, with one bit-set for each
+The field \Supports~is initialised as an array of bit-sets, with one bit-set for each
 variable-value pair, and the size of each
 bit-set being the number of tuples in~$\localvar{tuples}$. Each bit-set is assumed
 to be initially filled with zeros.
@@ -546,8 +546,7 @@ but this is how I would do it.}
 
 \Lineref{line:init:8} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
 $nsupports$ bits, initially with all bits set to~$1$ since~$nsupports$
-number of tuples are initially valid supports for~$c$. \Todo{We assume that 
-\SparseBitSet~has a constructor that takes nr of bits as arguments.}
+number of tuples are initially valid supports for~$c$.
 
 \Linesref{line:init:12}{line:init:14} removes values that are not supported
 by any tuple in the initial table. \Todo{Optimisation, not neccassary
@@ -601,7 +600,7 @@ We now describe these processes in more detail.
   \Linesref{line:updateTable:1}{line:updateTable:9} of~\Algoref{algo:CT}
   filters out (indices of)
   tuples that have ceased to be supports since the last invocation of the
-  propagator. The ovarall idea is that for each variable~$x \in \Scp$, we keep 
+  propagator. The overall idea is that for each variable~$x \in \Scp$, we keep 
   only those values in~$\CurrTable$ that correspond to valid tuples for~$x$, and the
   complement of those values are set to~$0$. We note that
   it is only necessary to consider a variable~$x$ if its domain has changed
@@ -644,17 +643,17 @@ We now describe these processes in more detail.
     \label{algo:filterDomains}
   \end{algorithm}
 
-  \Todo{This method would be slightly more sofisticated if residues
+  \Todo{This method would be slightly more sophisticated if residues
   were implemented. For now, disregard the empty line in the if-statement.}
 
   \Lineref{line:filterDom:1} initialises a counter for the number of unassigned
   variables.
 
   \Linesref{line:filterDom:2}{line:filterDom:9} performs the
-  actual filtering of the domains. We note that it is only neccessary to
+  actual filtering of the domains. We note that it is only necessary to
   consider a variable~$x \in \Scp$ whose domain size is larger than~$1$,
   because we will never filter out values from the domain of an assigned
-  varible. To see this, assume we removed the last value for a variable~$x$,
+  variable. To see this, assume we removed the last value for a variable~$x$,
   causing a wipe-out for~$x$. Then by the definition in equation~\eqref{eq:currtable}
   \CurrTable~must be empty,
   which it will not be upon invocation of filterDomains(). Hence, we need
@@ -698,7 +697,7 @@ here. I will need to modify it and I know that I need
 to define all the concepts properly in the background.
 I will just let it "lie around" here for now.}
 
-A propagtor signals a status message after propagation.
+A propagator signals a status message after propagation.
 For CT there are three possible status messages;~\emph{Fail},
 \emph{Subsumed} and~\emph{Fixpoint}.
 
@@ -717,13 +716,13 @@ A propagator is not allowed to signal subsumption if it could propagate further
 at a later point. At the latest, a propagator must signal subsumption if all the variables
 are assigned in~$S$ and a~$S$ is a solution store.
 CT signals subsumption when at most one variable is not assigned,
-since this is the pointe where no more propagation can be made.
+since this is the point where no more propagation can be made.
 
 \paragraph{Fixpoint.}
 A propagator is not allowed to claim that it has computed a fixpoint if
 it could still propagate.
 CT always computes a fixpoint if it is not subsumed or wipes out the domain of a variable.
-To understand this, consider two consequtive calls to propagate().
+To understand this, consider two consecutive calls to propagate().
 Let~$T$ be the set of valid tuples and~$x$ be the set of variables.
 The first time propagate() is executed, a (possibly empty) subset~$T_r$ of~$T$
 is invalidated (that is, the corresponding bits in $\CurrTable$ are set to $0$)
