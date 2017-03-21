@@ -43,7 +43,9 @@
 #include <gecode/kernel.hh>
 #include <gecode/int.hh>
 #include <gecode/minimodel.hh>
-#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp"
+
+#include "../../../src/compact-table.cpp"//"/Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp"
+
 
 #ifdef GECODE_HAS_SET_VARS
 #include <gecode/set.hh>
