@@ -1,4 +1,5 @@
-      \Func{initialiseCT}{$\localvar{variables}, \localvar{tuples}$} 
+      \Func{initialiseCT}{$\localvar{variables}$: array of variables,
+       $\localvar{tuples}$: list of tuples} 
       \STATE $\localvar{npairs} \leftarrow \function{sum}\Set{|\Dom{x}| : x \in \localvar{variables}}$
       \COMMENT{Number of variable-value pairs}\label{line:init:3}
       \STATE $\localvar{ntuples} \leftarrow \localvar{tuples}.\function{size}()$ \COMMENT{Number of tuples}
@@ -7,7 +8,7 @@
       \STATE $\Scp \leftarrow \localvar{variables}$ \label{line:init:1}
       \STATE $\LastSizes \leftarrow \text{array of  length~} \Scp.\function{length}
       ~\text{filled with -1}$ \COMMENT{Dummy value} \label{line:init:2}
-      \STATE $\Residues \leftarrow \text{array of length~} \localvar{npairs}$ \label{line:init:9}
+      \STATE $\Residues \leftarrow \text{array of length~} \localvar{npairs}$ \label{line:init:residue}
       
       \STATE $\Supports \leftarrow$ \text{array of length~}$\localvar{npairs}$
       \text{with bit-sets of size~}$\localvar{ntuples}$ \label{line:init:5}
@@ -36,7 +37,7 @@
 
      % \STATE $\Supports.\text{trimToWidth}(\localvar{nsupports})$ \COMMENT{Keep only the first $\localvar{nsupports}$ bits for each row}
       \FOREACH{$x \in \Scp$} \label{line:init:12}
-          \STATE{$\Dom{x} \leftarrow \Dom{x} \setminus \Set{a \in \Dom{x} : \Supports[x,a] = 0}$}\label{line:init:14}
+          \STATE{$\Dom{x} \leftarrow \Dom{x} \setminus \Set{a \in \Dom{x} : \Supports[x,a] \text{~is empty}}$}\label{line:init:14}
       \ENDFOREACH
       \STATE $\CurrTable \leftarrow \SparseBitSet$ \text{with} $\localvar{nsupports}$ \text{bits~} \label{line:init:15}
       \Endfunc

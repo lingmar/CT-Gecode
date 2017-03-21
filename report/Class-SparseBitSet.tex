@@ -4,6 +4,17 @@
       \STATE $\Index$: array of int \COMMENT{$\Index.\function{length}() = p$}
       \STATE $\Limit$: int 
       \STATE $\Mask$: array of long \COMMENT{$\Mask.\function{length}() = p$} \label{line:sbsfield:end}
+
+    \item[]
+    \Func{initSparseBitSet}{$\localvar{nbits}$: int} \label{line:initsbs:start}
+      \STATE $\localvar{p} \leftarrow \Ceiling{\frac{\localvar{nbits}}{64}}$
+      \STATE $\Words \leftarrow \text{~array of long of length~} \localvar{p} \text{, first~} 
+      \localvar{nbits} \text{~set to 1}$
+      \STATE $\Mask \leftarrow \text{~array of long of length} \localvar{p} \text{, all bits set to~}0$
+      \STATE $\Index \leftarrow [0, \ldots, \localvar{p} - 1]$
+      \STATE $\Limit \leftarrow \localvar{p-1}$ \label{line:initsbs:end}
+      \Endfunc
+
     \item[]
       \FuncRet{isEmpty}{}{Boolean} \label{line:isEmpty:1}
       \RETURN{$\Limit = -1$} \label{line:isEmpty:2}
@@ -44,7 +55,7 @@
       \STATE $\Words[\localvar{offset}] \leftarrow w$ \label{line:intersect:6}
       \IF{$w = 0^{64}$} \label{line:intersect:7}
       \STATE $\Index[i] \leftarrow \Index[\Limit]$ \label{line:intersect:8}
-      %\STATE $\Index[\Limit] \leftarrow \localvar{offset}$
+      \STATE $\Index[\Limit] \leftarrow \localvar{offset}$ \label{line:intersect:8.5}
       \STATE $\Limit \leftarrow \Limit - 1$ \label{line:intersect:9}
       \ENDIF
       \ENDIF

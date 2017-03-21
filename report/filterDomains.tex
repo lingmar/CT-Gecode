@@ -7,11 +7,12 @@
                         \STATE \todo{save index in residues} \COMMENT{No residues yet!} \label{line:filterDom:6}
                   \ELSE
                         \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$ \label{line:filterDom:7}
-                        \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
-                           \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}
-                        \ENDIF
                   \ENDIF
              \ENDFOREACH
+             \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
+                 \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}
+             \ENDIF
+
       \ENDFOREACH
       \IF{$\localvar{count\_unassigned} \leq 1$} \label{line:filterDom:10}
         \RETURN{$Subsumed$} \label{line:filterDom:11}

@@ -8,7 +8,8 @@
       No residues yet!}
 
     \item[]
-    \Func{initialiseCT}{}
+    \Func{initialiseCT}{$\localvar{variables}$: array of variables,
+       $\localvar{tuples}$: list of tuples}
     \STATE \Algoref{algo:initialise-CT}
     \Endfunc
 
@@ -23,6 +24,6 @@
     \Endfunc
 
     \item[]
-        \Func{propagate}{} \label{line:propagate:1}     
+        \Func{propagate}{}
         \STATE{\Algoref{algo:propagate}}
         \Endfunc
