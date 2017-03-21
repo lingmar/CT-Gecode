@@ -41,7 +41,7 @@
 
 #include <gecode/minimodel.hh>
 #include <climits>
-#include </Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp>
+#include "../../../src/compact-table.cpp"
 
 namespace Test { namespace Int {
 
