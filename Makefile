@@ -7,7 +7,7 @@ RM = rm -f
 
 OBJECTS = out/compact-table.o
 
-.PHONY: all clean report
+.PHONY: all clean report test
 
 all: bin/kakuro bin/black-hole-patience bin/swedish-drinking-protocol
 
@@ -32,3 +32,6 @@ report:
 
 clean:
 	$(RM) -r out/ bin/
+
+test:
+	cd gecode/test && make test && ./test -test Extensional::TupleSet
