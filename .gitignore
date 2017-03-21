@@ -40,6 +40,7 @@ out/*
 
 # Mysterious garbage files
 \#*
+.#
 
 # Gecode examples
 gecode/examples/*
