@@ -14,9 +14,9 @@ using namespace std;
 typedef Support::BitSetBase BitSet;
 
 typedef uint64_t word_t;
-typedef string mapkey;
-typedef unordered_map<mapkey, int> rmap;
-typedef pair<mapkey, int> rmap_entry;
+//typedef string mapkey;
+//typedef unordered_map<mapkey, int> rmap;
+//typedef pair<mapkey, int> rmap_entry;
 
 #ifdef GECODE_SUPPORT_MSVC_64
     /// Basetype for bits
