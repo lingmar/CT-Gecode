@@ -36,6 +36,7 @@ out/*
 *.aux
 *.dvi
 *.toc
+*.blg
 
 # Mysterious garbage files
 \#*
