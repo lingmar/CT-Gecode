@@ -50,27 +50,32 @@ public:
     nbits = _nbits;
     unsigned int nwords = required_words(nbits);
 
-    Region r(home);
+    words_bs = static_cast<Space&>(home).alloc<BitSet>(nwords);
+    mask_bs = static_cast<Space&>(home).alloc<BitSet>(nwords);
+
+    for (int i = 0; i < nwords; i++) {
+      int bits = i < nwords - 1 ? BITS_PER_WORD : nbits - BITS_PER_WORD*i;
+
+      words_bs[i].init(static_cast<Space&>(home), bits, true);
+      mask_bs[i].init(static_cast<Space&>(home), bits, true);
+    }
     
-    words_bs = r.alloc<BitSet>(nwords);
-    mask_bs = r.alloc<BitSet>(nwords);
-    
-    // Initialise words
+    // Initialise words, mask and index
     for (int i = 0; i < nwords; i++) {
       words.push_back(~0ULL); // Set all bits to 1
-    }
-
-    // Initialise mask
-    for (int i = 0; i < nwords; i++) {
       mask.push_back(0ULL);
-    }
-    
-    /// Initialise index
-    for (int i = 0; i < nwords; i++) {
       index.push_back(i);
     }
+
     /// Limit is initially highest index
     limit = nwords - 1;
+
+    //words_bs->data;
+
+    Support::RawBitSetBase rbs;// = Support::RawBitSetBase(static_cast<Space&>(home), 100);
+    //cout << "hej" << endl;
+    rbs.init(static_cast<Space&>(home), 100);
+    //cout << rbs.get(99) << endl;
   }
 
   /// Copy constructor
@@ -90,23 +95,25 @@ public:
   void clear_mask() {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
+      //mask_bs[offset].clearall();
       mask.at(offset) = 0ULL;
     }
   }
 
-  /// Reverse bits in mask
-  void reverse_mask() {
-    for (int i = 0; i <= limit; i++) {
-      int offset = index[i];
-      mask.at(offset) = ~mask.at(offset);
-    }
-  }
+  // /// Reverse bits in mask
+  // void reverse_mask() {
+  //   for (int i = 0; i <= limit; i++) {
+  //     int offset = index[i];
+  //     mask.at(offset) = ~mask.at(offset);
+  //   }
+  // }
 
   /// Add bits to mask
   void add_to_mask(vector<word_t> m) {
     assert(m.size() == mask.size());
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
+      
       mask.at(offset) |= m.at(offset);
     }
   }
@@ -485,6 +492,7 @@ public:
         if (x[i].size() > 1) {
           ++count_non_assigned;
         }
+        lastSize.at(i) = x[i].size();
       }
     }
     // Subsume if there is at most one non-assigned variable
@@ -538,18 +546,27 @@ private:
 
 // Post the table constraint
 void extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
+  using namespace Int;
+  if (!t.finalized())
+    throw NotYetFinalized("Int::extensional2");
+  if (t.arity() != x.size())
+    throw ArgumentSizeMismatch("Int::extensional2");
+
   // Never post a propagator in a failed space
-  if (home.failed()) return;
-  // Set up array of views for the coordinates
+  GECODE_POST;
+
+  if (t.tuples()==0) {
+    if (x.size()!=0) {
+      home.fail();
+    }
+    return;
+  }
+
+  // Construct view array
   ViewArray<IntView> vx(home,x);
 
-  //  cout << "Post extensional2" << endl;
-
-  //home.fail();
+  GECODE_ES_FAIL(CompactTable::post(home,vx,t));
   
-  // If posting failed, fail space
-  if (CompactTable::post(home,vx,t) != ES_OK)
-    home.fail();
 }
 
 
