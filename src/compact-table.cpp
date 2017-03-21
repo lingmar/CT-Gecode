@@ -31,8 +31,6 @@ static const unsigned int bpb =
 
 #define BITS_PER_WORD bpb
 
-int nprops = 0;
-
 // Class for maintaining the supported tuples
 class SparseBitSet {
   vector<word_t> words;
@@ -266,12 +264,14 @@ protected:
   SparseBitSet currTable;
   // Supported tuples (static)
   MyBitSet supports;
+  
+  int* start_idx;
+  int* start_val;
+  
   // Row map for support entries
-  rmap row_map;
+  //rmap row_map;
   // Last sizes
   vector<int> lastSize;
-  // nprop
-  int nprop;
   
 public:
   // Create propagator and initialize
@@ -282,12 +282,19 @@ public:
     : Propagator(home), x(x0), currTable(home, t0.tuples()),
       supports(domsum, t0.tuples())
   {
-    Region r(home);
-    
-    nprop = nprops++;
+    start_idx = static_cast<Space&>(home).alloc<int>(x.size());
+    start_val = static_cast<Space&>(home).alloc<int>(x.size());
+
+    int cnt = 0;
+    for (int i = 0; i < x.size(); i++) {
+      start_val[i] = x[i].min();
+      start_idx[i] = cnt;
+      cnt += x[i].size();
+    }
+
     x.subscribe(home,*this,PC_INT_DOM);
 
-    fill_row_map();
+    //fill_row_map();
     // Initalise supports
     int no_tuples = init_supports(home, t0);
 
@@ -304,7 +311,7 @@ public:
     }
     currTable.add_to_mask(bs.get_row(0));
     currTable.intersect_with_mask();
-
+    
 #ifdef DEBUG
     cout << "Constuctor done \n Initial state:\n";
     cout << "Tuples: " << endl;
@@ -314,7 +321,7 @@ public:
       }
       cout << endl;
     }
-    cout << "supports: " << endl;
+    cout << "supports: " << endl;J
     supports.print();
     cout << "currTable: " << endl;
     currTable.print();    
@@ -322,7 +329,11 @@ public:
   }
   
   int rowno(int var, int val) {
-    return row_map.at(key_of(var, val));
+    //int rowno1 = row_map.at(key_of(var, val));
+    //int rowno2 = start_idx[var] + val - start_val[var];
+
+    return start_idx[var] + val - start_val[var];
+    //return row_map.at(key_of(var, val));
   }
 
   int init_supports(Home home, TupleSet ts) {
@@ -383,12 +394,19 @@ public:
     : Propagator(home,share,p),
       currTable(home, p.currTable),
       supports(p.supports),
-      row_map(p.row_map),
+      //row_map(p.row_map),
       lastSize(p.lastSize) {
 #ifdef DEBUG
     cout << "copy constructor" << endl;
 #endif // DEBUG
     x.update(home,share,p.x);
+    start_val = home.alloc<int>(x.size());
+    start_idx = home.alloc<int>(x.size());
+    for (int i = 0; i < x.size(); i++) {
+      start_val[i] = p.start_val[i];
+      start_idx[i] = p.start_idx[i];
+    }
+
   }
   
   // Post table propagator
@@ -405,7 +423,8 @@ public:
     if (x.size() > 1) {
       int domsum = 0;
       for (int i = 0; i < x.size(); i++) {
-        domsum += x[i].size();
+        //domsum += x[i].size();
+        domsum += x[i].max() - x[i].min() + 1;
       }
       (void) new (home) CompactTable(home,x,t,domsum);
     }
@@ -430,25 +449,10 @@ public:
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
     
-    //    return home.ES_SUBSUMED(*this);
-#ifdef DEBUG
-    cout << "before update for prop " << nprop << endl;
-    currTable.print();
-    updateTable();
-    cout << "after update for prop " << nprop << endl;
-    currTable.print();
-#endif // DEBUG
-
-    
     updateTable();
     if (currTable.is_empty()) {
       return ES_FAILED;
     }
-#ifdef DEBUG
-    if (nprop == 50) {
-      cout << "nr 50" << endl;
-    }
-#endif // DEBUG
     return filterDomains(home);
   }
 
@@ -511,37 +515,37 @@ public:
   
 private:
   
-  void fill_row_map() {
-    int row_cnt = 0;
-    for (int j = 0; j < x.size(); j++) {
-      Int::ViewValues<Int::IntView> i(x[j]);
-      while (i()) {
-        rmap_entry entry(key_of(j, i.val()), row_cnt);
-        row_map.insert(entry);
-        ++i; ++row_cnt;
-      }
-    }
-  }
+  // void fill_row_map() {
+  //   int row_cnt = 0;
+  //   for (int j = 0; j < x.size(); j++) {
+  //     Int::ViewValues<Int::IntView> i(x[j]);
+  //     while (i()) {
+  //       rmap_entry entry(key_of(j, i.val()), row_cnt);
+  //       row_map.insert(entry);
+  //       ++i; ++row_cnt;
+  //     }
+  //   }
+  // }
 
-  void print_row_map() {
-    for (int j = 0; j < x.size(); j++) {
-      Int::ViewValues<Int::IntView> i(x[j]);
-      while (i()) {
-        cout << "(" << j << ", " << i.val() << ") with key value: " <<
-          key_of(j, i.val()) <<
-          " is at row " <<
-          row_map.at(key_of(j, i.val())) << endl;
-        ++i;
-      }
-    }
-  }
+  // void print_row_map() {
+  //   for (int j = 0; j < x.size(); j++) {
+  //     Int::ViewValues<Int::IntView> i(x[j]);
+  //     while (i()) {
+  //       cout << "(" << j << ", " << i.val() << ") with key value: " <<
+  //         key_of(j, i.val()) <<
+  //         " is at row " <<
+  //         row_map.at(key_of(j, i.val())) << endl;
+  //       ++i;
+  //     }
+  //   }
+  // }
 
-  mapkey key_of(int var, int val) {
-    char buf[2048];
-    sprintf(buf, "%d%d", var, val);
-    mapkey key(buf);
-    return key;
-  }
+  // mapkey key_of(int var, int val) {
+  //   char buf[2048];
+  //   sprintf(buf, "%d%d", var, val);
+  //   mapkey key(buf);
+  //   return key;
+  // }
 };
 
 // Post the table constraint
