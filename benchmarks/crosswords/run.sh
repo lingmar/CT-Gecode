@@ -3,6 +3,8 @@
 #./run_gecode.sh
 #./run_compact_table.sh
 
+VERBOSE=0
+
 while getopts ":v:" opt; do
   case $opt in
       :)
