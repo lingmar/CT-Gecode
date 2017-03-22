@@ -1,8 +1,18 @@
 override MKDIR = @mkdir -p
 
+#LIBRARY_PATH=/it/slask/student/liin3244/gecode/lib
+#LD_LIBRARY_PATH=/it/slask/student/liin3244/gecode/lib
+
+export gecode_path = /it/slask/student/liin3244/CT-Gecode/gecode
+export lib_path = ${gecode_path}/lib
+export include_path = ${gecode_path}/include
+
+export CPLUS_INCLUDE_PATH=${include_path}:$CPLUS_INCLUDE_PATH
+# export LIBRARY_PATH=${lib_path}:$LIBRARY_PATH 
+
 CXX = g++
-LIBS = -L/usr/local/lib -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodedriver -lgecodeminimodel -lgecodeset #-lgecodegist
-CXX_FLAGS = -std=c++11 -I/usr/local/include -I/usr/include/qt4 #-DDEBUG
+LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodegist -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport #-lpthread
+CXX_FLAGS = -std=c++11 -I${include_path} #-I/usr/include/qt4 #-DDEBUG
 RM = rm -f
 
 OBJECTS = out/compact-table.o
@@ -13,7 +23,7 @@ all: bin/kakuro bin/black-hole-patience bin/swedish-drinking-protocol
 
 out/%.o: src/%.cpp
 	$(MKDIR) $(@D)
-	$(CXX) $(CXX_FLAGS) -c -o $@ $?	
+	$(CXX) $(CXX_FLAGS) -c -o $@ $?	$(LIBS)
 
 bin/kakuro: $(OBJECTS) out/kakuro.o
 	$(MKDIR) $(@D)
