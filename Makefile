@@ -7,7 +7,15 @@ export CPLUS_INCLUDE_PATH=${include_path}:$CPLUS_INCLUDE_PATH
 # export LIBRARY_PATH=${lib_path}:$LIBRARY_PATH 
 
 CXX = g++
-LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport #-lpthread
+
+OS := $(shell uname)
+
+ifeq ($(OS),Darwin)
+LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport
+else
+LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist -lpthread
+endif
+
 CXX_FLAGS = -std=c++11 -I${include_path} #-I/usr/include/qt4 #-DDEBUG
 RM = rm -f
 
