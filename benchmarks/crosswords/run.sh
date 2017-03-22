@@ -35,7 +35,7 @@ do
     nsols_g=$(cat $solfile_g | grep "solutions" | grep -Eo "[0-9]{1,}")
     nsols_c=$(cat $solfile_c | grep "solutions" | grep -Eo "[0-9]{1,}")
 
-    if [ VERBOSE == 1 ]; then 
+    if [ $VERBOSE == 1 ]; then 
         if [ "$solution_c" != "$solution_g" ]; then
             echo "[WARN]: solutions differ for instance $i"
             diff <(echo $solution_g) <(echo $solution_c)
