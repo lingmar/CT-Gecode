@@ -3,12 +3,14 @@
 #./run_gecode.sh
 #./run_compact_table.sh
 
+echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
+
 # Compare solutions, assuming delimiter "-" between solution print and statistics
-for i in {0..20}
+for i in {0..9}
 do
     # Solution files
     solfile_g="solutions/gecode_$i.txt"
-    solfile_c="solutions/compact_table$i.txt"
+    solfile_c="solutions/compact-table_$i.txt"
     
     solution_g=$(cat $solfile_g | cut -d% -f1)
     solution_c=$(cat $solfile_c | cut -d% -f1)
@@ -42,6 +44,6 @@ do
         diff <(echo $nsols_g) <(echo $nsols_c)
     fi
 
-    echo "$i & $runtime_g & $fail_g & $runtime_c & $fail_c \\\\"
+    echo "$i & $runtime_g & $fail_g & $nprops_g & $runtime_c & $fail_c & $nprops_c \\\\"
     
 done
