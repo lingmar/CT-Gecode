@@ -1,20 +1,14 @@
-
-05.02, 5 x 5
-L:[1, 12, 9, 19, 1, 5, 2, 15, 12, 1, 4, 9, 14, 1, 8, 1, 26, 1, 14, 1, 1, 18, 1, 2]
-"l""i""s""a"*
-"e""b""o""l""a"
-"d""i""n""a""h"
-"a""z""a""n""a"
-*"a""r""a""b"
-
+L = array1d(0..23, [1, 12, 9, 19, 1, 5, 2, 15, 12, 1, 4, 9, 14, 1, 8, 1, 26, 1, 14, 1, 1, 18, 1, 2]);
 ----------
-%%  runtime:       0.215 (215.273 ms)
-%%  solvetime:     0.048 (48.866 ms)
+
+%%  runtime:       0.093 (93.768 ms)
+%%  solvetime:     0.023 (23.993 ms)
 %%  solutions:     1
-%%  variables:     206
-%%  propagators:   237
-%%  propagations:  5244
+%%  variables:     216
+%%  propagators:   273
+%%  propagations:  6144
 %%  nodes:         34
 %%  failures:      11
 %%  restarts:      0
 %%  peak depth:    12
+
