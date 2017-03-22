@@ -252,6 +252,10 @@ public:
     : Propagator(home), x(x0), currTable(t0.tuples()),
       supports(domsum, t0.tuples())
   {
+    Region r(home);
+
+    BitSet* test = r.alloc<BitSet>(x.size());
+    
     nprop = nprops++;
     x.subscribe(home,*this,PC_INT_DOM);
 

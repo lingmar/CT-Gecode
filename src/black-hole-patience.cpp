@@ -42,7 +42,7 @@
 #include <algorithm>
 #include <sstream>
 
-#include "compact-table.hpp"
+#include "compact-table.cpp"
  
 using namespace Gecode;
  

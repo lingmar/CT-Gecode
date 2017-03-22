@@ -8,7 +8,7 @@
 #include <math.h>
 #include <assert.h>
 #include <cstdio>
-#include "compact-table.hpp"
+#include "compact-table.cpp"
 
 
 using namespace std;
@@ -22,19 +22,18 @@ public:
 
   /// The actual problem.
   SwedishDrinkingProtocol(const Options& opt)
-    : x(*this, 3, 1, 3)
+    : x(*this, 1000, 0, 1000)
     , Script(opt){
 
     TupleSet t;
-    t.add(IntArgs(3, 1, 2, 3));
-    t.add(IntArgs(3, 1, 2, 2));
-    t.add(IntArgs(3, 1, 2, 1));
+
+    for (int i = 0; i < 120; i++) {
+      t.add(IntArgs::create(1000,i));
+    }
+
+    
     t.finalize();
         
-    //distinct(*this, x);
-
-    //rel(*this, x[1] != 1);
-
     //extensional(*this, x, t);
     switch (opt.model()) {
     case 0: {
@@ -49,7 +48,7 @@ public:
       break;
     }
 
-    //rel(*this, x[0] == 1);
+    rel(*this, x[3] != 1);
     
     branch(*this, x, INT_VAR_NONE(), INT_VAL_MIN());
   }

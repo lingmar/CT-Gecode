@@ -31,7 +31,7 @@
 #include <gecode/int.hh>
 #include <gecode/minimodel.hh>
 
-#include "compact-table.hpp"
+#include "compact-table.cpp"
 
 int model = 0;
 
