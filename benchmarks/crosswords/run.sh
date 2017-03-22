@@ -3,6 +3,14 @@
 #./run_gecode.sh
 #./run_compact_table.sh
 
+while getopts ":v:" opt; do
+  case $opt in
+      :)
+      VERBOSE=1
+      ;;
+  esac
+done
+
 echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
 
 # Compare solutions, assuming delimiter "-" between solution print and statistics
@@ -26,24 +34,26 @@ do
 
     nsols_g=$(cat $solfile_g | grep "solutions" | grep -Eo "[0-9]{1,}")
     nsols_c=$(cat $solfile_c | grep "solutions" | grep -Eo "[0-9]{1,}")
-    
-    if [ "$solution_c" != "$solution_g" ]; then
-        echo "[WARN]: solutions differ for instance $i"
-        diff <(echo $solution_g) <(echo $solution_c)
-    fi
-    if [ "$fail_g" != "$fail_c" ]; then
-        echo "[WARN]: number of failures differ for instance $i"
-        diff <(echo $fail_g) <(echo $fail_c)
-    fi
-    # if [ $nprops_g != $nprops_c ]; then
-    #     echo "[WARN]: number of propagations differ for instance $i"
-    #     diff <(echo $nprops_g) <(echo $nprops_c)
-    # fi
-    if [ "$nsols_g" != "$nsols_c" ]; then
-        echo "[WARN]: number of solutions differ for instance $i"
-        diff <(echo $nsols_g) <(echo $nsols_c)
-    fi
 
+    if [ VERBOSE == 1 ]; then 
+        if [ "$solution_c" != "$solution_g" ]; then
+            echo "[WARN]: solutions differ for instance $i"
+            diff <(echo $solution_g) <(echo $solution_c)
+        fi
+        if [ "$fail_g" != "$fail_c" ]; then
+            echo "[WARN]: number of failures differ for instance $i"
+            diff <(echo $fail_g) <(echo $fail_c)
+        fi
+        # if [ $nprops_g != $nprops_c ]; then
+        #     echo "[WARN]: number of propagations differ for instance $i"
+        #     diff <(echo $nprops_g) <(echo $nprops_c)
+        # fi
+        if [ "$nsols_g" != "$nsols_c" ]; then
+            echo "[WARN]: number of solutions differ for instance $i"
+            diff <(echo $nsols_g) <(echo $nsols_c)
+        fi
+    fi
+    
     echo "$i & $runtime_g & $fail_g & $nprops_g & $runtime_c & $fail_c & $nprops_c \\\\"
     
 done
