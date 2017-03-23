@@ -1161,7 +1161,7 @@ namespace Gecode { namespace FlatZinc {
       }
       ts.finalize();
       char* prop = getenv("TABLE_PROPAGATOR");
-      if (prop != NULL && strcmp(prop, "compact_table")) {
+      if (prop != NULL && strcmp(prop, "compact-table")) {
         extensional2(s,x,ts);
       } else {
         extensional(s,x,ts,s.ann2ipl(ann));
