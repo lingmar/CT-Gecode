@@ -11,52 +11,37 @@ using namespace Gecode;
 using namespace Gecode::Int;
 using namespace std;
 
-typedef Support::BitSetBase BitSet;
-
-typedef uint64_t word_t;
 //typedef string mapkey;
 //typedef unordered_map<mapkey, int> rmap;
 //typedef pair<mapkey, int> rmap_entry;
 
 #ifdef GECODE_SUPPORT_MSVC_64
     /// Basetype for bits
-    typedef unsigned __int64 Base;
+    typedef unsigned __int64 word_t;
 #else
     /// Basetype for bits
-    typedef unsigned long int Base;
+    typedef unsigned long int word_t;
 #endif
 
 static const unsigned int bpb =
-  static_cast<unsigned int>(CHAR_BIT * sizeof(Base));
+  static_cast<unsigned int>(CHAR_BIT * sizeof(word_t));
 
 #define BITS_PER_WORD bpb
 
 // Class for maintaining the supported tuples
 class SparseBitSet {
-  vector<word_t> words;
   vector<word_t> mask;
 
-  BitSet* words_bs;
-  BitSet* mask_bs;
-  
   vector<int> index; // type?
   int limit;
   unsigned int nbits;
 
 public:
+  vector<word_t> words;
+  
   SparseBitSet(Home home, unsigned int _nbits) {
     nbits = _nbits;
     unsigned int nwords = required_words(nbits);
-
-    words_bs = static_cast<Space&>(home).alloc<BitSet>(nwords);
-    mask_bs = static_cast<Space&>(home).alloc<BitSet>(nwords);
-
-    for (int i = 0; i < nwords; i++) {
-      int bits = i < nwords - 1 ? BITS_PER_WORD : nbits - BITS_PER_WORD*i;
-
-      words_bs[i].init(static_cast<Space&>(home), bits, true);
-      mask_bs[i].init(static_cast<Space&>(home), bits, true);
-    }
     
     // Initialise words, mask and index
     for (int i = 0; i < nwords; i++) {
@@ -68,12 +53,6 @@ public:
     /// Limit is initially highest index
     limit = nwords - 1;
 
-    //words_bs->data;
-
-    Support::RawBitSetBase rbs;// = Support::RawBitSetBase(static_cast<Space&>(home), 100);
-    //cout << "hej" << endl;
-    rbs.init(static_cast<Space&>(home), 100);
-    //cout << rbs.get(99) << endl;
   }
 
   /// Copy constructor
@@ -93,7 +72,6 @@ public:
   void clear_mask() {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
-      //mask_bs[offset].clearall();
       mask.at(offset) = 0ULL;
     }
   }
@@ -267,7 +245,7 @@ protected:
   
   int* start_idx;
   int* start_val;
-  
+  int* residues;
   // Row map for support entries
   //rmap row_map;
   // Last sizes
@@ -284,7 +262,8 @@ public:
   {
     start_idx = static_cast<Space&>(home).alloc<int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
-
+    residues = static_cast<Space&>(home).alloc<int>(domsum);
+    
     int cnt = 0;
     for (int i = 0; i < x.size(); i++) {
       start_val[i] = x[i].min();
@@ -352,8 +331,12 @@ public:
         }
       }
       if (supported) {
-        // Set tuple as valid
-        set_tuple(i, support_cnt, ts);
+        // Set tuple as valid and save residue
+        for (int j = 0; j < ts.arity(); j++) {
+          int row = rowno(j, ts[i][j]);
+          supports.set(row, support_cnt);
+          residues[row] = support_cnt/BITS_PER_WORD;
+        }
         support_cnt++;
       }
     }
@@ -381,13 +364,6 @@ public:
    
     return support_cnt;
   }
-
-  void set_tuple(int t, int column, TupleSet ts) {
-    assert(t <= ts.tuples());
-    for (int i = 0; i < ts.arity(); i++) {
-      supports.set(rowno(i, ts[t][i]), column);
-    }
-  }
   
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
@@ -402,11 +378,16 @@ public:
     x.update(home,share,p.x);
     start_val = home.alloc<int>(x.size());
     start_idx = home.alloc<int>(x.size());
+    int domsum = supports.size;
+    residues = home.alloc<int>(domsum);
     for (int i = 0; i < x.size(); i++) {
       start_val[i] = p.start_val[i];
       start_idx[i] = p.start_idx[i];
+      for (int j = 0; j < x[i].size(); j++) {
+        int row = rowno(i,j);
+        residues[row] = p.residues[row];
+      }
     }
-
   }
   
   // Post table propagator
@@ -483,12 +464,16 @@ public:
         Int::ViewValues<Int::IntView> it(x[i]);
         vector<int> rvals; //values to remove
         while (it()) {
-          int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
-          if (index != -1) {
-            // save residue
-          } else {
-            rvals.push_back(it.val());
-          }
+          int index = residues[rowno(i,it.val())];
+          // FIXME: refactor
+          if ((currTable.words[index] & supports.get_row(rowno(i,it.val()))[index]) == 0ULL) {
+            int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
+            if (index != -1) {
+              // save residue
+            } else {
+              rvals.push_back(it.val());
+            }
+          } 
           ++it;
         }
         Iter::Values::Array r(&rvals[0], rvals.size());
@@ -511,8 +496,6 @@ public:
     return sizeof(*this);
   }
 
-  virtual ~CompactTable() = default;
-  
 private:
   
   // void fill_row_map() {
