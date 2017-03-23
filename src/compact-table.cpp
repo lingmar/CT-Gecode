@@ -467,9 +467,10 @@ public:
           int index = residues[rowno(i,it.val())];
           // FIXME: refactor
           if ((currTable.words[index] & supports.get_row(rowno(i,it.val()))[index]) == 0ULL) {
-            int index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
+            index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
             if (index != -1) {
               // save residue
+              residues[rowno(i,it.val())] = index;
             } else {
               rvals.push_back(it.val());
             }
