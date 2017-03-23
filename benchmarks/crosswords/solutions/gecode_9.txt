@@ -1,6 +1,6 @@
 ----------
-%%  runtime:       0.035 (35.454 ms)
-%%  solvetime:     0.004 (4.988 ms)
+%%  runtime:       0.033 (33.892 ms)
+%%  solvetime:     0.005 (5.123 ms)
 %%  solutions:     1
 %%  variables:     138
 %%  propagators:   175

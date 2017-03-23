@@ -1,10 +1,10 @@
 ----------
-%%  runtime:       0.049 (49.822 ms)
-%%  solvetime:     0.007 (7.868 ms)
+%%  runtime:       0.040 (40.076 ms)
+%%  solvetime:     0.001 (1.700 ms)
 %%  solutions:     1
 %%  variables:     152
 %%  propagators:   187
-%%  propagations:  1281
+%%  propagations:  1306
 %%  nodes:         15
 %%  failures:      2
 %%  restarts:      0

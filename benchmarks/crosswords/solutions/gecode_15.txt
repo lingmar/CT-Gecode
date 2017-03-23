@@ -1,0 +1,11 @@
+----------
+%%  runtime:       2.740 (2740.599 ms)
+%%  solvetime:     1.712 (1712.222 ms)
+%%  solutions:     1
+%%  variables:     10624
+%%  propagators:   13056
+%%  propagations:  1148487
+%%  nodes:         551
+%%  failures:      245
+%%  restarts:      0
+%%  peak depth:    74
