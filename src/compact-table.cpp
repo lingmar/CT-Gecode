@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <assert.h>
+#include "bitset.hpp"
 //#include <unordered_map>
 
 //#define DEBUG 1
@@ -14,224 +15,212 @@ using namespace std;
 //typedef string mapkey;
 //typedef unordered_map<mapkey, int> rmap;
 //typedef pair<mapkey, int> rmap_entry;
+typedef unsigned long int word_t;
 
-#ifdef GECODE_SUPPORT_MSVC_64
-    /// Basetype for bits
-    typedef unsigned __int64 word_t;
-#else
-    /// Basetype for bits
-    typedef unsigned long int word_t;
-#endif
+#define BITS_PER_WORD sizeof(word_t);
 
-static const unsigned int bpb =
-  static_cast<unsigned int>(CHAR_BIT * sizeof(word_t));
+// // Class for maintaining the supported tuples
+// class SparseBitSet {
+//   vector<word_t> mask;
+//   vector<int> index; // type?
+//   int limit;
+//   unsigned int nbits;
 
-#define BITS_PER_WORD bpb
-
-// Class for maintaining the supported tuples
-class SparseBitSet {
-  vector<word_t> mask;
-
-  vector<int> index; // type?
-  int limit;
-  unsigned int nbits;
-
-public:
-  vector<word_t> words;
+// public:
+//   vector<word_t> words;
   
-  SparseBitSet(Home home, unsigned int _nbits) {
-    nbits = _nbits;
-    unsigned int nwords = required_words(nbits);
+//   SparseBitSet(Home home, unsigned int _nbits) {
+//     nbits = _nbits;
+//     unsigned int nwords = required_words(nbits);
     
-    // Initialise words, mask and index
-    for (int i = 0; i < nwords; i++) {
-      words.push_back(~0ULL); // Set all bits to 1
-      mask.push_back(0ULL);
-      index.push_back(i);
-    }
+//     // Initialise words, mask and index
+//     for (int i = 0; i < nwords; i++) {
+//       words.push_back(~0ULL); // Set all bits to 1
+//       mask.push_back(0ULL);
+//       index.push_back(i);
+//     }
 
-    /// Limit is initially highest index
-    limit = nwords - 1;
+//     /// Limit is initially highest index
+//     limit = nwords - 1;
 
-  }
+//   }
 
-  /// Copy constructor
-  SparseBitSet(Home home, SparseBitSet& sbs) :
-    words(sbs.words),
-    mask(sbs.mask),
-    index(sbs.index),
-    limit(sbs.limit),
-    nbits(sbs.nbits) {}
+//   /// Copy constructor
+//   SparseBitSet(Home home, SparseBitSet& sbs) :
+//     words(sbs.words),
+//     mask(sbs.mask),
+//     index(sbs.index),
+//     limit(sbs.limit),
+//     nbits(sbs.nbits) {}
   
-  /// Return true if bitset is empty, else false
-  bool is_empty() const {
-    return limit == -1;
-  }
+//   /// Return true if bitset is empty, else false
+//   bool is_empty() const {
+//     return limit == -1;
+//   }
   
-  /// Clear all bits in mask
-  void clear_mask() {
-    for (int i = 0; i <= limit; i++) {
-      int offset = index[i];
-      mask[offset] = 0ULL;
-    }
-  }
+//   /// Clear all bits in mask
+//   void clear_mask() {
+//     for (int i = 0; i <= limit; i++) {
+//       int offset = index[i];
+//       mask[offset] = 0ULL;
+//     }
+//   }
 
-  // /// Reverse bits in mask
-  // void reverse_mask() {
-  //   for (int i = 0; i <= limit; i++) {
-  //     int offset = index[i];
-  //     mask.at(offset) = ~mask.at(offset);
-  //   }
-  // }
+//   // /// Reverse bits in mask
+//   // void reverse_mask() {
+//   //   for (int i = 0; i <= limit; i++) {
+//   //     int offset = index[i];
+//   //     mask.at(offset) = ~mask.at(offset);
+//   //   }
+//   // }
 
-  /// Add bits to mask
-  void add_to_mask(vector<word_t> m) {
-    assert(m.size() == mask.size());
-    for (int i = 0; i <= limit; i++) {
-      int offset = index[i];
+//   /// Add bits to mask
+//   void add_to_mask(vector<word_t> m) {
+//     assert(m.size() == mask.size());
+//     for (int i = 0; i <= limit; i++) {
+//       int offset = index[i];
       
-      mask[offset] |= m[offset];
-    }
-  }
+//       mask[offset] |= m[offset];
+//     }
+//   }
 
-  /// Intersect words with mask
-  void intersect_with_mask() {
-    for (int i = limit; i >= 0; i--) {
-      int offset = index[i];
-      word_t w = (words[offset] & mask[offset]);
-      if (w != words[offset]) {
-        words[offset] = w;
-        if (w == 0ULL) {
-          index[i] = index[limit];
-          index[limit] = offset;
-          --limit;
-        }
-      }
-    }
-  }
+//   /// Intersect words with mask
+//   void intersect_with_mask() {
+//     for (int i = limit; i >= 0; i--) {
+//       int offset = index[i];
+//       word_t w = (words[offset] & mask[offset]);
+//       if (w != words[offset]) {
+//         words[offset] = w;
+//         if (w == 0ULL) {
+//           index[i] = index[limit];
+//           --limit;
+//         }
+//       }
+//     }
+//   }
 
-  /* Returns the index of a word where the bit-set
-  intersects with m, -1 otherwise */
-  int intersect_index(vector<word_t> m) const {
-    for (int i = 0; i <= limit; i++) {
-      int offset = index[i];
-      if ((words[offset] & m[offset]) != 0ULL) {
-        return offset;
-      }
-    }
-    return -1;
-  }
+//   /* Returns the index of a word where the bit-set
+//   intersects with m, -1 otherwise */
+//   int intersect_index(vector<word_t> m) const {
+//     for (int i = 0; i <= limit; i++) {
+//       int offset = index[i];
+//       if ((words[offset] & m[offset]) != 0ULL) {
+//         return offset;
+//       }
+//     }
+//     return -1;
+//   }
   
-  /// Print bit-set for simple debugging
-  void print() {
-    cout << "words: ";
-    for (int i = 0; i < required_words(nbits); i++) {
-      //cout << words.at(i) << endl;
-      for (int j = 0; j < BITS_PER_WORD; j++) {
-        word_t b = (words[i] >> j) & 1ULL;
-        cout << b << " ";
-      }
-      cout << endl;
-    }
+//   /// Print bit-set for simple debugging
+//   void print() {
+//     cout << "words: ";
+//     for (int i = 0; i < required_words(nbits); i++) {
+//       //cout << words.at(i) << endl;
+//       for (int j = 0; j < BITS_PER_WORD; j++) {
+//         word_t b = (words[i] >> j) & 1ULL;
+//         cout << b << " ";
+//       }
+//       cout << endl;
+//     }
 
-    // cout << "mask: ";
-    // for (int i = 0; i < required_words(nbits); i++) {
-    //   //cout << mask.at(i) << endl;
-    //   for (int j = 0; j < BITS_PER_WORD; j++) {
-    //     word_t b = (mask.at(i) >> j) & 1ULL;
-    //     cout << b << " ";
-    //   }
-    //   cout << endl;
-    // }
+//     // cout << "mask: ";
+//     // for (int i = 0; i < required_words(nbits); i++) {
+//     //   //cout << mask.at(i) << endl;
+//     //   for (int j = 0; j < BITS_PER_WORD; j++) {
+//     //     word_t b = (mask.at(i) >> j) & 1ULL;
+//     //     cout << b << " ";
+//     //   }
+//     //   cout << endl;
+//     // }
    
-    cout << "index: ";
-    for (int i = 0; i < required_words(nbits); i++) {
-      cout << index[i] << " ";
-    }
-    cout << endl;
-    cout << "limit: ";
-    cout << limit << endl;;
+//     cout << "index: ";
+//     for (int i = 0; i < required_words(nbits); i++) {
+//       cout << index[i] << " ";
+//     }
+//     cout << endl;
+//     cout << "limit: ";
+//     cout << limit << endl;;
       
-  }
+//   }
 
-  // Return the number of ints needed for nbits bits
-  unsigned int required_words(unsigned int nbits) {
-    if (nbits == 0) {
-      return 0;
-    } else {
-      return (nbits - 1) / BITS_PER_WORD + 1;
-    }
-  }
-};
+//   // Return the number of ints needed for nbits bits
+//   unsigned int required_words(unsigned int nbits) {
+//     if (nbits == 0) {
+//       return 0;
+//     } else {
+//       return (nbits - 1) / BITS_PER_WORD + 1;
+//     }
+//   }
+// };
 
-struct MyBitSet {
-#define Toggle(a, i) (a) |= (1UL << (i))
-#define Clear(a, i) (a) &= ~(1UL << (i))
-#define Get(a, i) (((a) >> (i)) & 1UL)
+// struct MyBitSet {
+// #define Toggle(a, i) (a) |= (1UL << (i))
+// #define Clear(a, i) (a) &= ~(1UL << (i))
+// #define Get(a, i) (((a) >> (i)) & 1UL)
   
-  vector<word_t> atoms;
-  size_t size;
-  size_t atoms_per_row;
+//   vector<word_t> atoms;
+//   size_t size;
+//   size_t atoms_per_row;
 
-  MyBitSet(int rows, int cols)
-    : atoms_per_row(required_ints_per_row(cols)) {
-    size = required_ints(rows);
-    for (int i = 0; i < size; i++) {
-      atoms.push_back(0UL);
-    }
-  }
+//   MyBitSet(int rows, int cols)
+//     : atoms_per_row(required_ints_per_row(cols)) {
+//     size = required_ints(rows);
+//     for (int i = 0; i < size; i++) {
+//       atoms.push_back(0UL);
+//     }
+//   }
 
-  size_t required_ints_per_row(int cols) {
-    return ceil((double)cols/BITS_PER_WORD);
-  }
+//   size_t required_ints_per_row(int cols) {
+//     return ceil((double)cols/BITS_PER_WORD);
+//   }
   
-  MyBitSet(const MyBitSet& other)
-    : atoms(other.atoms)
-    , size(other.size)
-    , atoms_per_row(other.atoms_per_row) {}
+//   MyBitSet(const MyBitSet& other)
+//     : atoms(other.atoms)
+//     , size(other.size)
+//     , atoms_per_row(other.atoms_per_row) {}
 
-  size_t required_ints(int rows) const {
-    return atoms_per_row*rows;
-  }
+//   size_t required_ints(int rows) const {
+//     return atoms_per_row*rows;
+//   }
 
-  void set(int r, int c) {
-    Toggle(atoms[atom_idx(r,c)], bit_idx(c));
-  }
+//   void set(int r, int c) {
+//     Toggle(atoms[atom_idx(r,c)], bit_idx(c));
+//   }
 
-  bool get(int r, int c) const {
-    return Get(atoms[atom_idx(r,c)], bit_idx(c)) == 1UL;
-  }
+//   bool get(int r, int c) const {
+//     return Get(atoms[atom_idx(r,c)], bit_idx(c)) == 1UL;
+//   }
 
-  vector<word_t> get_row(int r) {
-    vector<word_t> row;
-    for (int i = 0; i < atoms_per_row; i++) {
-      row.push_back(atoms[atom_idx(r,i*BITS_PER_WORD)]);
-    }
-    return row; 
-  }
+//   vector<word_t> get_row(int r) {
+//     vector<word_t> row;
+//     for (int i = 0; i < atoms_per_row; i++) {
+//       row.push_back(atoms[atom_idx(r,i*BITS_PER_WORD)]);
+//     }
+//     return row; 
+//   }
   
-  void print(ostream& os=cout) const {
-    cout << "size: " << size << endl;
-    cout << "atoms_per_row: " << atoms_per_row << endl;
-    for (int i = 0; i < size/atoms_per_row; i++) {
-      for (int j = 0; j < atoms_per_row; j++) {
-        for (int k = 0; k < BITS_PER_WORD; k++) {
-          os << get(i, j*BITS_PER_WORD + k) << " ";
-        }
-        os << endl;
-      }
-    }
-  }
+//   void print(ostream& os=cout) const {
+//     cout << "size: " << size << endl;
+//     cout << "atoms_per_row: " << atoms_per_row << endl;
+//     for (int i = 0; i < size/atoms_per_row; i++) {
+//       for (int j = 0; j < atoms_per_row; j++) {
+//         for (int k = 0; k < BITS_PER_WORD; k++) {
+//           os << get(i, j*BITS_PER_WORD + k) << " ";
+//         }
+//         os << endl;
+//       }
+//     }
+//   }
   
-private:
-  int atom_idx(int r, int c) const {
-    return r*atoms_per_row + c/BITS_PER_WORD;
-  }
+// private:
+//   int atom_idx(int r, int c) const {
+//     return r*atoms_per_row + c/BITS_PER_WORD;
+//   }
 
-  int bit_idx(int c) const {
-    return c % BITS_PER_WORD;
-  }
-};
+//   int bit_idx(int c) const {
+//     return c % BITS_PER_WORD;
+//   }
+// };
 
 // The compact table propagator
 class CompactTable : public Propagator {
@@ -239,14 +228,14 @@ protected:
   // The variables
   ViewArray<IntView> x;
   // The table with possible combinations of values
-  SparseBitSet validTuples;
+  NewSparseBitSet<Space&> validTuples;
   // Supported tuples (static)
-  MyBitSet supports;
-  
+  BitSet* supports;
   int* start_idx;
   int* start_val;
   int* residues;
   int* lastSize;
+  int domsum;
   // Row map for support entries
   //rmap row_map;
   // Last sizes
@@ -256,10 +245,12 @@ public:
   CompactTable(Home home,
                ViewArray<IntView>& x0,
                TupleSet t0,
-               int domsum)
-    : Propagator(home), x(x0), validTuples(home, t0.tuples()),
-      supports(domsum, t0.tuples())
+               int domsum0)
+    : Propagator(home), x(x0),
+      validTuples(static_cast<Space&>(home), t0.tuples()),
+      domsum(domsum0)
   {
+    supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
     start_idx = static_cast<Space&>(home).alloc<int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
     lastSize = static_cast<Space&>(home).alloc<int>(x.size());
@@ -280,27 +271,12 @@ public:
 
     // Set no_tuples bits to 1 in validTuples
     // FIXME: not nice
-    MyBitSet bs(1, t0.tuples());
-    for (int i = 0; i < no_tuples; i++) {
-      bs.set(0, i);
-    }
-    validTuples.add_to_mask(bs.get_row(0));
-    validTuples.intersect_with_mask();
-    
-#ifdef DEBUG
-    cout << "Constuctor done \n Initial state:\n";
-    cout << "Tuples: " << endl;
-    for (int i = 0; i < t0.tuples(); i++) {
-      for (int j = 0; j < t0.arity(); j++) {
-        cout << t0[i][j] << " ";
-      }
-      cout << endl;
-    }
-    cout << "supports: " << endl;J
-    supports.print();
-    cout << "validTuples: " << endl;
-    validTuples.print();    
-#endif // DEBUG
+    // MyBitSet bs(1, t0.tuples());
+    // for (int i = 0; i < no_tuples; i++) {
+    //   bs.set(0, i);
+    // }
+    // validTuples.add_to_mask(bs.get_row(0));
+    // validTuples.intersect_with_mask();
   }
   
   int rowno(int var, int val) {
@@ -313,6 +289,7 @@ public:
 
   int init_supports(Home home, TupleSet ts) {
     int support_cnt = 0;
+    int bpb = supports[0].get_bpb();
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
       for (int j = 0; j < ts.arity(); j++) {
@@ -330,8 +307,8 @@ public:
         // Set tuple as valid and save residue
         for (int j = 0; j < ts.arity(); j++) {
           int row = rowno(j, ts[i][j]);
-          supports.set(row, support_cnt);
-          residues[row] = support_cnt/BITS_PER_WORD;
+          supports[row].set(support_cnt);
+          residues[row] = support_cnt / bpb;
         }
         support_cnt++;
       }
@@ -342,15 +319,10 @@ public:
       Int::ViewValues<Int::IntView> it(x[i]);
       vector<int> rvals; //values to remove
       while (it()) {
-        vector<word_t> row = supports.get_row(rowno(i,it.val()));
-        for (int j = 0; j < row.size(); j++) {
-          if (row[j] != 0ULL) {
-            break;
-          }
-          // The row is 0, remove that value
-          if (j == row.size() - 1) {
-            rvals.push_back(it.val());
-          }
+        //Gecode::Support::BitSetBase bs;
+        //bs = supports[rowno(i,it.val())];
+        if (supports[rowno(i,it.val())].none()) {
+          rvals.push_back(it.val());
         }
         ++it;
       }
@@ -369,8 +341,7 @@ public:
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
-      validTuples(home, p.validTuples),
-      supports(p.supports) {
+      validTuples(home, p.validTuples) {
       //row_map(p.row_map),
 #ifdef DEBUG
     cout << "copy constructor" << endl;
@@ -379,7 +350,7 @@ public:
     start_val = home.alloc<int>(x.size());
     start_idx = home.alloc<int>(x.size());
     lastSize = home.alloc<int>(x.size());
-    int domsum = supports.size;
+    supports = home.alloc<BitSet>(domsum);
     residues = home.alloc<int>(domsum);
     for (int i = 0; i < x.size(); i++) {
       // Don't bother to copy assigned variables
@@ -390,6 +361,7 @@ public:
         for (int j = 0; j < x[i].size(); j++) {
           int row = rowno(i,j);
           residues[row] = p.residues[row];
+          supports[row].copy(p.supports[row]);
         }
       }
     }
@@ -451,7 +423,7 @@ public:
       validTuples.clear_mask();
       Int::ViewValues<Int::IntView> it(x[i]);
       while (it()) {
-        validTuples.add_to_mask(supports.get_row(rowno(i,it.val())));
+        validTuples.add_to_mask(supports[rowno(i,it.val())]);
         ++it;
       }
       validTuples.intersect_with_mask();
