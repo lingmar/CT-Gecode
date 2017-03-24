@@ -4,7 +4,7 @@
 #./run_compact_table.sh
 
 VERBOSE=0
-TIMEOUTMSG="======UNKNOWN====="
+TIMEOUTMSG="=====UNKNOWN====="
 
 while getopts ":v:" opt; do
   case $opt in
@@ -17,7 +17,7 @@ done
 echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
 
 # Compare solutions, assuming delimiter "-" between solution print and statistics
-for i in {0..72}
+for i in {0..71}
 do
     # Solution files
     solfile_g="solutions/gecode_"$i".txt"
