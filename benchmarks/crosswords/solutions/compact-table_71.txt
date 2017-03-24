@@ -16,13 +16,13 @@ L:[1, 18, 5, 4, 19, 2, 1, 4, 9, 18, 13, 1, 1, 12, 9, 20, 18, 3, 1, 14, 1, 9, 12,
 "l""e""a""s"*"a""s""s"*"d""a""m""e"
 
 ----------
-%%  runtime:       0.717 (717.186 ms)
-%%  solvetime:     0.307 (307.112 ms)
+%%  runtime:       0.377 (377.816 ms)
+%%  solvetime:     0.035 (35.242 ms)
 %%  solutions:     1
 %%  variables:     5518
 %%  propagators:   7215
-%%  propagations:  93887
-%%  nodes:         72
+%%  propagations:  98395
+%%  nodes:         67
 %%  failures:      12
 %%  restarts:      0
-%%  peak depth:    53
+%%  peak depth:    48
