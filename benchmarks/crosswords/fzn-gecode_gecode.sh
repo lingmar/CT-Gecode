@@ -2,7 +2,7 @@
 
 export TABLE_PROPAGATOR="gecode"
 
-i=22
+i=0
 while [ $i -lt 72 ]
 do
     file="fzn/crossword3_${i}_gecode.fzn"
