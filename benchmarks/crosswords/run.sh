@@ -4,6 +4,7 @@
 #./run_compact_table.sh
 
 VERBOSE=0
+TIMEOUTMSG="======UNKNOWN====="
 
 while getopts ":v:" opt; do
   case $opt in
@@ -16,17 +17,30 @@ done
 echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
 
 # Compare solutions, assuming delimiter "-" between solution print and statistics
-for i in {0..9}
+for i in {0..72}
 do
     # Solution files
-    solfile_g="solutions/gecode_$i.txt"
-    solfile_c="solutions/compact-table_$i.txt"
-    
-    solution_g=$(cat $solfile_g | cut -d% -f1)
-    solution_c=$(cat $solfile_c | cut -d% -f1)
+    solfile_g="solutions/gecode_"$i".txt"
+    solfile_c="solutions/compact-table_"$i".txt"
 
-    runtime_g=$(cat $solfile_g | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
-    runtime_c=$(cat $solfile_c | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
+    firstline_g=$(head -n 1 $solfile_g)
+    firstline_c=$(head -n 1 $solfile_c)
+
+    if [ "$firstline_c" == $TIMEOUTMSG ]; then
+        runtime_c="\Timeout"
+    else
+        runtime_c=$(cat $solfile_c | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
+    fi
+
+    if [ "$firstline_g" == $TIMEOUTMSG ]; then
+        runtime_g="\Timeout"
+    else
+        runtime_g=$(cat $solfile_g | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
+    fi
+   
+    # Find the solution
+    #solution_g=$(cat $solfile_g | cut -d% -f1)
+    #solution_c=$(cat $solfile_c | cut -d% -f1)
     
     fail_g=$(cat $solfile_g | grep "failures" | grep -Eo "[0-9]{1,}")
     fail_c=$(cat $solfile_c | grep "failures" | grep -Eo "[0-9]{1,}")
