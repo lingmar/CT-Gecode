@@ -222,6 +222,7 @@ typedef unsigned long int word_t;
 //   }
 // };
 
+
 // The compact table propagator
 class CompactTable : public Propagator {
 protected:  
@@ -351,6 +352,7 @@ public:
     start_idx = home.alloc<int>(x.size());
     lastSize = home.alloc<int>(x.size());
     supports = home.alloc<BitSet>(domsum);
+    //supports = new BitSet[domsum];
     residues = home.alloc<int>(domsum);
     for (int i = 0; i < x.size(); i++) {
       // Don't bother to copy assigned variables
@@ -443,8 +445,10 @@ public:
         while (it()) {
           int index = residues[rowno(i,it.val())];
           // FIXME: refactor
-          if ((validTuples.words[index] & supports.get_row(rowno(i,it.val()))[index]) == 0ULL) {
-            index = validTuples.intersect_index(supports.get_row(rowno(i,it.val())));
+          int row = rowno(i,it.val());
+          Support::BitSetData w = Support::BitSetData::a(validTuples.words.getword(index), supports[row].getword(index));
+          if (w.none()) {
+            index = validTuples.intersect_index(supports[row]);
             if (index != -1) {
               // save residue
               residues[rowno(i,it.val())] = index;
