@@ -72,7 +72,7 @@ public:
   void clear_mask() {
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
-      mask.at(offset) = 0ULL;
+      mask[offset] = 0ULL;
     }
   }
 
@@ -90,20 +90,20 @@ public:
     for (int i = 0; i <= limit; i++) {
       int offset = index[i];
       
-      mask.at(offset) |= m.at(offset);
+      mask[offset] |= m[offset];
     }
   }
 
   /// Intersect words with mask
   void intersect_with_mask() {
     for (int i = limit; i >= 0; i--) {
-      int offset = index.at(i);
-      word_t w = (words.at(offset) & mask.at(offset));
-      if (w != words.at(offset)) {
-        words.at(offset) = w;
+      int offset = index[i];
+      word_t w = (words[offset] & mask[offset]);
+      if (w != words[offset]) {
+        words[offset] = w;
         if (w == 0ULL) {
-          index.at(i) = index.at(limit);
-          index.at(limit) = offset;
+          index[i] = index[limit];
+          index[limit] = offset;
           --limit;
         }
       }
@@ -114,8 +114,8 @@ public:
   intersects with m, -1 otherwise */
   int intersect_index(vector<word_t> m) const {
     for (int i = 0; i <= limit; i++) {
-      int offset = index.at(i);
-      if ((words.at(offset) & m.at(offset)) != 0ULL) {
+      int offset = index[i];
+      if ((words[offset] & m[offset]) != 0ULL) {
         return offset;
       }
     }
@@ -128,7 +128,7 @@ public:
     for (int i = 0; i < required_words(nbits); i++) {
       //cout << words.at(i) << endl;
       for (int j = 0; j < BITS_PER_WORD; j++) {
-        word_t b = (words.at(i) >> j) & 1ULL;
+        word_t b = (words[i] >> j) & 1ULL;
         cout << b << " ";
       }
       cout << endl;
@@ -146,7 +146,7 @@ public:
    
     cout << "index: ";
     for (int i = 0; i < required_words(nbits); i++) {
-      cout << index.at(i) << " ";
+      cout << index[i] << " ";
     }
     cout << endl;
     cout << "limit: ";
@@ -195,17 +195,17 @@ struct MyBitSet {
   }
 
   void set(int r, int c) {
-    Toggle(atoms.at(atom_idx(r,c)), bit_idx(c));
+    Toggle(atoms[atom_idx(r,c)], bit_idx(c));
   }
 
   bool get(int r, int c) const {
-    return Get(atoms.at(atom_idx(r,c)), bit_idx(c)) == 1UL;
+    return Get(atoms[atom_idx(r,c)], bit_idx(c)) == 1UL;
   }
 
   vector<word_t> get_row(int r) {
     vector<word_t> row;
     for (int i = 0; i < atoms_per_row; i++) {
-      row.push_back(atoms.at(atom_idx(r,i*BITS_PER_WORD)));
+      row.push_back(atoms[atom_idx(r,i*BITS_PER_WORD)]);
     }
     return row; 
   }
@@ -239,31 +239,32 @@ protected:
   // The variables
   ViewArray<IntView> x;
   // The table with possible combinations of values
-  SparseBitSet currTable;
+  SparseBitSet validTuples;
   // Supported tuples (static)
   MyBitSet supports;
   
   int* start_idx;
   int* start_val;
   int* residues;
+  int* lastSize;
   // Row map for support entries
   //rmap row_map;
   // Last sizes
-  vector<int> lastSize;
-  
+    
 public:
   // Create propagator and initialize
   CompactTable(Home home,
-               ViewArray<IntView>& x0, 
+               ViewArray<IntView>& x0,
                TupleSet t0,
                int domsum)
-    : Propagator(home), x(x0), currTable(home, t0.tuples()),
+    : Propagator(home), x(x0), validTuples(home, t0.tuples()),
       supports(domsum, t0.tuples())
   {
     start_idx = static_cast<Space&>(home).alloc<int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
+    lastSize = static_cast<Space&>(home).alloc<int>(x.size());
     residues = static_cast<Space&>(home).alloc<int>(domsum);
-    
+        
     int cnt = 0;
     for (int i = 0; i < x.size(); i++) {
       start_val[i] = x[i].min();
@@ -277,19 +278,14 @@ public:
     // Initalise supports
     int no_tuples = init_supports(home, t0);
 
-    // Initialise lastSize with dummy value -1
-    for (int i = 0; i < x.size(); i++) {
-      lastSize.push_back(-1);
-    }
-
-    // Set no_tuples bits to 1 in currTable
+    // Set no_tuples bits to 1 in validTuples
     // FIXME: not nice
     MyBitSet bs(1, t0.tuples());
     for (int i = 0; i < no_tuples; i++) {
       bs.set(0, i);
     }
-    currTable.add_to_mask(bs.get_row(0));
-    currTable.intersect_with_mask();
+    validTuples.add_to_mask(bs.get_row(0));
+    validTuples.intersect_with_mask();
     
 #ifdef DEBUG
     cout << "Constuctor done \n Initial state:\n";
@@ -302,8 +298,8 @@ public:
     }
     cout << "supports: " << endl;J
     supports.print();
-    cout << "currTable: " << endl;
-    currTable.print();    
+    cout << "validTuples: " << endl;
+    validTuples.print();    
 #endif // DEBUG
   }
   
@@ -361,31 +357,40 @@ public:
       Iter::Values::Array r(&rvals[0], rvals.size());
       GECODE_ME_CHECK(x[i].minus_v(home,r));
     }
-   
+
+    // Set the domain sizes in lastSize
+    for (int i = 0; i < x.size(); i++) {
+      lastSize[i] = x[i].size();
+    }
+    
     return support_cnt;
   }
   
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
-      currTable(home, p.currTable),
-      supports(p.supports),
+      validTuples(home, p.validTuples),
+      supports(p.supports) {
       //row_map(p.row_map),
-      lastSize(p.lastSize) {
 #ifdef DEBUG
     cout << "copy constructor" << endl;
 #endif // DEBUG
     x.update(home,share,p.x);
     start_val = home.alloc<int>(x.size());
     start_idx = home.alloc<int>(x.size());
+    lastSize = home.alloc<int>(x.size());
     int domsum = supports.size;
     residues = home.alloc<int>(domsum);
     for (int i = 0; i < x.size(); i++) {
-      start_val[i] = p.start_val[i];
-      start_idx[i] = p.start_idx[i];
-      for (int j = 0; j < x[i].size(); j++) {
-        int row = rowno(i,j);
-        residues[row] = p.residues[row];
+      // Don't bother to copy assigned variables
+      if (x[i].size() != 1) {
+        start_val[i] = p.start_val[i];
+        start_idx[i] = p.start_idx[i];
+        lastSize[i] = p.lastSize[i];
+        for (int j = 0; j < x[i].size(); j++) {
+          int row = rowno(i,j);
+          residues[row] = p.residues[row];
+        }
       }
     }
   }
@@ -431,7 +436,7 @@ public:
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
     
     updateTable();
-    if (currTable.is_empty()) {
+    if (validTuples.is_empty()) {
       return ES_FAILED;
     }
     return filterDomains(home);
@@ -439,18 +444,18 @@ public:
 
   void updateTable() {
     for (int i = 0; i < x.size(); i++) {
-      if (lastSize.at(i) == x[i].size()) {
+      if (lastSize[i] == x[i].size()) {
         continue;
       }
-      lastSize.at(i) = x[i].size();
-      currTable.clear_mask();
+      lastSize[i] = x[i].size();
+      validTuples.clear_mask();
       Int::ViewValues<Int::IntView> it(x[i]);
       while (it()) {
-        currTable.add_to_mask(supports.get_row(rowno(i,it.val())));
+        validTuples.add_to_mask(supports.get_row(rowno(i,it.val())));
         ++it;
       }
-      currTable.intersect_with_mask();
-      if (currTable.is_empty()) {
+      validTuples.intersect_with_mask();
+      if (validTuples.is_empty()) {
         return;
       }
     }
@@ -466,8 +471,8 @@ public:
         while (it()) {
           int index = residues[rowno(i,it.val())];
           // FIXME: refactor
-          if ((currTable.words[index] & supports.get_row(rowno(i,it.val()))[index]) == 0ULL) {
-            index = currTable.intersect_index(supports.get_row(rowno(i,it.val())));
+          if ((validTuples.words[index] & supports.get_row(rowno(i,it.val()))[index]) == 0ULL) {
+            index = validTuples.intersect_index(supports.get_row(rowno(i,it.val())));
             if (index != -1) {
               // save residue
               residues[rowno(i,it.val())] = index;
@@ -482,7 +487,7 @@ public:
         if (x[i].size() > 1) {
           ++count_non_assigned;
         }
-        lastSize.at(i) = x[i].size();
+        lastSize[i] = x[i].size();
       }
     }
     // Subsume if there is at most one non-assigned variable
