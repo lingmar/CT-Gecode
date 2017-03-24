@@ -1,15 +1,13 @@
-Manually set the time from 0 to 300000
 =====UNKNOWN=====
-0x7facd7f2da50
 
-%%  runtime:       5.897 (5897.043 ms)
-%%  solvetime:     3.880 (3880.478 ms)
+%%  runtime:       5:02.027 (302027.904 ms)
+%%  solvetime:     5:00.003 (300003.910 ms)
 %%  solutions:     0
 %%  variables:     26748
 %%  propagators:   33461
-%%  propagations:  1271378
-%%  nodes:         268
-%%  failures:      116
+%%  propagations:  464113700
+%%  nodes:         139857
+%%  failures:      69906
 %%  restarts:      0
-%%  peak depth:    51
+%%  peak depth:    78
 
