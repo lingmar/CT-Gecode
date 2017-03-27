@@ -28,10 +28,10 @@ protected:
   NewSparseBitSet<Space&> validTuples;
   // Supported tuples (static)
   BitSet* supports;
-  int* start_idx;
+  unsigned int* start_idx;
   int* start_val;
-  int* residues;
-  int* lastSize;
+  unsigned int* residues;
+  unsigned int* lastSize;
   int domsum;
   int nsupports;
   // Row map for support entries
@@ -45,21 +45,22 @@ public:
                TupleSet t0,
                int domsum0)
     : Propagator(home), x(x0),
-      validTuples(static_cast<Space&>(home), t0.tuples()),
+      validTuples(static_cast<Space&>(home)),
       domsum(domsum0)
   {
+    
     cout << "constructor: domsum= " << domsum << endl;
     supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
-    start_idx = static_cast<Space&>(home).alloc<int>(x.size());
+    start_idx = static_cast<Space&>(home).alloc<unsigned int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
-    lastSize = static_cast<Space&>(home).alloc<int>(x.size());
-    residues = static_cast<Space&>(home).alloc<int>(domsum);
-        
+    lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
+    residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
+
     int cnt = 0;
     for (int i = 0; i < x.size(); i++) {
       start_val[i] = x[i].min();
       start_idx[i] = cnt;
-      cnt += x[i].size();
+      cnt += x[i].size(); // ?
     }
 
     x.subscribe(home,*this,PC_INT_DOM);
@@ -67,7 +68,7 @@ public:
     //fill_row_map();
     // Initalise supports
     nsupports = init_supports(home, t0);
-    nsupports = t0.tuples();
+    //    nsupports = t0.tuples();
 
     // Set no_tuples bits to 1 in validTuples
     // FIXME: not nice
@@ -77,18 +78,22 @@ public:
     // }
     // validTuples.add_to_mask(bs.get_row(0));
     // validTuples.intersect_with_mask();
+    validTuples.init(nsupports);
+    //validTuples.clearall(nsupports, true);
+    //cout << validTuples.is_empty() << endl;
+
+    cout << "nsupports: " << nsupports << endl;
+    validTuples.print();
     cout << "end constructor" << endl;
   }
   
   unsigned int rowno(int var, int val) {
     //int rowno1 = row_map.at(key_of(var, val));
     //int rowno2 = start_idx[var] + val - start_val[var];
-    if (start_idx[var] + val - start_val[var] < 0) {
-      cout << "start_idx: " << start_idx[var] << endl;
-      cout << "val: " << val << endl;
-      cout << "start_val: " << start_val[var] << endl;
-    }
-    assert(start_idx[var] + val - start_val[var] >= 0);
+    // if (var == 0 && val == 1) {
+    //   cout << start_idx[var] << "+" << val << "-" << start_val[var];
+    //   cout << "=" << start_idx[var] + val - start_val[var] << endl;
+    // }
     return start_idx[var] + val - start_val[var];
     //return row_map.at(key_of(var, val));
   }
@@ -100,30 +105,31 @@ public:
 
     int support_cnt = 0;
     int bpb = supports[0].get_bpb();
+    
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
+      bool seen = true;
       for (int j = 0; j < ts.arity(); j++) {
         if (!x[j].in(ts[i][j])) {
           supported = false;
-          
-#ifdef DEBUG
-          cout << "Value " << ts[i][j] << " not supported for variable " << j << endl;
-#endif // DEBUG
-          
           break;
+        } else if (support_cnt > 0) {
+          // To filter out multiples
+          seen = seen && supports[rowno(j,ts[i][j])].get(support_cnt - 1);
         }
       }
-      if (supported) {
+      if (supported && (support_cnt == 0 || !seen)) {
         // Set tuple as valid and save residue
         for (int j = 0; j < ts.arity(); j++) {
           int row = rowno(j, ts[i][j]);
+          cout << "setting row " << row << ", corresponding to " << j << ", " << ts[i][j] << endl; 
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
       }
     }
-
+    print_supports();
     // Remove values corresponding to 0-rows
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<Int::IntView> it(x[i]);
@@ -141,7 +147,7 @@ public:
     }
 
     // Set the domain sizes in lastSize
-    for (int i = 0; i < x.size(); i++) {
+    for (int i = 0; i < x.size(); i++) { 
       lastSize[i] = x[i].size();
     }
     
@@ -154,37 +160,48 @@ public:
       validTuples(home, p.validTuples),
       nsupports(p.nsupports),
       domsum(p.domsum) {
+    //cout << "rowno1:" << rowno(0,1) << endl;
+    
       //row_map(p.row_map),
 #ifdef DEBUG
-    cout << "copy constructor" << endl;
+    //cout << "copy constructor" << endl;
 #endif // DEBUG
     x.update(home,share,p.x);
     start_val = home.alloc<int>(x.size());
-    start_idx = home.alloc<int>(x.size());
-    lastSize = home.alloc<int>(x.size());
+    start_idx = home.alloc<unsigned int>(x.size());
+    lastSize = home.alloc<unsigned int>(x.size());
     supports = home.alloc<BitSet>(domsum);
     //supports = new BitSet[domsum];
-    residues = home.alloc<int>(domsum);
+    residues = home.alloc<unsigned int>(domsum);
     for (int i = 0; i < x.size(); i++) {
-      // Don't bother to copy assigned variables
-      if (x[i].size() != 1) {
-        start_val[i] = p.start_val[i];
-        start_idx[i] = p.start_idx[i];
-        lastSize[i] = p.lastSize[i];
+      // Don't bother to copy assigned variables -- TODO
+      //if (x[i].size() != 1) {
+      start_val[i] = p.start_val[i];
+      start_idx[i] = p.start_idx[i];
+      lastSize[i] = p.lastSize[i];
 
-        Int::ViewValues<Int::IntView> it(x[i]);
-        while (it()) {
-          int row = rowno(i,it.val());
-          residues[row] = p.residues[row];
-          cout << nsupports << endl;
-          //supports[row] = BitSet(home, p.supports[row]);
-          supports[row].init(home,nsupports,false);
-          supports[row].copy(nsupports,p.supports[row]);//.copy(p.supports[row]);
-          ++it;
-        }
+      Int::ViewValues<Int::IntView> it(x[i]);
+      while (it()) {
+        int row = p.rowno(i,it.val());
+        residues[row] = p.residues[row];
+        //supports[row] = BitSet(home, p.supports[row]);
+        supports[row].init(home,nsupports,false);
+        supports[row].copy(nsupports,p.supports[row]);//.copy(p.supports[row]);
+        ++it;
       }
+        //}
     }
-    cout << "end copy constructor" << endl;
+    cout << "What is copied in ct constructor:" << endl;
+    p.validTuples.print();
+    p.print_supports();
+    p.print_stuff();
+    
+    //cout << "rowno2:" << rowno(0,1) << endl;
+
+    cout << "After copy ct constructor:" << endl;
+    validTuples.print();
+    print_supports();
+    print_stuff();
   }
   
   // Post table propagator
@@ -226,12 +243,18 @@ public:
   
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-    
+    cout << "before propagate: " << endl;
+    validTuples.print();
+    print_supports();
     updateTable();
     if (validTuples.is_empty()) {
       return ES_FAILED;
     }
-    return filterDomains(home);
+    ExecStatus msg = filterDomains(home);
+    cout << "after propagate: " << endl;
+    validTuples.print();
+    print_supports();
+    return msg;
   }
 
   void updateTable() {
@@ -297,6 +320,43 @@ public:
   }
 
 private:
+
+  void print_supports() {
+    for (int i = 0; i < x.size(); i++) {
+      cout << "domain for variable " << i << ": " << x[i] << endl;
+      Int::ViewValues<Int::IntView> it(x[i]);
+      while (it()) {
+        if (i == 0 && it.val() == 1) {
+          cout << "(0,1):" << rowno(i,it.val()) << endl;
+          cout << start_idx[0] << "+" << 1 << "-" << start_val[0];
+          cout << "=" << start_idx[0] + 1 - start_val[0] << endl;
+        }
+        cout << rowno(i,it.val()) << ": ";
+        supports[rowno(i,it.val())].print();
+        ++it;
+      }
+    }
+  }
+
+  void print_stuff() {
+    cout << "lastSize: ";
+    for (int i = 0; i < x.size(); i++) {
+      cout << lastSize[i] << " ";
+    }
+    cout << endl;
+    cout << "startVal: ";
+    for (int i = 0; i < x.size(); i++) {
+      cout << start_val[i] << " ";
+    }
+    cout << endl;
+    cout << "startIdx: ";
+    for (int i = 0; i < x.size(); i++) {
+      cout << start_idx[i] << " ";
+    }
+    cout << endl;
+    
+  }
+  
   
   // void fill_row_map() {
   //   int row_cnt = 0;
