@@ -248,17 +248,17 @@ public:
   
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-    // cout << "before propagate: " << endl;
-    // validTuples.print();
-    // print_supports();
+    cout << "before propagate: " << endl;
+    validTuples.print();
+    print_supports();
     updateTable();
     if (validTuples.is_empty()) {
       return ES_FAILED;
     }
     ExecStatus msg = filterDomains(home);
-    // cout << "after propagate: " << endl;
-    // validTuples.print();
-    // print_supports();
+    cout << "after propagate: " << endl;
+    validTuples.print();
+    print_supports();
     return msg;
   }
 
@@ -396,6 +396,45 @@ private:
   // }
 };
 
+
+void test(Space& s) {
+  // And
+  BitSet bs1 = BitSet(s, 10, true);
+  BitSet bs2 = BitSet(s, 10, false);
+  bs1.a(bs2, 0);
+  bs1.print();
+  cout << endl;
+  bs2.print();
+  cout << endl;
+
+  // Or
+  bs1 = BitSet(s, 65, false);
+  bs2 = BitSet(s, 65, false);
+  bs1.set(63);
+  bs2.set(64);
+  bs1.o(bs2, 1);
+  bs1.print();
+  cout << endl;
+  bs2.print();
+  cout << endl;
+
+  // clearword
+  bs1 = BitSet(s, 65, true);
+  bs2 = BitSet(s, 65, true);
+  bs2.clear(0);
+  bs1.clearword(0, false);
+  bs1.print();
+  cout << endl;
+
+  cout << "or + setword" << endl;
+  Gecode::Support::BitSetData b = BitSet::o(bs1,bs2,1);
+  bs1.setword(b,1);
+  bs1.print();
+  cout << endl;
+
+}
+
+
 // Post the table constraint
 void extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
   using namespace Int;
@@ -418,7 +457,5 @@ void extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
   ViewArray<IntView> vx(home,x);
 
   GECODE_ES_FAIL(CompactTable::post(home,vx,t));
-  
+  //test(static_cast<Space&>(home));
 }
-
-
