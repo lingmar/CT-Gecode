@@ -60,9 +60,12 @@ public:
     for (int i = 0; i < x.size(); i++) {
       start_val[i] = x[i].min();
       start_idx[i] = cnt;
-      cnt += x[i].size(); // ?
+      cnt += x[i].width();//x[i].max() - x[i].min() + 1;
+      //cnt += x[i].size(); // ?
+      assert(x[i].width() == x[i].max() - x[i].min() + 1);
     }
-
+    print_stuff();
+    
     x.subscribe(home,*this,PC_INT_DOM);
 
     //fill_row_map();
@@ -78,7 +81,9 @@ public:
     // }
     // validTuples.add_to_mask(bs.get_row(0));
     // validTuples.intersect_with_mask();
-    validTuples.init(nsupports);
+    validTuples.init(t0.tuples());
+    validTuples.clearall(nsupports, true);
+    
     //validTuples.clearall(nsupports, true);
     //cout << validTuples.is_empty() << endl;
 
@@ -122,7 +127,7 @@ public:
         // Set tuple as valid and save residue
         for (int j = 0; j < ts.arity(); j++) {
           int row = rowno(j, ts[i][j]);
-          cout << "setting row " << row << ", corresponding to " << j << ", " << ts[i][j] << endl; 
+          //          cout << "setting row " << row << ", corresponding to " << j << ", " << ts[i][j] << endl; 
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
         }
@@ -191,17 +196,17 @@ public:
       }
         //}
     }
-    cout << "What is copied in ct constructor:" << endl;
-    p.validTuples.print();
-    p.print_supports();
-    p.print_stuff();
+    // cout << "What is copied in ct constructor:" << endl;
+    // p.validTuples.print();
+    // p.print_supports();
+    // p.print_stuff();
     
-    //cout << "rowno2:" << rowno(0,1) << endl;
+    // //cout << "rowno2:" << rowno(0,1) << endl;
 
-    cout << "After copy ct constructor:" << endl;
-    validTuples.print();
-    print_supports();
-    print_stuff();
+    // cout << "After copy ct constructor:" << endl;
+    // validTuples.print();
+    // print_supports();
+    // print_stuff();
   }
   
   // Post table propagator
@@ -243,17 +248,17 @@ public:
   
   // Perform propagation
   virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
-    cout << "before propagate: " << endl;
-    validTuples.print();
-    print_supports();
+    // cout << "before propagate: " << endl;
+    // validTuples.print();
+    // print_supports();
     updateTable();
     if (validTuples.is_empty()) {
       return ES_FAILED;
     }
     ExecStatus msg = filterDomains(home);
-    cout << "after propagate: " << endl;
-    validTuples.print();
-    print_supports();
+    // cout << "after propagate: " << endl;
+    // validTuples.print();
+    // print_supports();
     return msg;
   }
 
@@ -326,11 +331,11 @@ private:
       cout << "domain for variable " << i << ": " << x[i] << endl;
       Int::ViewValues<Int::IntView> it(x[i]);
       while (it()) {
-        if (i == 0 && it.val() == 1) {
-          cout << "(0,1):" << rowno(i,it.val()) << endl;
-          cout << start_idx[0] << "+" << 1 << "-" << start_val[0];
-          cout << "=" << start_idx[0] + 1 - start_val[0] << endl;
-        }
+        // if (i == 0 && it.val() == 1) {
+        //   cout << "(0,1):" << rowno(i,it.val()) << endl;
+        //   cout << start_idx[0] << "+" << 1 << "-" << start_val[0];
+        //   cout << "=" << start_idx[0] + 1 - start_val[0] << endl;
+        // }
         cout << rowno(i,it.val()) << ": ";
         supports[rowno(i,it.val())].print();
         ++it;
