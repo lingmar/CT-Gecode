@@ -79,15 +79,20 @@ public:
         start_idx[i] = start_idx[i-1] + x[i-1].width();
     }
     // Initialise supports
+    
     nsupports = init_supports(home, t0);
     // Initialise validTupels with nsupports bit set
-    validTuples.init(t0.tuples(), nsupports);
+    if (nsupports <= 0) {
+      home.fail();
+      return;
+    }
     // Set the domain sizes in lastSize
     for (int i = 0; i < x.size(); i++)
       lastSize[i] = x[i].size();
   }
   
   unsigned int init_supports(Home home, TupleSet ts) {
+    //cout << "in init_support" << endl;
     // Initialise supports
     for (int i = 0; i < domsum; i++) {
       supports[i].init(static_cast<Space&>(home), ts.tuples(), false);
@@ -117,6 +122,7 @@ public:
         support_cnt++;
       }
     }
+    //cout << "half-way init_supports" << endl;
     // Remove values corresponding to 0-rows
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<Int::IntView> it(x[i]);
@@ -129,7 +135,9 @@ public:
         ++it;
       }
       Iter::Values::Array r(&rvals[0], rvals.size());
-      GECODE_ME_CHECK(x[i].minus_v(home,r));
+      if (::Gecode::me_failed(x[i].minus_v(home,r))) {
+        return -1;
+      }
     }
     return support_cnt;
   }
@@ -142,8 +150,8 @@ public:
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
       validTuples(home, p.validTuples),
-      nsupports(p.nsupports),
-      domsum(p.domsum) {
+      domsum(p.domsum),
+      nsupports(p.nsupports) {
     // Update view
     x.update(home,share,p.x);
     // Allocate memory
@@ -227,6 +235,8 @@ public:
           int index = residues[rowno(i,it.val())];
           // FIXME: refactor
           int row = rowno(i,it.val());
+          cout << row << endl;
+          supports[row].print();
           Support::BitSetData w = validTuples.a(supports[row],index);
           if (w.none()) {
             index = validTuples.intersect_index(supports[row]);
