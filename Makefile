@@ -10,32 +10,42 @@ CXX = g++
 
 OS := $(shell uname)
 
+# Gist does not work on my MacOS
 ifeq ($(OS),Darwin)
 LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport
 else
 LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist -lpthread
 endif
 
-CXX_FLAGS = -std=c++11 -I${include_path} #-I/usr/include/qt4 #-DDEBUG
+CXX_FLAGS = -I${include_path} -g #-DNDEBUG
 RM = rm -f
 
-OBJECTS = out/compact-table.o
+OBJECTS = out/compact-table.o out/compact-table-buggy.o
 
 .PHONY: all clean report test
 
-all: bin/kakuro bin/black-hole-patience bin/swedish-drinking-protocol
+all: bin/kakuro bin/kakuro2 bin/black-hole-patience bin/black-hole-patience-buggy #bin/swedish-drinking-protocol
 
 out/%.o: src/%.cpp
 	$(MKDIR) $(@D)
-	$(CXX) $(CXX_FLAGS) -c -o $@ $?	#$(LIBS)
+	$(CXX) $(CXX_FLAGS) -c -o $@ $?
 
 bin/kakuro: out/kakuro.o
+	$(MKDIR) $(@D)
+	$(CXX) $(CXX_FLAGS) -o $@ $? $(LIBS)
+
+bin/kakuro2: out/kakuro2.o
 	$(MKDIR) $(@D)
 	$(CXX) $(CXX_FLAGS) -o $@ $? $(LIBS)
 
 bin/black-hole-patience: out/black-hole-patience.o
 	$(MKDIR) $(@D)
 	$(CXX) $(CXX_FLAGS) -o $@ $? $(LIBS)
+
+bin/black-hole-patience-buggy: out/black-hole-patience-buggy.o
+	$(MKDIR) $(@D)
+	$(CXX) $(CXX_FLAGS) -o $@ $? $(LIBS)
+
 
 bin/swedish-drinking-protocol: out/swedish-drinking-protocol.o
 	$(MKDIR) $(@D)
