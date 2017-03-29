@@ -24,9 +24,9 @@ protected:
     /// Copy \a s
     Supports(const Supports& s);
     /// Allocate supports for \a d rows, \a variables and \a n bits
-    void allocate_supports(int d,int v,int n);
+    void allocate_supports(unsigned int d,unsigned int v,unsigned int n);
     /// Row number for variable \a var and value \a val
-    unsigned int row(int var, int val) const;
+    unsigned int row(unsigned int var, int val) const;
     /// Copy function
     virtual Object* copy(void) const;
     /// Destructor
@@ -40,15 +40,15 @@ public:
   /// Assignment operator
   SharedSupports& operator =(const SharedSupports& si);
   /// Get bit set for variable i, value j
-  BitSet& get(int i, int j) const;
+  BitSet& get(unsigned int i, int j) const;
   /// Allocate supports for \a d rows, \a variables and \a n bits
-  void init_supports(int d, int v, int n);
+  void init_supports(unsigned int d, unsigned int v, unsigned int n);
   /// Set start index for variable \a i to \a idx
   void set_start_idx(unsigned int i, unsigned int idx);
   /// Set start value for variable \a i to \a val
   void set_start_val(unsigned int i, unsigned int val);
   /// Print bit set for variable \a i and value \a
-  void print(int i,int j);
+  void print(unsigned int i,unsigned int j);
   /// Destructor
   ~SharedSupports(void);
 };
@@ -64,20 +64,20 @@ SharedSupports::Supports::Supports(const Supports& sio)
   : domsize(sio.domsize), nsupports(sio.nsupports), vars(sio.vars) {
   //std::cout << "copy constructor" << std::endl;
   supports = heap.alloc<BitSet>(sio.domsize);
-  for (int i = 0; i < domsize; i++) {
+  for (unsigned int i = 0; i < domsize; i++) {
     supports[i].init(heap,nsupports,false);
     supports[i].copy(nsupports,sio.supports[i]);
   }
   start_idx = heap.alloc<unsigned int>(sio.vars);
   start_val = heap.alloc<unsigned int>(sio.vars);
-  for (int i = 0; i < vars; i++) {
+  for (unsigned int i = 0; i < vars; i++) {
     start_idx[i] = sio.start_idx[i];
     start_val[i] = sio.start_val[i];
   }
 }
 
 forceinline void
-SharedSupports::Supports::allocate_supports(int d,int v,int n) {
+SharedSupports::Supports::allocate_supports(unsigned int d,unsigned int v,unsigned int n) {
   //std::cout << "init_supports" << std::endl;
   domsize = d;
   vars = v;
@@ -85,13 +85,13 @@ SharedSupports::Supports::allocate_supports(int d,int v,int n) {
   supports = heap.alloc<BitSet>(domsize);
   start_idx = heap.alloc<unsigned int>(vars);
   start_val = heap.alloc<unsigned int>(vars);
-  for (int i = 0; i < d; i++) {
+  for (unsigned int i = 0; i < d; i++) {
     supports[i].init(heap,nsupports,false);
   }
 }
 
 forceinline unsigned int
-SharedSupports::Supports::row(int var, int val) const {
+SharedSupports::Supports::row(unsigned int var, int val) const {
   return start_idx[var] + val - start_val[var];
 }
 
@@ -117,14 +117,14 @@ SharedSupports::operator =(const SharedSupports& si) {
 }
 
 forceinline BitSet&
-SharedSupports::get(int i, int j) const {
+SharedSupports::get(unsigned int i, int j) const {
   const SharedSupports::Supports* s =
     static_cast<const SharedSupports::Supports*>(object());
   return s->supports[s->row(i,j)];
 }
 
 forceinline void
-SharedSupports::init_supports(int d, int v, int n) {
+SharedSupports::init_supports(unsigned int d, unsigned int v, unsigned int n) {
   static_cast<SharedSupports::Supports*>(object())->allocate_supports(d,v,n);
 }
 
@@ -139,7 +139,7 @@ SharedSupports::set_start_val(unsigned int i, unsigned int val) {
 }
 
 forceinline void
-SharedSupports::print(int i,int j) {
+SharedSupports::print(unsigned int i,unsigned int j) {
   const SharedSupports::Supports* s =
     static_cast<SharedSupports::Supports*>(object());
   s->supports[s->row(i,j)].print();
