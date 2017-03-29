@@ -44,9 +44,8 @@ protected:
 
 public:
   // Post table propagator
-  static ExecStatus post(Home home,
-                         ViewArray<View>& x,
-                         TupleSet t) {
+  forceinline static ExecStatus
+  post(Home home, ViewArray<View>& x, TupleSet t) {
     // All variables in the correct domain
     for (int i = x.size(); i--; ) {
       GECODE_ME_CHECK(x[i].gq(home, t.min()));
@@ -60,6 +59,7 @@ public:
   }
   
   // Create propagator and initialize
+  forceinline
   CompactTable(Home home,
                ViewArray<View>& x0,
                TupleSet t0)
@@ -112,8 +112,9 @@ public:
 
     validTuples.init(t0.tuples(), nsupports);
   }
-  
-  unsigned int init_supports(Home home, TupleSet ts) {
+
+  forceinline unsigned int
+  init_supports(Home home, TupleSet ts) {
 #ifdef SHARED
 #else    
     // Initialise supports
@@ -185,12 +186,14 @@ public:
   }
 
 #ifndef SHARED
-  unsigned int rowno(int var, int val) {
+  forceinline unsigned int
+  rowno(int var, int val) {
     return start_idx[var] + val - start_val[var];
   }
 #endif // SHARED
     
   // Copy constructor during cloning
+  forceinline
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
       validTuples(home, p.validTuples),
@@ -234,23 +237,27 @@ public:
   }
   
   // Create copy during cloning
-  virtual Propagator* copy(Space& home, bool share) {
+  forceinline virtual Propagator*
+  copy(Space& home, bool share) {
     return new (home) CompactTable(home,share,*this);
   }
     
   // Return cost (defined as cheap quadratic)
-  virtual PropCost cost(const Space&, const ModEventDelta&) const {
+  forceinline virtual PropCost
+  cost(const Space&, const ModEventDelta&) const {
     // TODO: ???
     return PropCost::linear(PropCost::LO,2*x.size());
   }
 
   // TODO: ???
-  virtual void reschedule(Space& home) {
+  forceinline virtual void
+  reschedule(Space& home) {
     x.reschedule(home,*this,Int::PC_INT_DOM);
   }
   
   // Perform propagation
-  virtual ExecStatus propagate(Space& home, const ModEventDelta&) {
+  forceinline virtual ExecStatus
+  propagate(Space& home, const ModEventDelta&) {
     updateTable();
     
     if (validTuples.is_empty()) {
@@ -260,7 +267,8 @@ public:
     return msg;
   }
 
-  void updateTable() {
+  forceinline void
+  updateTable() {
     //cout << "updateTable" << endl;
     for (int i = 0; i < x.size(); i++) {
       if (lastSize[i] == x[i].size()) {
@@ -285,7 +293,8 @@ public:
     }
   }
 
-  ExecStatus filterDomains(Space& home) {
+  forceinline ExecStatus
+  filterDomains(Space& home) {
     int count_non_assigned = 0;
     for (int i = 0; i < x.size(); i++) {
       // only filter out values for variables with domain size > 1
@@ -332,7 +341,8 @@ public:
   }
   
   // Dispose propagator and return its size
-  virtual size_t dispose(Space& home) {
+  forceinline virtual size_t
+  dispose(Space& home) {
     x.cancel(home,*this,PC_INT_DOM);
     // TODO: dispose t?
     (void) Propagator::dispose(home);
@@ -421,7 +431,7 @@ private:
 // Post the table constraint
 namespace Gecode {
   
-  void
+  forceinline void
   extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
     using namespace Int;
     if (!t.finalized())
@@ -442,7 +452,8 @@ namespace Gecode {
     GECODE_ES_FAIL(CompactTable<IntView>::post(home,vx,t));
   }
 
-  void extensional2(Home home, const BoolVarArgs& x, const TupleSet& t) {
+  forceinline void
+  extensional2(Home home, const BoolVarArgs& x, const TupleSet& t) {
     using namespace Int;
     if (!t.finalized())
       throw NotYetFinalized("Int::extensional2");
