@@ -24,7 +24,7 @@ OBJECTS = out/compact-table.o out/compact-table-buggy.o
 
 .PHONY: all clean report test
 
-all: bin/kakuro bin/black-hole-patience bin/swedish-drinking-protocol
+all: bin/black-hole-patience bin/kakuro #bin/swedish-drinking-protocol
 
 out/%.o: src/%.cpp
 	$(MKDIR) $(@D)
@@ -49,4 +49,7 @@ clean:
 	$(RM) -r out/ bin/
 
 test:
-	cd gecode/test && make test && ./test -test Extensional::TupleSet
+	touch gecode/test/int/extensional.cpp && cd gecode && make test && test/test -test Extensional::TupleSet
+
+flatzinc:
+	touch gecode/gecode/flatzinc/registry.cpp && cd gecode && make
