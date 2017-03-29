@@ -3,10 +3,13 @@
 #include <stdint.h>
 #include <iostream>
 #include <assert.h>
-#include "bitset.hpp"
+//#include "bitset.hpp"
+#include "bitset-support.cpp"
 //#include <unordered_map>
 
 #define DEBUG 1
+
+#define SHARED 1
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -20,8 +23,6 @@ protected:
   ViewArray<View> x;
   // The table with possible combinations of values
   SparseBitSet<Space&> validTuples;
-  // Supported tuples
-  BitSet* supports;
   // Starting idx for variable i in supports
   unsigned int* start_idx;
   // Smallest initial value for variable i
@@ -34,6 +35,13 @@ protected:
   int domsum;
   // Nr of inital supports
   int nsupports;
+#ifdef SHARED
+  SharedSupports s;
+#else
+  // Supported tuples
+  BitSet* supports;
+#endif // SHARED
+
 public:
   // Post table propagator
   static ExecStatus post(Home home,
@@ -60,13 +68,18 @@ public:
   {
     // Subscribe variables
     x.subscribe(home,*this,PC_INT_DOM);
+    
     // Calculate domain sum
     domsum = 0;
     for (int i = 0; i < x.size(); i++) {
       domsum += x[i].width();
     }
     // Allocate memory
-    supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
+#ifdef SHARED
+#else
+    supports = static_cast<Space&>(home).alloc<BitSet>(domsum);    
+#endif // SHARED
+
     start_idx = static_cast<Space&>(home).alloc<unsigned int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
     lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
@@ -96,12 +109,27 @@ public:
   
   unsigned int init_supports(Home home, TupleSet ts) {
     //cout << "in init_support" << endl;
+#ifdef SHARED
+    s.init_supports(domsum,x.size(),ts.tuples());
+    for (int i = 0; i < x.size(); i++) {
+      s.set_start_idx(i,start_idx[i]);
+      s.set_start_val(i,start_val[i]);
+    }
+#else    
     // Initialise supports
     for (int i = 0; i < domsum; i++) {
       supports[i].init(static_cast<Space&>(home), ts.tuples(), false);
     }
+#endif // SHARED
+    
+    
     int support_cnt = 0;
-    int bpb = supports[0].get_bpb();
+#ifdef SHARED
+    int bpb = 64;
+#else    
+    int bpb = supports[0].get_bpb();//Gecode::Support::BitSetData::data(1);
+#endif // SUPPORT
+
     // Look for supports and set correct bits
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
@@ -112,14 +140,22 @@ public:
           break;
         } else if (support_cnt > 0) {
           // To filter out copies
+#ifdef SHARED
+          seen = seen && s.get(j,ts[i][j]).get(support_cnt - 1);          
+#else          
           seen = seen && supports[rowno(j,ts[i][j])].get(support_cnt - 1);
+#endif // SHARED
         }
       }
       if (supported && (support_cnt == 0 || !seen)) {
         // Set tuple as valid and save residue
         for (int j = 0; j < ts.arity(); j++) {
           int row = rowno(j, ts[i][j]);
-          supports[row].set(support_cnt);
+#ifdef SHARED
+          s.get(j,ts[i][j]).set(support_cnt);
+#else
+          supports[row].set(support_cnt);          
+#endif // SHARED
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
@@ -130,9 +166,18 @@ public:
       vector<int> rvals; //values to remove
       while (it()) {
         // Remove value if row is empty
+        // if (supports[rowno(i,it.val())].none()) {
+        //   rvals.push_back(it.val());
+        // }
+#ifdef SHARED
+        if (s.get(i,it.val()).none()) {
+          rvals.push_back(it.val());
+        }
+#else        
         if (supports[rowno(i,it.val())].none()) {
           rvals.push_back(it.val());
         }
+#endif // SHARED
         ++it;
       }
       Iter::Values::Array r(&rvals[0], rvals.size());
@@ -155,11 +200,16 @@ public:
       nsupports(p.nsupports) {
     // Update view
     x.update(home,share,p.x);
+
     // Allocate memory
     start_val = home.alloc<int>(x.size());
     start_idx = home.alloc<unsigned int>(x.size());
     lastSize = home.alloc<unsigned int>(x.size());
-    supports = home.alloc<BitSet>(domsum);
+#ifdef SHARED
+    s.update(home,share,p.s);
+#else    
+    supports = home.alloc<BitSet>(domsum);    
+#endif // MACRO
     residues = home.alloc<unsigned int>(domsum);
     for (int i = 0; i < x.size(); i++) {
       lastSize[i] = p.lastSize[i];
@@ -171,8 +221,10 @@ public:
         while (it()) {
           unsigned int row = p.rowno(i,it.val());
           residues[row] = p.residues[row];
+#ifndef SHARED
           supports[row].init(home,nsupports,false);
           supports[row].copy(nsupports,p.supports[row]);
+#endif // SHARED
           ++it;
         }
       }
@@ -207,6 +259,7 @@ public:
   }
 
   void updateTable() {
+    //cout << "updateTable" << endl;
     for (int i = 0; i < x.size(); i++) {
       if (lastSize[i] == x[i].size()) {
         continue;
@@ -215,7 +268,12 @@ public:
       validTuples.clear_mask();
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-        validTuples.add_to_mask(supports[rowno(i,it.val())]);
+        //  cout << it.val() << endl;
+#ifdef SHARED
+        validTuples.add_to_mask(s.get(i,it.val()));        
+#else
+        validTuples.add_to_mask(supports[rowno(i,it.val())]);        
+#endif // SHARED
         ++it;
       }
       validTuples.intersect_with_mask();
@@ -235,13 +293,24 @@ public:
         while (it()) {
           int index = residues[rowno(i,it.val())];
           int row = rowno(i,it.val());
+
+#ifdef SHARED
+          Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
+#else          
           Support::BitSetData w = validTuples.a(supports[row],index);
+#endif // SHARED
+          
           if (w.none()) {
+#ifdef SHARED
+            index = validTuples.intersect_index(s.get(i,it.val()));
+#else            
             index = validTuples.intersect_index(supports[row]);
+#endif // SHARED
             if (index != -1) {
-              // save residue
+              // Save residue
               residues[rowno(i,it.val())] = index;
             } else {
+              // Value not supported
               rvals.push_back(it.val());
             }
           }
@@ -270,26 +339,26 @@ public:
 private:
 
   void print_supports() {
-    int count = 0;
-    for (int i = 0; i < domsum; i++) {
-      count += supports[i].nset();
-      //supports[i].print();
-    }
-    cout << count << endl;
-    // for (int i = 0; i < x.size(); i++) {
-    //   //cout << "domain for variable " << i << ": " << x[i] << endl;
-    //   Int::ViewValues<View> it(x[i]);
-    //   while (it()) {
-    //     // if (i == 0 && it.val() == 1) {
-    //     //   cout << "(0,1):" << rowno(i,it.val()) << endl;
-    //     //   cout << start_idx[0] << "+" << 1 << "-" << start_val[0];
-    //     //   cout << "=" << start_idx[0] + 1 - start_val[0] << endl;
-    //     // }
-    //     //cout << rowno(i,it.val()) << ": ";
-    //     supports[rowno(i,it.val())].print();
-    //     ++it;
-    //   }
+    // int count = 0;
+    // for (int i = 0; i < domsum; i++) {
+    //   count += supports[i].nset();
+    //   //supports[i].print();
     // }
+    // cout << count << endl;
+    // // for (int i = 0; i < x.size(); i++) {
+    // //   //cout << "domain for variable " << i << ": " << x[i] << endl;
+    // //   Int::ViewValues<View> it(x[i]);
+    // //   while (it()) {
+    // //     // if (i == 0 && it.val() == 1) {
+    // //     //   cout << "(0,1):" << rowno(i,it.val()) << endl;
+    // //     //   cout << start_idx[0] << "+" << 1 << "-" << start_val[0];
+    // //     //   cout << "=" << start_idx[0] + 1 - start_val[0] << endl;
+    // //     // }
+    // //     //cout << rowno(i,it.val()) << ": ";
+    // //     supports[rowno(i,it.val())].print();
+    // //     ++it;
+    // //   }
+    // // }
   }
 
   void print_stuff() {
