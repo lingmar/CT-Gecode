@@ -115,8 +115,7 @@ public:
 
   forceinline unsigned int
   init_supports(Home home, TupleSet ts) {
-#ifdef SHARED
-#else    
+#ifndef SHARED
     // Initialise supports
     for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(static_cast<Space&>(home), ts.tuples(), false);
@@ -124,11 +123,7 @@ public:
 #endif // SHARED
 
     int support_cnt = 0;
-#ifdef SHARED
     int bpb = BitSet::get_bpb();
-#else    
-    int bpb = supports[0].get_bpb();//Gecode::Support::BitSetData::data(1);
-#endif // SUPPORT
 
     // Look for supports and set correct bits
     for (int i = 0; i < ts.tuples(); i++) {
