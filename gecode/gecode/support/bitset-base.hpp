@@ -112,6 +112,8 @@ namespace Gecode { namespace Support {
     void o(BitSetData a, unsigned int i);
     /// Return "or" of \a a and \a b
     static BitSetData o(BitSetData a, BitSetData b);
+    /// Check if \a is the same
+    bool same(BitSetData a);
   };
 
   /// Status of a bitset
@@ -274,7 +276,7 @@ namespace Gecode { namespace Support {
       return static_cast<unsigned int>(p-1)+i;
     }
 #else
-    while (!get(i)) i++;
+    while (!get(i)) i++; 
     return i;
 #endif
   }
@@ -328,7 +330,10 @@ namespace Gecode { namespace Support {
     ab.bits = a.bits | b.bits;
     return ab;
   }
-
+  forceinline bool
+  BitSetData::same(BitSetData a) {
+    return bits == a.bits;
+  }
 
   /*
    * Basic bit sets
