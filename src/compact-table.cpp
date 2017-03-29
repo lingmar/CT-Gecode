@@ -43,9 +43,9 @@ public:
       GECODE_ME_CHECK(x[i].gq(home, t.min()));
       GECODE_ME_CHECK(x[i].lq(home, t.max()));
     }
-    // Only if there is something to propagate
-    if (x.size() > 1) {
-      (void) new (home) CompactTable(home,x,t);
+    (void) new (home) CompactTable(home,x,t);
+    if (home.failed()) {
+      return ES_FAILED;
     }
     return ES_OK;
   }
