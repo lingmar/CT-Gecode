@@ -23,10 +23,6 @@ protected:
   ViewArray<View> x;
   // The table with possible combinations of values
   SparseBitSet<Space&> validTuples;
-  // Starting idx for variable i in supports
-  unsigned int* start_idx;
-  // Smallest initial value for variable i
-  int* start_val;
   // Residues
   unsigned int* residues;
   // Size of variable since last propagation
@@ -40,6 +36,10 @@ protected:
 #else
   // Supported tuples
   BitSet* supports;
+  // Starting idx for variable i in supports
+  unsigned int* start_idx;
+  // Smallest initial value for variable i
+  int* start_val;
 #endif // SHARED
 
 public:
@@ -370,21 +370,21 @@ private:
   }
 
   void print_stuff() {
-    cout << "lastSize: ";
-    for (int i = 0; i < x.size(); i++) {
-      cout << lastSize[i] << " ";
-    }
-    cout << endl;
-    cout << "startVal: ";
-    for (int i = 0; i < x.size(); i++) {
-      cout << start_val[i] << " ";
-    }
-    cout << endl;
-    cout << "startIdx: ";
-    for (int i = 0; i < x.size(); i++) {
-      cout << start_idx[i] << " ";
-    }
-    cout << endl;
+    // cout << "lastSize: ";
+    // for (int i = 0; i < x.size(); i++) {
+    //   cout << lastSize[i] << " ";
+    // }
+    // cout << endl;
+    // cout << "startVal: ";
+    // for (int i = 0; i < x.size(); i++) {
+    //   cout << start_val[i] << " ";
+    // }
+    // cout << endl;
+    // cout << "startIdx: ";
+    // for (int i = 0; i < x.size(); i++) {
+    //   cout << start_idx[i] << " ";
+    // }
+    // cout << endl;
     
   }
   
