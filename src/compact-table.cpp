@@ -76,14 +76,18 @@ public:
     }
     // Allocate memory
 #ifdef SHARED
+    s.init_supports(domsum,x.size(),t0.tuples());
+    for (int i = 0; i < x.size(); i++) {
+      s.set_start_val(i,x[i].min());
+      if (i == 0)
+        s.set_start_idx(i,0);
+      else
+        s.set_start_idx(i,s.get_start_idx(i-1) + x[i-1].width());
+    }
 #else
-    supports = static_cast<Space&>(home).alloc<BitSet>(domsum);    
-#endif // SHARED
-
+    supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
     start_idx = static_cast<Space&>(home).alloc<unsigned int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
-    lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
-    residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
     // Initialise start_val, start_idx
     for (int i = 0; i < x.size(); i++) {
       start_val[i] = x[i].min();
@@ -92,8 +96,10 @@ public:
       else
         start_idx[i] = start_idx[i-1] + x[i-1].width();
     }
+#endif // SHARED
+    lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
+    residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
     // Initialise supports
-    
     nsupports = init_supports(home, t0);
     // Initialise validTupels with nsupports bit set
     if (nsupports <= 0) {
@@ -108,24 +114,17 @@ public:
   }
   
   unsigned int init_supports(Home home, TupleSet ts) {
-    //cout << "in init_support" << endl;
 #ifdef SHARED
-    s.init_supports(domsum,x.size(),ts.tuples());
-    for (int i = 0; i < x.size(); i++) {
-      s.set_start_idx(i,start_idx[i]);
-      s.set_start_val(i,start_val[i]);
-    }
 #else    
     // Initialise supports
     for (int i = 0; i < domsum; i++) {
-      supports[i].init(static_cast<Space&>(home), ts.tuples(), false);
+      supports[i].Support::BitSetBase::init(static_cast<Space&>(home), ts.tuples(), false);
     }
 #endif // SHARED
-    
-    
+
     int support_cnt = 0;
 #ifdef SHARED
-    int bpb = 64;
+    int bpb = BitSet::get_bpb();
 #else    
     int bpb = supports[0].get_bpb();//Gecode::Support::BitSetData::data(1);
 #endif // SUPPORT
@@ -150,10 +149,11 @@ public:
       if (supported && (support_cnt == 0 || !seen)) {
         // Set tuple as valid and save residue
         for (int j = 0; j < ts.arity(); j++) {
-          int row = rowno(j, ts[i][j]);
 #ifdef SHARED
+          unsigned int row = s.row(j,ts[i][j]);
           s.get(j,ts[i][j]).set(support_cnt);
 #else
+          unsigned int row = rowno(j, ts[i][j]);
           supports[row].set(support_cnt);          
 #endif // SHARED
           residues[row] = support_cnt / bpb;
@@ -165,10 +165,6 @@ public:
       Int::ViewValues<View> it(x[i]);
       vector<int> rvals; //values to remove
       while (it()) {
-        // Remove value if row is empty
-        // if (supports[rowno(i,it.val())].none()) {
-        //   rvals.push_back(it.val());
-        // }
 #ifdef SHARED
         if (s.get(i,it.val()).none()) {
           rvals.push_back(it.val());
@@ -188,9 +184,11 @@ public:
     return support_cnt;
   }
 
+#ifndef SHARED
   unsigned int rowno(int var, int val) {
     return start_idx[var] + val - start_val[var];
   }
+#endif // SHARED
     
   // Copy constructor during cloning
   CompactTable(Space& home, bool share, CompactTable& p)
@@ -202,29 +200,33 @@ public:
     x.update(home,share,p.x);
 
     // Allocate memory
-    start_val = home.alloc<int>(x.size());
-    start_idx = home.alloc<unsigned int>(x.size());
     lastSize = home.alloc<unsigned int>(x.size());
 #ifdef SHARED
     s.update(home,share,p.s);
 #else    
-    supports = home.alloc<BitSet>(domsum);    
+    supports = home.alloc<BitSet>(domsum);
+    start_val = home.alloc<int>(x.size());
+    start_idx = home.alloc<unsigned int>(x.size());
 #endif // MACRO
     residues = home.alloc<unsigned int>(domsum);
     for (int i = 0; i < x.size(); i++) {
       lastSize[i] = p.lastSize[i];
       // Don't bother to copy assigned variables
       if (x[i].size() > 1) {
+#ifndef SHARED
         start_val[i] = p.start_val[i];
         start_idx[i] = p.start_idx[i];
+#endif // SHARED
         Int::ViewValues<View> it(x[i]);
         while (it()) {
+#ifdef SHARED
+          unsigned int row = s.row(i,it.val());
+#else
           unsigned int row = p.rowno(i,it.val());
-          residues[row] = p.residues[row];
-#ifndef SHARED
-          supports[row].init(home,nsupports,false);
+          supports[row].Support::BitSetBase::init(home,nsupports,false);
           supports[row].copy(nsupports,p.supports[row]);
 #endif // SHARED
+          residues[row] = p.residues[row];
           ++it;
         }
       }
@@ -291,15 +293,16 @@ public:
         Int::ViewValues<View> it(x[i]);
         vector<int> rvals; //values to remove
         while (it()) {
-          int index = residues[rowno(i,it.val())];
-          int row = rowno(i,it.val());
-
 #ifdef SHARED
+          unsigned int row = s.row(i,it.val());
+          int index = residues[row];
           Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
-#else          
+#else
+          unsigned int row = rowno(i,it.val());
+          int index = residues[row];
           Support::BitSetData w = validTuples.a(supports[row],index);
 #endif // SHARED
-          
+
           if (w.none()) {
 #ifdef SHARED
             index = validTuples.intersect_index(s.get(i,it.val()));
@@ -308,7 +311,7 @@ public:
 #endif // SHARED
             if (index != -1) {
               // Save residue
-              residues[rowno(i,it.val())] = index;
+              residues[row] = index;
             } else {
               // Value not supported
               rvals.push_back(it.val());
