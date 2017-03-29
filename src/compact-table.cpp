@@ -13,10 +13,11 @@ using namespace Gecode::Int;
 using namespace std;
 
 // The compact table propagator
+template<class View>
 class CompactTable : public Propagator {
 protected:
   // The variables
-  ViewArray<IntView> x;
+  ViewArray<View> x;
   // The table with possible combinations of values
   SparseBitSet<Space&> validTuples;
   // Supported tuples
@@ -36,7 +37,7 @@ protected:
 public:
   // Post table propagator
   static ExecStatus post(Home home,
-                         ViewArray<IntView>& x,
+                         ViewArray<View>& x,
                          TupleSet t) {
     // All variables in the correct domain
     for (int i = x.size(); i--; ) {
@@ -52,7 +53,7 @@ public:
   
   // Create propagator and initialize
   CompactTable(Home home,
-               ViewArray<IntView>& x0,
+               ViewArray<View>& x0,
                TupleSet t0)
     : Propagator(home), x(x0),
       validTuples(static_cast<Space&>(home))
@@ -125,7 +126,7 @@ public:
       }
     }
     for (int i = 0; i < x.size(); i++) {
-      Int::ViewValues<Int::IntView> it(x[i]);
+      Int::ViewValues<View> it(x[i]);
       vector<int> rvals; //values to remove
       while (it()) {
         // Remove value if row is empty
@@ -166,7 +167,7 @@ public:
       if (x[i].size() > 1) {
         start_val[i] = p.start_val[i];
         start_idx[i] = p.start_idx[i];
-        Int::ViewValues<Int::IntView> it(x[i]);
+        Int::ViewValues<View> it(x[i]);
         while (it()) {
           unsigned int row = p.rowno(i,it.val());
           residues[row] = p.residues[row];
@@ -212,7 +213,7 @@ public:
       }
       lastSize[i] = x[i].size();
       validTuples.clear_mask();
-      Int::ViewValues<Int::IntView> it(x[i]);
+      Int::ViewValues<View> it(x[i]);
       while (it()) {
         validTuples.add_to_mask(supports[rowno(i,it.val())]);
         ++it;
@@ -229,7 +230,7 @@ public:
     for (int i = 0; i < x.size(); i++) {
       // only filter out values for variables with domain size > 1
       if (x[i].size() > 1) {
-        Int::ViewValues<Int::IntView> it(x[i]);
+        Int::ViewValues<View> it(x[i]);
         vector<int> rvals; //values to remove
         while (it()) {
           int index = residues[rowno(i,it.val())];
@@ -277,7 +278,7 @@ private:
     cout << count << endl;
     // for (int i = 0; i < x.size(); i++) {
     //   //cout << "domain for variable " << i << ": " << x[i] << endl;
-    //   Int::ViewValues<Int::IntView> it(x[i]);
+    //   Int::ViewValues<View> it(x[i]);
     //   while (it()) {
     //     // if (i == 0 && it.val() == 1) {
     //     //   cout << "(0,1):" << rowno(i,it.val()) << endl;
@@ -314,7 +315,7 @@ private:
   // void fill_row_map() {
   //   int row_cnt = 0;
   //   for (int j = 0; j < x.size(); j++) {
-  //     Int::ViewValues<Int::IntView> i(x[j]);
+  //     Int::ViewValues<View> i(x[j]);
   //     while (i()) {
   //       rmap_entry entry(key_of(j, i.val()), row_cnt);
   //       row_map.insert(entry);
@@ -325,7 +326,7 @@ private:
 
   // void print_row_map() {
   //   for (int j = 0; j < x.size(); j++) {
-  //     Int::ViewValues<Int::IntView> i(x[j]);
+  //     Int::ViewValues<View> i(x[j]);
   //     while (i()) {
   //       cout << "(" << j << ", " << i.val() << ") with key value: " <<
   //         key_of(j, i.val()) <<
@@ -346,21 +347,46 @@ private:
 
 
 // Post the table constraint
-void extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
-  using namespace Int;
-  if (!t.finalized())
-    throw NotYetFinalized("Int::extensional2");
-  if (t.arity() != x.size())
-    throw ArgumentSizeMismatch("Int::extensional2");
-  // Never post a propagator in a failed space
-  GECODE_POST;
-  if (t.tuples()==0) {
-    if (x.size()!=0) {
-      home.fail();
+namespace Gecode {
+  
+  void
+  extensional2(Home home, const IntVarArgs& x, const TupleSet& t) {
+    using namespace Int;
+    if (!t.finalized())
+      throw NotYetFinalized("Int::extensional2");
+    if (t.arity() != x.size())
+      throw ArgumentSizeMismatch("Int::extensional2");
+    // Never post a propagator in a failed space
+    GECODE_POST;
+    
+    if (t.tuples()==0) {
+      if (x.size()!=0) {
+        home.fail();
+      }
+      return;
     }
-    return;
+    // Construct view array
+    ViewArray<IntView> vx(home,x);
+    GECODE_ES_FAIL(CompactTable<IntView>::post(home,vx,t));
   }
-  // Construct view array
-  ViewArray<IntView> vx(home,x);
-  GECODE_ES_FAIL(CompactTable::post(home,vx,t));
+
+  void extensional2(Home home, const BoolVarArgs& x, const TupleSet& t) {
+    using namespace Int;
+    if (!t.finalized())
+      throw NotYetFinalized("Int::extensional2");
+    if (t.arity() != x.size())
+      throw ArgumentSizeMismatch("Int::extensional2");
+    // Never post a propagator in a failed space
+    GECODE_POST;
+    if (t.tuples()==0) {
+      if (x.size()!=0) {
+        home.fail();
+      }
+      return;
+    }
+    // Construct view array
+    ViewArray<BoolView> vx(home,x);
+    GECODE_ES_FAIL(CompactTable<BoolView>::post(home,vx,t));
+  }
+
 }
