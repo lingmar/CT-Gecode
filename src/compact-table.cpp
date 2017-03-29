@@ -89,6 +89,8 @@ public:
     // Set the domain sizes in lastSize
     for (int i = 0; i < x.size(); i++)
       lastSize[i] = x[i].size();
+
+    validTuples.init(t0.tuples(), nsupports);
   }
   
   unsigned int init_supports(Home home, TupleSet ts) {
@@ -122,8 +124,6 @@ public:
         support_cnt++;
       }
     }
-    //cout << "half-way init_supports" << endl;
-    // Remove values corresponding to 0-rows
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<Int::IntView> it(x[i]);
       vector<int> rvals; //values to remove
@@ -233,10 +233,7 @@ public:
         vector<int> rvals; //values to remove
         while (it()) {
           int index = residues[rowno(i,it.val())];
-          // FIXME: refactor
           int row = rowno(i,it.val());
-          cout << row << endl;
-          supports[row].print();
           Support::BitSetData w = validTuples.a(supports[row],index);
           if (w.none()) {
             index = validTuples.intersect_index(supports[row]);
