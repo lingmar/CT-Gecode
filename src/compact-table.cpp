@@ -157,14 +157,12 @@ public:
           break;
         } else if (support_cnt > 0) {
           // To filter out copies
-          #ifdef SHARED
+#ifdef SHARED
           seen = seen && s.get(j,ts[i][j]).get(support_cnt - 1);
-          assert(s.get(j,ts[i][j]).get(support_cnt - 1) ==
-                 supports[rowno(j,ts[i][j])].get(support_cnt - 1));
-          #else          
+#else          
           seen = seen && supports[rowno(j,ts[i][j])].get(support_cnt - 1);
 
-          #endif // SHARED
+#endif // SHARED
         }
       }
       if (supported && (support_cnt == 0 || !seen)) {
@@ -182,24 +180,27 @@ public:
         support_cnt++;
       }
     }
+
+    Region r(home);
+    Support::StaticStack<int,Region> nq(r,domsum);
+        
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<View> it(x[i]);
-      vector<int> rvals; //values to remove
       while (it()) {
 #ifdef SHARED
         if (s.get(i,it.val()).none()) {
-          rvals.push_back(it.val());
+          nq.push(it.val());
         }
 #else        
         if (supports[rowno(i,it.val())].none()) {
-          rvals.push_back(it.val());
+          nq.push(it.val());
         }
 #endif // SHARED
         ++it;
       }
-      Iter::Values::Array r(&rvals[0], rvals.size());
-      if (::Gecode::me_failed(x[i].minus_v(home,r))) {
-        return -1;
+
+      while (!nq.empty()) {
+        GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
     }
     return support_cnt;
@@ -319,11 +320,12 @@ public:
   forceinline ExecStatus
   filterDomains(Space& home) {
     int count_non_assigned = 0;
+    Region r(home);
+    Support::StaticStack<int,Region> nq(r,domsum);
     for (int i = 0; i < x.size(); i++) {
-      // only filter out values for variables with domain size > 1
+      // Only consider unassigned variables
       if (x[i].size() > 1) {
         Int::ViewValues<View> it(x[i]);
-        vector<int> rvals; //values to remove
         while (it()) {
 #ifdef SHARED
           unsigned int row = s.row(i,it.val());
@@ -346,13 +348,14 @@ public:
               residues[row] = index;
             } else {
               // Value not supported
-              rvals.push_back(it.val());
+              nq.push(it.val());
             }
           }
           ++it;
         }
-        Iter::Values::Array r(&rvals[0], rvals.size());
-        GECODE_ME_CHECK(x[i].minus_v(home,r));
+        while (!nq.empty())
+          GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
+
         if (x[i].size() > 1) {
           ++count_non_assigned;
         }
