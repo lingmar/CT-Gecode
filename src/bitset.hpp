@@ -37,7 +37,8 @@ public:
   void copy(unsigned int sz, const BitSet& bs);
   /// Next (disabled)
   unsigned int next(unsigned int i) const;
-  
+  /// Init bit set at memory address \a dest
+  void init(Gecode::Support::BitSetData* dest, unsigned int sz, bool setbits=false);
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -106,6 +107,8 @@ private:
 /**
  * Bit set
  */
+forceinline
+BitSet::BitSet(void) {}
 
 template<class A>
 forceinline
@@ -141,8 +144,15 @@ BitSet::BitSet(A& a, unsigned int sz, const BitSet& bs)
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
-forceinline
-BitSet::BitSet(void) {}
+forceinline void
+BitSet::init(Gecode::Support::BitSetData* dest,
+             unsigned int s, bool setbits) {
+  assert(data == NULL);
+  sz = s;
+  data=dest;
+  for (unsigned int i=Gecode::Support::BitSetData::data(sz+1); i--; )
+    data[i].init(setbits);
+}
 
 forceinline BitSet&
 BitSet::operator =(const BitSet& bs) {
