@@ -1,7 +1,7 @@
 =====UNSATISFIABLE=====
 
-%%  runtime:       2.915 (2915.067 ms)
-%%  solvetime:     0.007 (7.967 ms)
+%%  runtime:       2.289 (2289.694 ms)
+%%  solvetime:     0.007 (7.913 ms)
 %%  solutions:     0
 %%  variables:     50719
 %%  propagators:   0

@@ -1,0 +1,7 @@
+\begin{tikzpicture}[scale=1.0]
+  \begin{axis}[xmode=log, ymode=log, xmin=1000, ymin=1000, xmax=200000, ymax=200000, xlabel={Ch (ms)}, ylabel={Ge (ms)}]
+    \draw[line width=0.1mm] (axis cs:1000,1000) -- (axis cs:200000,200000);
+    \addplot[scatter, only marks, scatter src=\thisrow{class}, scatter/classes={0={mark=o}}]
+    table[x=ch,y=ge] {plot.dat};
+  \end{axis}
+\end{tikzpicture}

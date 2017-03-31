@@ -4,6 +4,7 @@
 #./run_compact_table.sh
 
 VERBOSE=0
+PLOT=0
 TIMEOUTMSG="=====UNKNOWN====="
 
 while getopts ":v:" opt; do
@@ -14,7 +15,19 @@ while getopts ":v:" opt; do
   esac
 done
 
-echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
+while getopts ":p:" opt; do
+  case $opt in
+      :)
+      PLOT=1
+      ;;
+  esac
+done
+
+#echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
+
+if [ PLOT == 1 ]; then
+    echo "ct ge"
+fi
 
 # Compare solutions, assuming delimiter "-" between solution print and statistics
 for i in {0..71}
@@ -70,6 +83,9 @@ do
         fi
     fi
     
-    echo "$i & $runtime_g & $fail_g & $nprops_g & $runtime_c & $fail_c & $nprops_c \\\\"
-    
+    if [ $PLOT == 1 ]; then
+	echo "$i & $runtime_g & $fail_g & $nprops_g & $runtime_c & $fail_c & $nprops_c \\\\"
+    else
+	echo "$runtime_c $runtime_g"	
+    fi
 done
