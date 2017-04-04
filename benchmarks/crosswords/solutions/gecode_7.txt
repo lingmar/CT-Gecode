@@ -1,8 +1,8 @@
 L = array1d(0..21, [1, 19, 1, 16, 13, 1, 18, 9, 1, 1, 8, 5, 1, 4, 10, 5, 14, 14, 1, 12, 1, 15]);
 ----------
 
-%%  runtime:       0.055 (55.400 ms)
-%%  solvetime:     0.001 (1.819 ms)
+%%  runtime:       0.099 (99.519 ms)
+%%  solvetime:     0.004 (4.406 ms)
 %%  solutions:     1
 %%  variables:     186
 %%  propagators:   219
