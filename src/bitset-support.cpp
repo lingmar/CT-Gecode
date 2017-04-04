@@ -4,7 +4,7 @@
 #include "hash-table.cpp"
 
 //#define MEMOPT 1
-#define HASH 1
+//#define HASH 1
 
 #define PRIME_1 7
 #define PRIME_2 11
@@ -26,8 +26,6 @@ protected:
     unsigned int domsize;
     /// Number of bits in each row
     unsigned int nsupports;
-    /// Number of variables
-    unsigned int vars;
     /// Allocate supports for \a d rows, \a variables and \a n bits
     void allocate_supports(unsigned int d,unsigned int v,unsigned int n);
     /// Copy function
@@ -51,6 +49,9 @@ protected:
     unsigned int* start_idx;
     /// Starting value
     unsigned int* start_val;
+    /// Number of variables
+    unsigned int vars;
+    
 #endif // HASH
   };
 public:
@@ -90,15 +91,14 @@ public:
 
 forceinline
 SharedSupports::Supports::Supports(void) {}
-//   : supports(NULL), start_idx(NULL), domsize(0),
-//     nsupports(0), vars(0) {
-// }
 
 forceinline
 SharedSupports::Supports::Supports(const Supports& s)
-  : domsize(s.domsize), vars(s.vars), nsupports(s.nsupports)
+  : domsize(s.domsize), nsupports(s.nsupports)
 #ifdef HASH
   , idx_table(s.idx_table)
+#else
+  , vars(s.vars)
 #endif // HASH  
 {
   supports = heap.alloc<BitSet>(domsize);
@@ -134,13 +134,13 @@ SharedSupports::Supports::Supports(const Supports& s)
 forceinline void
 SharedSupports::Supports::allocate_supports(unsigned int d,unsigned int v,unsigned int n) {
   domsize = d;
-  vars = v;
   nsupports = n;
   supports = heap.alloc<BitSet>(domsize);
 #ifdef HASH
   unsigned int hash_sz = HashTable::closest_prime(domsize);
   idx_table.init(hash_sz);
 #else
+  vars = v;
   start_idx = heap.alloc<unsigned int>(vars);
   start_val = heap.alloc<unsigned int>(vars);
 #endif // HASH
