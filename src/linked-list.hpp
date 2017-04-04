@@ -6,8 +6,11 @@
 using namespace std;
 
 struct Key {
-  int var;
-  int val;
+  int x;
+  int y;
+  bool operator ==(const Key& k) {
+    return x == k.x && y == k.y;
+  }
 };
 
 struct Item {
@@ -25,6 +28,8 @@ private:
 public:
   /// Constructs empty list object
   LinkedList();
+  /// Copy \a l
+  LinkedList(const LinkedList& l);
   /// Insert \a item into the list
   void insert(Item* item);
   /// Remove the item with key \a key, return true upon success

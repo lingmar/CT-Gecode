@@ -31,41 +31,19 @@ protected:
   int domsum;
   // Nr of inital supports
   int nsupports;
-  #ifdef SHARED
+#ifdef SHARED
   SharedSupports s;
-  #else
+#else
   // Supported tuples
   BitSet* supports;
   // Starting idx for variable i in supports
   unsigned int* start_idx;
   // Smallest initial value for variable i
   int* start_val;
-  #endif // SHARED
+#endif // SHARED
 
 public:
 
-  void assert_same_state() {
-    // for (int i = 0; i < x.size(); i++) {
-    //   assert(start_idx[i] == s.get_start_idx(i));
-    //   assert(start_val[i] == s.get_start_val(i));
-    //   Int::ViewValues<View> it(x[i]);
-    //   while (it()) {
-    //     BitSet bs1 = s.get(i,it.val());
-    //     BitSet bs2 = supports[rowno(i,it.val())];
-    //     if (bs1.nset() != bs2.nset()) {
-    //       cout << "bs1: " << bs1.nset() << endl;
-    //       bs1.print(); 
-    //       cout << "bs2: " << bs2.nset() << endl;
-    //       bs2.print();
-    //       exit(0);
-    //     }
-    //     assert(s.get(i,it.val()).nset() == supports[rowno(i,it.val())].nset);
-    //     ++it;
-    //   }
-
-    // }
-  }
-  
   // Post table propagator
   forceinline static ExecStatus
   post(Home home, ViewArray<View>& x, TupleSet t) {
@@ -90,14 +68,13 @@ public:
   {
     // Subscribe variables
     x.subscribe(home,*this,PC_INT_DOM);
-    
     // Calculate domain sum
     domsum = 0;
     for (int i = 0; i < x.size(); i++) {
       domsum += x[i].width();
     }
     // Allocate memory
-    #ifdef SHARED
+#ifdef SHARED
     s.init_supports(domsum,x.size(),t0.tuples());
     for (int i = 0; i < x.size(); i++) {
       s.set_start_val(i,x[i].min());
@@ -106,7 +83,7 @@ public:
       else
         s.set_start_idx(i,s.get_start_idx(i-1) + x[i-1].width());
     }
-    #else
+#else
     supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
     start_idx = static_cast<Space&>(home).alloc<unsigned int>(x.size());
     start_val = static_cast<Space&>(home).alloc<int>(x.size());
@@ -118,7 +95,7 @@ public:
       else
         start_idx[i] = start_idx[i-1] + x[i-1].width();
     }
-    #endif // SHARED
+#endif // SHARED
     lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
     residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
     // Initialise supports
@@ -137,13 +114,19 @@ public:
 
   forceinline unsigned int
   init_supports(Home home, TupleSet ts) {
-    #ifndef SHARED
+#ifndef SHARED
     // Initialise supports
     for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(static_cast<Space&>(home), ts.tuples(), false);
     }
-    #endif // SHARED
+#endif // SHARED
 
+    Region region(home);
+    BitSet* dom = region.alloc<BitSet>(x.size());
+    init_dom(home,dom,ts.min(),ts.max());
+#ifdef HASH
+    s.fill(dom,x.size(),ts.min(),ts.max());    
+#endif // HASH
     int support_cnt = 0;
     int bpb = BitSet::get_bpb();
 
@@ -152,7 +135,8 @@ public:
       bool supported = true;
       bool seen = true;
       for (int j = ts.arity() - 1; j >= 0; j--) {
-        if (!x[j].in(ts[i][j])) {
+        //if (!x[j].in(ts[i][j])) {
+        if (!dom[j].get(ts[i][j] - ts.min())) {
           supported = false;
           break;
         } else if (support_cnt > 0) {
@@ -161,7 +145,6 @@ public:
           seen = seen && s.get(j,ts[i][j]).get(support_cnt - 1);
 #else          
           seen = seen && supports[rowno(j,ts[i][j])].get(support_cnt - 1);
-
 #endif // SHARED
         }
       }
@@ -199,19 +182,36 @@ public:
         ++it;
       }
 
-      while (!nq.empty()) {
+      while (!nq.empty())
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
-      }
+
     }
     return support_cnt;
   }
 
-  #ifndef SHARED
+  forceinline void
+  init_dom(Space& home, BitSet* dom, int min, int max) {
+    unsigned int domsize = static_cast<unsigned int>(max - min + 1);
+    //cout << "max,min = " << max << "," << min << endl;
+    //cout << "domsize=" << domsize << endl;
+    for (int i = 0; i < x.size(); i++) {
+      dom[i].Support::BitSetBase::init(home, domsize, false);
+      Int::ViewValues<View> it(x[i]);
+      while(it()) {
+        dom[i].set(static_cast<unsigned int>(it.val() - min));
+        ++it;
+      }
+      //dom[i].print();
+    }
+    
+  }
+  
+#ifndef SHARED
   forceinline unsigned int
   rowno(int var, int val) {
     return start_idx[var] + val - start_val[var];
   }
-  #endif // SHARED
+#endif // SHARED
     
   // Copy constructor during cloning
   forceinline
@@ -279,14 +279,12 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
-    assert_same_state();
     updateTable();
     
     if (validTuples.is_empty()) {
       return ES_FAILED;
     }
     ExecStatus msg = filterDomains(home);
-    assert_same_state();
     return msg;
   }
 

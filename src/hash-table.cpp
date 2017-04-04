@@ -1,18 +1,25 @@
-#include "HashTable.h"
+#include "hash-table.hpp"
 #include <gecode/kernel.hh>
 
 #define PRIME_1 7
 #define PRIME_2 11
 
 forceinline
-HashTable::HashTable(unsigned int _sz)
-  : sz(_sz) {
-  table = heap.alloc<LinkedList>(_sz);
+HashTable::HashTable(void) {}
+
+forceinline
+HashTable::HashTable(const HashTable& ht) :
+  sz(ht.sz), table(ht.table) {}
+
+forceinline void
+HashTable::init(unsigned int _sz) {
+  sz = _sz;
+  table = heap.alloc<LinkedList>(sz);
 }
 
-forceinline int
+forceinline unsigned int
 HashTable::hash(Key key) {
-  return key->(var * PRIME_1 + val * PRIME_2) % sz;
+  return (key.x * PRIME_1 + key.y * PRIME_2) % sz;
 }
 
 forceinline void
@@ -50,5 +57,5 @@ HashTable::items() {
 forceinline
 HashTable::~HashTable()
 {
-    delete [] array;
+    delete [] table;
 }
