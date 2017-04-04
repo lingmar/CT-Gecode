@@ -202,7 +202,7 @@ SharedSupports::Supports::fill(BitSet* dom, int sz, int min, int max) {
       }
     }
   }
-  idx_table.print();
+  //idx_table.print();
 }
 
 forceinline void
