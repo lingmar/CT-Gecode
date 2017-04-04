@@ -9,7 +9,9 @@ HashTable::HashTable(void) {}
 
 forceinline
 HashTable::HashTable(const HashTable& ht) :
-  sz(ht.sz), table(ht.table) {}
+  sz(ht.sz), table(ht.table) {
+  //print();
+}
 
 forceinline void
 HashTable::init(unsigned int _sz) {
@@ -18,7 +20,7 @@ HashTable::init(unsigned int _sz) {
 }
 
 forceinline unsigned int
-HashTable::hash(Key key) {
+HashTable::hash(Key key) const {
   return (key.x * PRIME_1 + key.y * PRIME_2) % sz;
 }
 
@@ -34,19 +36,19 @@ HashTable::remove(Key key) {
   return table[index].remove(key);
 }
 
-forceinline Item*
-HashTable::get(Key key) {
-    int index = hash(key);
-    return table[index].get(key);
+forceinline int
+HashTable::get(Key key) const {
+  int index = hash(key);
+  return table[index].get(key)->row;
 }
 
 forceinline unsigned int
-HashTable::length() {
+HashTable::length() const {
     return sz;
 }
 
 forceinline unsigned int
-HashTable::items() {
+HashTable::items() const {
     int count = 0;
     for (int i = 0; i < sz; i++) {
         count += table[i].length();
@@ -58,4 +60,11 @@ forceinline
 HashTable::~HashTable()
 {
     delete [] table;
+}
+
+forceinline void
+HashTable::print() const {
+  for (int i = 0; i < sz; i++) {
+    table[i].print();
+  }
 }

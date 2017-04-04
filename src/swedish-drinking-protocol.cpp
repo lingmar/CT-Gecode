@@ -22,33 +22,45 @@ public:
 
   /// The actual problem.
   SwedishDrinkingProtocol(const Options& opt)
-    : x(*this, 1000, 0, 1000)
+    : x(*this, 3, 1, 3)
     , Script(opt){
 
     TupleSet t;
 
     for (int i = 0; i < 120; i++) {
-      t.add(IntArgs::create(1000,i));
+      t.add(IntArgs::create(3,i));
     }
-
+    t.add(IntArgs(3,1,1,1));
+    t.add(IntArgs(3,1,1,1));
+    t.add(IntArgs(3,1,1,1));
+    t.add(IntArgs(3,1,2,3));
     
     t.finalize();
-        
+
+    IntArgs::create(INT_MAX + 1,0);
+    
+    TupleSet t0;
+    //t0.add(IntArgs(3,1,2,3));
+    t0.finalize();
+
+    
     //extensional(*this, x, t);
     switch (opt.model()) {
     case 0: {
       extensional(*this, x, t);
+      extensional(*this, x, t0);
       break;
     }
     case 1: {
       extensional2(*this, x, t);
+      //extensional2(*this, x, t0);
       break;
     }
     default:
       break;
     }
 
-    rel(*this, x[3] != 1);
+    //rel(*this, x[3] != 1);
     
     branch(*this, x, INT_VAR_NONE(), INT_VAL_MIN());
   }

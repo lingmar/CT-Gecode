@@ -32,6 +32,7 @@
 #include <gecode/minimodel.hh>
 
 #include "compact-table.cpp"
+//#include "bitset.cpp"
 
 int model = 0;
 

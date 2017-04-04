@@ -39,6 +39,8 @@ public:
   unsigned int next(unsigned int i) const;
   /// Init bit set at memory address \a dest
   void init(Gecode::Support::BitSetData* dest, unsigned int sz, bool setbits=false);
+  /// Return number of set bits among the bits 0 to \a i
+  unsigned int nset(unsigned int i) const;
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -231,6 +233,30 @@ forceinline unsigned int
 BitSet::next(unsigned int) const {
   GECODE_NEVER;
   return -1;
+}
+
+forceinline unsigned int
+BitSet::nset(unsigned int i) const {
+  assert(i < sz);
+  unsigned int count = 0;
+  static unsigned int nbases = Gecode::Support::BitSetData::data(sz+1);
+  // Number of spare bits
+  static unsigned int r = i % nbases;
+  // Create mask
+  // BitSet with size sz, 0-r bits set
+  Gecode::Support::BitSetData mask;
+  mask.init(false); // 00000000
+  Gecode::Support::BitSetData aux;
+  aux.init(true);   // 11111111
+  mask.Gecode::Support::BitSetData::o(aux,r);    // 11111000
+
+  // Perform "and" with the mask
+  Gecode::Support::BitSetData masked =
+    Gecode::Support::BitSetData::a(data[nbases-1], mask);
+
+  // Count set bits
+  
+  return count;
 }
 
 /** Debugging purpose **/

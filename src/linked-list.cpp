@@ -2,6 +2,7 @@
 #include <gecode/kernel.hh>
 
 using namespace Gecode;
+using namespace std;
 
 forceinline
 LinkedList::LinkedList() {
@@ -62,7 +63,7 @@ LinkedList::remove(Key key) {
 }
 
 forceinline Item*
-LinkedList::get(Key key) {
+LinkedList::get(Key key) const {
   Item * p = head;
   Item * q = head;
   while (q) {
@@ -75,7 +76,7 @@ LinkedList::get(Key key) {
 }
 
 forceinline int
-LinkedList::length() {
+LinkedList::length() const {
   return sz;
 }
 
@@ -88,4 +89,15 @@ LinkedList::~LinkedList() {
     q = p->next;
     if (q) delete p;
   }
+}
+
+forceinline void
+LinkedList::print() const {
+  Item* p = head;
+  cout << "{";
+  while (p->next) {
+    p = p->next;
+    printf("{Key: {%d,%d}, Row: %d} ", p->key.x, p->key.y, p->row);
+  }
+  cout << "}\n";
 }

@@ -5,7 +5,7 @@
 
 //#define MEMOPT 1
 
-//#define HASH 1
+#define HASH 1
 
 #define PRIME_1 7
 #define PRIME_2 11
@@ -17,44 +17,29 @@ class SharedSupports : public SharedHandle {
 protected:
   class Supports : public SharedHandle::Object {
   public:
+    /// Default constructor (empty set)
+    Supports(void);
+    /// Copy \a s
+    Supports(const Supports& s);
     /// Support bits
     BitSet* supports;
-    /// Starting index
-    unsigned int* start_idx;
-    /// Starting value
-    unsigned int* start_val;
     /// Number of rows
     unsigned int domsize;
     /// Number of bits in each row
     unsigned int nsupports;
     /// Number of variables
     unsigned int vars;
-    /// Default constructor (empty set)
-    Supports(void);
-    /// Copy \a s
-    Supports(const Supports& s);
     /// Allocate supports for \a d rows, \a variables and \a n bits
     void allocate_supports(unsigned int d,unsigned int v,unsigned int n);
-    /// Row number for variable \a var and value \a val
-    unsigned int row(unsigned int var, int val) const;
     /// Copy function
     virtual Object* copy(void) const;
+    /// Row number for variable \a var and value \a val
+    unsigned int row(unsigned int var, int val) const;
     /// Destructor
     virtual ~Supports(void);
 #ifdef HASH
-    // class HashEntry {
-    // public:
-    //   int var;
-    //   int val;
-    //   int row;
-    //   HashEntry* next;
-    // };
-    // /// Hash table for indexing
-    // HashEntry* idx_table;
     /// Fill table with domains
     void fill(BitSet* dom, int sz, int min, int max);
-    /// Get the row for variable \a var, value \a val
-    unsigned int rowno(int var, int val);
     /// Remove element
     void remove(int var, int val);
     /// Add hash element
@@ -62,6 +47,11 @@ protected:
     /// Change row for hash entry
     // void set(int var, int val, int row);
     HashTable idx_table;
+#else
+    /// Starting index
+    unsigned int* start_idx;
+    /// Starting value
+    unsigned int* start_val;
 #endif // HASH
   };
 public:
@@ -75,14 +65,6 @@ public:
   BitSet& get(unsigned int i, int j) const;
   /// Allocate supports for \a d rows, \a variables and \a n bits
   void init_supports(unsigned int d, unsigned int v, unsigned int n);
-  /// Set start index for variable \a i to \a idx
-  void set_start_idx(unsigned int i, unsigned int idx);
-  /// Set start value for variable \a i to \a val
-  void set_start_val(unsigned int i, unsigned int val);
-  /// Get start index for variable \a i
-  unsigned int get_start_idx(unsigned int i) const;
-  /// Get start index for variable \a i
-  unsigned int get_start_val(unsigned int i) const;
   
   /// Print bit set for variable \a i and value \a
   void print(unsigned int i,unsigned int j) const;
@@ -91,6 +73,15 @@ public:
 #ifdef HASH
   /// Fill index hash table
   void fill(BitSet* dom, int sz, int min, int max);
+#else
+  /// Set start index for variable \a i to \a idx
+  void set_start_idx(unsigned int i, unsigned int idx);
+  /// Set start value for variable \a i to \a val
+  void set_start_val(unsigned int i, unsigned int val);
+  /// Get start index for variable \a i
+  unsigned int get_start_idx(unsigned int i) const;
+  /// Get start index for variable \a i
+  unsigned int get_start_val(unsigned int i) const;
 #endif // HASH
   void update(Space& home, bool share, SharedHandle& sh) {
     SharedHandle::update(home,share,sh);
@@ -100,22 +91,30 @@ public:
 };
 
 forceinline
-SharedSupports::Supports::Supports(void)
-  : supports(NULL), start_idx(NULL), domsize(0),
-    nsupports(0), vars(0) {
-}
+SharedSupports::Supports::Supports(void) {}
+//   : supports(NULL), start_idx(NULL), domsize(0),
+//     nsupports(0), vars(0) {
+// }
 
 forceinline
 SharedSupports::Supports::Supports(const Supports& s)
   : domsize(s.domsize), vars(s.vars), nsupports(s.nsupports)
-{
 #ifdef HASH
-  idx_table.init(domsize);
-#endif // HASH
-    
+  , idx_table(s.idx_table)
+#endif // HASH  
+{
   supports = heap.alloc<BitSet>(domsize);
+#ifdef HASH
+  //idx_table.init(domsize);
+  
+#else
   start_idx = heap.alloc<unsigned int>(vars);
   start_val = heap.alloc<unsigned int>(vars);
+  for (unsigned int i = 0; i < vars; i++) {
+    start_idx[i] = s.start_idx[i];
+    start_val[i] = s.start_val[i];
+  }
+#endif // HASH
   
 #ifdef MEMOPT
   // Allocate a chunk of memory to store the bit sets
@@ -132,10 +131,6 @@ SharedSupports::Supports::Supports(const Supports& s)
     supports[i].copy(nsupports,s.supports[i]);
   }
 #endif // MEMOPT
-  for (unsigned int i = 0; i < vars; i++) {
-    start_idx[i] = s.start_idx[i];
-    start_val[i] = s.start_val[i];
-  }
 }
 
 forceinline void
@@ -144,11 +139,13 @@ SharedSupports::Supports::allocate_supports(unsigned int d,unsigned int v,unsign
   vars = v;
   nsupports = n;
   supports = heap.alloc<BitSet>(domsize);
-  start_idx = heap.alloc<unsigned int>(vars);
-  start_val = heap.alloc<unsigned int>(vars);
 #ifdef HASH
   idx_table.init(domsize);
+#else
+  start_idx = heap.alloc<unsigned int>(vars);
+  start_val = heap.alloc<unsigned int>(vars);
 #endif // HASH
+
 #ifdef MEMOPT
   // Allocate a chunk of memory to store the bit sets
   unsigned int bases_per_bs = Support::BitSetData::data(nsupports);
@@ -167,7 +164,15 @@ SharedSupports::Supports::allocate_supports(unsigned int d,unsigned int v,unsign
 
 forceinline unsigned int
 SharedSupports::Supports::row(unsigned int var, int val) const {
+#ifdef HASH
+  Key key = {var,val};
+  unsigned int index = idx_table.get(key);
+  //printf("Row of key{%d,%d} is %d\n", var, val, index);
+  return idx_table.get(key);
+#else
   return start_idx[var] + val - start_val[var];
+#endif // HASH
+
 }
 
 forceinline SharedSupports::Object*
@@ -187,21 +192,19 @@ SharedSupports::Supports::~Supports(void) {
 
 forceinline void
 SharedSupports::Supports::fill(BitSet* dom, int sz, int min, int max) {
-  unsigned int row;
+  //cout << "fill" << endl;
+  unsigned int row = 0;
+  unsigned int domsize = static_cast<unsigned int>(max - min + 1);
   for (int i = 0; i < sz; i++) {
-    for (unsigned int j=Gecode::Support::BitSetData::data(sz+1); j--; ) {
+    for (unsigned int j=0; j<domsize; j++) {
       if (dom[i].get(j)) {
+        //printf("Adding {%d,%d} to row %d\n", i,j+min,row);
         add(i,j+min,row);
-        row++;
+        ++row;
       }
     }
   }
-}
-
-forceinline unsigned int
-SharedSupports::Supports::rowno(int var, int val) {
-  Key key = {var,val};
-  return idx_table.hash(key);
+  //idx_table.print();
 }
 
 forceinline void
@@ -250,6 +253,7 @@ SharedSupports::init_supports(unsigned int d, unsigned int v, unsigned int n) {
   static_cast<SharedSupports::Supports*>(object())->allocate_supports(d,v,n);
 }
 
+#ifndef HASH
 forceinline void
 SharedSupports::set_start_idx(unsigned int i, unsigned int idx) {
   static_cast<SharedSupports::Supports*>(object())->start_idx[i] = idx;
@@ -269,6 +273,8 @@ forceinline unsigned int
 SharedSupports::get_start_val(unsigned int i) const {
   return static_cast<SharedSupports::Supports*>(object())->start_val[i];
 }
+
+#endif // HASH
 
 forceinline void
 SharedSupports::print(unsigned int i,unsigned int j) const {

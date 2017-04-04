@@ -11,6 +11,8 @@
 
 #define SHARED 1
 
+typedef BitSet* Dom;
+
 using namespace Gecode;
 using namespace Gecode::Int;
 using namespace std;
@@ -76,6 +78,7 @@ public:
     // Allocate memory
 #ifdef SHARED
     s.init_supports(domsum,x.size(),t0.tuples());
+#ifndef HASH
     for (int i = 0; i < x.size(); i++) {
       s.set_start_val(i,x[i].min());
       if (i == 0)
@@ -83,6 +86,7 @@ public:
       else
         s.set_start_idx(i,s.get_start_idx(i-1) + x[i-1].width());
     }
+#endif // HASH
 #else
     supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
     start_idx = static_cast<Space&>(home).alloc<unsigned int>(x.size());
@@ -122,7 +126,7 @@ public:
 #endif // SHARED
 
     Region region(home);
-    BitSet* dom = region.alloc<BitSet>(x.size());
+    Dom dom = region.alloc<BitSet>(x.size());
     init_dom(home,dom,ts.min(),ts.max());
 #ifdef HASH
     s.fill(dom,x.size(),ts.min(),ts.max());    
@@ -190,7 +194,7 @@ public:
   }
 
   forceinline void
-  init_dom(Space& home, BitSet* dom, int min, int max) {
+  init_dom(Space& home, Dom dom, int min, int max) {
     unsigned int domsize = static_cast<unsigned int>(max - min + 1);
     //cout << "max,min = " << max << "," << min << endl;
     //cout << "domsize=" << domsize << endl;
@@ -225,13 +229,15 @@ public:
 
     // Allocate memory
     lastSize = home.alloc<unsigned int>(x.size());
+
 #ifdef SHARED
     s.update(home,share,p.s);
 #else    
     supports = home.alloc<BitSet>(domsum);
     start_val = home.alloc<int>(x.size());
     start_idx = home.alloc<unsigned int>(x.size());
-    #endif // MACRO
+#endif // SHARED
+
     residues = home.alloc<unsigned int>(domsum);
     for (int i = 0; i < x.size(); i++) {
       lastSize[i] = p.lastSize[i];

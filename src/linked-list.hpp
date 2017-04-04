@@ -26,7 +26,7 @@ private:
   /// Number of items
   unsigned int sz;
 public:
-  /// Constructs empty list object
+  /// Construct empty list object
   LinkedList();
   /// Copy \a l
   LinkedList(const LinkedList& l);
@@ -35,11 +35,13 @@ public:
   /// Remove the item with key \a key, return true upon success
   bool remove(Key key);
   /// Get pointer to item with key \a key
-  Item* get(Key key);
+  Item* get(Key key) const;
   /// Get the length of the list.
-  int length();
+  int length() const;
   /// Destructor
   ~LinkedList();
+  /// Print the contents of the list
+  void print() const;
 };
 
 #endif
