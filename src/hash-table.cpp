@@ -1,10 +1,17 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
 #include "hash-table.hpp"
 #include <gecode/kernel.hh>
+#include "primes.hpp"
 
 #define PRIME_1 7
 #define PRIME_2 11
 
 #define TABLE_SIZE 137
+
+int test[3] = {1,2,3};
 
 forceinline
 HashTable::HashTable(void) {}
@@ -12,14 +19,11 @@ HashTable::HashTable(void) {}
 forceinline
 HashTable::HashTable(const HashTable& ht) :
   sz(ht.sz), table(ht.table) {
-  //print();
 }
 
 forceinline void
 HashTable::init(unsigned int _sz) {
-  //printf("%d\n", _sz);
-  //sz = _sz;
-  sz = 137;
+  sz = _sz;
   table = heap.alloc<LinkedList>(sz);
 }
 
@@ -64,8 +68,7 @@ HashTable::items() const {
 }
 
 forceinline
-HashTable::~HashTable()
-{
+HashTable::~HashTable() {
     delete [] table;
 }
 
@@ -75,4 +78,14 @@ HashTable::print() const {
     cout << i << ": ";
     table[i].print();
   }
+}
+
+forceinline unsigned int
+HashTable::closest_prime(unsigned int n) {
+  for (int i = 0; i < NPRIMES; i++) {
+    if (primes[i] > n) {
+      return primes[i];
+    }
+  }
+  return primes[NPRIMES - 1];
 }

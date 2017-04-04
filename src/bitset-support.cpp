@@ -138,7 +138,8 @@ SharedSupports::Supports::allocate_supports(unsigned int d,unsigned int v,unsign
   nsupports = n;
   supports = heap.alloc<BitSet>(domsize);
 #ifdef HASH
-  idx_table.init(domsize);
+  unsigned int hash_sz = HashTable::closest_prime(domsize);
+  idx_table.init(hash_sz);
 #else
   start_idx = heap.alloc<unsigned int>(vars);
   start_val = heap.alloc<unsigned int>(vars);

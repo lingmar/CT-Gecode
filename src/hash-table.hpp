@@ -32,6 +32,8 @@ public:
   ~HashTable();
   /// Print the contents of the table
   void print() const;
+  /// Find the cloesest prime number larger than \a n
+  static unsigned int closest_prime(unsigned int n);
 };
 
 #endif
