@@ -1186,8 +1186,12 @@ namespace Gecode { namespace FlatZinc {
       }
       ts.finalize();
       //std::cout << "extensional bools" << endl;
-      extensional(s,x,ts,s.ann2ipl(ann));
-      //extensional2(s,x,ts);
+      char* prop = getenv("TABLE_PROPAGATOR");
+      if (prop != NULL && strcmp(prop, "compact-table")) {
+        extensional2(s,x,ts);
+      } else {
+        extensional(s,x,ts,s.ann2ipl(ann));
+      }
     }
 
     void p_cumulative_opt(FlatZincSpace& s, const ConExpr& ce,
