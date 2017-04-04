@@ -60,6 +60,7 @@ public:
     }
     return ES_OK;
   }
+  
   // Create propagator and initialize
   forceinline
   CompactTable(Home home,
@@ -72,9 +73,12 @@ public:
     x.subscribe(home,*this,PC_INT_DOM);
     // Calculate domain sum
     domsum = 0;
+    int domsize = 0;
     for (int i = 0; i < x.size(); i++) {
       domsum += x[i].width();
+      domsize += x[i].size();
     }
+    printf("domsum: %d, domsize: %d\n", domsum, domsize);
     // Allocate memory
 #ifdef SHARED
     s.init_supports(domsum,x.size(),t0.tuples());
@@ -126,9 +130,10 @@ public:
 #endif // SHARED
 
     Region region(home);
+    // Bitset for O(1) access to domains
     Dom dom = region.alloc<BitSet>(x.size());
     init_dom(home,dom,ts.min(),ts.max());
-#ifdef HASH
+#if defined SHARED && defined HASH
     s.fill(dom,x.size(),ts.min(),ts.max());    
 #endif // HASH
     int support_cnt = 0;
@@ -139,7 +144,6 @@ public:
       bool supported = true;
       bool seen = true;
       for (int j = ts.arity() - 1; j >= 0; j--) {
-        //if (!x[j].in(ts[i][j])) {
         if (!dom[j].get(ts[i][j] - ts.min())) {
           supported = false;
           break;
