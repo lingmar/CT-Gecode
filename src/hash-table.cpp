@@ -4,6 +4,8 @@
 #define PRIME_1 7
 #define PRIME_2 11
 
+#define TABLE_SIZE 137
+
 forceinline
 HashTable::HashTable(void) {}
 
@@ -15,13 +17,18 @@ HashTable::HashTable(const HashTable& ht) :
 
 forceinline void
 HashTable::init(unsigned int _sz) {
-  sz = _sz;
+  //printf("%d\n", _sz);
+  //sz = _sz;
+  sz = 137;
   table = heap.alloc<LinkedList>(sz);
 }
 
 forceinline unsigned int
 HashTable::hash(Key key) const {
-  return (key.x * PRIME_1 + key.y * PRIME_2) % sz;
+  unsigned int ret = key.x;
+  ret *= 2654435761U;
+  return (ret ^ key.y) % sz;
+  //return (key.x * PRIME_1 + key.y * PRIME_2) % sz;
 }
 
 forceinline void
@@ -65,6 +72,7 @@ HashTable::~HashTable()
 forceinline void
 HashTable::print() const {
   for (int i = 0; i < sz; i++) {
+    cout << i << ": ";
     table[i].print();
   }
 }

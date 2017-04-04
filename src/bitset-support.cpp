@@ -4,7 +4,6 @@
 #include "hash-table.cpp"
 
 //#define MEMOPT 1
-
 #define HASH 1
 
 #define PRIME_1 7
@@ -65,7 +64,6 @@ public:
   BitSet& get(unsigned int i, int j) const;
   /// Allocate supports for \a d rows, \a variables and \a n bits
   void init_supports(unsigned int d, unsigned int v, unsigned int n);
-  
   /// Print bit set for variable \a i and value \a
   void print(unsigned int i,unsigned int j) const;
   /// Row number for variable \a var and value \a val
@@ -204,7 +202,7 @@ SharedSupports::Supports::fill(BitSet* dom, int sz, int min, int max) {
       }
     }
   }
-  //idx_table.print();
+  idx_table.print();
 }
 
 forceinline void
