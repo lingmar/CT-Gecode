@@ -29,10 +29,9 @@ HashTable::init(unsigned int _sz) {
 
 forceinline unsigned int
 HashTable::hash(Key key) const {
-  unsigned int ret = key.x;
-  ret *= 2654435761U;
-  return (ret ^ key.y) % sz;
-  //return (key.x * PRIME_1 + key.y * PRIME_2) % sz;
+  //unsigned int ret = key.x;
+  //ret *= UINT32_C(2654435761); // Knuth's hashing
+  return (key.x ^ key.y) % sz;
 }
 
 forceinline void
@@ -51,6 +50,12 @@ forceinline int
 HashTable::get(Key key) const {
   int index = hash(key);
   return table[index].get(key)->row;
+}
+
+forceinline bool
+HashTable::set(Key key,int val) {
+  int index = hash(key);
+  return table[index].set(key,val);
 }
 
 forceinline unsigned int

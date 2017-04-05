@@ -19,11 +19,13 @@ public:
   /// Initialise a hash table with length \a sz (only after default constructor)
   void init(unsigned int length);
   /// Adds an item to the Hash Table.
-  void insert(Item* newItem );
+  void insert(Item* newItem);
   /// Remove item with key \a key and return true upon success
   bool remove(Key key);
   /// Get the value of the item with key \a key
   int get(Key key) const;
+  /// Set the item with key \a key
+  bool set(Key key, int val);
   /// Get the length of the hash table 
   unsigned int length() const;
   /// Returns the number of Items in the Hash Table

@@ -36,6 +36,8 @@ public:
   bool remove(Key key);
   /// Get pointer to item with key \a key
   Item* get(Key key) const;
+  /// Set the value of item with key \a key
+  bool set(Key key, int val);
   /// Get the length of the list.
   int length() const;
   /// Destructor

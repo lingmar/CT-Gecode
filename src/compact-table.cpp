@@ -25,24 +25,21 @@ protected:
   ViewArray<View> x;
   // The table with possible combinations of values
   SparseBitSet<Space&> validTuples;
-  // Residues
+#ifdef HASH
+  /// Residues
+  HashTable residues;
+#else
+  /// Residues
   unsigned int* residues;
+#endif // HASH
   // Size of variable since last propagation
   unsigned int* lastSize;
   // Sum of domain sizes
   int domsum;
   // Nr of inital supports
   int nsupports;
-#ifdef SHARED
+  // Supports
   SharedSupports s;
-#else
-  // Supported tuples
-  BitSet* supports;
-  // Starting idx for variable i in supports
-  unsigned int* start_idx;
-  // Smallest initial value for variable i
-  int* start_val;
-#endif // SHARED
 
 public:
 
@@ -78,9 +75,9 @@ public:
       domsum += x[i].width();
       domsize += x[i].size();
     }
-    printf("domsum: %d, domsize: %d\n", domsum, domsize);
+    //printf("domsum: %d, domsize: %d\n", domsum, domsize);
     // Allocate memory
-#ifdef SHARED
+
     s.init_supports(domsum,x.size(),t0.tuples());
 #ifndef HASH
     for (int i = 0; i < x.size(); i++) {
@@ -90,25 +87,17 @@ public:
       else
         s.set_start_idx(i,s.get_start_idx(i-1) + x[i-1].width());
     }
-#endif // HASH
-#else
-    supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
-    start_idx = static_cast<Space&>(home).alloc<unsigned int>(x.size());
-    start_val = static_cast<Space&>(home).alloc<int>(x.size());
-    // Initialise start_val, start_idx
-    for (int i = 0; i < x.size(); i++) {
-      start_val[i] = x[i].min();
-      if (i == 0)
-        start_idx[i] = 0;
-      else
-        start_idx[i] = start_idx[i-1] + x[i-1].width();
-    }
-#endif // SHARED
+#endif // not HASH
     lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
+#ifdef HASH
+    residues.init(HashTable::closest_prime(1.7*domsize));
+#else    
     residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
+#endif // HASH
+    
     // Initialise supports
     nsupports = init_supports(home, t0);
-    // Initialise validTupels with nsupports bit set
+
     if (nsupports <= 0) {
       home.fail();
       return;
@@ -116,24 +105,18 @@ public:
     // Set the domain sizes in lastSize
     for (int i = 0; i < x.size(); i++)
       lastSize[i] = x[i].size();
-
+    
+    // Initialise validTupels with nsupports bit set
     validTuples.init(t0.tuples(), nsupports);
   }
 
   forceinline unsigned int
   init_supports(Home home, TupleSet ts) {
-#ifndef SHARED
-    // Initialise supports
-    for (int i = 0; i < domsum; i++) {
-      supports[i].Support::BitSetBase::init(static_cast<Space&>(home), ts.tuples(), false);
-    }
-#endif // SHARED
-
     Region region(home);
     // Bitset for O(1) access to domains
     Dom dom = region.alloc<BitSet>(x.size());
     init_dom(home,dom,ts.min(),ts.max());
-#if defined SHARED && defined HASH
+#ifdef HASH
     s.fill(dom,x.size(),ts.min(),ts.max());    
 #endif // HASH
     int support_cnt = 0;
@@ -149,24 +132,22 @@ public:
           break;
         } else if (support_cnt > 0) {
           // To filter out copies
-#ifdef SHARED
           seen = seen && s.get(j,ts[i][j]).get(support_cnt - 1);
-#else          
-          seen = seen && supports[rowno(j,ts[i][j])].get(support_cnt - 1);
-#endif // SHARED
         }
       }
       if (supported && (support_cnt == 0 || !seen)) {
         // Set tuple as valid and save residue
         for (int j = 0; j < ts.arity(); j++) {
-#ifdef SHARED
           unsigned int row = s.row(j,ts[i][j]);
           s.get(j,ts[i][j]).set(support_cnt);
-#else
-          unsigned int row = rowno(j, ts[i][j]);
-          supports[row].set(support_cnt);          
-#endif // SHARED
+#ifdef HASH
+          Key key = {j,ts[i][j]};
+          Item* item = heap.alloc<Item>(1);
+          item->key = key; item->row = support_cnt / bpb;
+          residues.insert(item);
+#else          
           residues[row] = support_cnt / bpb;
+#endif // HASH
         }
         support_cnt++;
       }
@@ -178,21 +159,16 @@ public:
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-#ifdef SHARED
         if (s.get(i,it.val()).none()) {
           nq.push(it.val());
         }
-#else        
-        if (supports[rowno(i,it.val())].none()) {
-          nq.push(it.val());
-        }
-#endif // SHARED
         ++it;
       }
 
-      while (!nq.empty())
+      while (!nq.empty()) {
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
-
+      }
+        
     }
     return support_cnt;
   }
@@ -214,56 +190,40 @@ public:
     
   }
   
-#ifndef SHARED
-  forceinline unsigned int
-  rowno(int var, int val) {
-    return start_idx[var] + val - start_val[var];
-  }
-#endif // SHARED
-    
   // Copy constructor during cloning
   forceinline
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
       validTuples(home, p.validTuples),
       domsum(p.domsum),
-      nsupports(p.nsupports) {
+      nsupports(p.nsupports)
+#ifdef HASH
+    , residues(p.residues)
+#endif // HASH
+  {
     // Update view
     x.update(home,share,p.x);
-
+    s.update(home,share,p.s);
+    
     // Allocate memory
     lastSize = home.alloc<unsigned int>(x.size());
-
-#ifdef SHARED
-    s.update(home,share,p.s);
-#else    
-    supports = home.alloc<BitSet>(domsum);
-    start_val = home.alloc<int>(x.size());
-    start_idx = home.alloc<unsigned int>(x.size());
-#endif // SHARED
-
+#ifndef HASH
     residues = home.alloc<unsigned int>(domsum);
+#endif // HASH
+
     for (int i = 0; i < x.size(); i++) {
       lastSize[i] = p.lastSize[i];
       // Don't bother to copy assigned variables
+#ifndef HASH
       if (x[i].size() > 1) {
-#ifndef SHARED
-        start_val[i] = p.start_val[i];
-        start_idx[i] = p.start_idx[i];
-#endif // SHARED
         Int::ViewValues<View> it(x[i]);
         while (it()) {
-#ifdef SHARED
           unsigned int row = s.row(i,it.val());
-#else
-          unsigned int row = p.rowno(i,it.val());
-          supports[row].Support::BitSetBase::init(home,nsupports,false);
-          supports[row].copy(nsupports,p.supports[row]);
-#endif // SHARED
           residues[row] = p.residues[row];
           ++it;
         }
       }
+#endif // HASH
     }
   }
   
@@ -309,13 +269,7 @@ public:
       validTuples.clear_mask();
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-        
-#ifdef SHARED
         validTuples.add_to_mask(s.get(i,it.val()));        
-#else
-        validTuples.add_to_mask(supports[rowno(i,it.val())]);
-#endif // SHARED
-
         ++it;
       }
       validTuples.intersect_with_mask();
@@ -335,25 +289,26 @@ public:
       if (x[i].size() > 1) {
         Int::ViewValues<View> it(x[i]);
         while (it()) {
-#ifdef SHARED
-          unsigned int row = s.row(i,it.val());
-          int index = residues[row];
-          Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
+#ifdef HASH
+          Key key = {i,it.val()};
+          int index = residues.get(key);
 #else
-          unsigned int row = rowno(i,it.val());
-          int index = residues[row];
-          Support::BitSetData w = validTuples.a(supports[row],index);
-#endif // SHARED
+          unsigned int row = s.row(i,it.val());
+          int index = residues[row];          
+#endif // HASH
+
+          Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
 
           if (w.none()) {
-#ifdef SHARED
             index = validTuples.intersect_index(s.get(i,it.val()));
-#else            
-            index = validTuples.intersect_index(supports[row]);
-#endif // SHARED
             if (index != -1) {
               // Save residue
+#ifdef HASH
+              residues.set((Key){i,it.val()},index);
+#else
               residues[row] = index;
+#endif // HASH
+
             } else {
               // Value not supported
               nq.push(it.val());

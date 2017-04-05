@@ -4,7 +4,7 @@
 #include "hash-table.cpp"
 
 //#define MEMOPT 1
-//#define HASH 1
+#define HASH 1
 
 #define PRIME_1 7
 #define PRIME_2 11

@@ -75,6 +75,21 @@ LinkedList::get(Key key) const {
   return NULL;
 }
 
+forceinline bool
+LinkedList::set(Key key, int val) {
+  Item * p = head;
+  Item * q = head;
+  while (q) {
+    p = q;
+    if ((p != head) && (p->key == key)) {
+      p->row = val;
+      return true;
+    }
+    q = p->next;
+  }
+  return false;
+}
+
 forceinline int
 LinkedList::length() const {
   return sz;
