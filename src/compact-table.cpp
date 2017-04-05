@@ -56,13 +56,14 @@ public:
         }
       }
       /// Initialise from bit set \a with start val 
-      void init(const BitSet* s, int init_min, int max) {
-        DEBUG_PRINT(("init supports\n"));
+      void init(const BitSet* s, int init_min, int max, int nsupports) {
+        DEBUG_PRINT(("init supports, nsupports = %d\n", nsupports));
         nvals = static_cast<unsigned int>(max - init_min + 1);
         supports = heap.alloc<BitSet>(nvals);
         for (int i = nvals; i--; ) {
-          supports[i].init(heap,s[i].size());
-          supports[i].copy(s[i].size(), s[i]);
+          assert(nsupports <= s[i].size());
+          supports[i].init(heap,nsupports);
+          supports[i].copy(nsupports, s[i]);
         }
         min = init_min;
       }
@@ -90,8 +91,8 @@ public:
       return si->supports[i - si->min];
     }
     /// Initialise from parameters (only bit-set is deep-copied)
-    void init(BitSet* s, int min, int max) {
-      static_cast<SupportsI*>(object())->init(s,min,max);
+    void init(BitSet* s, int min, int max, int nsupports) {
+      static_cast<SupportsI*>(object())->init(s,min,max,nsupports);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
@@ -108,9 +109,10 @@ public:
   forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
-            View x0, int i, BitSet* s0, int min)
+            View x0, int i, BitSet* s0, int min,
+            int nsupports)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,min,x0.max());
+    supports.init(s0,min,x0.max(),nsupports);
   }
  
   /// Copy constructor
@@ -318,7 +320,8 @@ public:
       if (!x[i].assigned()) {
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
                                           (supports + widths[i]),
-                                          min_vals[i]);
+                                          min_vals[i],
+                                          support_cnt);
       } else {
         unassigned--;
       }
@@ -480,7 +483,9 @@ public:
         int index = residues[row];          
 #endif // HASH
 
-        Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
+        // validTuples[i] & supports[x,a][i]
+        Support::BitSetData w = validTuples.a(a.advisor().supports[it.val()],
+                                              index);
 
         if (w.none()) {
           index = validTuples.intersect_index(s.get(i,it.val()));
