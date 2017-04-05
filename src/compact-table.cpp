@@ -12,7 +12,7 @@
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
 #define PRINT
-#define DEBUG
+//#define DEBUG
 
 typedef BitSet* Dom;
 
@@ -112,17 +112,6 @@ public:
       validTuples(static_cast<Space&>(home))
   {
     DEBUG_PRINT(("Start constructor\n"));
-    // Post advisors
-    unassigned = x.size();
-    for (int i = x.size(); i--; ) {
-      if (!x[i].assigned()) {
-        (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i);
-      } else {
-        unassigned--;
-      }
-    }
-
-    DEBUG_PRINT(("nvars: %d, unassigned: %d\n",x.size(),unassigned));
     // Calculate domain sum
     domsum = 0;
     int domsize = 0;
@@ -166,6 +155,18 @@ public:
     validTuples.init(t0.tuples(), nsupports);
     DEBUG_PRINT(("End constructor\n"));
 
+    // Post advisors
+    unassigned = x.size();
+    for (int i = x.size(); i--; ) {
+      if (!x[i].assigned()) {
+        (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i);
+      } else {
+        unassigned--;
+      }
+    }
+
+    DEBUG_PRINT(("nvars: %d, unassigned: %d\n",x.size(),unassigned));
+    
     // TODO
     View::schedule(home,*this,Int::ME_INT_VAL);
   }
@@ -313,11 +314,11 @@ public:
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
     DEBUG_PRINT(("Propagate\n"));
-    updateTable();
+    //updateTable();
     
-    if (validTuples.is_empty()) {
-      return ES_FAILED;
-    }
+    //if (validTuples.is_empty()) {
+    //return ES_FAILED;
+    //}
     ExecStatus msg = filterDomains(home);
     DEBUG_PRINT(("End propagate\n"));
     return msg;
@@ -352,18 +353,16 @@ public:
   }
 
   forceinline virtual ExecStatus
-  advise(Space&, Advisor& a0, const Delta& d) {
+  advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     DEBUG_PRINT(("Advise %d\n", a.index));
     DEBUG_PRINT(("%d\n",a.view().modevent(d)));
-    // Int::ViewValues<View> it(a.view());
-    // while (it()) {
-    //   validTuples.add_to_mask(s.get(a.index,it.val()));        
-    //   ++it;
-    // }
-    // validTuples.intersect_with_mask();
-    return ES_NOFIX;
-    
+    updateTable(a.index);
+    if (validTuples.is_empty())
+      return ES_FAILED;
+
+    // TODO: unassigned?
+    return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a) : ES_NOFIX;
   }
       
   
