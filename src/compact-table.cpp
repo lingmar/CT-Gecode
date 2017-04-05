@@ -78,8 +78,6 @@ protected:
   /// Residues
   unsigned int* residues;
 #endif // HASH
-  // Size of variable since last propagation
-  unsigned int* lastSize;
   // Sum of domain sizes
   int domsum;
   // Nr of inital supports
@@ -136,7 +134,7 @@ public:
         s.set_start_idx(i,s.get_start_idx(i-1) + x[i-1].width());
     }
 #endif // not HASH
-    lastSize = static_cast<Space&>(home).alloc<unsigned int>(x.size());
+
 #ifdef HASH
     residues.init(HashTable::closest_prime(1.7*domsize));
 #else    
@@ -151,9 +149,6 @@ public:
       home.fail();
       return;
     } 
-    // Set the domain sizes in lastSize
-    for (int i = 0; i < x.size(); i++)
-      lastSize[i] = x[i].size();
     
     // Initialise validTupels with nsupports bit set
     validTuples.init(t0.tuples(), nsupports);
@@ -272,17 +267,15 @@ public:
     c.update(home,share,p.c);
 
     DEBUG_PRINT(("Done updating datastructures\n"));
-    // Allocate memory
-    lastSize = home.alloc<unsigned int>(x.size());
+
 #ifndef HASH
     residues = home.alloc<unsigned int>(domsum);
 #endif // HASH
     DEBUG_PRINT(("Done allocating memory\n"));
-    
-    for (int i = 0; i < x.size(); i++) {
-      lastSize[i] = p.lastSize[i];
+
       // Don't bother to copy assigned variables
 #ifndef HASH
+    for (int i = 0; i < x.size(); i++) {
       if (x[i].size() > 1) {
         Int::ViewValues<View> it(x[i]);
         while (it()) {
@@ -291,8 +284,9 @@ public:
           ++it;
         }
       }
-#endif // HASH
     }
+#endif // HASH
+    
     DEBUG_PRINT(("End copy constructor\n"));
   }
   
@@ -331,25 +325,24 @@ public:
     return msg;
   }
 
-  forceinline void
-  updateTable() {
-    DEBUG_PRINT(("updateTable"));
-    for (int i = 0; i < x.size(); i++) {
-      if (lastSize[i] == x[i].size()) {
-        continue;
-      }
-      updateTable(i);
-      if (validTuples.is_empty()) {
-        return;
-      }
-    }
-    DEBUG_PRINT(("End updateTable\n"));
-  }
+  // forceinline void
+  // updateTable() {
+  //   DEBUG_PRINT(("updateTable"));
+  //   for (int i = 0; i < x.size(); i++) {
+  //     if (lastSize[i] == x[i].size()) {
+  //       continue;
+  //     }
+  //     updateTable(i);
+  //     if (validTuples.is_empty()) {
+  //       return;
+  //     }
+  //   }
+  //   DEBUG_PRINT(("End updateTable\n"));
+  // }
 
   forceinline void
   updateTable(int i) {
     DEBUG_PRINT(("Update table %d\n", i));
-    lastSize[i] = x[i].size();
     validTuples.clear_mask();
     Int::ViewValues<View> it(x[i]);
     while (it()) {
@@ -440,7 +433,6 @@ public:
         DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
         //a.advisor().dispose(home,c);
       }
-      lastSize[i] = x[i].size();
     }
     // Subsume if there is at most one non-assigned variable
     return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
