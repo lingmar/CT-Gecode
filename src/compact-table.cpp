@@ -12,7 +12,7 @@
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
 #define PRINT
-//#define DEBUG
+#define DEBUG
 
 typedef BitSet* Dom;
 
@@ -83,7 +83,9 @@ protected:
   int nsupports;
   // Supports
   SharedSupports s;
-
+  /// Number of unassigned variables
+  unsigned int unassigned;
+  
 public:
 
   // Post table propagator
@@ -109,13 +111,18 @@ public:
     : Propagator(home), x(x0), c(home),
       validTuples(static_cast<Space&>(home))
   {
+    DEBUG_PRINT(("Start constructor\n"));
     // Post advisors
+    unassigned = x.size();
     for (int i = x.size(); i--; ) {
       if (!x[i].assigned()) {
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i);
+      } else {
+        unassigned--;
       }
     }
 
+    DEBUG_PRINT(("nvars: %d, unassigned: %d\n",x.size(),unassigned));
     // Calculate domain sum
     domsum = 0;
     int domsize = 0;
@@ -123,9 +130,9 @@ public:
       domsum += x[i].width();
       domsize += x[i].size();
     }
-    //DEBUG_PRINT("domsum: %d, domsize: %d\n", domsum, domsize);
-    // Allocate memory
+    DEBUG_PRINT(("domsum: %d, domsize: %d\n", domsum, domsize));
 
+    // Allocate memory
     s.init_supports(domsum,x.size(),t0.tuples());
 #ifndef HASH
     for (int i = 0; i < x.size(); i++) {
@@ -145,11 +152,12 @@ public:
     
     // Initialise supports
     nsupports = init_supports(home, t0);
-
+    DEBUG_PRINT(("nsupports=%d\n",nsupports));
+    
     if (nsupports <= 0) {
       home.fail();
       return;
-    }
+    } 
     // Set the domain sizes in lastSize
     for (int i = 0; i < x.size(); i++)
       lastSize[i] = x[i].size();
@@ -157,6 +165,9 @@ public:
     // Initialise validTupels with nsupports bit set
     validTuples.init(t0.tuples(), nsupports);
     DEBUG_PRINT(("End constructor\n"));
+
+    // TODO
+    View::schedule(home,*this,Int::ME_INT_VAL);
   }
 
   forceinline unsigned int
