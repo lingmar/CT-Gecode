@@ -12,7 +12,7 @@
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
 #define PRINT
-#define DEBUG
+//#define DEBUG
 
 typedef BitSet* Dom;
 
@@ -255,7 +255,7 @@ public:
     // Save initial minimum value and widths for indexing
     int* min_vals = region.alloc<int>(x.size());
     int* widths = region.alloc<int>(x.size());
-    for (int i = x.size(); i--; ) {
+    for (int i = 0; i<x.size(); i++) {
       min_vals[i] = x[i].min();
       widths[i] = i != 0 ? widths[i-1] + x[i-1].width() : 0;
     }
@@ -282,7 +282,7 @@ public:
           }
           
           s.get(var,ts[i][var]).set(support_cnt);
-          supports[row2].set(support_cnt);
+          supports[row].set(support_cnt);
 #ifdef HASH
           Key key = {var,ts[i][var]};
           Item* item = heap.alloc<Item>(1);
@@ -316,16 +316,9 @@ public:
     // Post advisors
     for (int i = x.size(); i--; ) {
       if (!x[i].assigned()) {
-        if (i != 0) {
-          (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
-                                            (supports + widths[i-1]),
-                                            min_vals[i]);
-        } else {
-          (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
-                                            supports,
-                                            min_vals[i]);
-
-        }
+        (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
+                                          (supports + widths[i]),
+                                          min_vals[i]);
       } else {
         unassigned--;
       }
@@ -432,7 +425,7 @@ public:
     Int::ViewValues<View> it(a.view());
     while (it()) {
       validTuples.add_to_mask(a.supports[it.val()]);
-      validTuples.add_to_mask(s.get(a.index,it.val()));        
+      //validTuples.add_to_mask(s.get(a.index,it.val()));        
       ++it;
     }
     validTuples.intersect_with_mask();
