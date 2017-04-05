@@ -33,21 +33,90 @@ using namespace std;
 template<class View>
 class CTAdvisor : public ViewAdvisor<View> {
 public:
+  /// Class for managing supports
+  class Supports : public SharedHandle {
+  protected:
+    class SupportsI : public SharedHandle::Object {
+    public:
+      /// Support bits (valid tuple indices)
+      BitSet supports;
+      /// Initial minimum value for x
+      int min;
+      /// Default constructor (yields empty set)
+      SupportsI(void) {}
+      /// Copy \a s
+      SupportsI(const Supports& s) :
+        supports(heap,s.supports.size(),s.supports)
+      {
+        //supports = new BitSet(heap, s.supports.size(), s.supports);
+      }
+      /// Initialise from bit set \a with start val 
+      void init(const BitSet s, int val0) {
+        supports.Support::BitSetBase::init(heap,s.size());
+        supports.copy(s.size(),s);
+        min = val0;
+      }
+      /// Copy function
+      virtual Object* copy(void) const {
+        return new SupportsI(*this);
+      }
+      /// Desctructor
+      virtual ~SupportsI(void) {}
+    };
+  public:
+    /// Default constructor
+    Supports(void)
+      : SharedHandle(new SupportsI()) {}
+    /// Copy \a s
+    Supports(const Supports& s)
+      : SharedHandle(s) {}
+    /// Assignment operator
+    SharedSupports& operator =(const Supports& s) {
+      return static_cast<SupportsI&>(SharedHandle::operator =(s));
+    }
+    /// [] operator
+    bool operator [](unsigned int i) {
+      const SupportsI* si = static_cast<SupportsI*>(object());
+      return si->supports.get(i - si->min);
+    }
+    /// Initialise from parameters (only bit-set is deep-copied)
+    void init(BitSet s, int val0) {
+      static_cast<SupportsI*>(object())->init(s,val0);
+    }
+    /// Update function
+    void update(Space& home, bool share, SharedHandle& sh) {
+      SharedHandle::update(home,share,sh);
+    }
+  };
+  
   /// Index of the view
   int index;
+  /// Tuple indices that are supports for the variable
+  Supports supports;
+  /// Word index for the last found support for (x,a)
+  unsigned int* residues;
   /// Constructor
   forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
             View x0, int i)
-    : ViewAdvisor<View>(home,p,c,x0), index(i) {}
-
+    : ViewAdvisor<View>(home,p,c,x0), index(i) {
+  }
+ 
   /// Copy constructor
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
     : ViewAdvisor<View>(home,share,a),
-    index(a.index) {}
+    index(a.index) {
+    //supports.update(home,share,a.supports);
+  }
 
+  /// Initialise supports
+  forceinline void
+  init_supports(BitSet s, int val0) {
+    supports.init(s,val0);
+  }
+  
   /// Dispose function
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
@@ -182,7 +251,12 @@ public:
     int support_cnt = 0;
     int bpb = BitSet::get_bpb();
 
-    // Look for supports and set correct bits
+    /// Allocate BitSets for supports
+    BitSet* supports = region.alloc<BitSet>(x.size());
+    for (int i = x.size(); i--; )
+      supports[i].Support::BitSetBase::init(region,x[i].width());
+    
+    // Look for supports and set correct bits in supports
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
       bool seen = true;
@@ -193,6 +267,7 @@ public:
         } else if (support_cnt > 0) {
           // To filter out copies
           seen = seen && s.get(j,ts[i][j]).get(support_cnt - 1);
+          seen = seen && supports[j].get(ts[i][j] - x[j].min());
         }
       }
       if (supported && (support_cnt == 0 || !seen)) {
@@ -200,6 +275,7 @@ public:
         for (int j = 0; j < ts.arity(); j++) {
           unsigned int row = s.row(j,ts[i][j]);
           s.get(j,ts[i][j]).set(support_cnt);
+          supports[j].set(ts[i][j] - x[j].min());
 #ifdef HASH
           Key key = {j,ts[i][j]};
           Item* item = heap.alloc<Item>(1);
@@ -213,6 +289,12 @@ public:
       }
     }
 
+    // Initialise the supports in the advisors    
+    for (Advisors<CTAdvisor<View> > a(c); a(); ++a) {
+      int index = a.advisor().index;
+      a.advisor().init_supports(supports[index], x[index].min());
+    }
+    
     Region r(home);
     Support::StaticStack<int,Region> nq(r,domsum);
         
@@ -224,12 +306,11 @@ public:
         }
         ++it;
       }
-
       while (!nq.empty()) {
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
-        
     }
+    
     return support_cnt;
   }
 
@@ -314,7 +395,6 @@ public:
   propagate(Space& home, const ModEventDelta&) {
     DEBUG_PRINT(("Propagate\n"));
     status = PROPAGATE;
-    //updateTable();
     
     if (validTuples.is_empty()) {
       return ES_FAILED;
@@ -324,21 +404,6 @@ public:
     status = NOT_PROPAGATE;
     return msg;
   }
-
-  // forceinline void
-  // updateTable() {
-  //   DEBUG_PRINT(("updateTable"));
-  //   for (int i = 0; i < x.size(); i++) {
-  //     if (lastSize[i] == x[i].size()) {
-  //       continue;
-  //     }
-  //     updateTable(i);
-  //     if (validTuples.is_empty()) {
-  //       return;
-  //     }
-  //   }
-  //   DEBUG_PRINT(("End updateTable\n"));
-  // }
 
   forceinline void
   updateTable(int i) {
