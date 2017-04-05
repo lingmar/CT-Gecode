@@ -12,7 +12,7 @@
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
 #define PRINT
-//#define DEBUG
+#define DEBUG
 
 typedef BitSet* Dom;
 
@@ -39,22 +39,32 @@ public:
     class SupportsI : public SharedHandle::Object {
     public:
       /// Support bits (valid tuple indices)
-      BitSet supports;
+      BitSet* supports;
       /// Initial minimum value for x
       int min;
+      /// Number of values
+      int nvals;
       /// Default constructor (yields empty set)
       SupportsI(void) {}
       /// Copy \a s
       SupportsI(const Supports& s) :
-        supports(heap,s.supports.size(),s.supports)
-      {
-        //supports = new BitSet(heap, s.supports.size(), s.supports);
+        min(s.min), nvals(s.nvals) {
+        supports = heap.alloc<BitSet>(nvals);
+        for (int i = nvals; i--; ) {
+          supports[i].init(heap,s[i].size());
+          supports[i].copy(s[i].size(), s[i]);
+        }
       }
       /// Initialise from bit set \a with start val 
-      void init(const BitSet s, int val0) {
-        supports.Support::BitSetBase::init(heap,s.size());
-        supports.copy(s.size(),s);
-        min = val0;
+      void init(const BitSet* s, int init_min, int max) {
+        DEBUG_PRINT(("init supports\n"));
+        nvals = static_cast<unsigned int>(max - init_min + 1);
+        supports = heap.alloc<BitSet>(nvals);
+        for (int i = nvals; i--; ) {
+          supports[i].init(heap,s[i].size());
+          supports[i].copy(s[i].size(), s[i]);
+        }
+        min = init_min;
       }
       /// Copy function
       virtual Object* copy(void) const {
@@ -75,20 +85,19 @@ public:
       return static_cast<SupportsI&>(SharedHandle::operator =(s));
     }
     /// [] operator
-    bool operator [](unsigned int i) {
+    BitSet operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->supports.get(i - si->min);
+      return si->supports[i - si->min];
     }
     /// Initialise from parameters (only bit-set is deep-copied)
-    void init(BitSet s, int val0) {
-      static_cast<SupportsI*>(object())->init(s,val0);
+    void init(BitSet* s, int min, int max) {
+      static_cast<SupportsI*>(object())->init(s,min,max);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
       SharedHandle::update(home,share,sh);
     }
   };
-  
   /// Index of the view
   int index;
   /// Tuple indices that are supports for the variable
@@ -99,8 +108,9 @@ public:
   forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
-            View x0, int i)
+            View x0, int i, BitSet* s0, int min)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
+    supports.init(s0,min,x0.max());
   }
  
   /// Copy constructor
@@ -108,13 +118,7 @@ public:
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
     : ViewAdvisor<View>(home,share,a),
     index(a.index) {
-    //supports.update(home,share,a.supports);
-  }
-
-  /// Initialise supports
-  forceinline void
-  init_supports(BitSet s, int val0) {
-    supports.init(s,val0);
+    supports.update(home,share,a.supports);
   }
   
   /// Dispose function
@@ -180,7 +184,8 @@ public:
                TupleSet t0)
     : Propagator(home), x(x0), c(home),
       validTuples(static_cast<Space&>(home)),
-      status(NOT_PROPAGATE)
+      status(NOT_PROPAGATE),
+      unassigned(x.size())
   {
     DEBUG_PRINT(("Start constructor\n"));
     // Calculate domain sum
@@ -223,16 +228,6 @@ public:
     validTuples.init(t0.tuples(), nsupports);
     DEBUG_PRINT(("End constructor\n"));
 
-    // Post advisors
-    unassigned = x.size();
-    for (int i = x.size(); i--; ) {
-      if (!x[i].assigned()) {
-        (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i);
-      } else {
-        unassigned--;
-      }
-    }
-
     DEBUG_PRINT(("nvars: %d, unassigned: %d\n",x.size(),unassigned));
     
     // TODO
@@ -252,32 +247,44 @@ public:
     int bpb = BitSet::get_bpb();
 
     /// Allocate BitSets for supports
-    BitSet* supports = region.alloc<BitSet>(x.size());
-    for (int i = x.size(); i--; )
-      supports[i].Support::BitSetBase::init(region,x[i].width());
+    BitSet* supports = region.alloc<BitSet>(domsum);
+    for (int i = domsum; i--; ) {
+      supports[i].Support::BitSetBase::init(region,ts.tuples());
+    }
     
+    // Save initial minimum value and widths for indexing
+    int* min_vals = region.alloc<int>(x.size());
+    int* widths = region.alloc<int>(x.size());
+    for (int i = x.size(); i--; ) {
+      min_vals[i] = x[i].min();
+      widths[i] = i != 0 ? widths[i-1] + x[i-1].width() : 0;
+    }
+        
     // Look for supports and set correct bits in supports
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
-      bool seen = true;
       for (int j = ts.arity() - 1; j >= 0; j--) {
         if (!dom[j].get(ts[i][j] - ts.min())) {
           supported = false;
           break;
-        } else if (support_cnt > 0) {
-          // To filter out copies
-          seen = seen && s.get(j,ts[i][j]).get(support_cnt - 1);
-          seen = seen && supports[j].get(ts[i][j] - x[j].min());
-        }
+        } 
       }
-      if (supported && (support_cnt == 0 || !seen)) {
+      if (supported) {
         // Set tuple as valid and save residue
-        for (int j = 0; j < ts.arity(); j++) {
-          unsigned int row = s.row(j,ts[i][j]);
-          s.get(j,ts[i][j]).set(support_cnt);
-          supports[j].set(ts[i][j] - x[j].min());
+        for (int var = 0; var < ts.arity(); var++) {
+          int val = ts[i][var];
+          unsigned int row = s.row(var,val);
+          unsigned int row2 = widths[var] + val - min_vals[var];
+
+          if (row != row2) {
+            DEBUG_PRINT(("offset: %d, min: %d\n", widths[var], min_vals[var]));
+            DEBUG_PRINT(("row = %d, row2 = %d\n",row,row2));
+          }
+          
+          s.get(var,ts[i][var]).set(support_cnt);
+          supports[row2].set(support_cnt);
 #ifdef HASH
-          Key key = {j,ts[i][j]};
+          Key key = {var,ts[i][var]};
           Item* item = heap.alloc<Item>(1);
           item->key = key; item->row = support_cnt / bpb;
           residues.insert(item);
@@ -288,16 +295,11 @@ public:
         support_cnt++;
       }
     }
-
-    // Initialise the supports in the advisors    
-    for (Advisors<CTAdvisor<View> > a(c); a(); ++a) {
-      int index = a.advisor().index;
-      a.advisor().init_supports(supports[index], x[index].min());
-    }
     
     Region r(home);
     Support::StaticStack<int,Region> nq(r,domsum);
-        
+
+    // Remove values corresponding to empty rows
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<View> it(x[i]);
       while (it()) {
@@ -310,7 +312,25 @@ public:
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
     }
-    
+
+    // Post advisors
+    for (int i = x.size(); i--; ) {
+      if (!x[i].assigned()) {
+        if (i != 0) {
+          (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
+                                            (supports + widths[i-1]),
+                                            min_vals[i]);
+        } else {
+          (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
+                                            supports,
+                                            min_vals[i]);
+
+        }
+      } else {
+        unassigned--;
+      }
+    }
+        
     return support_cnt;
   }
 
@@ -406,12 +426,13 @@ public:
   }
 
   forceinline void
-  updateTable(int i) {
-    DEBUG_PRINT(("Update table %d\n", i));
+  updateTable(CTAdvisor<View> a) {
+    DEBUG_PRINT(("Update table %d\n", a.index));
     validTuples.clear_mask();
-    Int::ViewValues<View> it(x[i]);
+    Int::ViewValues<View> it(a.view());
     while (it()) {
-      validTuples.add_to_mask(s.get(i,it.val()));        
+      validTuples.add_to_mask(a.supports[it.val()]);
+      validTuples.add_to_mask(s.get(a.index,it.val()));        
       ++it;
     }
     validTuples.intersect_with_mask();
@@ -420,13 +441,15 @@ public:
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
+
     DEBUG_PRINT(("Advise %d\n", a.index));
     DEBUG_PRINT(("Modevent: %d\n",a.view().modevent(d)));
+    
+    // Do not schedule if propagator is performing propagation
     if (status == PROPAGATE) {
-      // Do not schedule if propagator is performing propagation
       return ES_FIX;
     }
-    updateTable(a.index);
+    updateTable(a);
     if (validTuples.is_empty())
       // Not allowed to report failure in a disabled propagator
       return disabled() ? home.ES_FIX_DISPOSE(c,a) : ES_FAILED;
