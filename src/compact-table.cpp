@@ -7,7 +7,7 @@
 #include "bitset-support.cpp"
 //#include <unordered_map>
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
@@ -25,17 +25,6 @@ using namespace std;
 #else
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
-
-// void DEBUG_PRINT ( const char * format, ... ) {
-// #ifdef PRINT
-//   char formatted_string[MAX_FMT_SIZE];
-//   va_list argptr;
-//   va_start(argptr,format);
-//   //format_string(format, argptr, formatted_string);
-//   va_end(argptr);
-//   fprintf(stdout, "%s",formatted_string);
-// #endif // PRINT
-// }
   
 /**
  * Advisor
@@ -67,11 +56,15 @@ public:
   }
 };
 
-// The compact table propagator
+/**
+ * The CT propagator
+ **/
 template<class View>
 class CompactTable : public Propagator {
 protected:
-  
+  enum Status {NOT_PROPAGATE,PROPAGATE};
+  /// Whether propagator is done propagating
+  Status status;
   /// The variables
   ViewArray<View> x;
   /// Council of advisors
@@ -119,7 +112,8 @@ public:
                ViewArray<View>& x0,
                TupleSet t0)
     : Propagator(home), x(x0), c(home),
-      validTuples(static_cast<Space&>(home))
+      validTuples(static_cast<Space&>(home)),
+      status(NOT_PROPAGATE)
   {
     DEBUG_PRINT(("Start constructor\n"));
     // Calculate domain sum
@@ -266,7 +260,8 @@ public:
     : Propagator(home,share,p),
       validTuples(home, p.validTuples),
       domsum(p.domsum),
-      nsupports(p.nsupports)
+      nsupports(p.nsupports),
+      status(p.status)
 #ifdef HASH
     , residues(p.residues)
 #endif // HASH
@@ -324,6 +319,7 @@ public:
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
     DEBUG_PRINT(("Propagate\n"));
+    status = PROPAGATE;
     //updateTable();
     
     if (validTuples.is_empty()) {
@@ -331,6 +327,7 @@ public:
     }
     ExecStatus msg = filterDomains(home);
     DEBUG_PRINT(("End propagate\n"));
+    status = NOT_PROPAGATE;
     return msg;
   }
 
@@ -367,6 +364,10 @@ public:
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     DEBUG_PRINT(("Advise %d\n", a.index));
     DEBUG_PRINT(("Modevent: %d\n",a.view().modevent(d)));
+    if (status == PROPAGATE) {
+      // Do not schedule if propagator is performing propagation
+      return ES_FIX;
+    }
     updateTable(a.index);
     if (validTuples.is_empty())
       // Not allowed to report failure in a disabled propagator
