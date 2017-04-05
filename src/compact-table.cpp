@@ -10,6 +10,9 @@
 //#define DEBUG 1
 
 #define SHARED 1
+#define MAX_FMT_SIZE 4096
+#define PRINT
+//#define DEBUG
 
 typedef BitSet* Dom;
 
@@ -17,12 +20,52 @@ using namespace Gecode;
 using namespace Gecode::Int;
 using namespace std;
 
+#ifdef DEBUG
+# define DEBUG_PRINT(x) printf x
+#else
+# define DEBUG_PRINT(x) do {} while (0)
+#endif
+
+// void DEBUG_PRINT ( const char * format, ... ) {
+// #ifdef PRINT
+//   char formatted_string[MAX_FMT_SIZE];
+//   va_list argptr;
+//   va_start(argptr,format);
+//   //format_string(format, argptr, formatted_string);
+//   va_end(argptr);
+//   fprintf(stdout, "%s",formatted_string);
+// #endif // PRINT
+// }
+  
+/**
+ * Advisor
+ * Like a ViewAdvisor with index of the view saved
+ **/
+template<class View>
+class CTAdvisor : public ViewAdvisor<View> {
+public:
+  /// Index of the view
+  int index;
+  CTAdvisor(Space& home, Propagator& p,
+            Council<CTAdvisor<View> >& c,
+            View x0, int i)
+    : ViewAdvisor<View>(home,p,c,x0), index(i) {}
+
+  CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
+    : ViewAdvisor<View>(home,share,a),
+    index(a.index) {} 
+};
+
+
+
 // The compact table propagator
 template<class View>
 class CompactTable : public Propagator {
 protected:
-  // The variables
+  /// The variables
   ViewArray<View> x;
+  /// Council of advisors
+  Council<CTAdvisor<View> > c;
   // The table with possible combinations of values
   SparseBitSet<Space&> validTuples;
 #ifdef HASH
@@ -63,11 +106,16 @@ public:
   CompactTable(Home home,
                ViewArray<View>& x0,
                TupleSet t0)
-    : Propagator(home), x(x0),
+    : Propagator(home), x(x0), c(home),
       validTuples(static_cast<Space&>(home))
   {
-    // Subscribe variables
-    x.subscribe(home,*this,PC_INT_DOM);
+    // Post advisors
+    for (int i = x.size(); i--; ) {
+      if (!x[i].assigned()) {
+        (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i);
+      }
+    }
+
     // Calculate domain sum
     domsum = 0;
     int domsize = 0;
@@ -75,7 +123,7 @@ public:
       domsum += x[i].width();
       domsize += x[i].size();
     }
-    //printf("domsum: %d, domsize: %d\n", domsum, domsize);
+    //DEBUG_PRINT("domsum: %d, domsize: %d\n", domsum, domsize);
     // Allocate memory
 
     s.init_supports(domsum,x.size(),t0.tuples());
@@ -108,6 +156,7 @@ public:
     
     // Initialise validTupels with nsupports bit set
     validTuples.init(t0.tuples(), nsupports);
+    DEBUG_PRINT(("End constructor\n"));
   }
 
   forceinline unsigned int
@@ -187,7 +236,6 @@ public:
       }
       //dom[i].print();
     }
-    
   }
   
   // Copy constructor during cloning
@@ -201,16 +249,19 @@ public:
     , residues(p.residues)
 #endif // HASH
   {
-    // Update view
+    DEBUG_PRINT(("Copy constructor\n"));
     x.update(home,share,p.x);
     s.update(home,share,p.s);
-    
+    c.update(home,share,p.c);
+
+    DEBUG_PRINT(("Done updating datastructures\n"));
     // Allocate memory
     lastSize = home.alloc<unsigned int>(x.size());
 #ifndef HASH
     residues = home.alloc<unsigned int>(domsum);
 #endif // HASH
-
+    DEBUG_PRINT(("Done allocating memory\n"));
+    
     for (int i = 0; i < x.size(); i++) {
       lastSize[i] = p.lastSize[i];
       // Don't bother to copy assigned variables
@@ -225,6 +276,7 @@ public:
       }
 #endif // HASH
     }
+    DEBUG_PRINT(("End copy constructor\n"));
   }
   
   // Create copy during cloning
@@ -249,36 +301,61 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
+    DEBUG_PRINT(("Propagate\n"));
     updateTable();
     
     if (validTuples.is_empty()) {
       return ES_FAILED;
     }
     ExecStatus msg = filterDomains(home);
+    DEBUG_PRINT(("End propagate\n"));
     return msg;
   }
 
   forceinline void
   updateTable() {
-    //cout << "updateTable" << endl;
+    DEBUG_PRINT(("updateTable"));
     for (int i = 0; i < x.size(); i++) {
       if (lastSize[i] == x[i].size()) {
         continue;
       }
-      lastSize[i] = x[i].size();
-      validTuples.clear_mask();
-      Int::ViewValues<View> it(x[i]);
-      while (it()) {
-        validTuples.add_to_mask(s.get(i,it.val()));        
-        ++it;
-      }
-      validTuples.intersect_with_mask();
+      updateTable(i);
       if (validTuples.is_empty()) {
         return;
       }
     }
+    DEBUG_PRINT(("End updateTable\n"));
   }
 
+  forceinline void
+  updateTable(int i) {
+    DEBUG_PRINT(("Update table %d\n", i));
+    lastSize[i] = x[i].size();
+    validTuples.clear_mask();
+    Int::ViewValues<View> it(x[i]);
+    while (it()) {
+      validTuples.add_to_mask(s.get(i,it.val()));        
+      ++it;
+    }
+    validTuples.intersect_with_mask();
+  }
+
+  forceinline virtual ExecStatus
+  advise(Space&, Advisor& a0, const Delta& d) {
+    CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
+    DEBUG_PRINT(("Advise %d\n", a.index));
+    DEBUG_PRINT(("%d\n",a.view().modevent(d)));
+    // Int::ViewValues<View> it(a.view());
+    // while (it()) {
+    //   validTuples.add_to_mask(s.get(a.index,it.val()));        
+    //   ++it;
+    // }
+    // validTuples.intersect_with_mask();
+    return ES_NOFIX;
+    
+  }
+      
+  
   forceinline ExecStatus
   filterDomains(Space& home) {
     int count_non_assigned = 0;
@@ -332,8 +409,9 @@ public:
   // Dispose propagator and return its size
   forceinline virtual size_t
   dispose(Space& home) {
-    x.cancel(home,*this,PC_INT_DOM);
+    //x.cancel(home,*this,PC_INT_DOM);
     // TODO: dispose t?
+    c.dispose(home);
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }
@@ -410,7 +488,7 @@ private:
 
   // mapkey key_of(int var, int val) {
   //   char buf[2048];
-  //   sprintf(buf, "%d%d", var, val);
+  //   sDEBUG_PRINT(buf, "%d%d", var, val);
   //   mapkey key(buf);
   //   return key;
   // }
