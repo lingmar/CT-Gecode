@@ -7,7 +7,7 @@
 #include "bitset-support.cpp"
 //#include <unordered_map>
 
-//#define DEBUG 1
+#define DEBUG 1
 
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
@@ -39,29 +39,39 @@ using namespace std;
   
 /**
  * Advisor
- * Like a ViewAdvisor with index of the view saved
+ * Like a ViewAdvisor but with index of the view saved
  **/
 template<class View>
 class CTAdvisor : public ViewAdvisor<View> {
 public:
   /// Index of the view
   int index;
+  /// Constructor
+  forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
             View x0, int i)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {}
 
+  /// Copy constructor
+  forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
     : ViewAdvisor<View>(home,share,a),
-    index(a.index) {} 
+    index(a.index) {}
+
+  /// Dispose function
+  forceinline void
+  dispose(Space& home, Council<CTAdvisor<View> >& c) {
+    DEBUG_PRINT(("Advisor %d disposed\n",index));
+    ViewAdvisor<View>::dispose(home,c);
+  }
 };
-
-
 
 // The compact table propagator
 template<class View>
 class CompactTable : public Propagator {
 protected:
+  
   /// The variables
   ViewArray<View> x;
   /// Council of advisors
@@ -316,9 +326,9 @@ public:
     DEBUG_PRINT(("Propagate\n"));
     //updateTable();
     
-    //if (validTuples.is_empty()) {
-    //return ES_FAILED;
-    //}
+    if (validTuples.is_empty()) {
+      return ES_FAILED;
+    }
     ExecStatus msg = filterDomains(home);
     DEBUG_PRINT(("End propagate\n"));
     return msg;
@@ -356,13 +366,18 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     DEBUG_PRINT(("Advise %d\n", a.index));
-    DEBUG_PRINT(("%d\n",a.view().modevent(d)));
+    DEBUG_PRINT(("Modevent: %d\n",a.view().modevent(d)));
     updateTable(a.index);
     if (validTuples.is_empty())
-      return ES_FAILED;
-
-    // TODO: unassigned?
-    return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a) : ES_NOFIX;
+      // Not allowed to report failure in a disabled propagator
+      return disabled() ? home.ES_FIX_DISPOSE(c,a) : ES_FAILED;
+    if (a.view().assigned()) {
+      --unassigned;
+      DEBUG_PRINT(("Variable %d assigned in advise\n",a.index));
+      //      return unassigned <= 1 ? home.ES_SUBSUMED(*this) : home.ES_NOFIX_DISPOSE(c,a);
+      return  home.ES_NOFIX_DISPOSE(c,a);
+    }
+    return ES_NOFIX;
   }
       
   
@@ -371,46 +386,60 @@ public:
     int count_non_assigned = 0;
     Region r(home);
     Support::StaticStack<int,Region> nq(r,domsum);
-    for (int i = 0; i < x.size(); i++) {
-      // Only consider unassigned variables
-      if (x[i].size() > 1) {
-        Int::ViewValues<View> it(x[i]);
-        while (it()) {
-#ifdef HASH
-          Key key = {i,it.val()};
-          int index = residues.get(key);
-#else
-          unsigned int row = s.row(i,it.val());
-          int index = residues[row];          
-#endif // HASH
-
-          Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
-
-          if (w.none()) {
-            index = validTuples.intersect_index(s.get(i,it.val()));
-            if (index != -1) {
-              // Save residue
-#ifdef HASH
-              residues.set((Key){i,it.val()},index);
-#else
-              residues[row] = index;
-#endif // HASH
-
-            } else {
-              // Value not supported
-              nq.push(it.val());
-            }
-          }
-          ++it;
-        }
-        while (!nq.empty())
-          GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
-
-        if (x[i].size() > 1) {
-          ++count_non_assigned;
-        }
-        lastSize[i] = x[i].size();
+    // Only consider unassigned variables
+    for (Advisors<CTAdvisor<View> > a(c); a(); ++a) {
+      int i = a.advisor().index;
+      if (a.advisor().view().assigned()) {
+        DEBUG_PRINT(("Variable %d is assigned\n",i));
+        continue;
       }
+
+      DEBUG_PRINT(("Advisor for %d with domain size %d\n", i, x[i].size()));
+      Int::ViewValues<View> it(x[i]);
+      while (it()) {
+#ifdef HASH
+        Key key = {i,it.val()};
+        int index = residues.get(key);
+#else
+        unsigned int row = s.row(i,it.val());
+        int index = residues[row];          
+#endif // HASH
+
+        Support::BitSetData w = validTuples.a(s.get(i,it.val()),index);
+
+        if (w.none()) {
+          index = validTuples.intersect_index(s.get(i,it.val()));
+          if (index != -1) {
+            // Save residue
+#ifdef HASH
+            residues.set((Key){i,it.val()},index);
+#else
+            residues[row] = index;
+#endif // HASH
+
+          } else {
+            // Value not supported
+            nq.push(it.val());
+          }
+        }
+        ++it;
+      }
+      while (!nq.empty()) {
+        int val = nq.pop();
+        DEBUG_PRINT(("Remove value %d from variable %d\n",
+                     val, i));
+        GECODE_ME_CHECK(x[i].nq(home,val));
+      }
+        
+      if (!x[i].assigned()) {
+        //        a.advisor().dispose(home,c);
+        count_non_assigned++;
+        //--unassigned;
+      } else {
+        DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
+        //a.advisor().dispose(home,c);
+      }
+      lastSize[i] = x[i].size();
     }
     // Subsume if there is at most one non-assigned variable
     return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
