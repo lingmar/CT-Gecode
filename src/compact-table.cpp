@@ -5,11 +5,8 @@
 #include <assert.h>
 //#include "bitset.hpp"
 #include "bitset-support.cpp"
+#include "info-base.hpp"
 
-
-#define SHARED 1
-#define MAX_FMT_SIZE 4096
-#define PRINT
 //#define DEBUG
 
 typedef BitSet* Dom;
@@ -36,48 +33,37 @@ public:
   protected:
     class SupportsI : public SharedHandle::Object {
     public:
-      /// Support bits (valid tuple indices)
-      BitSet* supports;
-      /// Residues
-      unsigned int* residues;
-      /// Initial minimum value for x
-      int min;
-      /// Number of values
-      int nvals;
+      enum Type {ARRAY,HASH};
+      /// The type of indexing
+      Type type;
+      /// Info object
+      InfoBase* info;
       /// Default constructor (yields empty set)
       SupportsI(void) {}
       /// Copy \a s
-      SupportsI(const SupportsI& s) :
-        min(s.min), nvals(s.nvals) {
-        DEBUG_PRINT(("Copy SupportsI"));
-        supports = heap.alloc<BitSet>(nvals);
-        residues = heap.alloc<unsigned int>(nvals);
-        for (int i = 0; i < nvals; i++) {
-          supports[i].init(heap,s.supports[i].size());
-          supports[i].copy(s.supports[i].size(), s.supports[i]);
-          residues[i] = s.residues[i];
-        }
-      }
-      /// Initialise from \a s, \a res, \a init_min, \a nsupports, \a offset 
+      SupportsI(const SupportsI& s) 
+        : type(s.type), info(s.info) {}
+      
+      /// Initialise from \a s, \a res, \a init_min, \a nsupports, \a offset
       void init(const BitSet* s, const unsigned int* res,
                 int init_min, int max,
                 int nsupports, int offset) {
-        // Number of bitsets
-        nvals = static_cast<unsigned int>(max - init_min + 1);
-        DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
-                     nsupports,nvals));
-
-        // Allocate memory and initialise
-        supports = heap.alloc<BitSet>(nvals);
-        residues = heap.alloc<unsigned int>(nvals);
-        for (int i = 0; i < nvals; i++) {
-          assert(nsupports <= s[offset + i].size());
-          supports[i].init(heap,nsupports);
-          supports[i].copy(nsupports,s[i + offset]);
-
-          residues[i] = res[i + offset];
+        DEBUG_PRINT(("Init info"));
+        type = ARRAY;
+        switch (type) {
+        case ARRAY:  {
+          info = new InfoArray();
+          break;
         }
-        min = init_min;
+        case HASH: {
+          //info = new InfoHash();
+          break;
+        } 
+        default:
+          GECODE_NEVER;
+          break;
+        }
+        info->init(s,res,init_min,max,nsupports,offset);
       }
       /// Copy function
       virtual Object* copy(void) const {
@@ -85,8 +71,16 @@ public:
       }
       /// Desctructor
       virtual ~SupportsI(void) {
-        heap.rfree(residues, nvals);
-        heap.rfree(supports, nvals);
+        switch (type) {
+        case ARRAY: {
+          static_cast<InfoArray*>(info)->~InfoArray();
+          break;
+        }
+        default:
+          GECODE_NEVER;
+          break;
+        }
+
       }
     };
   public:
@@ -104,7 +98,7 @@ public:
     /// [] operator
     BitSet operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->supports[i - si->min];
+      return si->info->get_supports(i);
     }
     /// Initialise from parameters (only bit-set is deep-copied)
     void init(BitSet* s, unsigned int* residues,
@@ -118,19 +112,19 @@ public:
     /// Get the residue for value \a v
     unsigned int residue(int v) const {
       const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->residues[v - si->min];
+      return si->info->get_residue(v);
     }
     /// Set residue for value \a v to \a i
-    void set_residue(int v, int i) {
+    void set_residue(int v, int r) {
       const SupportsI* si = static_cast<SupportsI*>(object());
-      si->residues[v - si->min] = i;
+      si->info->set_residue(v,r);
     }
     /// Print
     void print() const {
       const SupportsI* si = static_cast<SupportsI*>(object());
       printf("nvals=%d, min=%d\n",si->nvals,si->min);
       for (int j = 0; j < si->nvals; j++) {
-        si->supports[j].print();
+        si->info->get_supports(j).print();
       }
     }
   };
@@ -313,7 +307,8 @@ public:
                                           offset[i]);
       } 
     }
-        
+
+    home.notice(*this,AP_DISPOSE);
     return support_cnt;
   }
 
@@ -480,6 +475,7 @@ public:
   dispose(Space& home) {
     //x.cancel(home,*this,PC_INT_DOM);
     // TODO: dispose t?
+    home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
     (void) Propagator::dispose(home);
     return sizeof(*this);
