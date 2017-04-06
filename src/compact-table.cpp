@@ -47,7 +47,7 @@ public:
       /// Initialise from \a s, \a res, \a init_min, \a nsupports, \a offset
       void init(const BitSet* s, const unsigned int* res,
                 int init_min, int max,
-                int nsupports, int offset) {
+                int nsupports, int offset, BitSet dom) {
         DEBUG_PRINT(("Init info"));
         type = ARRAY;
         switch (type) {
@@ -56,14 +56,14 @@ public:
           break;
         }
         case HASH: {
-          //info = new InfoHash();
+          info = new InfoHash();
           break;
         } 
         default:
           GECODE_NEVER;
           break;
         }
-        info->init(s,res,init_min,max,nsupports,offset);
+        info->init(s,res,init_min,max,nsupports,offset,dom);
       }
       /// Copy function
       virtual Object* copy(void) const {
@@ -101,9 +101,10 @@ public:
       return si->info->get_supports(i);
     }
     /// Initialise from parameters (only bit-set is deep-copied)
-    void init(BitSet* s, unsigned int* residues,
-              int min,int max, int nsupports,int offset) {
-      static_cast<SupportsI*>(object())->init(s,residues,min,max,nsupports,offset);
+    void init(BitSet* s, unsigned int* residues, int min,int max,
+              int nsupports,int offset, BitSet dom) {
+      static_cast<SupportsI*>(object())->
+        init(s,residues,min,max,nsupports,offset,dom);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
@@ -138,9 +139,10 @@ public:
             Council<CTAdvisor<View> >& c,
             View x0, int i, BitSet* s0,
             unsigned int* residues, int min,
-            int nsupports, int start_idx)
+            int nsupports, int offset,
+            BitSet dom)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,residues,min,x0.max(),nsupports,start_idx);
+    supports.init(s0,residues,min,x0.max(),nsupports,offset,dom);
   }
  
   /// Copy constructor
@@ -233,24 +235,24 @@ public:
   forceinline unsigned int
   init_supports(Home home, TupleSet ts) {
 
-    Region region(home);
+    Region r(home);
     // Bitset for O(1) access to domains
-    Dom dom = region.alloc<BitSet>(x.size());
+    Dom dom = r.alloc<BitSet>(x.size());
     init_dom(home,dom,ts.min(),ts.max());
 
     int support_cnt = 0;
     int bpb = BitSet::get_bpb();
 
     /// Allocate BitSets and residues
-    BitSet* supports = region.alloc<BitSet>(domsum);
-    unsigned int* residues = region.alloc<unsigned int>(domsum);
+    BitSet* supports = r.alloc<BitSet>(domsum);
+    unsigned int* residues = r.alloc<unsigned int>(domsum);
     for (int i = 0; i < domsum; i++) {
-      supports[i].Support::BitSetBase::init(region,ts.tuples());
+      supports[i].Support::BitSetBase::init(r,ts.tuples());
     }
     
     // Save initial minimum value and widths for indexing
-    int* min_vals = region.alloc<int>(x.size());
-    int* offset = region.alloc<int>(x.size());
+    int* min_vals = r.alloc<int>(x.size());
+    int* offset = r.alloc<int>(x.size());
     for (int i = 0; i<x.size(); i++) {
       min_vals[i] = x[i].min();
       offset[i] = i != 0 ? offset[i-1] + x[i-1].width() : 0;
@@ -277,7 +279,6 @@ public:
       }
     }
     
-    Region r(home);
     Support::StaticStack<int,Region> nq(r,domsum);
 
     // Remove values corresponding to empty rows
@@ -286,10 +287,13 @@ public:
       while (it()) {
         unsigned int row = offset[i] + it.val() - min_vals[i];
         if (supports[row].none()) {
+          // Push to remove-stack and clear bit in domain
           nq.push(it.val());
+          dom[i].clear(it.val() - min_vals[i]);
         }
         ++it;
       }
+      // Prune actual domains
       while (!nq.empty()) {
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
@@ -304,7 +308,8 @@ public:
                                           residues,
                                           min_vals[i],
                                           support_cnt,
-                                          offset[i]);
+                                          offset[i],
+                                          dom[i]);
       } 
     }
 
