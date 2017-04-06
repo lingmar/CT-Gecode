@@ -7,7 +7,11 @@
 #include "bitset-support.cpp"
 #include "info-base.hpp"
 
-//#define DEBUG
+#define DEBUG
+
+// Threshold for using hash table
+// (0->always hash, infinity->never hash)
+#define HASH_THRESHOLD 0
 
 typedef BitSet* Dom;
 
@@ -20,7 +24,9 @@ using namespace std;
 #else
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
-  
+
+enum IndexType {ARRAY,HASH};
+
 /**
  * Advisor
  * Like a ViewAdvisor but with index of the view saved
@@ -33,9 +39,8 @@ public:
   protected:
     class SupportsI : public SharedHandle::Object {
     public:
-      enum Type {ARRAY,HASH};
       /// The type of indexing
-      Type type;
+      IndexType type;
       /// Info object
       InfoBase* info;
       /// Default constructor (yields empty set)
@@ -47,15 +52,16 @@ public:
       /// Initialise from \a s, \a res, \a init_min, \a nsupports, \a offset
       void init(const BitSet* s, const unsigned int* res,
                 int init_min, int max,
-                int nsupports, int offset, BitSet dom) {
+                int nsupports, int offset, BitSet dom, IndexType t) {
         DEBUG_PRINT(("Init info"));
-        type = ARRAY;
+        type = t;
         switch (type) {
         case ARRAY:  {
           info = new InfoArray();
           break;
         }
         case HASH: {
+          //printf("HASH\n");
           info = new InfoHash();
           break;
         } 
@@ -102,9 +108,9 @@ public:
     }
     /// Initialise from parameters (only bit-set is deep-copied)
     void init(BitSet* s, unsigned int* residues, int min,int max,
-              int nsupports,int offset, BitSet dom) {
+              int nsupports,int offset, BitSet dom, IndexType type) {
       static_cast<SupportsI*>(object())->
-        init(s,residues,min,max,nsupports,offset,dom);
+        init(s,residues,min,max,nsupports,offset,dom,type);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
@@ -140,9 +146,9 @@ public:
             View x0, int i, BitSet* s0,
             unsigned int* residues, int min,
             int nsupports, int offset,
-            BitSet dom)
+            BitSet dom,IndexType type)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,residues,min,x0.max(),nsupports,offset,dom);
+    supports.init(s0,residues,min,x0.max(),nsupports,offset,dom,type);
   }
  
   /// Copy constructor
@@ -153,7 +159,7 @@ public:
     supports.update(home,share,a.supports);
   }
   
-  /// Dispose function
+  /// Dispose function. TODO: dispose shared handle
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
     DEBUG_PRINT(("Advisor %d disposed\n",index));
@@ -180,7 +186,6 @@ protected:
   int domsum;
   
 public:
-
   // Post table propagator
   forceinline static ExecStatus
   post(Home home, ViewArray<View>& x, TupleSet t) {
@@ -302,14 +307,18 @@ public:
     // Post advisors
     for (int i = x.size(); i--; ) {
       if (!x[i].assigned()) {
-        DEBUG_PRINT(("%d\n",(supports + offset[i])[0].size()));
+        
+        // Decide whether to use an array or a hash table
+        double sparseness = x[i].width() / x[i].size();
+        IndexType type = ARRAY;
+        if (sparseness >= HASH_THRESHOLD)
+          type = HASH;
+        
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
-                                          supports,
-                                          residues,
+                                          supports,residues,
                                           min_vals[i],
-                                          support_cnt,
-                                          offset[i],
-                                          dom[i]);
+                                          support_cnt,offset[i],
+                                          dom[i],type);
       } 
     }
 
