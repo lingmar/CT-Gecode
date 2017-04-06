@@ -54,17 +54,7 @@ public:
         for (int i = 0; i < nvals; i++) {
           supports[i].init(heap,s.supports[i].size());
           supports[i].copy(s.supports[i].size(), s.supports[i]);
-          // cout << "This:" << endl;
-          // supports[i].print();
-          // cout << "Vs:" << endl;
-          // s.supports[i].print();
         }
-        // printf("After copy, nvals= %d\n", nvals);
-        // for (int i = 0; i < nvals; i++) {
-        //   cout << supports[i].size() << ": ";
-        //   supports[i].print();
-        // }
-
       }
       /// Initialise from bit set \a s with start val 
       void init(const BitSet* s, int init_min, int max,
@@ -185,8 +175,6 @@ protected:
   int domsum;
   // Nr of inital supports
   int nsupports;
-  // Supports
-  SharedSupports s;
   /// Number of unassigned variables
   unsigned int unassigned;
   
@@ -226,19 +214,6 @@ public:
       domsize += x[i].size();
     }
     DEBUG_PRINT(("domsum: %d, domsize: %d, ntuples: %d\n", domsum, domsize, t0.tuples()));
-
-    // Allocate memory
-    s.init_supports(domsum,x.size(),t0.tuples());
-
-#ifndef HASH
-    for (int i = 0; i < x.size(); i++) {
-      s.set_start_val(i,x[i].min());
-      if (i == 0)
-        s.set_start_idx(i,0);
-      else
-        s.set_start_idx(i,s.get_start_idx(i-1) + x[i-1].width());
-    }
-#endif // not HASH
 
 #ifdef HASH
     residues.init(HashTable::closest_prime(1.7*domsize));
@@ -305,17 +280,7 @@ public:
         // Set tuple as valid and save residue
         for (int var = 0; var < ts.arity(); var++) {
           int val = ts[i][var];
-          unsigned int row = s.row(var,val);
-          unsigned int row2 = widths[var] + val - min_vals[var];
-
-          if (row != row2) {
-            printf("ROWS DIFFER\n");
-            printf("offset: %d, min: %d\n", widths[var], min_vals[var]);
-            printf("offset: %d, min: %d\n", s.get_start_idx(var), s.get_start_val(var));
-            printf("row = %d, row2 = %d\n",row,row2);
-          }
-          
-          s.get(var,ts[i][var]).set(support_cnt);
+          unsigned int row = widths[var] + val - min_vals[var];
           supports[row].set(support_cnt);
 #ifdef HASH
           Key key = {var,ts[i][var]};
@@ -337,7 +302,8 @@ public:
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-        if (s.get(i,it.val()).none()) {
+        unsigned int row = widths[i] + it.val() - min_vals[i];
+        if (supports[row].none()) {
           nq.push(it.val());
         }
         ++it;
@@ -394,7 +360,6 @@ public:
   {
     DEBUG_PRINT(("Copy constructor,share=%d\n",share));
     x.update(home,share,p.x);
-    s.update(home,share,p.s);
     c.update(home,share,p.c);
 
     DEBUG_PRINT(("Done updating datastructures\n"));
@@ -410,8 +375,9 @@ public:
       if (x[i].size() > 1) {
         Int::ViewValues<View> it(x[i]);
         while (it()) {
-          unsigned int row = s.row(i,it.val());
-          residues[row] = p.residues[row];
+          //TODO
+          //unsigned int row = s.row(i,it.val());
+          //residues[row] = p.residues[row];
           ++it;
         }
       }
@@ -444,14 +410,17 @@ public:
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
     DEBUG_PRINT(("Propagate\n"));
+
     status = PROPAGATE;
-    
+
     if (validTuples.is_empty()) {
       return ES_FAILED;
     }
+
     ExecStatus msg = filterDomains(home);
-    DEBUG_PRINT(("End propagate\n"));
+
     status = NOT_PROPAGATE;
+    DEBUG_PRINT(("End propagate\n"));
     return msg;
   }
 
@@ -462,7 +431,6 @@ public:
     Int::ViewValues<View> it(a.view());
     while (it()) {
       validTuples.add_to_mask(a.supports[it.val()]);
-      //validTuples.add_to_mask(s.get(a.index,it.val()));        
       ++it;
     }
     validTuples.intersect_with_mask();
@@ -513,30 +481,17 @@ public:
         Key key = {i,it.val()};
         int index = residues.get(key);
 #else
-        unsigned int row = s.row(i,it.val());
+        int row = 0; // TODO
         int index = residues[row];          
 #endif // HASH
 
         // validTuples[i] & supports[x,a][i]
         Support::BitSetData w = validTuples.a(a.advisor().supports[it.val()],
                                               index);
-        // Support::BitSetData w2 = validTuples.a(s.get(i,it.val()),
-        //                                        index);
-        // if (!w.same(w2)) {
-        //   printf("Not same:\n");
-        //   a.advisor().supports[it.val()].print();
-        //   s.get(i,it.val()).print();
-        // } 
         
         if (w.none()) {
           //index = validTuples.intersect_index(s.get(i,it.val()));
           index = validTuples.intersect_index(a.advisor().supports[it.val()]);
-          // if (index != index2) {
-          //   printf("(%d,%d): {%d,%d}\n", i, it.val(), index, index2);
-          //   s.get(i,it.val()).print();
-          //   a.advisor().supports[it.val()].print();
-          //   index = index2;
-          // }
         
           if (index != -1) {
             // Save residue
@@ -547,7 +502,6 @@ public:
 #endif // HASH
 
           } else {
-            // Value not supported
             nq.push(it.val());
           }
         }
