@@ -5,9 +5,7 @@
 #include <assert.h>
 //#include "bitset.hpp"
 #include "bitset-support.cpp"
-//#include <unordered_map>
 
-//#define DEBUG 1
 
 #define SHARED 1
 #define MAX_FMT_SIZE 4096
@@ -157,9 +155,6 @@ public:
     : ViewAdvisor<View>(home,share,a),
     index(a.index) {
     supports.update(home,share,a.supports);
-    // if (share == false && index == 3) {
-    //   supports.print();
-    // }
   }
   
   /// Dispose function
@@ -176,7 +171,7 @@ public:
 template<class View>
 class CompactTable : public Propagator {
 protected:
-  enum Status {NOT_PROPAGATE,PROPAGATE};
+  enum Status {NOT_PROPAGATING,PROPAGATING};
   /// Whether propagator is done propagating
   Status status;
   /// The variables
@@ -187,10 +182,6 @@ protected:
   SparseBitSet<Space&> validTuples;
   // Sum of domain sizes
   int domsum;
-  // Nr of inital supports
-  int nsupports;
-  /// Number of unassigned variables
-  unsigned int unassigned;
   
 public:
 
@@ -216,8 +207,7 @@ public:
                TupleSet t0)
     : Propagator(home), x(x0), c(home),
       validTuples(static_cast<Space&>(home)),
-      status(NOT_PROPAGATE),
-      unassigned(x.size())
+      status(NOT_PROPAGATING)
   {
     DEBUG_PRINT(("Start constructor\n"));
     // Calculate domain sum
@@ -230,7 +220,7 @@ public:
     DEBUG_PRINT(("domsum: %d, domsize: %d, ntuples: %d\n", domsum, domsize, t0.tuples()));
     
     // Initialise supports
-    nsupports = init_supports(home, t0);
+    int nsupports = init_supports(home, t0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
     
     if (nsupports <= 0) {
@@ -242,9 +232,7 @@ public:
     validTuples.init(t0.tuples(), nsupports);
     DEBUG_PRINT(("End constructor\n"));
 
-    DEBUG_PRINT(("nvars: %d, unassigned: %d\n",x.size(),unassigned));
-    
-    // TODO
+    // Schedule in case no advisors have been posted
     View::schedule(home,*this,Int::ME_INT_VAL);
   }
 
@@ -323,9 +311,7 @@ public:
                                           min_vals[i],
                                           support_cnt,
                                           offset[i]);
-      } else {
-        unassigned--;
-      }
+      } 
     }
         
     return support_cnt;
@@ -353,7 +339,6 @@ public:
     : Propagator(home,share,p),
       validTuples(home, p.validTuples),
       domsum(p.domsum),
-      nsupports(p.nsupports),
       status(p.status)
   {
     DEBUG_PRINT(("Copy constructor,share=%d\n",share));
@@ -368,17 +353,16 @@ public:
     return new (home) CompactTable(home,share,*this);
   }
     
-  // Return cost (defined as cheap quadratic)
+  // Return cost
   forceinline virtual PropCost
   cost(const Space&, const ModEventDelta&) const {
-    // TODO: ???
-    return PropCost::linear(PropCost::LO,2*x.size());
+    // Expensive linear
+    return PropCost::linear(PropCost::HI,x.size());
   }
 
-  // TODO: ???
   forceinline virtual void
   reschedule(Space& home) {
-    x.reschedule(home,*this,Int::PC_INT_DOM);
+    View::schedule(home,*this, ME_INT_DOM);
   }
   
   // Perform propagation
@@ -386,7 +370,7 @@ public:
   propagate(Space& home, const ModEventDelta&) {
     DEBUG_PRINT(("Propagate\n"));
 
-    status = PROPAGATE;
+    status = PROPAGATING;
 
     if (validTuples.is_empty()) {
       return ES_FAILED;
@@ -394,7 +378,7 @@ public:
 
     ExecStatus msg = filterDomains(home);
 
-    status = NOT_PROPAGATE;
+    status = NOT_PROPAGATING;
     DEBUG_PRINT(("End propagate\n"));
     return msg;
   }
@@ -417,24 +401,23 @@ public:
 
     DEBUG_PRINT(("Advise %d\n", a.index));
     DEBUG_PRINT(("Modevent: %d\n",a.view().modevent(d)));
+    DEBUG_PRINT(("Domain size: %d\n",a.view().size()));
+        
+    // Do not schedule if propagator is performing propagation,
+    // dispose if assigned
+    if (status == PROPAGATING)
+      return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a)
+        : ES_FIX;
     
-    // Do not schedule if propagator is performing propagation
-    if (status == PROPAGATE) {
-      return ES_FIX;
-    }
     updateTable(a);
     if (validTuples.is_empty())
-      // Not allowed to report failure in a disabled propagator
       return disabled() ? home.ES_FIX_DISPOSE(c,a) : ES_FAILED;
-    if (a.view().assigned()) {
-      --unassigned;
-      DEBUG_PRINT(("Variable %d assigned in advise\n",a.index));
-      //      return unassigned <= 1 ? home.ES_SUBSUMED(*this) : home.ES_NOFIX_DISPOSE(c,a);
-      return  home.ES_NOFIX_DISPOSE(c,a);
-    }
-    return ES_NOFIX;
+
+    // Schedule propagator and dispose if assigned
+    DEBUG_PRINT(("Scheduling propagator %d\n",a.index));
+    return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a)
+      : ES_NOFIX;
   }
-      
   
   forceinline ExecStatus
   filterDomains(Space& home) {
@@ -476,7 +459,7 @@ public:
         int val = nq.pop();
         DEBUG_PRINT(("Remove value %d from variable %d\n",
                      val, i));
-        GECODE_ME_CHECK(x[i].nq(home,val));
+        x[i].nq(home,val);
       }
         
       if (!x[i].assigned()) {
@@ -486,8 +469,10 @@ public:
         DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
       }
     }
+
     // Subsume if there is at most one non-assigned variable
     return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
+    //return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
   
   // Dispose propagator and return its size
@@ -500,82 +485,6 @@ public:
     return sizeof(*this);
   }
 
-private:
-
-  void print_supports() {
-    // int count = 0;
-    // for (int i = 0; i < domsum; i++) {
-    //   count += supports[i].nset();
-    //   //supports[i].print();
-    // }
-    // cout << count << endl;
-    // // for (int i = 0; i < x.size(); i++) {
-    // //   //cout << "domain for variable " << i << ": " << x[i] << endl;
-    // //   Int::ViewValues<View> it(x[i]);
-    // //   while (it()) {
-    // //     // if (i == 0 && it.val() == 1) {
-    // //     //   cout << "(0,1):" << rowno(i,it.val()) << endl;
-    // //     //   cout << start_idx[0] << "+" << 1 << "-" << start_val[0];
-    // //     //   cout << "=" << start_idx[0] + 1 - start_val[0] << endl;
-    // //     // }
-    // //     //cout << rowno(i,it.val()) << ": ";
-    // //     supports[rowno(i,it.val())].print();
-    // //     ++it;
-    // //   }
-    // // }
-  }
-
-  void print_stuff() {
-    // cout << "lastSize: ";
-    // for (int i = 0; i < x.size(); i++) {
-    //   cout << lastSize[i] << " ";
-    // }
-    // cout << endl;
-    // cout << "startVal: ";
-    // for (int i = 0; i < x.size(); i++) {
-    //   cout << start_val[i] << " ";
-    // }
-    // cout << endl;
-    // cout << "startIdx: ";
-    // for (int i = 0; i < x.size(); i++) {
-    //   cout << start_idx[i] << " ";
-    // }
-    // cout << endl;
-    
-  }
-  
-  
-  // void fill_row_map() {
-  //   int row_cnt = 0;
-  //   for (int j = 0; j < x.size(); j++) {
-  //     Int::ViewValues<View> i(x[j]);
-  //     while (i()) {
-  //       rmap_entry entry(key_of(j, i.val()), row_cnt);
-  //       row_map.insert(entry);
-  //       ++i; ++row_cnt;
-  //     }
-  //   }
-  // }
-
-  // void print_row_map() {
-  //   for (int j = 0; j < x.size(); j++) {
-  //     Int::ViewValues<View> i(x[j]);
-  //     while (i()) {
-  //       cout << "(" << j << ", " << i.val() << ") with key value: " <<
-  //         key_of(j, i.val()) <<
-  //         " is at row " <<
-  //         row_map.at(key_of(j, i.val())) << endl;
-  //       ++i;
-  //     }
-  //   }
-  // }
-
-  // mapkey key_of(int var, int val) {
-  //   char buf[2048];
-  //   sDEBUG_PRINT(buf, "%d%d", var, val);
-  //   mapkey key(buf);
-  //   return key;
-  // }
 };
 
 
@@ -622,5 +531,4 @@ namespace Gecode {
     ViewArray<BoolView> vx(home,x);
     GECODE_ES_FAIL(CompactTable<BoolView>::post(home,vx,t));
   }
-
 }
