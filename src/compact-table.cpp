@@ -47,25 +47,41 @@ public:
       /// Default constructor (yields empty set)
       SupportsI(void) {}
       /// Copy \a s
-      SupportsI(const Supports& s) :
+      SupportsI(const SupportsI& s) :
         min(s.min), nvals(s.nvals) {
+        DEBUG_PRINT(("Copy SupportsI"));
         supports = heap.alloc<BitSet>(nvals);
-        for (int i = nvals; i--; ) {
-          supports[i].init(heap,s[i].size());
-          supports[i].copy(s[i].size(), s[i]);
+        for (int i = 0; i < nvals; i++) {
+          supports[i].init(heap,s.supports[i].size());
+          supports[i].copy(s.supports[i].size(), s.supports[i]);
+          // cout << "This:" << endl;
+          // supports[i].print();
+          // cout << "Vs:" << endl;
+          // s.supports[i].print();
         }
+        // printf("After copy, nvals= %d\n", nvals);
+        // for (int i = 0; i < nvals; i++) {
+        //   cout << supports[i].size() << ": ";
+        //   supports[i].print();
+        // }
+
       }
-      /// Initialise from bit set \a with start val 
-      void init(const BitSet* s, int init_min, int max, int nsupports) {
-        DEBUG_PRINT(("init supports, nsupports = %d\n", nsupports));
+      /// Initialise from bit set \a s with start val 
+      void init(const BitSet* s, int init_min, int max,
+                int nsupports,int offset) {
         nvals = static_cast<unsigned int>(max - init_min + 1);
+        DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n", nsupports,nvals));
         supports = heap.alloc<BitSet>(nvals);
-        for (int i = nvals; i--; ) {
-          assert(nsupports <= s[i].size());
+        for (int i = 0; i < nvals; i++) {
+          if (nsupports > s[offset + i].size()) {
+            printf("i: %d, {%d,%d}\n", i, nsupports, s[offset + i].size());
+          }
+          assert(nsupports <= s[offset + i].size());
           supports[i].init(heap,nsupports);
-          supports[i].copy(nsupports, s[i]);
+          supports[i].copy(nsupports,s[i + offset]);
         }
         min = init_min;
+        
       }
       /// Copy function
       virtual Object* copy(void) const {
@@ -80,7 +96,8 @@ public:
       : SharedHandle(new SupportsI()) {}
     /// Copy \a s
     Supports(const Supports& s)
-      : SharedHandle(s) {}
+      : SharedHandle(s) {
+    }
     /// Assignment operator
     SharedSupports& operator =(const Supports& s) {
       return static_cast<SupportsI&>(SharedHandle::operator =(s));
@@ -91,12 +108,20 @@ public:
       return si->supports[i - si->min];
     }
     /// Initialise from parameters (only bit-set is deep-copied)
-    void init(BitSet* s, int min, int max, int nsupports) {
-      static_cast<SupportsI*>(object())->init(s,min,max,nsupports);
+    void init(BitSet* s, int min, int max, int nsupports,int offset) {
+      static_cast<SupportsI*>(object())->init(s,min,max,nsupports, offset);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
       SharedHandle::update(home,share,sh);
+    }
+    /// Print
+    void print() const {
+      const SupportsI* si = static_cast<SupportsI*>(object());
+      printf("nvals=%d, min=%d\n",si->nvals,si->min);
+      for (int j = 0; j < si->nvals; j++) {
+        si->supports[j].print();
+      }
     }
   };
   /// Index of the view
@@ -110,9 +135,9 @@ public:
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
             View x0, int i, BitSet* s0, int min,
-            int nsupports)
+            int nsupports, int start_idx)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,min,x0.max(),nsupports);
+    supports.init(s0,min,x0.max(),nsupports,start_idx);
   }
  
   /// Copy constructor
@@ -121,6 +146,9 @@ public:
     : ViewAdvisor<View>(home,share,a),
     index(a.index) {
     supports.update(home,share,a.supports);
+    // if (share == false && index == 3) {
+    //   supports.print();
+    // }
   }
   
   /// Dispose function
@@ -197,10 +225,11 @@ public:
       domsum += x[i].width();
       domsize += x[i].size();
     }
-    DEBUG_PRINT(("domsum: %d, domsize: %d\n", domsum, domsize));
+    DEBUG_PRINT(("domsum: %d, domsize: %d, ntuples: %d\n", domsum, domsize, t0.tuples()));
 
     // Allocate memory
     s.init_supports(domsum,x.size(),t0.tuples());
+
 #ifndef HASH
     for (int i = 0; i < x.size(); i++) {
       s.set_start_val(i,x[i].min());
@@ -238,6 +267,7 @@ public:
 
   forceinline unsigned int
   init_supports(Home home, TupleSet ts) {
+
     Region region(home);
     // Bitset for O(1) access to domains
     Dom dom = region.alloc<BitSet>(x.size());
@@ -250,7 +280,7 @@ public:
 
     /// Allocate BitSets for supports
     BitSet* supports = region.alloc<BitSet>(domsum);
-    for (int i = domsum; i--; ) {
+    for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(region,ts.tuples());
     }
     
@@ -279,8 +309,10 @@ public:
           unsigned int row2 = widths[var] + val - min_vals[var];
 
           if (row != row2) {
-            DEBUG_PRINT(("offset: %d, min: %d\n", widths[var], min_vals[var]));
-            DEBUG_PRINT(("row = %d, row2 = %d\n",row,row2));
+            printf("ROWS DIFFER\n");
+            printf("offset: %d, min: %d\n", widths[var], min_vals[var]);
+            printf("offset: %d, min: %d\n", s.get_start_idx(var), s.get_start_val(var));
+            printf("row = %d, row2 = %d\n",row,row2);
           }
           
           s.get(var,ts[i][var]).set(support_cnt);
@@ -318,10 +350,12 @@ public:
     // Post advisors
     for (int i = x.size(); i--; ) {
       if (!x[i].assigned()) {
+        DEBUG_PRINT(("%d\n",(supports + widths[i])[0].size()));
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
-                                          (supports + widths[i]),
+                                          supports,
                                           min_vals[i],
-                                          support_cnt);
+                                          support_cnt,
+                                          widths[i]);
       } else {
         unassigned--;
       }
@@ -358,7 +392,7 @@ public:
     , residues(p.residues)
 #endif // HASH
   {
-    DEBUG_PRINT(("Copy constructor\n"));
+    DEBUG_PRINT(("Copy constructor,share=%d\n",share));
     x.update(home,share,p.x);
     s.update(home,share,p.s);
     c.update(home,share,p.c);
@@ -486,9 +520,24 @@ public:
         // validTuples[i] & supports[x,a][i]
         Support::BitSetData w = validTuples.a(a.advisor().supports[it.val()],
                                               index);
-
+        // Support::BitSetData w2 = validTuples.a(s.get(i,it.val()),
+        //                                        index);
+        // if (!w.same(w2)) {
+        //   printf("Not same:\n");
+        //   a.advisor().supports[it.val()].print();
+        //   s.get(i,it.val()).print();
+        // } 
+        
         if (w.none()) {
-          index = validTuples.intersect_index(s.get(i,it.val()));
+          //index = validTuples.intersect_index(s.get(i,it.val()));
+          index = validTuples.intersect_index(a.advisor().supports[it.val()]);
+          // if (index != index2) {
+          //   printf("(%d,%d): {%d,%d}\n", i, it.val(), index, index2);
+          //   s.get(i,it.val()).print();
+          //   a.advisor().supports[it.val()].print();
+          //   index = index2;
+          // }
+        
           if (index != -1) {
             // Save residue
 #ifdef HASH
