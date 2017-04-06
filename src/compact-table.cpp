@@ -40,6 +40,8 @@ public:
     public:
       /// Support bits (valid tuple indices)
       BitSet* supports;
+      /// Residues
+      unsigned int* residues;
       /// Initial minimum value for x
       int min;
       /// Number of values
@@ -51,34 +53,43 @@ public:
         min(s.min), nvals(s.nvals) {
         DEBUG_PRINT(("Copy SupportsI"));
         supports = heap.alloc<BitSet>(nvals);
+        residues = heap.alloc<unsigned int>(nvals);
         for (int i = 0; i < nvals; i++) {
           supports[i].init(heap,s.supports[i].size());
           supports[i].copy(s.supports[i].size(), s.supports[i]);
+          residues[i] = s.residues[i];
         }
       }
-      /// Initialise from bit set \a s with start val 
-      void init(const BitSet* s, int init_min, int max,
-                int nsupports,int offset) {
+      /// Initialise from \a s, \a res, \a init_min, \a nsupports, \a offset 
+      void init(const BitSet* s, const unsigned int* res,
+                int init_min, int max,
+                int nsupports, int offset) {
+        // Number of bitsets
         nvals = static_cast<unsigned int>(max - init_min + 1);
-        DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n", nsupports,nvals));
+        DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
+                     nsupports,nvals));
+
+        // Allocate memory and initialise
         supports = heap.alloc<BitSet>(nvals);
+        residues = heap.alloc<unsigned int>(nvals);
         for (int i = 0; i < nvals; i++) {
-          if (nsupports > s[offset + i].size()) {
-            printf("i: %d, {%d,%d}\n", i, nsupports, s[offset + i].size());
-          }
           assert(nsupports <= s[offset + i].size());
           supports[i].init(heap,nsupports);
           supports[i].copy(nsupports,s[i + offset]);
+
+          residues[i] = res[i + offset];
         }
         min = init_min;
-        
       }
       /// Copy function
       virtual Object* copy(void) const {
         return new SupportsI(*this);
       }
       /// Desctructor
-      virtual ~SupportsI(void) {}
+      virtual ~SupportsI(void) {
+        heap.rfree(residues, nvals);
+        heap.rfree(supports, nvals);
+      }
     };
   public:
     /// Default constructor
@@ -98,12 +109,23 @@ public:
       return si->supports[i - si->min];
     }
     /// Initialise from parameters (only bit-set is deep-copied)
-    void init(BitSet* s, int min, int max, int nsupports,int offset) {
-      static_cast<SupportsI*>(object())->init(s,min,max,nsupports, offset);
+    void init(BitSet* s, unsigned int* residues,
+              int min,int max, int nsupports,int offset) {
+      static_cast<SupportsI*>(object())->init(s,residues,min,max,nsupports,offset);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
       SharedHandle::update(home,share,sh);
+    }
+    /// Get the residue for value \a v
+    unsigned int residue(int v) const {
+      const SupportsI* si = static_cast<SupportsI*>(object());
+      return si->residues[v - si->min];
+    }
+    /// Set residue for value \a v to \a i
+    void set_residue(int v, int i) {
+      const SupportsI* si = static_cast<SupportsI*>(object());
+      si->residues[v - si->min] = i;
     }
     /// Print
     void print() const {
@@ -118,16 +140,15 @@ public:
   int index;
   /// Tuple indices that are supports for the variable
   Supports supports;
-  /// Word index for the last found support for (x,a)
-  unsigned int* residues;
   /// Constructor
   forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
-            View x0, int i, BitSet* s0, int min,
+            View x0, int i, BitSet* s0,
+            unsigned int* residues, int min,
             int nsupports, int start_idx)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,min,x0.max(),nsupports,start_idx);
+    supports.init(s0,residues,min,x0.max(),nsupports,start_idx);
   }
  
   /// Copy constructor
@@ -164,13 +185,6 @@ protected:
   Council<CTAdvisor<View> > c;
   // The table with possible combinations of values
   SparseBitSet<Space&> validTuples;
-#ifdef HASH
-  /// Residues
-  HashTable residues;
-#else
-  /// Residues
-  unsigned int* residues;
-#endif // HASH
   // Sum of domain sizes
   int domsum;
   // Nr of inital supports
@@ -214,12 +228,6 @@ public:
       domsize += x[i].size();
     }
     DEBUG_PRINT(("domsum: %d, domsize: %d, ntuples: %d\n", domsum, domsize, t0.tuples()));
-
-#ifdef HASH
-    residues.init(HashTable::closest_prime(1.7*domsize));
-#else    
-    residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
-#endif // HASH
     
     // Initialise supports
     nsupports = init_supports(home, t0);
@@ -247,24 +255,23 @@ public:
     // Bitset for O(1) access to domains
     Dom dom = region.alloc<BitSet>(x.size());
     init_dom(home,dom,ts.min(),ts.max());
-#ifdef HASH
-    s.fill(dom,x.size(),ts.min(),ts.max());    
-#endif // HASH
+
     int support_cnt = 0;
     int bpb = BitSet::get_bpb();
 
-    /// Allocate BitSets for supports
+    /// Allocate BitSets and residues
     BitSet* supports = region.alloc<BitSet>(domsum);
+    unsigned int* residues = region.alloc<unsigned int>(domsum);
     for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(region,ts.tuples());
     }
     
     // Save initial minimum value and widths for indexing
     int* min_vals = region.alloc<int>(x.size());
-    int* widths = region.alloc<int>(x.size());
+    int* offset = region.alloc<int>(x.size());
     for (int i = 0; i<x.size(); i++) {
       min_vals[i] = x[i].min();
-      widths[i] = i != 0 ? widths[i-1] + x[i-1].width() : 0;
+      offset[i] = i != 0 ? offset[i-1] + x[i-1].width() : 0;
     }
         
     // Look for supports and set correct bits in supports
@@ -280,16 +287,9 @@ public:
         // Set tuple as valid and save residue
         for (int var = 0; var < ts.arity(); var++) {
           int val = ts[i][var];
-          unsigned int row = widths[var] + val - min_vals[var];
+          unsigned int row = offset[var] + val - min_vals[var];
           supports[row].set(support_cnt);
-#ifdef HASH
-          Key key = {var,ts[i][var]};
-          Item* item = heap.alloc<Item>(1);
-          item->key = key; item->row = support_cnt / bpb;
-          residues.insert(item);
-#else          
           residues[row] = support_cnt / bpb;
-#endif // HASH
         }
         support_cnt++;
       }
@@ -302,7 +302,7 @@ public:
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-        unsigned int row = widths[i] + it.val() - min_vals[i];
+        unsigned int row = offset[i] + it.val() - min_vals[i];
         if (supports[row].none()) {
           nq.push(it.val());
         }
@@ -316,12 +316,13 @@ public:
     // Post advisors
     for (int i = x.size(); i--; ) {
       if (!x[i].assigned()) {
-        DEBUG_PRINT(("%d\n",(supports + widths[i])[0].size()));
+        DEBUG_PRINT(("%d\n",(supports + offset[i])[0].size()));
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
                                           supports,
+                                          residues,
                                           min_vals[i],
                                           support_cnt,
-                                          widths[i]);
+                                          offset[i]);
       } else {
         unassigned--;
       }
@@ -354,36 +355,10 @@ public:
       domsum(p.domsum),
       nsupports(p.nsupports),
       status(p.status)
-#ifdef HASH
-    , residues(p.residues)
-#endif // HASH
   {
     DEBUG_PRINT(("Copy constructor,share=%d\n",share));
     x.update(home,share,p.x);
     c.update(home,share,p.c);
-
-    DEBUG_PRINT(("Done updating datastructures\n"));
-
-#ifndef HASH
-    residues = home.alloc<unsigned int>(domsum);
-#endif // HASH
-    DEBUG_PRINT(("Done allocating memory\n"));
-
-      // Don't bother to copy assigned variables
-#ifndef HASH
-    for (int i = 0; i < x.size(); i++) {
-      if (x[i].size() > 1) {
-        Int::ViewValues<View> it(x[i]);
-        while (it()) {
-          //TODO
-          //unsigned int row = s.row(i,it.val());
-          //residues[row] = p.residues[row];
-          ++it;
-        }
-      }
-    }
-#endif // HASH
-    
     DEBUG_PRINT(("End copy constructor\n"));
   }
   
@@ -467,9 +442,11 @@ public:
     Region r(home);
     Support::StaticStack<int,Region> nq(r,domsum);
     // Only consider unassigned variables
-    for (Advisors<CTAdvisor<View> > a(c); a(); ++a) {
-      int i = a.advisor().index;
-      if (a.advisor().view().assigned()) {
+    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+      CTAdvisor<View> a = a0.advisor();
+      int i = a.index;
+
+      if (a.view().assigned()) {
         DEBUG_PRINT(("Variable %d is assigned\n",i));
         continue;
       }
@@ -477,31 +454,19 @@ public:
       DEBUG_PRINT(("Advisor for %d with domain size %d\n", i, x[i].size()));
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-#ifdef HASH
-        Key key = {i,it.val()};
-        int index = residues.get(key);
-#else
-        int row = 0; // TODO
-        int index = residues[row];          
-#endif // HASH
+        int index = a.supports.residue(it.val());
 
-        // validTuples[i] & supports[x,a][i]
-        Support::BitSetData w = validTuples.a(a.advisor().supports[it.val()],
-                                              index);
+        // performing validTuples[index] & supports[x,a][index]
+        Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
         
         if (w.none()) {
-          //index = validTuples.intersect_index(s.get(i,it.val()));
-          index = validTuples.intersect_index(a.advisor().supports[it.val()]);
+          index = validTuples.intersect_index(a.supports[it.val()]);
         
           if (index != -1) {
             // Save residue
-#ifdef HASH
-            residues.set((Key){i,it.val()},index);
-#else
-            residues[row] = index;
-#endif // HASH
-
+            a.supports.set_residue(i,it.val());
           } else {
+            // Value not supported
             nq.push(it.val());
           }
         }
@@ -515,12 +480,10 @@ public:
       }
         
       if (!x[i].assigned()) {
-        //        a.advisor().dispose(home,c);
         count_non_assigned++;
         //--unassigned;
       } else {
         DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
-        //a.advisor().dispose(home,c);
       }
     }
     // Subsume if there is at most one non-assigned variable
