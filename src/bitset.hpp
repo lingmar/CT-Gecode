@@ -37,8 +37,8 @@ public:
   void copy(unsigned int sz, const BitSet& bs);
   /// Next (disabled)
   unsigned int next(unsigned int i) const;
-  /// Init bit set at memory address \a dest
-  void init(Gecode::Support::BitSetData* dest, unsigned int sz, bool setbits=false);
+  // /// Init bit set at memory address \a dest
+  // void init(Gecode::Support::BitSetData* dest, unsigned int sz, bool setbits=false);
   /// Return number of set bits among the bits 0 to \a i
   unsigned int nset(unsigned int i) const;
   /** Debugging **/
@@ -83,7 +83,7 @@ public:
   /// Add bits in \a b to mask
   void add_to_mask(BitSet b);
   /// Intersect words with mask
-  void intersect_with_mask();
+  bool intersect_with_mask();
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   int intersect_index(BitSet b);
   Gecode::Support::BitSetData a(BitSet b, unsigned int i);
@@ -146,15 +146,15 @@ BitSet::BitSet(A& a, unsigned int sz, const BitSet& bs)
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
-forceinline void
-BitSet::init(Gecode::Support::BitSetData* dest,
-             unsigned int s, bool setbits) {
-  assert(data == NULL);
-  sz = s;
-  data=dest;
-  for (unsigned int i=Gecode::Support::BitSetData::data(sz+1); i--; )
-    data[i].init(setbits);
-}
+// forceinline void
+// BitSet::init(Gecode::Support::BitSetData* dest,
+//              unsigned int s, bool setbits) {
+//   assert(data == NULL);
+//   sz = s;
+//   data=dest;
+//   for (unsigned int i=Gecode::Support::BitSetData::data(sz+1); i--; )
+//     data[i].init(setbits);
+// }
 
 forceinline BitSet&
 BitSet::operator =(const BitSet& bs) {
@@ -177,25 +177,28 @@ BitSet::same(Gecode::Support::BitSetData d, unsigned int i) {
 
 forceinline void
 BitSet::o(BitSet a, unsigned int i) {
-  assert(sz == a.sz && i < sz);
+  assert(i < sz && i < a.sz);
   data[i].o(a.data[i]);
 }
 
 forceinline void
 BitSet::a(BitSet a, unsigned int i) {
-  assert(sz == a.sz);
+  assert(i < sz && i < a.sz);
   data[i].a(a.data[i]);
 }
 
 forceinline Gecode::Support::BitSetData
 BitSet::o(BitSet a, BitSet b, unsigned int i) {
-  assert(a.sz == b.sz && i < a.sz);
+  assert(i < a.sz && i < b.sz);
   return Gecode::Support::BitSetData::o(a.data[i], b.data[i]);
 }
 
 forceinline Gecode::Support::BitSetData
 BitSet::a(BitSet a, BitSet b, unsigned int i) {
-  assert(a.sz == b.sz && i < a.sz);
+  if (i >= a.sz || i >= b.sz) {
+    printf("i = %d, a.sz = %d, b.sz = %d\n",i,a.sz,b.sz);
+  }
+  assert(i < a.sz && i < b.sz);
   return Gecode::Support::BitSetData::a(a.data[i], b.data[i]);;
 }
 
@@ -382,12 +385,14 @@ SparseBitSet<A>::add_to_mask(BitSet b) {
 }
 
 template<class A>
-forceinline void
+forceinline bool
 SparseBitSet<A>::intersect_with_mask() {
+  bool diff = false;
   for (int i = limit; i >= 0; i--) {
     int offset = index[i];
     Gecode::Support::BitSetData w = a(mask, offset);
     if (!words.same(w, offset)) {
+      diff = true;
       words.setword(w, offset);
       if (w.none()) {
         index[i] = index[limit];
@@ -395,6 +400,7 @@ SparseBitSet<A>::intersect_with_mask() {
       }
     }
   }
+  return diff;
 }
 
 template<class A>
