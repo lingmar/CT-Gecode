@@ -316,10 +316,13 @@ public:
     
     // Initialise validTupels with nsupports bit set
     validTuples.init(t0.tuples(), nsupports);
-    DEBUG_PRINT(("End constructor\n"));
+#ifdef DEBUG
+    validTuples.print();
+#endif // DEBUG
 
     // Schedule in case no advisors have been posted
     View::schedule(home,*this,Int::ME_INT_VAL);
+    DEBUG_PRINT(("End constructor\n"));
   }
 
   forceinline unsigned int
@@ -477,6 +480,7 @@ public:
     status = PROPAGATING;
 
     if (validTuples.is_empty()) {
+      DEBUG_PRINT(("FAIL\n"));
       return ES_FAILED;
     }
 
@@ -514,6 +518,8 @@ public:
         : ES_FIX;
     
     bool diff = updateTable(a);
+    DEBUG_PRINT(("Done updateTable (%d)\n",a.index));
+    //printf("BOTHER\n");
     if (validTuples.is_empty())
       return disabled() ? home.ES_FIX_DISPOSE(c,a) : ES_FAILED;
 
