@@ -11,9 +11,12 @@
 
 //#define DEBUG
 
-// Threshold for using hash table
-// (0->always hash, infinity->never hash)
-#define HASH_THRESHOLD 0
+/** 
+ * Threshold value for using hash table
+ * Defined as domain-width / domain-size for each variable
+ * (0->always hash, infinity->never hash)
+ */
+#define HASH_THRESHOLD 10
 
 typedef BitSet* Dom;
 
@@ -184,7 +187,11 @@ public:
       nvals = x0.max() - x0.min() + 1;
       residues = home.alloc<unsigned int>(nvals);
       for (int i = 0; i < nvals; i++) {
-        residues[i] = residues[i + offset];
+        DEBUG_PRINT(("residues[%d] = %d\n",i,residues[i + offset]));
+        //printf("residues[%d] = %d\n",i,residues[i + offset]);
+        //printf("i + offset = %d\n", i + offset);
+        //residues[i] = residues[i + offset];
+        residues[i] = 0;
       }
       break;
     }
@@ -386,11 +393,6 @@ public:
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
     }
-
-    for (int i = 0; i < domsum; i++) {
-      DEBUG_PRINT(("RESIDUE[%d] = %d\n", i, residues[i]));
-    }
-
     
     // TODO: move this loop into the one above!
     // Post advisors
