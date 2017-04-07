@@ -29,7 +29,7 @@ using namespace std;
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
 
-typedef enum {ARRAYY,HASHHH} IndexType;
+typedef enum {ARRAYY,HASHH} IndexType;
 
 /**
  * Advisor
