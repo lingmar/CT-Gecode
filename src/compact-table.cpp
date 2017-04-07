@@ -14,7 +14,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 1000
+#define HASHH_THRESHOLD 100
 
 typedef BitSet* Dom;
 
@@ -109,6 +109,10 @@ public:
           static_cast<InfoArray*>(info)->~InfoArray();
           break;
         }
+        case HASHH: {
+          static_cast<InfoHash*>(info)->~InfoHash();
+          break;
+        }
         default:
           GECODE_NEVER;
           break;
@@ -135,11 +139,10 @@ public:
     }
     /// Initialise from parameters
     void init(BitSet* s, int min,int max,
-              int nsupports,int offset, BitSet dom,
+              int nsupports, int offset, BitSet dom,
               int domain_offset, IndexType type) {
       static_cast<SupportsI*>(object())->
         init(s,min,max,nsupports,offset,dom,domain_offset,type);
-      
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
@@ -158,7 +161,7 @@ public:
       }
     }
   };
-  /// Index of the view
+  /// Index of the view the advisor is assigned to
   int index;
   /// Tuple indices that are supports for the variable
   Supports supports;
@@ -173,7 +176,7 @@ public:
             Council<CTAdvisor<View> >& c,
             View x0, int i,
             BitSet* s0,                    /*** Support information ***/
-            unsigned int* res,             /*** Residues ***/
+            unsigned int* res,             /*** Initial residues ***/
             int nsupports, int offset,
             BitSet dom, int dom_offset, IndexType type)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
@@ -187,10 +190,7 @@ public:
       residues = home.alloc<unsigned int>(nvals);
       for (int i = 0; i < nvals; i++) {
         DEBUG_PRINT(("residues[%d] = %d\n",i,residues[i + offset]));
-        //printf("residues[%d] = %d\n",i,residues[i + offset]);
-        //printf("i + offset = %d\n", i + offset);
-        //residues[i] = residues[i + offset];
-        residues[i] = 0;
+        residues[i] = res[i + offset];
       }
       break;
     }
@@ -199,15 +199,16 @@ public:
       nvals = dom.nset(); /** Initial domain size **/
       residues = home.alloc<unsigned int>(nvals);
       int count = 0;
-      for (int i = 0; i < dom.size() && count < nvals; i++) {
+      int diff = x0.min() - dom_offset;
+      for (int i = diff; i < dom.size(); i++) {
         if (dom.get(i)) {
-          DEBUG_PRINT(("Accessing index %d in residues\n", i + offset));
-          //residues[count] = residues[i + offset];
+          DEBUG_PRINT(("Accessing index %d in residues\n", i + offset - diff));
+          residues[count] = res[i + offset - diff];
           // TODO: bugfix
-          residues[count] = 0;
-          DEBUG_PRINT(("residues[%d] = %d\n", count,residues[i + offset]));
+          //residues[count] = 0;
+          DEBUG_PRINT(("residues[%d] = %d\n", count, res[i + offset - diff]));
+          ++count;
         }
-        ++count;
       }
       break;
     }
@@ -386,9 +387,7 @@ public:
         }
         ++it;
       }
-      // printf("After pruning: ");
-      // dom[i].print();
-      // Prune actual domains
+
       while (!nq.empty()) {
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
@@ -405,15 +404,9 @@ public:
         if (sparseness >= HASHH_THRESHOLD)
           type = HASHH;
 
-        // cout << x[i] << endl;
-        // printf("Min: %d\n", min_vals[i]);
-        // dom[i].print();
-
         // To shift the offset
         int diff = x[i].min() - min_vals[i];
-        DEBUG_PRINT(("diff(%d) = %d\n",i,diff));
-        DEBUG_PRINT(("offset[%d] = %d\n",i,offset[i]));
-        
+
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
                                           supports,
                                           residues,
