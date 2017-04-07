@@ -15,7 +15,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASH_THRESHOLD 1000
+#define HASHH_THRESHOLD 1000
 
 typedef BitSet* Dom;
 
@@ -29,7 +29,7 @@ using namespace std;
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
 
-typedef enum {ARRAY,HASH} IndexType;
+typedef enum {ARRAYY,HASHHH} IndexType;
 
 /**
  * Advisor
@@ -55,13 +55,13 @@ public:
         : type(s.type) {
         DEBUG_PRINT(("Copy SupportsI\n"));
         switch (type) {
-        case ARRAY: {
+        case ARRAYY: {
           info = new InfoArray(*((InfoArray *const)s.info));
           //info->InfoArray::allocate(heap,s.info->nvals)
           //info->InfoArray::copy(s.info);
           break;
         }
-        case HASH: {
+        case HASHH: {
           info = new InfoHash(*((InfoHash *const)s.info));
           //info->InfoHash::allocate(heap,s.info->nvals);
           //info->InfoHash::copy(s.info);
@@ -80,13 +80,13 @@ public:
         DEBUG_PRINT(("Init info"));
         type = t;
         switch (type) {
-        case ARRAY:  {
+        case ARRAYY:  {
           info = heap.alloc<InfoArray>(1);
           static_cast<InfoArray*>(info)->
             InfoArray::init(s,init_min,max,nsupports,offset,dom,domain_offset);
           break;
         }
-        case HASH: {
+        case HASHH: {
           info = heap.alloc<InfoHash>(1);
           static_cast<InfoHash*>(info)->
             InfoHash::init(s,init_min,max,nsupports,offset,dom,domain_offset);
@@ -105,7 +105,7 @@ public:
       /// Desctructor
       virtual ~SupportsI(void) {
         switch (type) {
-        case ARRAY: {
+        case ARRAYY: {
           static_cast<InfoArray*>(info)->~InfoArray();
           break;
         }
@@ -181,7 +181,7 @@ public:
                   dom,dom_offset,type);    
     // Initialise residues
     switch (type) {
-    case ARRAY: {
+    case ARRAYY: {
       // Sparse array
       nvals = x0.max() - x0.min() + 1;
       residues = home.alloc<unsigned int>(nvals);
@@ -194,7 +194,7 @@ public:
       }
       break;
     }
-    case HASH: {
+    case HASHH: {
       // Pack the residues tight
       nvals = dom.nset(); /** Initial domain size **/
       residues = home.alloc<unsigned int>(nvals);
@@ -401,9 +401,9 @@ public:
         
         // Decide whether to use an array or a hash table
         double sparseness = x[i].width() / x[i].size();
-        IndexType type = ARRAY;
-        if (sparseness >= HASH_THRESHOLD)
-          type = HASH;
+        IndexType type = ARRAYY;
+        if (sparseness >= HASHH_THRESHOLD)
+          type = HASHH;
 
         // cout << x[i] << endl;
         // printf("Min: %d\n", min_vals[i]);
