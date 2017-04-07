@@ -37,8 +37,6 @@ public:
   void copy(unsigned int sz, const BitSet& bs);
   /// Next (disabled)
   unsigned int next(unsigned int i) const;
-  // /// Init bit set at memory address \a dest
-  // void init(Gecode::Support::BitSetData* dest, unsigned int sz, bool setbits=false);
   /// Return number of set bits among the bits 0 to \a i
   unsigned int nset(unsigned int i) const;
   /** Debugging **/
@@ -145,16 +143,6 @@ BitSet::BitSet(A& a, unsigned int sz, const BitSet& bs)
   // Clear bit sz
   Gecode::Support::RawBitSetBase::clear(sz);
 }
-
-// forceinline void
-// BitSet::init(Gecode::Support::BitSetData* dest,
-//              unsigned int s, bool setbits) {
-//   assert(data == NULL);
-//   sz = s;
-//   data=dest;
-//   for (unsigned int i=Gecode::Support::BitSetData::data(sz+1); i--; )
-//     data[i].init(setbits);
-// }
 
 forceinline BitSet&
 BitSet::operator =(const BitSet& bs) {
