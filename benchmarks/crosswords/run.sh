@@ -7,25 +7,17 @@ VERBOSE=0
 PLOT=0
 TIMEOUTMSG="=====UNKNOWN====="
 
-while getopts ":v:" opt; do
-  case $opt in
-      :)
-      VERBOSE=1
-      ;;
-  esac
-done
-
-while getopts ":p:" opt; do
-  case $opt in
-      :)
-      PLOT=1
-      ;;
+while getopts 'pv' flag; do
+  case "${flag}" in
+    p) PLOT=1 ;;
+    v) VERBOSE=1 ;;
+    *) error "Unexpected option ${flag}" ;;
   esac
 done
 
 #echo "n & runtime_g & fail_g & nprops_g & runtime_c & fail_c & nprops_c"
 
-if [ PLOT == 1 ]; then
+if [ $PLOT == 1 ]; then
     echo "ct ge"
 fi
 
@@ -39,16 +31,18 @@ do
     firstline_g=$(head -n 1 $solfile_g)
     firstline_c=$(head -n 1 $solfile_c)
 
-    if [ "$firstline_c" == $TIMEOUTMSG ]; then
+    if [ "$firstline_c" == $TIMEOUTMSG ] && [ $PLOT == 0 ]; then
         runtime_c="\Timeout"
     else
-        runtime_c=$(cat $solfile_c | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
+        runtime_c=$(cat $solfile_c | grep "runtime" | grep -o "([0-9]*.[0-9][0-9][0-9] ms)" | cut -d. -f1 | cut -d "(" -f2)
+        #runtime_c=$(cat $solfile_c | grep "runtime" | grep -o "([0-9]*.[0-9][0-9][0-9] ms)" | head -n 1)
     fi
 
-    if [ "$firstline_g" == $TIMEOUTMSG ]; then
+    if [ "$firstline_g" == $TIMEOUTMSG ] && [ $PLOT == 0 ]; then
         runtime_g="\Timeout"
     else
-        runtime_g=$(cat $solfile_g | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
+        runtime_g=$(cat $solfile_g | grep "runtime" | grep -o "([0-9]*.[0-9][0-9][0-9] ms)" | cut -d. -f1 | cut -d "(" -f2)
+        #runtime_g=$(cat $solfile_g | grep "runtime" | grep -o "[0-9]*.[0-9][0-9][0-9]" | head -n 1)
     fi
    
     # Find the solution
@@ -84,8 +78,8 @@ do
     fi
     
     if [ $PLOT == 1 ]; then
-	echo "$i & $runtime_g & $fail_g & $nprops_g & $runtime_c & $fail_c & $nprops_c \\\\"
+        echo "$runtime_c $runtime_g"	
     else
-	echo "$runtime_c $runtime_g"	
+	echo "$i & $runtime_g & $fail_g & $nprops_g & $runtime_c & $fail_c & $nprops_c \\\\"
     fi
 done
