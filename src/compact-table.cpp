@@ -6,8 +6,10 @@
 //#include "bitset.hpp"
 #include "bitset-support.cpp"
 #include "info-base.hpp"
+#include <signal.h>
 
-#define DEBUG
+
+//#define DEBUG
 
 // Threshold for using hash table
 // (0->always hash, infinity->never hash)
@@ -29,12 +31,13 @@ enum IndexType {ARRAY,HASH};
 
 /**
  * Advisor
- * Like a ViewAdvisor but with index of the view saved
  **/
 template<class View>
 class CTAdvisor : public ViewAdvisor<View> {
 public:
-  /// Class for managing supports
+  /**
+   * Shared handle for maintaining supports
+   */
   class Supports : public SharedHandle {
   protected:
     class SupportsI : public SharedHandle::Object {
@@ -47,29 +50,51 @@ public:
       SupportsI(void) {}
       /// Copy \a s
       SupportsI(const SupportsI& s) 
-        : type(s.type), info(s.info) {}
+        : type(s.type) {
+        DEBUG_PRINT(("Copy SupportsI\n"));
+        switch (type) {
+        case ARRAY: {
+          info = new InfoArray(*((InfoArray *const)s.info));
+          //info->InfoArray::allocate(heap,s.info->nvals)
+          //info->InfoArray::copy(s.info);
+          break;
+        }
+        case HASH: {
+          info = new InfoHash(*((InfoHash *const)s.info));
+          //info->InfoHash::allocate(heap,s.info->nvals);
+          //info->InfoHash::copy(s.info);
+          break;
+        }
+        default:
+          break;
+        }
+      }
       
-      /// Initialise from \a s, \a res, \a init_min, \a nsupports, \a offset
-      void init(const BitSet* s, const unsigned int* res,
+      /// Initialise from \a s, \a init_min, \a nsupports, \a offset
+      void init(const BitSet* s,
                 int init_min, int max,
-                int nsupports, int offset, BitSet dom, IndexType t) {
+                int nsupports, int offset, BitSet dom,
+                int domain_offset, IndexType t) {
         DEBUG_PRINT(("Init info"));
         type = t;
         switch (type) {
         case ARRAY:  {
-          info = new InfoArray();
+          info = heap.alloc<InfoArray>(1);
+          static_cast<InfoArray*>(info)->
+            InfoArray::init(s,init_min,max,nsupports,offset,dom,domain_offset);
           break;
         }
         case HASH: {
-          //printf("HASH\n");
-          info = new InfoHash();
+          info = heap.alloc<InfoHash>(1);
+          static_cast<InfoHash*>(info)->
+            InfoHash::init(s,init_min,max,nsupports,offset,dom,domain_offset);
           break;
         } 
         default:
           GECODE_NEVER;
           break;
         }
-        info->init(s,res,init_min,max,nsupports,offset,dom);
+        
       }
       /// Copy function
       virtual Object* copy(void) const {
@@ -106,25 +131,21 @@ public:
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
     }
-    /// Initialise from parameters (only bit-set is deep-copied)
-    void init(BitSet* s, unsigned int* residues, int min,int max,
-              int nsupports,int offset, BitSet dom, IndexType type) {
+    /// Initialise from parameters
+    void init(BitSet* s, int min,int max,
+              int nsupports,int offset, BitSet dom,
+              int domain_offset, IndexType type) {
       static_cast<SupportsI*>(object())->
-        init(s,residues,min,max,nsupports,offset,dom,type);
+        init(s,min,max,nsupports,offset,dom,domain_offset,type);
+      
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
       SharedHandle::update(home,share,sh);
     }
-    /// Get the residue for value \a v
-    unsigned int residue(int v) const {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->info->get_residue(v);
-    }
-    /// Set residue for value \a v to \a i
-    void set_residue(int v, int r) {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      si->info->set_residue(v,r);
+    /// Get the index for a value
+    unsigned int row(int val) {
+      return static_cast<SupportsI*>(object())->info->row(val);
     }
     /// Print
     void print() const {
@@ -139,30 +160,85 @@ public:
   int index;
   /// Tuple indices that are supports for the variable
   Supports supports;
+  /// Residues
+  unsigned int* residues;
+  /// Number of values
+  unsigned int nvals;
+  
   /// Constructor
   forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
-            View x0, int i, BitSet* s0,
-            unsigned int* residues, int min,
+            View x0, int i,
+            BitSet* s0,                    /*** Support information ***/
+            unsigned int* res,             /*** Residues ***/
             int nsupports, int offset,
-            BitSet dom,IndexType type)
+            BitSet dom, int dom_offset, IndexType type)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,residues,min,x0.max(),nsupports,offset,dom,type);
+    supports.init(s0,x0.min(),x0.max(),nsupports,offset,
+                  dom,dom_offset,type);    
+    // Initialise residues
+    switch (type) {
+    case ARRAY: {
+      // Sparse array
+      nvals = x0.max() - x0.min() + 1;
+      residues = home.alloc<unsigned int>(nvals);
+      for (int i = 0; i < nvals; i++) {
+        residues[i] = residues[i + offset];
+      }
+      break;
+    }
+    case HASH: {
+      // Pack the residues tight
+      nvals = dom.nset(); /** Initial domain size **/
+      residues = home.alloc<unsigned int>(nvals);
+      int count = 0;
+      for (int i = 0; i < dom.size() && count < nvals; i++) {
+        if (dom.get(i)) {
+          DEBUG_PRINT(("Accessing index %d in residues\n", i + offset));
+          //residues[count] = residues[i + offset];
+          residues[count] = 0;
+          DEBUG_PRINT(("residues[%d] = %d\n", count,residues[i + offset]));
+        }
+        ++count;
+      }
+      break;
+    }
+    default:
+      GECODE_NEVER;
+      break;
+    }
   }
  
   /// Copy constructor
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
     : ViewAdvisor<View>(home,share,a),
-    index(a.index) {
+    index(a.index), nvals(a.nvals) {
     supports.update(home,share,a.supports);
+    residues = home.alloc<unsigned int>(nvals);
+    for (int i = 0; i < nvals; i++)
+      residues[i] = a.residues[i];
   }
-  
+
+  /// Access residue for value \a val
+  forceinline unsigned int
+  residue(int val) {
+    DEBUG_PRINT(("residue[%d] = %d\n",supports.row(val),residues[supports.row(val)]));
+    return residues[supports.row(val)];
+  }
+
+  /// Set residue for value \a val
+  forceinline void
+  set_residue(int val, int r) {
+    residues[supports.row(val)] = r;
+  }
+    
   /// Dispose function. TODO: dispose shared handle
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
     DEBUG_PRINT(("Advisor %d disposed\n",index));
+    // TODO: call destructor for supports?
     ViewAdvisor<View>::dispose(home,c);
   }
 };
@@ -210,6 +286,7 @@ public:
       validTuples(static_cast<Space&>(home)),
       status(NOT_PROPAGATING)
   {
+    DEBUG_PRINT(("********************\n"));
     DEBUG_PRINT(("Start constructor\n"));
     // Calculate domain sum
     domsum = 0;
@@ -241,7 +318,7 @@ public:
   init_supports(Home home, TupleSet ts) {
 
     Region r(home);
-    // Bitset for O(1) access to domains
+    // Bitsets for O(1) access to domains
     Dom dom = r.alloc<BitSet>(x.size());
     init_dom(home,dom,ts.min(),ts.max());
 
@@ -249,10 +326,11 @@ public:
     int bpb = BitSet::get_bpb();
 
     /// Allocate BitSets and residues
-    BitSet* supports = r.alloc<BitSet>(domsum);
-    unsigned int* residues = r.alloc<unsigned int>(domsum);
+    BitSet* supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
+    unsigned int* residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
     for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(r,ts.tuples());
+      residues[i] = 0;
     }
     
     // Save initial minimum value and widths for indexing
@@ -261,6 +339,7 @@ public:
     for (int i = 0; i<x.size(); i++) {
       min_vals[i] = x[i].min();
       offset[i] = i != 0 ? offset[i-1] + x[i-1].width() : 0;
+      DEBUG_PRINT(("offset[%d] = %d\n", i,offset[i]));
     }
         
     // Look for supports and set correct bits in supports
@@ -279,6 +358,7 @@ public:
           unsigned int row = offset[var] + val - min_vals[var];
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
+          DEBUG_PRINT(("INIT: residue[%d] = %d\n",row,support_cnt / bpb));
         }
         support_cnt++;
       }
@@ -286,24 +366,33 @@ public:
     
     Support::StaticStack<int,Region> nq(r,domsum);
 
-    // Remove values corresponding to empty rows
+    // Remove values corresponding to empty rows and post advisors
     for (int i = 0; i < x.size(); i++) {
       Int::ViewValues<View> it(x[i]);
       while (it()) {
         unsigned int row = offset[i] + it.val() - min_vals[i];
         if (supports[row].none()) {
           // Push to remove-stack and clear bit in domain
+          DEBUG_PRINT(("Remove %d from variable %d\n", it.val(), i));
           nq.push(it.val());
-          dom[i].clear(it.val() - min_vals[i]);
+          dom[i].clear(it.val() - ts.min());
         }
         ++it;
       }
+      // printf("After pruning: ");
+      // dom[i].print();
       // Prune actual domains
       while (!nq.empty()) {
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
     }
 
+    for (int i = 0; i < domsum; i++) {
+      DEBUG_PRINT(("RESIDUE[%d] = %d\n", i, residues[i]));
+    }
+
+    
+    // TODO: move this loop into the one above!
     // Post advisors
     for (int i = x.size(); i--; ) {
       if (!x[i].assigned()) {
@@ -313,12 +402,23 @@ public:
         IndexType type = ARRAY;
         if (sparseness >= HASH_THRESHOLD)
           type = HASH;
+
+        // cout << x[i] << endl;
+        // printf("Min: %d\n", min_vals[i]);
+        // dom[i].print();
+
+        // To shift the offset
+        int diff = x[i].min() - min_vals[i];
+        DEBUG_PRINT(("diff(%d) = %d\n",i,diff));
+        DEBUG_PRINT(("offset[%d] = %d\n",i,offset[i]));
         
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
-                                          supports,residues,
-                                          min_vals[i],
-                                          support_cnt,offset[i],
-                                          dom[i],type);
+                                          supports,
+                                          residues,
+                                          support_cnt,
+                                          offset[i] + diff,
+                                          dom[i],ts.min(),
+                                          type);
       } 
     }
 
@@ -444,10 +544,11 @@ public:
       }
 
       DEBUG_PRINT(("Advisor for %d with domain size %d\n", i, x[i].size()));
+      //cout << x[i] << endl;
       Int::ViewValues<View> it(x[i]);
       while (it()) {
-        int index = a.supports.residue(it.val());
-
+        int index = a.residue(it.val());
+        DEBUG_PRINT(("Found index %d\n",index));
         // performing validTuples[index] & supports[x,a][index]
         Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
         
@@ -456,7 +557,7 @@ public:
         
           if (index != -1) {
             // Save residue
-            a.supports.set_residue(i,it.val());
+            a.set_residue(i,it.val());
           } else {
             // Value not supported
             nq.push(it.val());

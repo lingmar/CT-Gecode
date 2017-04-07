@@ -1,4 +1,5 @@
 #include <gecode/int.hh>
+#include <signal.h>
 
 using namespace Gecode;
 
@@ -11,41 +12,45 @@ using namespace Gecode;
 #endif
   
 /**
- * Abstract base class for classes providing supports and 
- * residues information
+ * Abstract base class for classes providing supports
+ * information for a variable
  */
 class InfoBase {
 protected:
   /// Support bits (valid tuple indices)
   BitSet* supports;
-  /// Residues
-  unsigned int* residues;
+public:
   /// Number of values
   int nvals;
-public:
   /// Default constructor
   InfoBase(void) {}
   /// Copy constructor
-  InfoBase(const InfoBase& ib)
-    : nvals(ib.nvals)
-  {
-    supports = heap.alloc<BitSet>(nvals);
-    residues = heap.alloc<unsigned int>(nvals);
+  InfoBase(const InfoBase& ib) {
+    supports = heap.alloc<BitSet>(ib.nvals);
+    copy(ib);
+  }
+  /// Copy \a ib
+  void copy(const InfoBase& ib) {
+    nvals = ib.nvals;
     for (int i = 0; i < nvals; i++) {
       supports[i].init(heap,ib.supports[i].size());
       supports[i].copy(ib.supports[i].size(), ib.supports[i]);
-      residues[i] = ib.residues[i];
     }
   }
+  /// Allocate with allocator \a for \a n values
+  virtual void allocate(int n) {
+    nvals = n;
+    supports = heap.alloc<BitSet>(nvals);
+  }
+  /// Abstract functions
   virtual BitSet get_supports(int val) = 0;
-  virtual unsigned int get_residue(int val) = 0;
-  virtual void set_residue(int val, unsigned int r) = 0;
+
   virtual void init(const BitSet* supports,
-                    const unsigned int* residues,
-                    int init_min, int max,
+                    int min, int max,
                     int nsupports, int offset,
-                    BitSet dom) = 0;
-};
+                    BitSet dom, int dom_offset) = 0;
+  virtual unsigned int row(int val) = 0;
+ };
 
 class InfoArray : public InfoBase {
 private:
@@ -62,36 +67,37 @@ public:
     return supports[val - min];
   }
 
-  virtual unsigned int get_residue(int val) {
-    return residues[val - min];
-  }
-
-  virtual void set_residue(int val, unsigned int r) {
-    residues[val - min] = r;
-  }
-  
   virtual void init(const BitSet* s,
-                    const unsigned int* r,
-                    int init_min, int max,
+                    int min0, int max,
                     int nsupports, int offset,
-                    BitSet dom) {
+                    BitSet dom, int dom_offset) {
             // Number of bitsets
-        nvals = static_cast<unsigned int>(max - init_min + 1);
+        nvals = static_cast<unsigned int>(max - min0 + 1);
         DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
                      nsupports,nvals));
 
         // Allocate memory and initialise
         supports = heap.alloc<BitSet>(nvals);
-        residues = heap.alloc<unsigned int>(nvals);
         for (int i = 0; i < nvals; i++) {
           assert(nsupports <= s[offset + i].size());
           supports[i].init(heap,nsupports);
           supports[i].copy(nsupports,s[i + offset]);
-
-          residues[i] = r[i + offset];
         }
-        min = init_min;
+        min = min0;
   }
+
+  virtual void allocate(int n) {
+    InfoBase::allocate(n);
+  }
+
+  virtual unsigned int row(int val) {
+    return static_cast<unsigned int>(val - min);
+  }
+  
+  // virtual void copy(const InfoBase& ia) {
+  //   InfoBase::copy(ia);
+  //   min = ia.min;
+  // }
 };
 
 class InfoHash : public InfoBase {
@@ -114,7 +120,7 @@ private:
     HashTable() {}
     /// Allocate space a hash table with room for \a pop elements
     void allocate(int pop) {
-      DEBUG_PRINT(("Allocate hash %d\n",pop));
+      DEBUG_PRINT(("Allocate hash with size %d\n",pop));
       size=2;
       while (size <= 2*pop)
         size *= 2;
@@ -153,6 +159,7 @@ private:
     }
     /// Get value of element with key \a key
     int get(int key) const {
+      DEBUG_PRINT(("Looking for key %d\n", key));
       long t0 = key*factor;
       int inc=0;
   
@@ -167,27 +174,8 @@ private:
       }
     }
 
-    static void test() {
-      long keys[] = {43, 24, 17, 77, 25, 50, 94, 49, 22, 44, 10, 31, 68, 100, 2, 99, 3, 85, 9, 87, 73, 26, 63, 8, 67, 95, 92, 42, 1, 47, 37, 33, 81, 54, 39, 27, 56, 40, 86, 4, 35, 21, 13, 7, 79, 28, 72, 46, 58, 12, 41, 69, 6, 32, 11, 36, 71, 48, 29, 78, 96, 83, 5, 30, 45, 88, 84, 18, 93, 15, 89, 53, 19, 65, 60, 66, 34, 59, 70, 16, 23, 74, 20, 61, 55, 64, 76, 75, 82, 57, 80, 62, 51, 97, 14, 52, 91, 98, 90, 38};
-
-      HashTable h;
-      h.allocate(100);
-      int i;
-      
-      printf("index sequence: ");
-      for (i=0; i<=h.mask; i++)
-        printf("%ld ", (h.factor*i) & h.mask);
-      printf("\n");
-      
-      for (i=0; i<100; i++)
-        h.insert(keys[i], 101-keys[i]);
-      for (i=0; i<100; i++)
-        printf("hash[%ld] = %d\n", keys[i], h.get(keys[i]));
-    }
-
-    
   };
-  /// Hash table for indexing supports and residues
+  /// Hash table for indexing supports
   HashTable index_table;
   
 public:
@@ -195,25 +183,23 @@ public:
   InfoHash(void) {}
   /// Copy constructor
   InfoHash(const InfoHash& ih)
-    : InfoBase(ih), index_table(ih.index_table) {}
+    : InfoBase(ih), index_table(ih.index_table) {
+    DEBUG_PRINT(("Copy InfoHash\n"));
+  }
   
   virtual BitSet get_supports(int val) {
     return supports[index_table.get(val)];
   }
 
-  virtual unsigned int get_residue(int val) {
-    return residues[index_table.get(val)];
+  virtual void allocate(int n) {
+    InfoBase::allocate(n);
+    index_table.allocate(n);
   }
-
-  virtual void set_residue(int val, unsigned int r) {
-    residues[index_table.get(val)] = r;
-  }
-
+  
   virtual void init(const BitSet* s,
-                    const unsigned int* r,
-                    int init_min, int max,
+                    int min, int max,
                     int nsupports, int offset,
-                    BitSet dom) {
+                    BitSet dom, int dom_offset) {
     DEBUG_PRINT(("init hash\n"));
     //HashTable::test();
     // Initial domain size
@@ -221,22 +207,28 @@ public:
     // Allocate memory
     index_table.allocate(nvals);
     supports = heap.alloc<BitSet>(nvals);
-    residues = heap.alloc<unsigned int>(nvals);
 
     int count = 0;
-    for (int i = 0; i < dom.size(); i++) {
+    int diff = min - dom_offset;
+    
+    for (int i = diff; i < dom.size(); i++) {
       if (dom.get(i)) {
-        assert(nsupports <= s[offset + i].size());
+        DEBUG_PRINT(("Accessing index %d\n",i+offset - diff));
+        assert(nsupports <= s[offset + i - diff].size());
         // Initialise and copy nsupports bits
         supports[count].init(heap,nsupports);
-        supports[count].copy(nsupports,s[i+offset]);
+        supports[count].copy(nsupports,s[i + offset - diff]);
         // Set residue and save index to table
-        residues[count] = r[i+offset];
-        index_table.insert(i + init_min,      /** actual value is i+init_min **/
+        index_table.insert(i + dom_offset,      /** actual value is i+dom_offset **/
                            count);
         ++count;
       }
     }
     DEBUG_PRINT(("Finish init hash\n"));
   }
+
+  virtual unsigned int row(int val) {
+    return index_table.get(val);
+  }
+  
 };
