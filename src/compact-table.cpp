@@ -8,7 +8,6 @@
 #include "info-base.hpp"
 #include <signal.h>
 
-
 //#define DEBUG
 
 /** 
@@ -16,7 +15,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASH_THRESHOLD 10
+#define HASH_THRESHOLD 1000
 
 typedef BitSet* Dom;
 
@@ -30,7 +29,7 @@ using namespace std;
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
 
-enum IndexType {ARRAY,HASH};
+typedef enum {ARRAY,HASH} IndexType;
 
 /**
  * Advisor
@@ -204,6 +203,7 @@ public:
         if (dom.get(i)) {
           DEBUG_PRINT(("Accessing index %d in residues\n", i + offset));
           //residues[count] = residues[i + offset];
+          // TODO: bugfix
           residues[count] = 0;
           DEBUG_PRINT(("residues[%d] = %d\n", count,residues[i + offset]));
         }
@@ -333,8 +333,8 @@ public:
     int bpb = BitSet::get_bpb();
 
     /// Allocate BitSets and residues
-    BitSet* supports = static_cast<Space&>(home).alloc<BitSet>(domsum);
-    unsigned int* residues = static_cast<Space&>(home).alloc<unsigned int>(domsum);
+    BitSet* supports = r.alloc<BitSet>(domsum);
+    unsigned int* residues = r.alloc<unsigned int>(domsum);
     for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(r,ts.tuples());
       residues[i] = 0;
@@ -424,7 +424,7 @@ public:
       } 
     }
 
-    home.notice(*this,AP_DISPOSE);
+    //home.notice(*this,AP_DISPOSE);
     return support_cnt;
   }
 
@@ -494,7 +494,7 @@ public:
     return msg;
   }
 
-  forceinline void
+  forceinline bool
   updateTable(CTAdvisor<View> a) {
     DEBUG_PRINT(("Update table %d\n", a.index));
     validTuples.clear_mask();
@@ -503,7 +503,7 @@ public:
       validTuples.add_to_mask(a.supports[it.val()]);
       ++it;
     }
-    validTuples.intersect_with_mask();
+    return validTuples.intersect_with_mask();
   }
 
   forceinline virtual ExecStatus
@@ -520,14 +520,18 @@ public:
       return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a)
         : ES_FIX;
     
-    updateTable(a);
+    bool diff = updateTable(a);
     if (validTuples.is_empty())
       return disabled() ? home.ES_FIX_DISPOSE(c,a) : ES_FAILED;
 
     // Schedule propagator and dispose if assigned
-    DEBUG_PRINT(("Scheduling propagator %d\n",a.index));
-    return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a)
-      : ES_NOFIX;
+    if (diff) {
+      DEBUG_PRINT(("Advisor %d schedules propagator\n",a.index));
+      return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a)
+        : ES_NOFIX;
+    }
+    //printf("Fixpoint\n");
+    return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a) : ES_FIX;
   }
   
   forceinline ExecStatus
@@ -592,7 +596,7 @@ public:
   dispose(Space& home) {
     //x.cancel(home,*this,PC_INT_DOM);
     // TODO: dispose t?
-    home.ignore(*this,AP_DISPOSE);
+    //home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
     (void) Propagator::dispose(home);
     return sizeof(*this);
