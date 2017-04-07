@@ -4,9 +4,8 @@
 #include <iostream>
 #include <assert.h>
 //#include "bitset.hpp"
-#include "bitset-support.cpp"
+//#include "bitset-support.cpp"
 #include "info-base.hpp"
-#include <signal.h>
 
 //#define DEBUG
 
@@ -29,6 +28,7 @@ using namespace std;
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
 
+// Macros ARRAY and HASH are already defined on Linux
 typedef enum {ARRAYY,HASHH} IndexType;
 
 /**
@@ -125,7 +125,7 @@ public:
       : SharedHandle(s) {
     }
     /// Assignment operator
-    SharedSupports& operator =(const Supports& s) {
+    Supports& operator =(const Supports& s) {
       return static_cast<SupportsI&>(SharedHandle::operator =(s));
     }
     /// [] operator

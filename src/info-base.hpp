@@ -1,5 +1,6 @@
 #include <gecode/int.hh>
 #include <signal.h>
+#include "bitset.hpp"
 
 using namespace Gecode;
 
