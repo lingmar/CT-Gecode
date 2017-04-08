@@ -1,5 +1,10 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage{fullpage}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{plot coordinates/math parser=false}
+\usetikzlibrary{calc}
 \usepackage{astra}
 %\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
 %\usepackage{algorithm2e}
@@ -9,6 +14,9 @@
 %\usepackage{amsthm}
 
 \newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
 
 % Silly but saves space
 \newcommand{\T}[1]{\texttt{#1}}
@@ -237,7 +245,36 @@ After this intuitive description we are ready to define some concepts.
 \end{itemize}
 }
 
-\paragraph{Propagation}
+\subsection{Propagation}
+A propagator is a function mapping stores to stores.
+
+\subsubsection{Propagator obligations}
+\label{sec:obligations}
+In order to have well-defined behaviour of propagators, they must meet certain obligations.
+The following properties must be implemented by a propagator~\cite{handbook}~\cite{MPG}.
+
+\Todo{Define store and $\preceq$}
+
+A propagator~$p$ must be...
+\begin{itemize}
+  \item ...a \emph{decreasing} function:~$p(s) \preceq s$ for any store~$s$.
+    This property guarantees that constraint propagation only removes values.
+  \item ...a \emph{monotonic} function:~$s_1 \preceq s_2 \Leftarrow p(s_1) \preceq p(s_2)$
+    for any~$s_1$ and~$s_2$. This property guarantees that constraint propagation
+    preserves the strength-ordering of stores.
+  \item ...correct. The propagator must faithfully implement the constraint.~$p$
+    is correct for a constraint~$c$ if and only if it does not remove values that can
+    appear in a solution of the constraint it implements.
+  \item ...checking. For a store~$s$ where all variables have fixed domains,~$p(s) = s$
+    if and only if~$s$ is a solution store for~$c$. In other words, when all variables are
+    assigned, the propagator must decide whether the assignment is a solution store or not.
+  \item \Todo{Implementation specific of general rule?}. ...fixpoint and subsumption honest.
+    A propagator is not allowed to claim that is has reached a fixpoint or that is subsumed
+    if it is not.
+
+\end{itemize}
+
+
 % From chap14
 
 % \begin{definition}
@@ -716,6 +753,51 @@ in~\Algoref{algo:propagate}.
   \label{algo:propagate}
 \end{algorithm}
 
+\subsubsection{Propagator obligations}
+This section proves that the CT Propagator has all the properties presented in
+\Secref{sec:obligations}.
+
+\begin{lemma}
+  The CT propagator is a decreasing function.
+\end{lemma}
+
+\begin{proof}
+  CT can only remove values from the domains of the variables, it cannot
+  add values to the domains. Therefore, CT is a decreasing function.
+\end{proof}
+
+\begin{lemma}
+  The CT propagator is a monotonic function.
+\end{lemma}
+
+\begin{proof}
+  
+\end{proof}
+
+\begin{lemma}
+  The CT propagator is correct for the \Table constraint.
+\end{lemma}
+
+\begin{proof}
+  
+\end{proof}
+
+\begin{lemma}
+  The CT propagator is checking.
+\end{lemma}
+
+\begin{proof}
+  
+\end{proof}
+
+\begin{lemma}
+  The CT propagator is fixpoint and subsumption honest.
+\end{lemma}
+
+\begin{proof}
+  
+\end{proof}
+
 \subsubsection{Propagator Status Messages}
 \Todo{Text to be revised.}
 
@@ -763,9 +845,11 @@ Hence, the second call to propagate() does not give
 any further propagation.
 
 \section{Implementation}
-\label{implementation}
+\label{sec:implementation}
 
 \Todo{Copy-function.}
+
+
 
 % Section 4 blir nog mindre intressant än Section 3 och 5, men där kan du skriva om sånt som är specifikt för C++ och Gecode för att algoritmerna i Section 3 ska fungera, precis som du har börjat göra. Det är också en bra plats för detaljer som sopats under mattan i pseudokoden, t.ex. exakt hur du mappar (x,a) till rätt element i supports och residues, med hashtabell eller så.
 
@@ -808,12 +892,33 @@ presented in \Chapref{implementation}. In \Secref{evaluation:setup},
 the evaluation setup is described. In \Secref{evaluation:results} presents
 the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
 
+% Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
+
 \subsection{Evaluation Setup}
 \label{evaluation:setup}
 \subsection{Results}
 \label{evaluation:results}
+
+\input{scatter-plot.tex}
+
+\begin{table}[t] \tiny
+  \centering
+  \begin{tabular}{rrrrrrr}  % right alignment --> decimal point alignment
+    $n$ & $runtime_g$ & $fail_g$ & $nprops_g$ & $runtime_c$ & $fail_c$ & $nprops_c$ \\
+    \midrule
+    \input{results-crosswords.tex} % let your experiment script write directly
+                            % into this file, making sure every number
+                            % in a column has the _same_ number of decimals
+  \end{tabular}
+  \caption{}
+  \label{tab:res:sat}
+\end{table}
+
+
 \subsection{Discussion}
 \label{evaluation:discussion}
+
+
 
 \section{Conclusions and Future Work}
 \label{conclusions}
@@ -823,9 +928,14 @@ the results of the evaluation. The results are discussed in \Secref{evaluation:d
 
 \appendix
 \section{Source Code}
-\label{source code}
+\label{sec:source-code}
+
 
 This appendix presents the source code for the implementation described in \Chapref{implementation}.
+
+
+
+
 
 \end{document}
 
@@ -840,3 +950,12 @@ This appendix presents the source code for the implementation described in \Chap
 
 % course note in constraint programming
 % http://user.it.uu.se/~pierref/courses/COCP/slides/CourseNotes.pdf
+
+% M-x reftex-parse-all
+% F1 b
+% M-x customize-group reftex
+
+% Hash Functions
+% https://en.wikipedia.org/wiki/Pairing_function
+% https://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
+% http://stackoverflow.com/questions/37918951/what-is-a-minimal-hash-function-for-a-pair-of-ints-that-has-low-chance-of-collis
