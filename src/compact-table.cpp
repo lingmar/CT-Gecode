@@ -314,7 +314,8 @@ public:
     } 
     
     // Initialise validTupels with nsupports bit set
-    validTuples.init(t0.tuples(), nsupports);
+    //validTuples.init(t0.tuples(), nsupports);
+    validTuples.init(nsupports);
 
     // Schedule in case no advisors have been posted
     if (unassigned == 0)

@@ -74,7 +74,7 @@ public:
   /// Destructor
   //~SparseBitSet(void);
   /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
-  void init(unsigned int s, unsigned int set);
+  void init(unsigned int s);
   /// Check if sparse bit set is empty
   bool is_empty() const;
   /// Clear the mask
@@ -298,17 +298,16 @@ SparseBitSet<A>::SparseBitSet(A& a0)
 
 template<class A>
 forceinline void
-SparseBitSet<A>::init(unsigned int s, unsigned int set) {
+SparseBitSet<A>::init(unsigned int s) {
   words = BitSet(al,s,false);
   sz = s;
   int nwords = s != 0 ? (s - 1) / words.get_bpb() + 1 : 0;
   limit = nwords - 1;
   index = al.template alloc<unsigned int>(nwords);
-  for (int i = 0; i <= limit; i++) {
+  for (int i = limit+1; i--; )
     index[i] = i;
-  }
-  // Set set nr of bits
-  clearall(set, true);
+  // Set the set nr of bits in words
+  clearall(s, true);
  }
 
 template<class A>
@@ -318,7 +317,7 @@ SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
     limit(sbs.limit), sz(sbs.sz)  {
   // Copy limit nr of elements in index
   index = al.template alloc<unsigned int>(limit + 1);
-  for (int i = limit; i--; )
+  for (int i = limit+1; i--; )
     index[i] = sbs.index[i];
 }
 
