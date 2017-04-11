@@ -15,6 +15,9 @@ public:
   BitSet(A& a, unsigned int sz, const BitSet& bs);
   ///Assignment operator
   BitSet& operator =(const BitSet&);
+  /// Initialise for \a sz bits with allocator \a a
+  template<class A>
+  void init(A& a, unsigned int s, bool setbits=false);
   /// Allocate for \a sz bits and allocator \a a (only after default constructor)
   template<class A>
   void allocate(A& a, unsigned int sz);
@@ -247,6 +250,15 @@ forceinline unsigned int
 BitSet::next(unsigned int) const {
   GECODE_NEVER;
   return -1;
+}
+
+template<class A>
+forceinline void
+BitSet::init(A& a, unsigned int s, bool setbits) {
+  assert(sz == 0);
+  RawBitSetBase::init(a,s,setbits); sz=s;
+  // Clear bit sz
+  Gecode::Support::RawBitSetBase::clear(sz);
 }
 
 /** Debugging purpose **/
