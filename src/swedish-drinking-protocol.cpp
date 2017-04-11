@@ -27,9 +27,9 @@ public:
 
     TupleSet t;
 
-    for (int i = 0; i < 120; i++) {
-      t.add(IntArgs::create(3,i));
-    }
+    // for (int i = 0; i < 120; i++) {
+    //   t.add(IntArgs::create(3,i));
+    // }
     t.add(IntArgs(3,1,1,1));
     t.add(IntArgs(3,1,1,1));
     t.add(IntArgs(3,1,1,1));

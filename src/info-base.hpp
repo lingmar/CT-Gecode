@@ -46,10 +46,13 @@ public:
   /// Abstract functions
   virtual BitSet get_supports(int val) = 0;
 
-  virtual void init(const BitSet* supports,
-                    int min, int max,
-                    int nsupports, int offset,
-                    BitSet dom, int dom_offset) = 0;
+  template<class View>
+  void init(const BitSet* supports,
+            int min, int max,
+            int nsupports, int offset,
+            int dom_offset,
+            View x);
+
   virtual unsigned int row(int val) = 0;
  };
 
@@ -68,23 +71,24 @@ public:
     return supports[val - min];
   }
 
-  virtual void init(const BitSet* s,
-                    int min0, int max,
-                    int nsupports, int offset,
-                    BitSet dom, int dom_offset) {
-            // Number of bitsets
-        nvals = static_cast<unsigned int>(max - min0 + 1);
-        DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
-                     nsupports,nvals));
-
-        // Allocate memory and initialise
-        supports = heap.alloc<BitSet>(nvals);
-        for (int i = 0; i < nvals; i++) {
-          assert(nsupports <= s[offset + i].size());
-          supports[i].init(heap,nsupports);
-          supports[i].copy(nsupports,s[i + offset]);
-        }
-        min = min0;
+  template<class View>
+  void init(const BitSet* s,
+            int min0, int max,
+            int nsupports, int offset,
+            int dom_offset, View x) {
+    // Number of bitsets
+    nvals = static_cast<unsigned int>(max - min0 + 1);
+    DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
+                 nsupports,nvals));
+    
+    // Allocate memory and initialise
+    supports = heap.alloc<BitSet>(nvals);
+    for (int i = 0; i < nvals; i++) {
+      assert(nsupports <= s[offset + i].size());
+      supports[i].init(heap,nsupports);
+      supports[i].copy(nsupports,s[i + offset]);
+    }
+    min = min0;
   }
 
   virtual void allocate(int n) {
@@ -92,8 +96,7 @@ public:
   }
 
   virtual unsigned int row(int val) {
-    // printf("Row in info: val - min = %d - %d = %ud\n",
-    //        val,min,val-min);
+    assert(val >= min);
     return static_cast<unsigned int>(val - min);
   }
   
@@ -198,36 +201,34 @@ public:
     InfoBase::allocate(n);
     index_table.allocate(n);
   }
-  
-  virtual void init(const BitSet* s,
-                    int min, int max,
-                    int nsupports, int offset,
-                    BitSet dom, int dom_offset) {
-    DEBUG_PRINT(("init hash\n"));
-    //HashTable::test();
+
+  template<class View>
+  void init(const BitSet* s,
+            int min, int max,
+            int nsupports, int offset,
+            int dom_offset, View x) {
     // Initial domain size
-    nvals = dom.nset();
+    nvals = x.size();
     // Allocate memory
     index_table.allocate(nvals);
     supports = heap.alloc<BitSet>(nvals);
 
     int count = 0;
-    int diff = min - dom_offset;
-    
-    for (int i = diff; i < dom.size(); i++) {
-      if (dom.get(i)) {
-        DEBUG_PRINT(("Accessing index %d\n",i+offset - diff));
-        assert(nsupports <= s[offset + i - diff].size());
-        // Initialise and copy nsupports bits
-        supports[count].init(heap,nsupports);
-        supports[count].copy(nsupports,s[i + offset - diff]);
-        // Set residue and save index to table
-        index_table.insert(i + dom_offset,      /** actual value is i+dom_offset **/
-                           count);
-        ++count;
-      }
+    int diff = x.min();
+
+    Int::ViewValues<View> it(x);
+
+    while (it()) {
+      assert(nsupports <= s[offset + it.val() - diff].size());
+
+      // Initialise and copy nsupports bits and save index to table
+      supports[count].init(heap,nsupports);
+      supports[count].copy(nsupports,s[it.val() + offset - diff]);
+      index_table.insert(it.val(),count);
+      
+      ++count;
+      ++it;
     }
-    DEBUG_PRINT(("Finish init hash\n"));
   }
 
   virtual unsigned int row(int val) {
