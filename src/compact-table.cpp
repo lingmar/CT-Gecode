@@ -53,7 +53,6 @@ public:
       /// Copy \a s
       SupportsI(const SupportsI& s) 
         : type(s.type) {
-        DEBUG_PRINT(("Copy SupportsI\n"));
         switch (type) {
         case ARRAYY: {
           info = new InfoArray(*((InfoArray *const)s.info));
@@ -73,7 +72,6 @@ public:
                 int init_min, int max,
                 int nsupports, int offset, BitSet dom,
                 int domain_offset, IndexType t) {
-        DEBUG_PRINT(("Init info"));
         type = t;
         switch (type) {
         case ARRAYY:  {
@@ -185,7 +183,8 @@ public:
       nvals = x0.max() - x0.min() + 1;
       residues = home.alloc<unsigned int>(nvals);
       for (int i = 0; i < nvals; i++) {
-        DEBUG_PRINT(("residues[%d] = %d\n",i,residues[i + offset]));
+        DEBUG_PRINT(("residues[%d] = res[%d + %d] = %d\n",
+                     i,i,offset,res[i + offset]));
         residues[i] = res[i + offset];
       }
       break;
@@ -228,7 +227,7 @@ public:
   /// Access residue for value \a val
   forceinline unsigned int
   residue(int val) {
-    DEBUG_PRINT(("residue[%d] = %d\n",supports.row(val),residues[supports.row(val)]));
+    //DEBUG_PRINT(("residue[%d] = %d\n",supports.row(val),residues[supports.row(val)]));
     return residues[supports.row(val)];
   }
 
@@ -242,7 +241,7 @@ public:
   /// Dispose function. TODO: dispose shared handle
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
-    DEBUG_PRINT(("Advisor %d disposed\n",index));
+    //DEBUG_PRINT(("Advisor %d disposed\n",index));
     // TODO: call destructor for supports?
     ViewAdvisor<View>::dispose(home,c);
   }
@@ -293,6 +292,7 @@ public:
   {
     DEBUG_PRINT(("********************\n"));
     DEBUG_PRINT(("Start constructor\n"));
+    
     // Calculate domain sum
     domsum = 0;
     int domsize = 0;
@@ -338,7 +338,6 @@ public:
     unsigned int* residues = r.alloc<unsigned int>(domsum);
     for (int i = 0; i < domsum; i++) {
       supports[i].Support::BitSetBase::init(r,ts.tuples());
-      residues[i] = 0;
     }
     
     // Save initial minimum value and widths for indexing
@@ -347,7 +346,6 @@ public:
     for (int i = 0; i<x.size(); i++) {
       min_vals[i] = x[i].min();
       offset[i] = i != 0 ? offset[i-1] + x[i-1].width() : 0;
-      DEBUG_PRINT(("offset[%d] = %d\n", i,offset[i]));
     }
         
     // Look for supports and set correct bits in supports
@@ -366,7 +364,7 @@ public:
           unsigned int row = offset[var] + val - min_vals[var];
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
-          DEBUG_PRINT(("INIT: residue[%d] = %d\n",row,support_cnt / bpb));
+          DEBUG_PRINT(("INIT: residue[%d] = %d\n", row, residues[row]));
         }
         support_cnt++;
       }
@@ -391,11 +389,7 @@ public:
       while (!nq.empty()) {
         GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
       }
-    }
-    
-    // TODO: move this loop into the one above!
-    // Post advisors
-    for (int i = x.size(); i--; ) {
+
       if (!x[i].assigned()) {
         
         // Decide whether to use an array or a hash table
@@ -407,6 +401,8 @@ public:
         // To shift the offset
         int diff = x[i].min() - min_vals[i];
 
+        DEBUG_PRINT(("Offset %d: %d + %d = %d\n",i,offset[i],diff,offset[i]+diff));
+                  
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
                                           supports,
                                           residues,
@@ -415,8 +411,9 @@ public:
                                           dom[i],ts.min(),
                                           type);
       } 
+      
     }
-
+    
     //home.notice(*this,AP_DISPOSE);
     return support_cnt;
   }
@@ -445,10 +442,8 @@ public:
       domsum(p.domsum),
       status(p.status)
   {
-    DEBUG_PRINT(("Copy constructor,share=%d\n",share));
     x.update(home,share,p.x);
     c.update(home,share,p.c);
-    DEBUG_PRINT(("End copy constructor\n"));
   }
   
   // Create copy during cloning
@@ -472,8 +467,6 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
-    DEBUG_PRINT(("Propagate\n"));
-
     status = PROPAGATING;
 
     if (validTuples.is_empty()) {
@@ -484,13 +477,11 @@ public:
     ExecStatus msg = filterDomains(home);
 
     status = NOT_PROPAGATING;
-    DEBUG_PRINT(("End propagate\n"));
     return msg;
   }
 
   forceinline bool
   updateTable(CTAdvisor<View> a) {
-    DEBUG_PRINT(("Update table %d\n", a.index));
     validTuples.clear_mask();
     Int::ViewValues<View> it(a.view());
     while (it()) {
@@ -504,9 +495,9 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
 
-    DEBUG_PRINT(("Advise %d\n", a.index));
-    DEBUG_PRINT(("Modevent: %d\n",a.view().modevent(d)));
-    DEBUG_PRINT(("Domain size: %d\n",a.view().size()));
+    //DEBUG_PRINT(("Advise %d\n", a.index));
+    //DEBUG_PRINT(("Modevent: %d\n",a.view().modevent(d)));
+    //DEBUG_PRINT(("Domain size: %d\n",a.view().size()));
         
     // Do not schedule if propagator is performing propagation,
     // dispose if assigned
@@ -515,14 +506,14 @@ public:
         : ES_FIX;
     
     bool diff = updateTable(a);
-    DEBUG_PRINT(("Done updateTable (%d)\n",a.index));
+    //    DEBUG_PRINT(("Done updateTable (%d)\n",a.index));
     //printf("BOTHER\n");
     if (validTuples.is_empty())
       return disabled() ? home.ES_FIX_DISPOSE(c,a) : ES_FAILED;
 
     // Schedule propagator and dispose if assigned
     if (diff) {
-      DEBUG_PRINT(("Advisor %d schedules propagator\n",a.index));
+      //DEBUG_PRINT(("Advisor %d schedules propagator\n",a.index));
       return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a)
         : ES_NOFIX;
     }
@@ -541,16 +532,16 @@ public:
       int i = a.index;
 
       if (a.view().assigned()) {
-        DEBUG_PRINT(("Variable %d is assigned\n",i));
+        //DEBUG_PRINT(("Variable %d is assigned\n",i));
         continue;
       }
 
-      DEBUG_PRINT(("Advisor for %d with domain size %d\n", i, x[i].size()));
+      //DEBUG_PRINT(("Advisor for %d with domain size %d\n", i, x[i].size()));
       //cout << x[i] << endl;
       Int::ViewValues<View> it(x[i]);
       while (it()) {
         int index = a.residue(it.val());
-        DEBUG_PRINT(("Found index %d\n",index));
+        //DEBUG_PRINT(("Found index %d\n",index));
         // performing validTuples[index] & supports[x,a][index]
         Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
         
@@ -569,8 +560,6 @@ public:
       }
       while (!nq.empty()) {
         int val = nq.pop();
-        DEBUG_PRINT(("Remove value %d from variable %d\n",
-                     val, i));
         x[i].nq(home,val);
       }
         
@@ -578,13 +567,12 @@ public:
         count_non_assigned++;
         //--unassigned;
       } else {
-        DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
+        //DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
       }
     }
 
     // Subsume if there is at most one non-assigned variable
     return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
-    //return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
   
   // Dispose propagator and return its size
