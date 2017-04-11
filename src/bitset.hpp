@@ -97,7 +97,7 @@ public:
   bool intersect_with_mask();
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   int intersect_index(BitSet b);
-  /// Return "and" of words at index \a a and \a b
+  /// Return "and" of words at index index[\a i] and \a b at index \a i
   Gecode::Support::BitSetData a(BitSet b, unsigned int i);
 
   /** Debugging purpose **/
@@ -368,6 +368,7 @@ SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
 {
   if (sbs.limit < 0) {
     printf("limit = %d in copy constructor\n", sbs.limit);
+    assert(false);
   }
   words.init(al,BitSet::get_bpb()*(sbs.limit+1));
   mask.init(al,BitSet::get_bpb()*(sbs.limit + 1),false);
@@ -437,7 +438,7 @@ SparseBitSet<A>::intersect_with_mask() {
   
   bool diff = false;
   for (int i = limit; i >= 0; i--) {
-    Gecode::Support::BitSetData w = a(mask, i);
+    Gecode::Support::BitSetData w = BitSet::a(words, mask, i);
     if (!words.same(w,i)) {
       diff = true;
       words.setword(w,i);
@@ -498,7 +499,7 @@ SparseBitSet<A>::clearall(unsigned int sz, bool setbits) {
 template<class A>
 forceinline Gecode::Support::BitSetData
 SparseBitSet<A>::a(BitSet b, unsigned int i) {
-  return BitSet::a(words, b, i);
+  return BitSet::a(words, b, index[i], i);
 }
 
 /** Debugging purpose **/

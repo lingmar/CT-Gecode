@@ -57,14 +57,10 @@ public:
         switch (type) {
         case ARRAYY: {
           info = new InfoArray(*((InfoArray *const)s.info));
-          //info->InfoArray::allocate(heap,s.info->nvals)
-          //info->InfoArray::copy(s.info);
           break;
         }
         case HASHH: {
           info = new InfoHash(*((InfoHash *const)s.info));
-          //info->InfoHash::allocate(heap,s.info->nvals);
-          //info->InfoHash::copy(s.info);
           break;
         }
         default:
@@ -239,6 +235,7 @@ public:
   /// Set residue for value \a val
   forceinline void
   set_residue(int val, int r) {
+    unsigned int row = supports.row(val);
     residues[supports.row(val)] = r;
   }
     
@@ -559,10 +556,10 @@ public:
         
         if (w.none()) {
           index = validTuples.intersect_index(a.supports[it.val()]);
-        
+
           if (index != -1) {
             // Save residue
-            a.set_residue(i,it.val());
+            a.set_residue(i,index);
           } else {
             // Value not supported
             nq.push(it.val());

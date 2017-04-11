@@ -92,6 +92,8 @@ public:
   }
 
   virtual unsigned int row(int val) {
+    // printf("Row in info: val - min = %d - %d = %ud\n",
+    //        val,min,val-min);
     return static_cast<unsigned int>(val - min);
   }
   
