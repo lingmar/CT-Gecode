@@ -19,21 +19,23 @@ public:
   template<class A>
   void allocate(A& a, unsigned int sz);
   /// Perform "or" with \a a of word index \a i
-  void o(BitSet a, unsigned int i);
+  void o(const BitSet& a, unsigned int i);
   /// Perform "and" with \a a of word index \a 
-  void a(BitSet a, unsigned int i);
+  void a(const BitSet& a, unsigned int i);
   /// Return "or" of \a a and \a b of word index \a i
-  static Gecode::Support::BitSetData o(BitSet a, BitSet b, unsigned int i);
+  static Gecode::Support::BitSetData o(const BitSet& a, const BitSet& b,
+                                       unsigned int i);
   /// Return "and" of \a a and \a b of word index \a i
-  static Gecode::Support::BitSetData a(BitSet a, BitSet b, unsigned int i);
+  static Gecode::Support::BitSetData a(const BitSet& a, const BitSet& b,
+                                       unsigned int i);
   /// Clear all bits at word index \a i
   void clearword(unsigned int i, bool setbits=false);
   /// Set a word \a i to \a a
   void setword(Gecode::Support::BitSetData a, unsigned int i);
   /// Get word \a i
-  Gecode::Support::BitSetData getword(unsigned int i);
+  Gecode::Support::BitSetData getword(unsigned int i) const;
   /// Check if bit set has \a d on word index \a i
-  bool same(Gecode::Support::BitSetData d, unsigned int i);
+  bool same(Gecode::Support::BitSetData d, unsigned int i) const;
   /// Get number of bits per base
   static int get_bpb();
   /// Copy \a sz bits from \a bs
@@ -81,15 +83,15 @@ public:
   /// Check if sparse bit set is empty
   bool is_empty() const;
   /// Clear the mask
-  void clear_mask(BitSet mask);
+  void clear_mask(BitSet& mask);
   /// Add bits in \a b to \a mask
-  void add_to_mask(BitSet b, BitSet mask);
+  void add_to_mask(const BitSet& b, BitSet& mask) const;
   /// Intersect words with \a mask
-  bool intersect_with_mask(BitSet mask);
+  bool intersect_with_mask(const BitSet& mask);
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
-  int intersect_index(BitSet b);
+  int intersect_index(const BitSet& b) const;
   /// Perform "and" with words and \a b at word index \a i
-  Gecode::Support::BitSetData a(BitSet b, unsigned int i);
+  Gecode::Support::BitSetData a(const BitSet& b, unsigned int i);
   /// Get the number of bits
   unsigned int size() const;
   
@@ -174,7 +176,7 @@ BitSet::copy(unsigned int sz, const BitSet& bs) {
 }
 
 forceinline bool
-BitSet::same(Gecode::Support::BitSetData d, unsigned int i) {
+BitSet::same(Gecode::Support::BitSetData d, unsigned int i) const {
   return data[i].same(d);
 }
 
@@ -185,25 +187,25 @@ BitSet::dispose(A& a) {
 }
 
 forceinline void
-BitSet::o(BitSet a, unsigned int i) {
+BitSet::o(const BitSet& a, unsigned int i) {
   assert(i < sz && i < a.sz);
   data[i].o(a.data[i]);
 }
 
 forceinline void
-BitSet::a(BitSet a, unsigned int i) {
+BitSet::a(const BitSet& a, unsigned int i) {
   assert(i < sz && i < a.sz);
   data[i].a(a.data[i]);
 }
 
 forceinline Gecode::Support::BitSetData
-BitSet::o(BitSet a, BitSet b, unsigned int i) {
+BitSet::o(const BitSet& a, const BitSet& b, unsigned int i) {
   assert(i < a.sz && i < b.sz);
   return Gecode::Support::BitSetData::o(a.data[i], b.data[i]);
 }
 
 forceinline Gecode::Support::BitSetData
-BitSet::a(BitSet a, BitSet b, unsigned int i) {
+BitSet::a(const BitSet& a, const BitSet& b, unsigned int i) {
   if (i >= a.sz || i >= b.sz) {
     printf("i = %d, a.sz = %d, b.sz = %d\n",i,a.sz,b.sz);
   }
@@ -231,7 +233,7 @@ BitSet::setword(Gecode::Support::BitSetData a, unsigned int i) {
 }
 
 forceinline Gecode::Support::BitSetData
-BitSet::getword(unsigned int i) {
+BitSet::getword(unsigned int i) const {
   assert(i < sz);
   return data[i];
 }
@@ -333,21 +335,12 @@ SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
 template<class A>
 forceinline bool
 SparseBitSet<A>::is_empty() const {
-#ifdef DEBUG
-  if (limit == -1) {
-    assert(words.none());
-  }
-  if (words.none() && limit != -1) {
-    words.print();
-    assert(limit == -1);
-  }
-#endif // DEBUG
   return limit == -1;
 }
 
 template<class A>
 forceinline void
-SparseBitSet<A>::clear_mask(BitSet mask) {
+SparseBitSet<A>::clear_mask(BitSet& mask) {
   for (int i = 0; i <= limit; i++) {
     int offset = index[i];
     mask.clearword(offset, false);
@@ -356,7 +349,7 @@ SparseBitSet<A>::clear_mask(BitSet mask) {
 
 template<class A>
 forceinline void
-SparseBitSet<A>::add_to_mask(BitSet b, BitSet mask) {
+SparseBitSet<A>::add_to_mask(const BitSet& b, BitSet& mask) const {
   for (int i = 0; i<=limit; i++) {
     int offset = index[i];
     mask.o(b,offset);
@@ -365,7 +358,7 @@ SparseBitSet<A>::add_to_mask(BitSet b, BitSet mask) {
 
 template<class A>
 forceinline bool
-SparseBitSet<A>::intersect_with_mask(BitSet mask) {
+SparseBitSet<A>::intersect_with_mask(const BitSet& mask) {
   bool diff = false;
   for (int i = limit; i >= 0; i--) {
     int offset = index[i];
@@ -384,12 +377,11 @@ SparseBitSet<A>::intersect_with_mask(BitSet mask) {
 
 template<class A>
 forceinline int
-SparseBitSet<A>::intersect_index(BitSet b) {
+SparseBitSet<A>::intersect_index(const BitSet& b) const {
   for (int i = 0; i <= limit; i++) {
     int offset = index[i];
-    if (!a(b,offset).none()) {
+    if (!BitSet::a(words,b,offset).none())
       return offset;
-    }
   }
   return -1;
 }
@@ -410,7 +402,7 @@ SparseBitSet<A>::clearall(unsigned int sz, bool setbits) {
 
 template<class A>
 forceinline Gecode::Support::BitSetData
-SparseBitSet<A>::a(BitSet b, unsigned int i) {
+SparseBitSet<A>::a(const BitSet& b, unsigned int i) {
   return BitSet::a(words, b, i);
 }
 
