@@ -127,7 +127,7 @@ public:
       return static_cast<SupportsI&>(SharedHandle::operator =(s));
     }
     /// [] operator
-    BitSet& operator [](unsigned int i) {
+    const BitSet& operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
     }

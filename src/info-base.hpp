@@ -44,7 +44,7 @@ public:
     supports = heap.alloc<BitSet>(nvals);
   }
   /// Abstract functions
-  virtual BitSet get_supports(int val) = 0;
+  virtual const BitSet& get_supports(int val) = 0;
 
   template<class View>
   void init(const BitSet* supports,
@@ -66,11 +66,11 @@ public:
   /// Copy constructor
   InfoArray(const InfoArray& s)
     : InfoBase(s), min(s.min) {}
-  
-  virtual BitSet get_supports(int val) {
+
+  virtual const BitSet& get_supports(int val) {
     return supports[val - min];
   }
-
+  
   template<class View>
   void init(const BitSet* s,
             int min0, int max,
@@ -192,11 +192,11 @@ public:
     : InfoBase(ih), index_table(ih.index_table) {
     DEBUG_PRINT(("Copy InfoHash\n"));
   }
-  
-  virtual BitSet get_supports(int val) {
-    return supports[index_table.get(val)];
-  }
 
+  virtual const BitSet& get_supports(int val) {
+    return supports[index_table.get(val)];
+  }  
+  
   virtual void allocate(int n) {
     InfoBase::allocate(n);
     index_table.allocate(n);
