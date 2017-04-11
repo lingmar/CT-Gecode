@@ -38,6 +38,9 @@ public:
   static int get_bpb();
   /// Copy \a sz bits from \a bs
   void copy(unsigned int sz, const BitSet& bs);
+  /// Dispose memory for bit set
+  template<class A>
+  void dispose(A& a);
   /// Next (disabled)
   unsigned int next(unsigned int i) const;
   /// Return number of set bits among the bits 0 to \a i
@@ -72,7 +75,7 @@ public:
   /// Copy sparse bit set \a sbs with allocator \a a
   SparseBitSet(A& a, const SparseBitSet& sbs);
   /// Destructor
-  //~SparseBitSet(void);
+  ~SparseBitSet(void);
   /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
   void init(unsigned int s);
   /// Check if sparse bit set is empty
@@ -173,6 +176,12 @@ BitSet::copy(unsigned int sz, const BitSet& bs) {
 forceinline bool
 BitSet::same(Gecode::Support::BitSetData d, unsigned int i) {
   return data[i].same(d);
+}
+
+template<class A>
+forceinline void
+BitSet::dispose(A& a) {
+  RawBitSetBase::dispose(a,sz);
 }
 
 forceinline void
@@ -448,8 +457,9 @@ SparseBitSet<A>::none() const {
   return words.none();
 }
 
-// template<class A>
-// forceinline
-// SparseBitSet<A>::~SparseBitSet(void) {
-//   Gecode::Support::dispose(a);
-// }
+template<class A>
+forceinline
+SparseBitSet<A>::~SparseBitSet(void) {
+  words.BitSet::dispose(al);
+  al.template free<unsigned int>(index,limit+1);
+}
