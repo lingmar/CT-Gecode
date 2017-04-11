@@ -15,6 +15,9 @@ public:
   BitSet(A& a, unsigned int sz, const BitSet& bs);
   ///Assignment operator
   BitSet& operator =(const BitSet&);
+  /// Allocate for \a sz bits and allocator \a a (only after default constructor)
+  template<class A>
+  void allocate(A& a, unsigned int sz);
   /// Perform "or" with \a a of word index \a i
   void o(BitSet a, unsigned int i);
   /// Perform "and" with \a a of word index \a 
@@ -57,8 +60,6 @@ private:
   A& al;
   /// Words (FIXME: why public?)
   BitSet words;
-  /// Mask
-  BitSet mask;
   /// Index
   unsigned int* index;
   /// Limit
@@ -77,15 +78,18 @@ public:
   /// Check if sparse bit set is empty
   bool is_empty() const;
   /// Clear the mask
-  void clear_mask();
-  /// Add bits in \a b to mask
-  void add_to_mask(BitSet b);
-  /// Intersect words with mask
-  bool intersect_with_mask();
+  void clear_mask(BitSet mask);
+  /// Add bits in \a b to \a mask
+  void add_to_mask(BitSet b, BitSet mask);
+  /// Intersect words with \a mask
+  bool intersect_with_mask(BitSet mask);
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   int intersect_index(BitSet b);
+  /// Perform "and" with words and \a b at word index \a i
   Gecode::Support::BitSetData a(BitSet b, unsigned int i);
-
+  /// Get the number of bits
+  unsigned int size() const;
+  
   /** Debugging purpose **/
   /// Print bit set
   void print() const;
@@ -152,6 +156,14 @@ BitSet::operator =(const BitSet& bs) {
   Gecode::Support::RawBitSetBase::clear(sz);
   return *this;
 }
+
+template<class A>
+forceinline void
+BitSet::allocate(A& a, unsigned int sz0) {
+  RawBitSetBase::allocate(a,sz0);
+  sz = sz0;
+}
+
 
 forceinline void
 BitSet::copy(unsigned int sz, const BitSet& bs) {
@@ -226,30 +238,6 @@ BitSet::next(unsigned int) const {
   return -1;
 }
 
-forceinline unsigned int
-BitSet::nset(unsigned int i) const {
-  assert(i < sz);
-  unsigned int count = 0;
-  static unsigned int nbases = Gecode::Support::BitSetData::data(sz+1);
-  // Number of spare bits
-  static unsigned int r = i % nbases;
-  // Create mask
-  // BitSet with size sz, 0-r bits set
-  Gecode::Support::BitSetData mask;
-  mask.init(false); // 00000000
-  Gecode::Support::BitSetData aux;
-  aux.init(true);   // 11111111
-  mask.Gecode::Support::BitSetData::o(aux,r);    // 11111000
-
-  // Perform "and" with the mask
-  Gecode::Support::BitSetData masked =
-    Gecode::Support::BitSetData::a(data[nbases-1], mask);
-
-  // Count set bits
-  
-  return count;
-}
-
 /** Debugging purpose **/
 
 forceinline void
@@ -311,9 +299,7 @@ SparseBitSet<A>::SparseBitSet(A& a0)
 template<class A>
 forceinline void
 SparseBitSet<A>::init(unsigned int s, unsigned int set) {
-  //std::cout << "INIT" << std::endl;
   words = BitSet(al,s,false);
-  mask = BitSet(al,s,false);
   sz = s;
   int nwords = s != 0 ? (s - 1) / words.get_bpb() + 1 : 0;
   limit = nwords - 1;
@@ -328,12 +314,12 @@ SparseBitSet<A>::init(unsigned int s, unsigned int set) {
 template<class A>
 forceinline
 SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
-  : al(a0), words(al,sbs.words), mask(al,sbs.sz,false), limit(sbs.limit), sz(sbs.sz)  {
-  // Only copy limit nr of elements in index
+  : al(a0), words(al,sbs.words),
+    limit(sbs.limit), sz(sbs.sz)  {
+  // Copy limit nr of elements in index
   index = al.template alloc<unsigned int>(limit + 1);
-  for (int i = 0; i <= limit; i++) {
+  for (int i = limit; i--; )
     index[i] = sbs.index[i];
-  }
 }
 
 template<class A>
@@ -353,19 +339,16 @@ SparseBitSet<A>::is_empty() const {
 
 template<class A>
 forceinline void
-SparseBitSet<A>::clear_mask() {
+SparseBitSet<A>::clear_mask(BitSet mask) {
   for (int i = 0; i <= limit; i++) {
     int offset = index[i];
     mask.clearword(offset, false);
-#ifdef DEBUG
-    assert(mask.getword(offset).none());
-#endif // DEBUG
   }
 }
 
 template<class A>
 forceinline void
-SparseBitSet<A>::add_to_mask(BitSet b) {
+SparseBitSet<A>::add_to_mask(BitSet b, BitSet mask) {
   for (int i = 0; i<=limit; i++) {
     int offset = index[i];
     mask.o(b,offset);
@@ -374,7 +357,7 @@ SparseBitSet<A>::add_to_mask(BitSet b) {
 
 template<class A>
 forceinline bool
-SparseBitSet<A>::intersect_with_mask() {
+SparseBitSet<A>::intersect_with_mask(BitSet mask) {
   bool diff = false;
   for (int i = limit; i >= 0; i--) {
     int offset = index[i];
@@ -423,6 +406,12 @@ SparseBitSet<A>::a(BitSet b, unsigned int i) {
   return BitSet::a(words, b, i);
 }
 
+template<class A>
+forceinline unsigned int
+SparseBitSet<A>::size() const {
+  return words.size();
+}
+
 /** Debugging purpose **/
 
 template<class A>
@@ -430,8 +419,8 @@ forceinline void
 SparseBitSet<A>::print() const {
   std::cout << "words: ";
   words.print();
-  std::cout << "mask: ";
-  mask.print();
+  // std::cout << "mask: ";
+  // mask.print();
   std::cout << "index: ";
   //int nwords = sz != 0 ? (sz - 1) / words.get_bpb() + 1 : 0;
   for (int i = 0; i <= limit; i++) {

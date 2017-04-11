@@ -59,7 +59,7 @@ public:
           break;
         }
         case HASHH: {
-          info = new InfoHash(*((InfoHash *const)s.info));
+          info = new InfoHash(*((InfoHash *const)s .info));
           break;
         }
         default:
@@ -473,14 +473,18 @@ public:
   }
 
   forceinline bool
-  updateTable(CTAdvisor<View> a) {
-    validTuples.clear_mask();
+  updateTable(CTAdvisor<View> a, Space& home) {
+    Region r(home);
+    BitSet mask;
+    mask.allocate(r,validTuples.size());
+    //printf("Size = %d\n", mask.size());
+    validTuples.clear_mask(mask);
     Int::ViewValues<View> it(a.view());
     while (it()) {
-      validTuples.add_to_mask(a.supports[it.val()]);
+      validTuples.add_to_mask(a.supports[it.val()],mask);
       ++it;
     }
-    return validTuples.intersect_with_mask();
+    return validTuples.intersect_with_mask(mask);
   }
 
   forceinline virtual ExecStatus
@@ -494,7 +498,7 @@ public:
     if (status == PROPAGATING)
       return ES_FIX; // Advisor is disposed in propagate()
       
-    bool diff = updateTable(a);
+    bool diff = updateTable(a,home);
 
     // Do not fail a disabled propagator
     if (validTuples.is_empty())
