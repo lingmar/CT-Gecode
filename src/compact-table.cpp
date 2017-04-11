@@ -253,16 +253,23 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
+  enum Modified {NONE, ONE, SEVERAL};
   /// Whether propagator is propagating
   Status status;
+  /// Number of variables that are modified since last propagation
+  Modified modified;
+  /// Index of the last modified variable
+  int last;
   /// Council of advisors
   Council<CTAdvisor<View> > c;
-  // The indices of valid tuples
+  /// The indices of valid tuples
   SparseBitSet<Space&> validTuples;
-  // Sum of domain widths
+  /// Sum of domain widths
   int domsum;
-  // Arity
+  /// Arity
   unsigned int arity;
+  /// Number of unassigned variables
+  unsigned int unassigned;
   
 public:
   // Post table propagator
@@ -288,11 +295,10 @@ public:
     : Propagator(home), c(home),
       validTuples(static_cast<Space&>(home)),
       status(NOT_PROPAGATING),
-      arity(x0.size())
+      modified(NONE),
+      arity(x0.size()),
+      unassigned(x0.size())
   {
-    DEBUG_PRINT(("********************\n"));
-    DEBUG_PRINT(("Start constructor\n"));
-    
     // Calculate domain sum
     domsum = 0;
     for (int i = x0.size(); i--; )
@@ -309,13 +315,10 @@ public:
     
     // Initialise validTupels with nsupports bit set
     validTuples.init(t0.tuples(), nsupports);
-#ifdef DEBUG
-    validTuples.print();
-#endif // DEBUG
 
     // Schedule in case no advisors have been posted
-    View::schedule(home,*this,Int::ME_INT_VAL);
-    DEBUG_PRINT(("End constructor\n"));
+    if (unassigned == 0)
+      View::schedule(home,*this,Int::ME_INT_VAL);
   }
 
   forceinline unsigned int
@@ -404,7 +407,8 @@ public:
                                           offset[i] + diff,
                                           ts.min(),
                                           type);
-      } 
+      } else
+        unassigned--;
       
     }
     
@@ -432,7 +436,8 @@ public:
       validTuples(home, p.validTuples),
       domsum(p.domsum),
       status(p.status),
-      arity(p.arity)
+      arity(p.arity),
+      unassigned(p.unassigned)
   {
     // Update views and advisors
     c.update(home,share,p.c);
@@ -460,7 +465,7 @@ public:
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
     status = PROPAGATING;
-
+    
     if (validTuples.is_empty()) {
       DEBUG_PRINT(("FAIL\n"));
       return ES_FAILED;
@@ -468,6 +473,7 @@ public:
 
     ExecStatus msg = filterDomains(home);
 
+    modified = NONE;
     status = NOT_PROPAGATING;
     return msg;
   }
@@ -487,13 +493,16 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
 
-    /** Do not schedule if propagator is performing propagation,
-     *  and dispose if assigned
+    /** 
+     * Do not schedule if propagator is performing propagation,
+     * and dispose if assigned
      **/
-    if (status == PROPAGATING)
-      return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a)
-        : ES_FIX;
-        
+    if (status == PROPAGATING) {
+    //return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a)
+      //  : ES_FIX; // Will be disposed in propagate() in case assigned
+      return ES_FIX;
+    }
+      
     bool diff = updateTable(a);
 
     // Do not fail a disabled propagator
@@ -501,26 +510,44 @@ public:
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
 
     // Schedule propagator and dispose if assigned
-    if (diff)
-      return a.view().assigned() ? home.ES_NOFIX_DISPOSE(c,a)
-        : ES_NOFIX;
+    if (diff) {
+      
+      if (modified == NONE) {
+        modified = ONE;
+        last = a.index;
+      } else
+        modified = SEVERAL;
+      
+      if (a.view().assigned()) {
+        unassigned--;
+        return home.ES_NOFIX_DISPOSE(c,a);
+      }
+      return ES_NOFIX;
+    }
 
-    // Fixpoint
-    return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a) : ES_FIX;
+
+    if (a.view().assigned()) {
+      unassigned--;
+      return home.ES_FIX_DISPOSE(c,a);
+    }
+      
+    return ES_FIX;
   }
   
   forceinline ExecStatus
   filterDomains(Space& home) {
-    int count_non_assigned = 0;
+    if (unassigned == 0) return home.ES_SUBSUMED(*this);
+        
+    int count_unassigned = 0;
+   
     Region r(home);
     Support::StaticStack<int,Region> nq(r,domsum);
-    // Only consider unassigned variables
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       int i = a.index;
 
-      if (v.assigned())
+      if (v.assigned() || (modified == ONE && last == i))
         continue;
       
       Int::ViewValues<View> it(v);
@@ -531,13 +558,10 @@ public:
         if (w.none()) {
           index = validTuples.intersect_index(a.supports[it.val()]);
 
-          if (index != -1) {
-            // Save residue
-            a.set_residue(i,index);
-          } else {
-            // Value not supported
-            nq.push(it.val());
-          }
+          if (index != -1) 
+            a.set_residue(i,index); // Save residue
+          else
+            nq.push(it.val()); // Value not supported
         }
         ++it;
       }
@@ -545,17 +569,16 @@ public:
         int val = nq.pop();
         v.nq(home,val);
       }
-        
-      if (!v.assigned()) {
-        count_non_assigned++;
-        //--unassigned;
-      } else {
-        //DEBUG_PRINT(("Variable %d assigned in filterDomains\n",i));
-      }
+
+      if (v.assigned()) {
+        --unassigned;
+        a.dispose(home,c);
+      } else if (++count_unassigned == unassigned) // Rest of the variables assigned 
+        break;
     }
 
     // Subsume if there is at most one non-assigned variable
-    return count_non_assigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
+    return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
   
   // Dispose propagator and return its size
