@@ -157,9 +157,9 @@ public:
   };
   /// Index of the view the advisor is assigned to
   int index;
-  /// Tuple indices that are supports for the variable
+  /// Tuple indices that are supports for the variable (shared handle)
   Supports supports;
-  /// The word index of the last found support
+  /// The word index of the last found support for each value
   unsigned int* residues;
   /// Number of values
   unsigned int nvals;
@@ -215,17 +215,19 @@ public:
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
     : ViewAdvisor<View>(home,share,a),
-    index(a.index), nvals(a.nvals) {
+    index(a.index), nvals(a.nvals)
+  {
+    // Update shared handle
     supports.update(home,share,a.supports);
+    // Copy residues
     residues = home.alloc<unsigned int>(nvals);
-    for (int i = 0; i < nvals; i++)
+    for (int i = nvals; i--; )
       residues[i] = a.residues[i];
   }
 
   /// Access residue for value \a val
   forceinline unsigned int
   residue(int val) {
-    //DEBUG_PRINT(("residue[%d] = %d\n",supports.row(val),residues[supports.row(val)]));
     return residues[supports.row(val)];
   }
 
@@ -235,7 +237,7 @@ public:
     residues[supports.row(val)] = r;
   }
     
-  /// Dispose function. TODO: dispose shared handle
+  /// Dispose function. TODO: dispose shared handle?
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
     //DEBUG_PRINT(("Advisor %d disposed\n",index));
@@ -251,16 +253,16 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
-  /// Whether propagator is done propagating
+  /// Whether propagator is propagating
   Status status;
-  /// The variables
-  ViewArray<View> x;
   /// Council of advisors
   Council<CTAdvisor<View> > c;
-  // The table with possible combinations of values
+  // The indices of valid tuples
   SparseBitSet<Space&> validTuples;
-  // Sum of domain sizes
+  // Sum of domain widths
   int domsum;
+  // Arity
+  unsigned int arity;
   
 public:
   // Post table propagator
@@ -283,24 +285,21 @@ public:
   CompactTable(Home home,
                ViewArray<View>& x0,
                TupleSet t0)
-    : Propagator(home), x(x0), c(home),
+    : Propagator(home), c(home),
       validTuples(static_cast<Space&>(home)),
-      status(NOT_PROPAGATING)
+      status(NOT_PROPAGATING),
+      arity(x0.size())
   {
     DEBUG_PRINT(("********************\n"));
     DEBUG_PRINT(("Start constructor\n"));
     
     // Calculate domain sum
     domsum = 0;
-    int domsize = 0;
-    for (int i = 0; i < x.size(); i++) {
-      domsum += x[i].width();
-      domsize += x[i].size();
-    }
-    DEBUG_PRINT(("domsum: %d, domsize: %d, ntuples: %d\n", domsum, domsize, t0.tuples()));
-    
+    for (int i = x0.size(); i--; )
+      domsum += x0[i].width();
+   
     // Initialise supports
-    int nsupports = init_supports(home, t0);
+    int nsupports = init_supports(home, t0, x0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
     
     if (nsupports <= 0) {
@@ -320,13 +319,13 @@ public:
   }
 
   forceinline unsigned int
-  init_supports(Home home, TupleSet ts) {
+  init_supports(Home home, TupleSet ts, ViewArray<View>& x) {
     static int ts_min = ts.min();
     
     Region r(home);
     // Bitsets for O(1) access to domains
     Dom dom = r.alloc<BitSet>(x.size());
-    init_dom(home,dom,ts_min,ts.max());
+    init_dom(home,dom,ts_min,ts.max(),x);
 
     // Allocate temporary supports and residues
     BitSet* supports = r.alloc<BitSet>(domsum);
@@ -414,9 +413,9 @@ public:
   }
 
   forceinline void
-  init_dom(Space& home, Dom dom, int min, int max) {
+  init_dom(Space& home, Dom dom, int min, int max, ViewArray<View>& x) {
     unsigned int domsize = static_cast<unsigned int>(max - min + 1);
-    for (int i = 0; i < x.size(); i++) {
+    for (int i = x.size(); i--; ) {
       dom[i].init(home, domsize, false);
       Int::ViewValues<View> it(x[i]);
       while(it()) {
@@ -432,10 +431,10 @@ public:
     : Propagator(home,share,p),
       validTuples(home, p.validTuples),
       domsum(p.domsum),
-      status(p.status)
+      status(p.status),
+      arity(p.arity)
   {
     // Update views and advisors
-    x.update(home,share,p.x);
     c.update(home,share,p.c);
   }
   
@@ -449,7 +448,7 @@ public:
   forceinline virtual PropCost
   cost(const Space&, const ModEventDelta&) const {
     // Expensive linear ?
-    return PropCost::linear(PropCost::HI,x.size());
+    return PropCost::linear(PropCost::HI,arity);
   }
 
   forceinline virtual void
@@ -518,12 +517,13 @@ public:
     // Only consider unassigned variables
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
+      View v = a.view();
       int i = a.index;
 
-      if (a.view().assigned())
+      if (v.assigned())
         continue;
-
-      Int::ViewValues<View> it(x[i]);
+      
+      Int::ViewValues<View> it(v);
       while (it()) {
         int index = a.residue(it.val());
         Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
@@ -543,10 +543,10 @@ public:
       }
       while (!nq.empty()) {
         int val = nq.pop();
-        x[i].nq(home,val);
+        v.nq(home,val);
       }
         
-      if (!x[i].assigned()) {
+      if (!v.assigned()) {
         count_non_assigned++;
         //--unassigned;
       } else {
