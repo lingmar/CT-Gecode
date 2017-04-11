@@ -367,25 +367,23 @@ public:
         support_cnt++;
       }
     }
-    
-    Support::StaticStack<int,Region> nq(r,domsum);
 
+    int* nq = r.alloc<int>(domsum);
+    int nremoves;
+    
     // Remove values corresponding to empty rows and post advisors
     for (int i = x.size(); i--; ) {
+      nremoves = 0;
       Int::ViewValues<View> it(x[i]);
       while (it()) {
         unsigned int row = offset[i] + it.val() - min_vals[i];
-        if (supports[row].none()) {
-          // Push to remove-stack and clear bit in domain
-          DEBUG_PRINT(("Remove %d from variable %d\n", it.val(), i));
-          nq.push(it.val());
-        }
+        if (supports[row].none())
+          nq[nremoves++] = it.val();
         ++it;
       }
 
-      while (!nq.empty()) {
-        GECODE_ME_CHECK(x[i].nq(home,nq.pop()));
-      }
+      Iter::Values::Array r(nq,nremoves);
+      x[i].minus_v(home,r,false);
 
       if (!x[i].assigned()) {
         
@@ -398,8 +396,6 @@ public:
         // To shift the offset
         int diff = x[i].min() - min_vals[i];
 
-        DEBUG_PRINT(("Offset %d: %d + %d = %d\n",i,offset[i],diff,offset[i]+diff));
-                  
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
                                           supports,
                                           residues,
@@ -408,11 +404,9 @@ public:
                                           ts.min(),
                                           type);
       } else
-        unassigned--;
-      
+        unassigned--;      
     }
     
-    //home.notice(*this,AP_DISPOSE);
     return support_cnt;
   }
 
@@ -497,11 +491,8 @@ public:
      * Do not schedule if propagator is performing propagation,
      * and dispose if assigned
      **/
-    if (status == PROPAGATING) {
-    //return a.view().assigned() ? home.ES_FIX_DISPOSE(c,a)
-      //  : ES_FIX; // Will be disposed in propagate() in case assigned
-      return ES_FIX;
-    }
+    if (status == PROPAGATING)
+      return ES_FIX; // Advisor is disposed in propagate()
       
     bool diff = updateTable(a);
 
@@ -525,7 +516,6 @@ public:
       return ES_NOFIX;
     }
 
-
     if (a.view().assigned()) {
       unassigned--;
       return home.ES_FIX_DISPOSE(c,a);
@@ -541,7 +531,8 @@ public:
     int count_unassigned = 0;
    
     Region r(home);
-    Support::StaticStack<int,Region> nq(r,domsum);
+    int* nq = r.alloc<int>(domsum);
+    
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
@@ -549,7 +540,8 @@ public:
 
       if (v.assigned() || (modified == ONE && last == i))
         continue;
-      
+
+      unsigned int nremoves = 0;
       Int::ViewValues<View> it(v);
       while (it()) {
         int index = a.residue(it.val());
@@ -559,16 +551,15 @@ public:
           index = validTuples.intersect_index(a.supports[it.val()]);
 
           if (index != -1) 
-            a.set_residue(i,index); // Save residue
-          else
-            nq.push(it.val()); // Value not supported
+            a.set_residue(i,index);
+          else 
+            nq[nremoves++] = it.val(); // Value not supported
         }
         ++it;
       }
-      while (!nq.empty()) {
-        int val = nq.pop();
-        v.nq(home,val);
-      }
+      
+      Iter::Values::Array r(nq,nremoves);
+      v.minus_v(home,r,false);
 
       if (v.assigned()) {
         --unassigned;
