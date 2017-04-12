@@ -497,7 +497,7 @@ public:
      * and dispose if assigned
      **/
     if (status == PROPAGATING)
-      return ES_FIX; // Advisor is disposed in propagate()
+      return ES_FIX; // Advisor is disposed in propagate() if assigned
       
     bool diff = updateTable(a,home);
 
@@ -507,12 +507,10 @@ public:
 
     // Schedule propagator and dispose if assigned
     if (diff) {
-      
       if (modified == NONE) {
         modified = ONE;
         last = a.index;
-      } else
-        modified = SEVERAL;
+      } else modified = SEVERAL;
       
       if (a.view().assigned()) {
         unassigned--;
