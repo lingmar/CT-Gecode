@@ -69,7 +69,6 @@ public:
       
       /// Initialise from \a s, \a init_min, \a nsupports, \a offset
       void init(const BitSet* s,
-                int init_min, int max,
                 int nsupports, int offset,
                 int domain_offset, IndexType t, View x) {
         type = t;
@@ -77,13 +76,13 @@ public:
         case ARRAYY:  {
           info = heap.alloc<InfoArray>(1);
           static_cast<InfoArray*>(info)->
-            InfoArray::init(s,init_min,max,nsupports,offset,domain_offset,x);
+            InfoArray::init(s,nsupports,offset,domain_offset,x);
           break;
         }
         case HASHH: {
           info = heap.alloc<InfoHash>(1);
           static_cast<InfoHash*>(info)->
-            InfoHash::init(s,init_min,max,nsupports,offset,domain_offset,x);
+            InfoHash::init(s,nsupports,offset,domain_offset,x);
           break;
         } 
         default:
@@ -133,11 +132,11 @@ public:
     }
     
     /// Initialise from parameters
-    void init(BitSet* s, int min,int max,
+    void init(BitSet* s,
               int nsupports, int offset,
               int domain_offset, IndexType type, View x) {
       static_cast<SupportsI*>(object())->
-        init(s,min,max,nsupports,offset,domain_offset,type,x);
+        init(s,nsupports,offset,domain_offset,type,x);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
@@ -177,7 +176,7 @@ public:
             int dom_offset,                /** ts.min() **/
             IndexType type)
     : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,x0.min(),x0.max(),nsupports,offset,
+    supports.init(s0,nsupports,offset,
                   dom_offset,type,x0);    
     // Initialise residues
     switch (type) {
@@ -557,7 +556,7 @@ public:
           index = validTuples.intersect_index(a.supports[it.val()]);
 
           if (index != -1) 
-            a.set_residue(i,index);
+            a.set_residue(it.val(),index);
           else 
             nq[nremoves++] = it.val(); // Value not supported
         }

@@ -48,7 +48,6 @@ public:
 
   template<class View>
   void init(const BitSet* supports,
-            int min, int max,
             int nsupports, int offset,
             int dom_offset,
             View x);
@@ -73,11 +72,11 @@ public:
   
   template<class View>
   void init(const BitSet* s,
-            int min0, int max,
             int nsupports, int offset,
             int dom_offset, View x) {
+    min = x.min();
     // Number of bitsets
-    nvals = static_cast<unsigned int>(max - min0 + 1);
+    nvals = static_cast<unsigned int>(x.max() - min + 1);
     DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
                  nsupports,nvals));
     
@@ -88,7 +87,6 @@ public:
       supports[i].init(heap,nsupports);
       supports[i].copy(nsupports,s[i + offset]);
     }
-    min = min0;
   }
 
   virtual void allocate(int n) {
@@ -96,6 +94,9 @@ public:
   }
 
   virtual unsigned int row(int val) {
+    if (val < min) {
+      printf("val = %d, min = %d\n", val,min);
+    }
     assert(val >= min);
     return static_cast<unsigned int>(val - min);
   }
@@ -204,7 +205,6 @@ public:
 
   template<class View>
   void init(const BitSet* s,
-            int min, int max,
             int nsupports, int offset,
             int dom_offset, View x) {
     // Initial domain size
@@ -217,11 +217,10 @@ public:
     int diff = x.min();
 
     Int::ViewValues<View> it(x);
-
     while (it()) {
       assert(nsupports <= s[offset + it.val() - diff].size());
 
-      // Initialise and copy nsupports bits and save index to table
+      // Initialise and save index to table
       supports[count].init(heap,nsupports);
       supports[count].copy(nsupports,s[it.val() + offset - diff]);
       index_table.insert(it.val(),count);
