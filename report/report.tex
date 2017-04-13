@@ -858,6 +858,7 @@ To prove~\Thmref{thm:prop}, we formulate and prove the following lemmas.
 In what follows, we denote~$CT(s)$ the resulting store of running 
 either \T{initCT()} or \texttt{propagate()} on an input store~$s$,
 depending on if it is the first time or not that the propagator is called.
+\Todo{Or skip initCT() and only count calls to propagate()?}
 
 \begin{lemma} \label{lemma:decreasing}
   CT is a decreasing function.
@@ -1040,6 +1041,8 @@ the results of the evaluation. The results are discussed in \Secref{evaluation:d
 \label{evaluation:setup}
 \subsection{Results}
 \label{evaluation:results}
+
+\Todo{Not real data.}
 
 \input{scatter-plot.tex}
 
