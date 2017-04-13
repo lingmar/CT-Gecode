@@ -19,6 +19,8 @@
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
 
+\newcommand{\CT}[0]{\emph{CT~}}
+
 % Silly but saves space
 \newcommand{\T}[1]{\texttt{#1}}
 
@@ -33,6 +35,8 @@
 \newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
 \newcommand{\lineref}[1]{line~\ref{#1}}
 \newcommand{\linesref}[2]{lines~\ref{#1}-\ref{#2}}
+\newcommand{\Defref}[1]{Definition~\ref{#1}}
+\newcommand{\Thmref}[1]{Theorem~\ref{#1}}
 
 \newcommand{\Eqref}[1]{\eqref{#1}}
 
@@ -223,7 +227,7 @@ associated with at least one propagator algorithm, whose task is to detect
 values that would violate the constraint if the variables were to be assigned
 any of those values, and remove those values from the domain of the variables.
 
-After this intuitive description we are ready to define some concepts.
+We now define some concepts more formally.
 
 % Intuition
 % Example
@@ -236,36 +240,31 @@ After this intuitive description we are ready to define some concepts.
 
 \Todo{Todo: Define concepts
 \begin{itemize}
-  \item CSP
-  % \item Assignment
-  % \item Assignments as Constraint Solution
-  \item Valid tuple for a variable
-  \item Tuples that are supports for a constraint
   \item Value-, bounds-, and domain-consistency
-  \item Constraint store
 \end{itemize}
 }
 
 \begin{definition}
   \textbf{Constraint.} Consider a finite sequence of~$n$ 
   variables~$X = x_1,\ldots,x_n$, and a corresponding sequence of
-  \emph{domains}~$D = D_1,\ldots,D_n$ that are possible values for the
-  respective variable. For a variable~$x_i \in X$, its domain~$D_i$ is denoted 
+  \emph{domains}~$D = D_1,\ldots,D_n$, that are possible values for the
+  respective variable. 
+  For a variable~$x_i \in X$, its domain~$D_i$ is denoted 
   by~$dom(x_i)$.
   \begin{itemize}
-    \item   A \emph{constraint} on~$X$ is a relation, 
+    \item   A \emph{constraint}~$c$ on~$X$ is a relation, 
       denoted by~$rel(c)$. The associated variables~$X$ are denoted~$vars(c)$,
       and we call~$|vars(c)|$ the \emph{arity} of~$c$. The relation
       $rel(c)$ contains the set of~$n$-tuples that are allowed
-      for~$X$. 
-    \item   For an~$n$-tuple~$\tau = (a_1,\ldots,a_n)$ associated with~$X$, we
+      for~$X$, we call those~$n$-tuples \emph{solutions} to the constraint~$c$.
+    \item   For an~$n$-tuple~$\tau = \Tuple{a_1,\ldots,a_n}$ associated with~$X$, we
       denote the~$i$th value of~$\tau$ by~$\tau[i]$ or~$\tau[x_i]$. The 
       tuple~$\tau$ is \emph{valid} for~$X$
       if and only if each value of~$\tau$ is in the domain of the corresponding
       variable: $\forall i \in 1 \ldots n, \tau[i] \in dom(x_i)$, or equivalently,
       $\tau \in D_1 \times \ldots \times D_n$.
     \item An~$n$-tuple~$\tau$ is a \emph{support} on a~$n$-ary constraint~$c$ if and only
-      if~$\tau$ is valid for~$vars(c)$ and~$\tau$ is allowed by~$c$, that is,
+      if~$\tau$ is valid for~$vars(c)$ and~$\tau$ is a solution to~$c$, that is,
       $\tau$ is contained in~$rel(c)$.
     \item For an~$n$-ary constraint~$c$, involving a variable~$x$ such that
       the value~$a \in dom(x)$, an~$n$-tuple~$\tau$ is a 
@@ -304,11 +303,15 @@ After this intuitive description we are ready to define some concepts.
     \item A store~$s$ is \emph{failed} if and only if~$s(v_i) = \varnothing$ for some~$v_i \in V$.
     \item   A variable~$v_i \in V$ is \emph{fixed}, or \emph{assigned},
       by a store~$s$ if and only if~$|s(v_i)| = 1$. 
-    \item   Let~$c$ be an $n$-ary constraint on~$V$. A store~$s$ is a \emph{solution store} 
-      to~$c$ if and only if all variables are fixed under~$s$, and the
-      corresponding~$n$-tuple is allowed by~$c$:
+    \item A store~$s$ is an \emph{assignment} store if all variables are 
+      fixed under~$s$. A store~$s$ 
+
+    \item Let~$c$ be an $n$-ary constraint on~$V$. A store~$s$ is 
+      a \emph{solution store} 
+      to~$c$ if and only if~$s$ is an assignment store and the
+      corresponding~$n$-tuple is a solution to~$c$:
       $\forall i \in \Set{1,\ldots,n}, s(v_i) = \Set{a_i}$,
-      and~$\left<a_1,\ldots,a_n\right>$ is allowed by~$c$.
+      and~$\left<a_1,\ldots,a_n\right>$ is a solution to~$c$.
     \item A store~$s_1$ is \emph{stronger} than a store~$s_2$, 
       written~$s_1 \preceq s_2$ if and only if~$s_1(v) \subseteq s_2(v)$ 
       for all~$v \in V$.
@@ -318,57 +321,57 @@ After this intuitive description we are ready to define some concepts.
 
 \Todo{Consistency}
 
-\subsection{Propagation}
-A propagator is a function mapping stores to stores.
+\subsection{Propagation and propagators}
 
-\subsubsection{Propagator obligations}
-\label{sec:obligations}
-In order to have well-defined behaviour of prfkljslkfjopagators, they must meet certain obligations.
-The following properties must be implemented by a propagator~\cite{handbook}~\cite{MPG}.
+Constraint propagation is the process of removing values from the domains
+of 
 
-\Todo{Define store and $\preceq$}
+The are partly taken from~\cite{handbook}, ~\cite{MPG} and~\cite{article}.
 
-A propagator~$p$ must be...
-\begin{itemize}
-  \item ...a \emph{decreasing} function:~$p(s) \preceq s$ for any store~$s$.
+\begin{definition} \label{def:prop}
+  \textbf{Propagators.} A \emph{propagator}~$p$ is a function mapping stores to stores:
+  \begin{equation*}
+    p: store \mapsto store
+  \end{equation*}
+
+  In a CP-solver, a propagator is implemented as a procedure that also returns 
+  a \emph{status message}. A propagator must fulfill the following properties:
+
+  \begin{itemize}
+  \item A propagator~$p$ is a decreasing function:~$p(s) \preceq s$ for any store~$s$.
     This property guarantees that constraint propagation only removes values.
-  \item ...a \emph{monotonic} function:~$s_1 \preceq s_2 \Leftarrow p(s_1) \preceq p(s_2)$
-    for any~$s_1$ and~$s_2$. This property guarantees that constraint propagation
+
+  \item A propagator~$p$ is a monotonic function:
+    ~$s_1 \preceq s_2 \Rightarrow p(s_1) \preceq p(s_2)$
+    for any stores~$s_1$ and~$s_2$. This property guarantees that constraint propagation
     preserves the strength-ordering of stores.
-  \item ...correct. The propagator must faithfully implement the constraint.~$p$
-    is correct for a constraint~$c$ if and only if it does not remove values that can
-    appear in a solution of the constraint it implements.
-  \item ...checking. For a store~$s$ where all variables have fixed domains,~$p(s) = s$
-    if and only if~$s$ is a solution store for~$c$. In other words, when all variables are
-    assigned, the propagator must decide whether the assignment is a solution store or not.
-  \item \Todo{Implementation specific of general rule?}. ...fixpoint and subsumption honest.
-    A propagator is not allowed to claim that is has reached a fixpoint or that is subsumed
-    if it is not.
+
+  \item A propagator is correct for the constraint it implements.
+    A propagator~$p$
+    is correct for a constraint~$c$ if and only if it does not
+    remove values that are part of~$n$-tuples that are supports for~$c$.
+    This property guarantees that a propagator does not miss any potential 
+    solution store.
+
+  \item A propagator is \emph{checking}: for a given assignment store~$s$, the propagator
+    must decide whether~$s$ is a solution store or not for the constraint it
+    implements. If~$s$ is a solution store, it must signal subsumption, otherwise
+    it must signal failure.
+
+  \item A propagator must be \emph{honest}: it must be 
+    \emph{fixpoint honest} and \emph{subsumption honest}. 
+    A propagator~$p$ is fixpoint honest if and only if it does not signal 
+    fixpoint if it is not at fixpoint, and it is subsumption honest
+    if and only if it does
+    not signal subsumption if it is not subsumed by an input store~$s$.
+    
+    A propagator~$p$ is at \emph{fixpoint} if and only if~$p(s) = s$ for
+    a store~$s$. A propagator is \emph{subsumed} by a store~$s$ if and only if
+    all stronger stores are fixpoints:~$\forall s' \preceq s, p(s') = s_1$.
 
 \end{itemize}
 
-
-% From chap14
-
-% \begin{definition}
-%   A domain~$D$ is a complete mapping from a fixed (countable) set of 
-%   variables~$V$ to finite sets of integers. A domain~$D$ is failed,
-%   if $D(x) = \emptyset$ for some $x \in V$. A variable~$x \in V$
-%   is fixed by a domain D, if $|D(x)| = 1$. The intersection of domains~$D1$ and~$D2$,
-%   denoted~$D1 \sqcap D2$, is defined by the domain
-%   $D(x) = D1(x) \Union D2(x)$ for all $x \in V$.
-%   A domain~$D1$ is stronger than a domain~$D2$, written $D1 \sqsubseteq D2$,
-%   if~$D1(x) \subset D2(x)$ for all $x \in V$.
-% \end{definition}
-
-% \begin{definition}
-%   A constraint store is a function mapping variables to sets of values.
-% \end{definition}
-
-A propagator~$p$ is a function from constraint stores to constraint stores
-that performs constraint propagation. 
-
-\Todo{Define what a propagator must fulfill. (Contracting, monotonic...)}
+\end{definition}
 
 \subsection{Gecode}
 \label{bg:gecode}
@@ -832,50 +835,77 @@ in~\Algoref{algo:propagate}.
   \label{algo:propagate}
 \end{algorithm}
 
-\subsubsection{Propagator obligations}
-This section proves that the CT Propagator has all the properties presented in
-\Secref{sec:obligations}.
+\subsubsection{Proof of propagator properties}
+This section proves that the CT Propagator is indeed a well-defined propagator
+implementing the~\Table~constraint. We formulate the followint theorem, which
+we will prove by a number of lemmas.
+
+\begin{theorem} \label{thm:prop}
+  CT is an idempotent, domain consistent propagator implementing 
+  the~\Table~constraint, fulfilling the properties in~\Defref{def:prop}.
+\end{theorem}
+
+To prove~\Thmref{thm:prop}, we formulate and prove the following lemmas.
+In what follows, we denote~$CT(s)$ the resulting store of running 
+\texttt{propagate()} in \Algoref{algo:propagate} for an input store~$s$.
 
 \begin{lemma}
-  The CT propagator is a decreasing function.
+  CT is idempotent.
 \end{lemma}
 
+\Todo{assignment store?}
+
 \begin{proof}
-  CT can only remove values from the domains of the variables, it cannot
-  add values to the domains. Therefore, CT is a decreasing function.
+  To prove that $CT$ is idempotent, we shall show that $CT$ always reaches
+  fixpoint for any input store~$s$, that is, $CT(CT(s)) = CT(s)$ for any
+  store~$s$.
+
+  Suppose $CT(CT(s)) \neq CT(s)$ for a store~$s$. 
+  Since CT is monotonic
+  and decreasing, we must have $CT(CT(s)) \prec CT(s)$, that is, $CT$
+  must prune at least one value~$a$ from a variable~$x$ from the 
+  store~$CT(s)$. 
+
+  By \Eqref{eq:validcond}, there must exists at least one 
+  tuple~$\tau_i$
+  that is a support for~$(x,a)$ under the store $CT(s)$: 
+  $\exists i: i \in \CurrTable \ \land \ \tau_i[x] = a$.
+  After \T{updateTable()} is perfomed on~$CT(s)$, we still have
+  ~$i \in \CurrTable$, because~$\tau_i$ is still valid in~$CT(s)$.
+  Since~\T{filterDomains()} only removes values that have no supports,
+  it is impossible that~$a$ is pruned from~$x$, since~$\tau_i$ is a
+  support for~$(x,a)$. Hence, we must have~$CT(CT(s)) = CT(s)$.
+  This completes the proof.
 \end{proof}
 
 \begin{lemma}
-  The CT propagator is a monotonic function.
+  CT is a decreasing function.
 \end{lemma}
 
-\begin{proof}
-  
-\end{proof}
+% \begin{proof}
+%   CT can only remove values from the domains of the variables, it cannot
+%   add values to the domains. Therefore, CT is a decreasing function.
+% \end{proof}
 
 \begin{lemma}
-  The CT propagator is correct for the \Table constraint.
+  CT is a monotonic function.
 \end{lemma}
-
-\begin{proof}
-  
-\end{proof}
 
 \begin{lemma}
-  The CT propagator is checking.
+  CT is correct for the \Table constraint.
 \end{lemma}
-
-\begin{proof}
-  
-\end{proof}
 
 \begin{lemma}
-  The CT propagator is fixpoint and subsumption honest.
+  CT is checking.
 \end{lemma}
 
-\begin{proof}
-  
-\end{proof}
+\begin{lemma}
+  CT is honest.
+\end{lemma}
+
+\begin{lemma}
+  CT is domain consistent.
+\end{lemma}
 
 \subsubsection{Propagator Status Messages}
 \Todo{Text to be revised.}
