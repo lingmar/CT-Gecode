@@ -439,6 +439,7 @@ interval~$[i,j]$, where~$0 \leq i \leq j \leq a.\function{length}() - 1$.
 % row~$i$ and~$m[*][j]$ column~$j$, seeing~$m$ as a matrix.
 
 \subsection{Sparse Bit-Set}
+\label{sec:sbs}
 This section describes Class~$\SparseBitSet$, which is the main data-structure
 in the CT algorithm for maintaining the supports.~\Algoref{algo:sparse} shows the
 pseudo code for Class~$\SparseBitSet$. The rest of this section describes its
@@ -553,6 +554,7 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
 \end{itemize}
 
 \subsection{Compact-Table (CT) Algorithm}
+\label{sec:ct}
 This section describes the CT algorithm, a domain consistent propagation
 algorithm for any \Table constraint~$c$.~\Algoref{algo:CT} shows the interface
 for Class CT-Propagator, which implements the CT algorithm. The rest of this
@@ -819,6 +821,11 @@ After defining updateTable() and filterDomains(), we are now ready to
 define the method propagate() in Class CT-Propagator, shown 
 in~\Algoref{algo:propagate}.
 
+\Todo{It should be unneccessary to check if validTuples is empty
+  as that is done in updateTable already. However, when I try to
+  remove the check in the c++ code it crashes, maybe because of
+  synchronisation issues between advise() and propagate().}
+
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{propagate.tex}
@@ -831,6 +838,12 @@ in~\Algoref{algo:propagate}.
   \label{algo:propagate}
 \end{algorithm}
 
+\paragraph{Optimisation of propagate().} If~$x$ is the only variable
+that has been modified since the last invocation of~$CT$, it is
+not necessary to attempt to filter out values from~$x$, because
+every value of of~$x$ will have a support in~$\CurrTable$. 
+\Todo{Show the implementation of this explicitly?}
+ 
 \subsubsection{Proof of properties for CT}
 This section proves that the CT Propagator is indeed a well-defined propagator
 implementing the~\Table~constraint. We formulate the following theorem, which
@@ -854,14 +867,6 @@ depending on if it is the first time or not that the propagator is called.
   Since $CT$ only removes values from
   the domains of the variables, we have $CT(s) \preceq s$ for any store $s$.
   Thus, $CT$ is a decreasing function.
-\end{proof}
-
-\begin{lemma}\label{lemma:monotonic}
-  CT is a monotonic function.
-\end{lemma}
-
-\begin{proof}[Proof of \Lemmaref{lemma:monotonic}]
-  Consider two stores~$s_1$ and~$s_2$ such that~$s_1 \preceq s_2$.
 \end{proof}
 
 \begin{lemma}\label{lemma:idempotent}
@@ -929,12 +934,9 @@ depending on if it is the first time or not that the propagator is called.
   Since there are no valid tuples left, \CurrTable~will be empty after
   the call to \T{updateTable()} and $CT$ reports failure.
   
-  Now assume that~$s$ is a solution store, that is,~$\tau \in c$. In the
-  case of initialisation, CT signals subsumption because all variables are 
-  assigned, in line \Todo{which} in \T{initCT()}.
-  If it is not initialisation, CT signals subsumption because all variables
-  are assigned, in line \Todo{which} in \T{filterDomains()}.
-
+  Now assume that~$s$ is a solution store. 
+  $CT$ signals failure in \T{filterDomains()} because all variables are assigned.
+  \Todo{Initialisation?}
 \end{proof}
 
 \begin{lemma}\label{lemma:honest}
@@ -964,12 +966,24 @@ depending on if it is the first time or not that the propagator is called.
   values that have no support.
 \end{proof}
 
-After proving Lemmas~\ref{lemma:decreasing}-\ref{lemma:domain-consistent},
+\begin{lemma}\label{lemma:monotonic}
+  CT is a monotonic function.
+\end{lemma}
+
+\begin{proof}[Proof of \Lemmaref{lemma:monotonic}]
+  Consider two stores~$s_1$ and~$s_2$ such that~$s_1 \preceq s_2$.
+  Since~$CT$ is domain consistent, each variable-value pair $(x,a)$
+  that is part of~$CT(s_1)$, must also be part of~$CT(s_2)$,
+  so~$CT(s_1) \preceq CT(s_2)$.
+\end{proof}
+
+
+After proving Lemmas~\ref{lemma:decreasing}-\ref{lemma:monotonic},
 proving~\Thmref{thm:prop} is trivial.
 
 \begin{proof}[Proof of \Thmref{thm:prop}]
-  The theorem follows by Lemmas~\ref{lemma:decreasing}-
-  \ref{lemma:domain-consistent}.
+  The result follows by Lemmas~\ref{lemma:decreasing}-
+  \ref{lemma:monotonic}.
 \end{proof}
 
 \section{Implementation}
