@@ -50,6 +50,8 @@ public:
   unsigned int next(unsigned int i) const;
   /// Return number of set bits among the bits 0 to \a i
   unsigned int nset(unsigned int i) const;
+  /// Test whether exactly one bit is set for word index \i
+  bool one(unsigned int i) const;
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -109,8 +111,8 @@ public:
   bool none() const;
   /// Print mask
   void print_mask() const;
-  /// Return "and" of words at index \a a and \a b
-  
+  /// Test whether exactly one bit is set
+  bool one() const;
 private: 
   /// Clear \a set bits in words
   void clearall(unsigned int sz, bool setbits);
@@ -259,6 +261,12 @@ BitSet::init(A& a, unsigned int s, bool setbits) {
   RawBitSetBase::init(a,s,setbits); sz=s;
   // Clear bit sz
   Gecode::Support::RawBitSetBase::clear(sz);
+}
+
+forceinline bool
+BitSet::one(unsigned int i) const {
+  assert(i < sz);
+  return data[i].one();
 }
 
 /** Debugging purpose **/
@@ -422,6 +430,12 @@ template<class A>
 forceinline unsigned int
 SparseBitSet<A>::size() const {
   return words.size();
+}
+
+template<class A>
+forceinline bool
+SparseBitSet<A>::one() const {
+  return limit == 0 && words.one(limit);
 }
 
 /** Debugging purpose **/

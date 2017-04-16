@@ -1,20 +1,19 @@
 \STATE $\Class$ CT-Propagator
     \item[]
       \STATE $\Scp$: array of variables \label{line:CTfield:start}
-      \STATE $\CurrTable$: SparseBitSet \COMMENT{Current supported tuples}
+      \STATE $\CurrTable$: SparseBitSet \COMMENT{Current valid tuples}
       \STATE $\Supports$: array of bit-sets   \COMMENT{$\Supports[x,a]$ is the bit-set of supports for $(x,a)$}
-      \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$.c}
-      \STATE $\Residues$: array of int  \COMMENT{$\Residues[x,a]$ is the last found support for $(x,a)$. \label{line:CTfield:end}
-      No residues yet!}
+     % \STATE $\LastSizes$: array of int \COMMENT{$\LastSizes[x]$ is the last size of the domain of $x$.c}
+      \STATE $\Residues$: array of int  \COMMENT{$\Residues[x,a]$ is the last found index for a support for $(x,a)$} \label{line:CTfield:end}
 
     \item[]
-    \Func{initialiseCT}{$\localvar{variables}$: array of variables,
+    \Func{initCT}{$\localvar{variables}$: array of variables,
        $\localvar{tuples}$: list of tuples}
     \STATE \Algoref{algo:initialise-CT}
     \Endfunc
 
     \item[]
-    \Func{updateTable}{} 
+    \Func{updateTable}{$\localvar{x}$: variable} 
     \STATE{\Algoref{algo:updateTable}}
     \Endfunc
 

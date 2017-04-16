@@ -453,7 +453,7 @@ public:
     c.update(home,share,p.c);
     tupleSet.update(home,share,p.tupleSet);
   }
-  
+
   // Create copy during cloning
   forceinline virtual Propagator*
   copy(Space& home, bool share) {
@@ -480,7 +480,7 @@ public:
     if (validTuples.is_empty()) {
       DEBUG_PRINT(("FAIL\n"));
       return ES_FAILED;
-    }
+    } 
 
     ExecStatus msg = filterDomains(home);
 

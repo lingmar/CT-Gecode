@@ -1380,12 +1380,12 @@ gecode/driver/%$(SBJSUFFIX): $(top_srcdir)/gecode/driver/%.cpp
 	-S -o $@  $<
 
 
-examples/%$(OBJSUFFIX): $(top_srcdir)/examples/%.cpp
-	$(CXX) $(CXXFLAGS) $(EXAMPLES_EXTRA_CXXFLAGS) $(QT_CPPFLAGS) \
-	-c -o $@  $<
-examples/%$(SBJSUFFIX): $(top_srcdir)/examples/%.cpp
-	$(CXX) $(CXXFLAGS) $(EXAMPLES_EXTRA_CXXFLAGS) $(QT_CPPFLAGS) \
-	-S -o $@  $<
+# examples/%$(OBJSUFFIX): $(top_srcdir)/examples/%.cpp
+# 	$(CXX) $(CXXFLAGS) $(EXAMPLES_EXTRA_CXXFLAGS) $(QT_CPPFLAGS) \
+# 	-c -o $@  $<
+# examples/%$(SBJSUFFIX): $(top_srcdir)/examples/%.cpp
+# 	$(CXX) $(CXXFLAGS) $(EXAMPLES_EXTRA_CXXFLAGS) $(QT_CPPFLAGS) \
+# 	-S -o $@  $<
 
 
 test/%$(OBJSUFFIX): $(top_srcdir)/test/%.cpp

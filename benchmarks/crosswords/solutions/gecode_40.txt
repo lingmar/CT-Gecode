@@ -1,11 +1,13 @@
+0x7fed6366c350
 =====UNSATISFIABLE=====
+0x7fed6366c350
 
-%%  runtime:       3.258 (3258.893 ms)
-%%  solvetime:     0.001 (1.555 ms)
+%%  runtime:       2.683 (2683.591 ms)
+%%  solvetime:     0.004 (4.004 ms)
 %%  solutions:     0
 %%  variables:     50719
 %%  propagators:   0
-%%  propagations:  34787
+%%  propagations:  5731
 %%  nodes:         0
 %%  failures:      1
 %%  restarts:      0
