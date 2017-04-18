@@ -113,6 +113,8 @@ public:
   void print_mask() const;
   /// Test whether exactly one bit is set
   bool one() const;
+  /// Get the index of the set bit (only after one() returns true)
+  unsigned int index_of_fixed() const;
 private: 
   /// Clear \a set bits in words
   void clearall(unsigned int sz, bool setbits);
@@ -182,7 +184,7 @@ BitSet::copy(unsigned int sz, const BitSet& bs) {
 
 forceinline bool
 BitSet::same(Gecode::Support::BitSetData d, unsigned int i) const {
-  return data[i].same(d);
+  return data[i].Gecode::Support::BitSetData::same(d);
 }
 
 template<class A>
@@ -266,9 +268,9 @@ BitSet::init(A& a, unsigned int s, bool setbits) {
 forceinline bool
 BitSet::one(unsigned int i) const {
   assert(i < sz);
-  return false;
-  //return data[i].one();
+  return data[i].Gecode::Support::BitSetData::one();
 }
+
 
 /** Debugging purpose **/
 
@@ -384,7 +386,7 @@ SparseBitSet<A>::intersect_with_mask(const BitSet& mask) {
   for (int i = limit; i >= 0; i--) {
     int offset = index[i];
     Gecode::Support::BitSetData w = a(mask, offset);
-    if (!words.same(w, offset)) {
+    if (!words.BitSet::same(w, offset)) {
       diff = true;
       words.setword(w, offset);
       if (w.none()) {
@@ -436,8 +438,18 @@ SparseBitSet<A>::size() const {
 template<class A>
 forceinline bool
 SparseBitSet<A>::one() const {
-  return limit == 0 && words.one(limit);
+  return limit == 0 && words.one(index[limit]);
 }
+
+template<class A>
+forceinline unsigned int
+SparseBitSet<A>::index_of_fixed() const {
+  // The word index is index[limit]
+  // Total index is word_index*bpb + bit_index
+  unsigned int bit_index = words.getword(index[limit]).next();
+  return index[limit] * words.get_bpb() + bit_index;
+}
+
 
 /** Debugging purpose **/
 

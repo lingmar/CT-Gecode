@@ -272,6 +272,8 @@ protected:
   unsigned int unassigned;
   /// Tuple-set
   TupleSet tupleSet;
+  /// Largest domain size
+  int max_dom_size;
   
 public:
   // Post table propagator
@@ -300,11 +302,14 @@ public:
       arity(x0.size()),
       unassigned(x0.size())
   {
-    // Calculate domain sum
+    // Calculate sum of domain widths and maximum domain size
     domsum = 0;
-    for (int i = x0.size(); i--; )
+    max_dom_size = 1;
+    for (int i = x0.size(); i--; ) {
       domsum += x0[i].width();
-   
+      if (x0[i].size() > max_dom_size)
+        max_dom_size = x0[i].size();
+    }
     // Initialise supports
     int nsupports = init_supports(home, t0, x0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
@@ -379,8 +384,14 @@ public:
       }
     }
 
-    int* nq = r.alloc<int>(domsum);
+    int* nq = r.alloc<int>(max_dom_size);
+    for (int i = x.size(); i--; ) {
+      assert(x[i].size() <= max_dom_size);
+    }
+
+    
     int nremoves;
+    max_dom_size = 1; // Reset maximal domain size
     
     // Remove values corresponding to empty rows 
     for (int i = x.size(); i--; ) {
@@ -395,7 +406,9 @@ public:
       }
 
       Iter::Values::Array r(nq,nremoves);
-      x[i].minus_v(home,r,false);
+      GECODE_ME_CHECK(x[i].minus_v(home,r,false));
+      if (x[i].size() > max_dom_size)
+        max_dom_size = x[i].size();
     }
 
     // post advisors
@@ -447,7 +460,8 @@ public:
       domsum(p.domsum),
       status(p.status),
       arity(p.arity),
-      unassigned(p.unassigned)
+      unassigned(p.unassigned),
+      max_dom_size(p.max_dom_size)
   {
     // Update views and advisors
     c.update(home,share,p.c);
@@ -482,7 +496,11 @@ public:
       return ES_FAILED;
     } 
 
-    ExecStatus msg = filterDomains(home);
+    ExecStatus msg;
+    if (validTuples.one()) 
+      msg = fixDomains(home);
+    else
+      msg = filterDomains(home);
 
     modified = NONE;
     status = NOT_PROPAGATING;
@@ -503,7 +521,7 @@ public:
     }
     return validTuples.intersect_with_mask(mask);
   }
-
+  
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
     
@@ -551,16 +569,25 @@ public:
     int count_unassigned = 0;
    
     Region r(home);
-    int* nq = r.alloc<int>(domsum);
+    int* nq = r.alloc<int>(max_dom_size);
+    max_dom_size = 1; // Smallest possible domain size
     
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       int i = a.index;
-
-      if (v.assigned() || (modified == ONE && last == i))
+      
+      // No point filtering assigned variables
+      if (v.assigned())
         continue;
 
+      // No point filtering variable if it was the only modified variable
+      if (modified == ONE && last == i) {
+        if (v.size() > max_dom_size)
+          max_dom_size = v.size();
+        continue;
+      }
+      
       unsigned int nremoves = 0;
       Int::ViewValues<View> it(v);
       while (it()) {
@@ -581,6 +608,9 @@ public:
       Iter::Values::Array r(nq,nremoves);
       v.minus_v(home,r,false);
 
+      if (v.size() > max_dom_size)
+        max_dom_size = v.size();
+
       if (v.assigned()) {
         --unassigned;
         a.dispose(home,c);
@@ -590,6 +620,21 @@ public:
 
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
+  }
+
+  forceinline ExecStatus
+  fixDomains(Space& home) {
+    // Only one valid tuple left, so we can fix all vars to that tuple
+    unsigned int tuple_index = validTuples.index_of_fixed();
+    TupleSet::Tuple t = tupleSet[tuple_index];
+    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+      CTAdvisor<View> a = a0.advisor();
+      View v = a.view();
+      v.eq(home,t[a.index]);
+      a.dispose(home,c);
+    }
+
+    return home.ES_SUBSUMED(*this);
   }
   
   // Dispose propagator and return its size
