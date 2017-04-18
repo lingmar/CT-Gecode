@@ -266,7 +266,8 @@ BitSet::init(A& a, unsigned int s, bool setbits) {
 forceinline bool
 BitSet::one(unsigned int i) const {
   assert(i < sz);
-  return data[i].one();
+  return false;
+  //return data[i].one();
 }
 
 /** Debugging purpose **/
