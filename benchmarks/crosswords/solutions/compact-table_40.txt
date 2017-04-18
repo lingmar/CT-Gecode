@@ -1,11 +1,13 @@
+0x7fc75c6b8dd0
 =====UNSATISFIABLE=====
+0x7fc75c6b8dd0
 
-%%  runtime:       2.288 (2288.469 ms)
-%%  solvetime:     0.007 (7.968 ms)
+%%  runtime:       3.114 (3114.491 ms)
+%%  solvetime:     0.006 (6.199 ms)
 %%  solutions:     0
 %%  variables:     50719
 %%  propagators:   0
-%%  propagations:  69542
+%%  propagations:  66815
 %%  nodes:         0
 %%  failures:      1
 %%  restarts:      0

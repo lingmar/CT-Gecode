@@ -1,13 +1,14 @@
 =====UNKNOWN=====
+0x7fc7f6bf07c0
 
-%%  runtime:       5:03.145 (303145.016 ms)
-%%  solvetime:     5:00.009 (300009.274 ms)
+%%  runtime:       5:03.834 (303834.393 ms)
+%%  solvetime:     5:00.005 (300005.633 ms)
 %%  solutions:     0
 %%  variables:     54700
 %%  propagators:   66485
-%%  propagations:  324421043
-%%  nodes:         53051
-%%  failures:      26504
+%%  propagations:  354557211
+%%  nodes:         58124
+%%  failures:      29040
 %%  restarts:      0
 %%  peak depth:    70
 

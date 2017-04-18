@@ -1166,7 +1166,6 @@ namespace Gecode { namespace FlatZinc {
       } else {
         extensional(s,x,ts,s.ann2ipl(ann));
       }
-      //std::cout << "extensional compact table" << endl;
       
 
     }

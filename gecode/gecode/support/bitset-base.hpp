@@ -114,6 +114,8 @@ namespace Gecode { namespace Support {
     static BitSetData o(BitSetData a, BitSetData b);
     /// Check if \a is the same
     bool same(BitSetData a);
+    /// Test whether exactly one bit is set
+    bool one() const;
   };
 
   /// Status of a bitset
@@ -333,6 +335,12 @@ namespace Gecode { namespace Support {
   forceinline bool
   BitSetData::same(BitSetData a) {
     return bits == a.bits;
+  }
+
+  forceinline bool
+  BitSetData::one() const {
+    return (bits & (bits - static_cast<Base>(1U))) ==
+      static_cast<Base>(0U);
   }
 
   /*
