@@ -545,7 +545,8 @@ public:
       if (modified == NONE) {
         modified = ONE;
         last = a.index;
-      } else modified = SEVERAL;
+      } else if (last != a.index)
+        modified = SEVERAL;
       
       if (a.view().assigned()) {
         unassigned--;
