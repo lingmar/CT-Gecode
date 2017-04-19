@@ -648,9 +648,9 @@ public:
         const int max_val = v.max();
         int new_min = min_val;
         int new_max = max_val;
-        unsigned int nremoves = 0;
+        int nremoves = 0;
         
-        // Iterate over range if domain is an interval
+        // Iterate over single range if domain is an interval
         if (v.range()) {
           // Increase new_min to smallest suppored value
           for (; new_min <= max_val; ++new_min) {
@@ -681,34 +681,51 @@ public:
           }
           
         } else { // Not range
+          new_min = Limits::max + 1; // Escape value
+
           Int::ViewValues<View> it(v);
           while (it()) {
-            int index = a.residue(it.val());
-            Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
-        
-            if (w.none()) {
-              index = validTuples.intersect_index(a.supports[it.val()]);
-
-              if (index != -1) 
-                a.set_residue(it.val(),index);
-              else 
-                nq[nremoves++] = it.val(); // Value not supported
+            if (!supported(a,it.val()))
+              nq[nremoves++] = it.val();
+            else {
+              if (new_min == Limits::max + 1) {
+                new_min = it.val();
+                nremoves = 0; // Will be covered by gq
+              }
+              new_max = it.val(); // Will collect the largest supported value
             }
             ++it;
           }
+          // Perform bounds propagation first
+          v.gq(home,new_min);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          v.lq(home,new_max);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          // Trim nremoves
+          while (nremoves >= 0 && nq[nremoves] > new_max)
+            nremoves--;
+        }
+        // Final domain propagation
+        if (nremoves > 0) {
+          Iter::Values::Array r(nq,nremoves);
+          v.minus_v(home,r,false);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
         }
         
-        Iter::Values::Array r(nq,nremoves);
-        v.minus_v(home,r,false);
-
         if (v.size() > max_dom_size)
           max_dom_size = v.size();
-
-        if (v.assigned()) {
-          --unassigned;
-          a.dispose(home,c);
-          break;
-        }
 
         ++count_unassigned;
         break;
@@ -734,7 +751,7 @@ public:
     }
     return true;
   }
-  
+
   forceinline ExecStatus
   fixDomains(Space& home) {
     // Only one valid tuple left, so we can fix all vars to that tuple
