@@ -45,3 +45,6 @@ out/*
 # Gecode examples
 gecode/examples/*
 gecode/examples/*
+
+# Local environment variables
+.env
