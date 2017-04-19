@@ -1,12 +1,13 @@
 L = array1d(0..21, [1, 1, 2, 2, 25, 2, 1, 1, 9, 5, 4, 1, 13, 19, 4, 5, 5, 12, 5, 4, 7, 5]);
 ----------
+0x7fb540d007c0
 
-%%  runtime:       0.041 (41.013 ms)
-%%  solvetime:     0.002 (2.061 ms)
+%%  runtime:       0.051 (51.080 ms)
+%%  solvetime:     0.001 (1.460 ms)
 %%  solutions:     1
 %%  variables:     198
 %%  propagators:   274
-%%  propagations:  988
+%%  propagations:  970
 %%  nodes:         10
 %%  failures:      0
 %%  restarts:      0

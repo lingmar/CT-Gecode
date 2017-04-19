@@ -17,7 +17,7 @@ else
 LIBS = -L${lib_path} -lgecodeflatzinc -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist -lpthread
 endif
 
-CXX_FLAGS = -I${include_path} -O3 #-DNDEBUG
+CXX_FLAGS = -I${include_path} -fno-inline-small-functions #-O3 #-DNDEBUG
 RM = rm -f
 
 OBJECTS = out/compact-table.o out/compact-table-buggy.o

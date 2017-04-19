@@ -1,13 +1,14 @@
 =====UNKNOWN=====
+0x7fedb505a330
 
-%%  runtime:       5:02.510 (302510.169 ms)
-%%  solvetime:     5:00.010 (300010.745 ms)
+%%  runtime:       5:02.734 (302734.530 ms)
+%%  solvetime:     5:00.007 (300007.069 ms)
 %%  solutions:     0
 %%  variables:     54751
 %%  propagators:   69155
-%%  propagations:  650021923
-%%  nodes:         103869
-%%  failures:      51890
+%%  propagations:  688493186
+%%  nodes:         110464
+%%  failures:      55185
 %%  restarts:      0
 %%  peak depth:    135
 

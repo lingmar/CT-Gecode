@@ -2,12 +2,15 @@
       \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
       \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$} \label{line:filterDom:2}
             \FOREACH{$a \in \Dom{x}$} \label{line:filterDom:3}
+              \STATE $\localvar{index} \leftarrow \Residues[x,a]$ \label{line:filterDom:res1}
+              \IF{$\CurrTable[index] \ \& \ \Supports[x,a][index] = 0$} \label{line:filterDom:res2} %\COMMENT{bit-wise and}
                   \STATE $\localvar{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
                   \IF{$\localvar{index~} \neq -1$} \label{line:filterDom:5}
-                        \STATE \todo{save index in residues} \COMMENT{No residues yet!} \label{line:filterDom:6}
+                        \STATE $\Residues[x,a] \leftarrow \localvar{index}$ \label{line:filterDom:6}
                   \ELSE
                         \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$ \label{line:filterDom:7}
                   \ENDIF
+              \ENDIF
              \ENDFOREACH
              \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
                  \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}

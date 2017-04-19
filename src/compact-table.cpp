@@ -270,6 +270,10 @@ protected:
   unsigned int arity;
   /// Number of unassigned variables
   unsigned int unassigned;
+  /// Tuple-set
+  TupleSet tupleSet;
+  /// Largest domain size
+  int max_dom_size;
   
 public:
   // Post table propagator
@@ -281,9 +285,8 @@ public:
       GECODE_ME_CHECK(x[i].lq(home, t.max()));
     }
     (void) new (home) CompactTable(home,x,t);
-    if (home.failed()) {
+    if (home.failed())
       return ES_FAILED;
-    }
     return ES_OK;
   }
   
@@ -299,11 +302,14 @@ public:
       arity(x0.size()),
       unassigned(x0.size())
   {
-    // Calculate domain sum
+    // Calculate sum of domain widths and maximum domain size
     domsum = 0;
-    for (int i = x0.size(); i--; )
+    max_dom_size = 1;
+    for (int i = x0.size(); i--; ) {
       domsum += x0[i].width();
-   
+      if (x0[i].size() > max_dom_size)
+        max_dom_size = x0[i].size();
+    }
     // Initialise supports
     int nsupports = init_supports(home, t0, x0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
@@ -317,6 +323,11 @@ public:
     //validTuples.init(t0.tuples(), nsupports);
     validTuples.init(nsupports);
 
+    if (validTuples.is_empty()) {
+      home.fail();
+      return;
+    }
+    
     // Schedule in case no advisors have been posted
     if (unassigned == 0)
       View::schedule(home,*this,Int::ME_INT_VAL);
@@ -331,6 +342,8 @@ public:
     Dom dom = r.alloc<BitSet>(x.size());
     init_dom(home,dom,ts_min,ts.max(),x);
 
+    int* tuple = r.alloc<int>(x.size());
+    
     // Allocate temporary supports and residues
     BitSet* supports = r.alloc<BitSet>(domsum);
     unsigned int* residues = r.alloc<unsigned int>(domsum);
@@ -361,20 +374,29 @@ public:
         // Set tuple as valid and save word index in residue
         for (int j = ts.arity(); j--; ) {
           int val = ts[i][j];
+          tuple[j] = val;
           unsigned int row = offset[j] + val - min_vals[j];
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
+        tupleSet.add(IntArgs(x.size(),tuple));
       }
     }
 
-    int* nq = r.alloc<int>(domsum);
-    int nremoves;
+    int* nq = r.alloc<int>(max_dom_size);
+    for (int i = x.size(); i--; ) {
+      assert(x[i].size() <= max_dom_size);
+    }
+
     
-    // Remove values corresponding to empty rows and post advisors
+    int nremoves;
+    max_dom_size = 1; // Reset maximal domain size
+    
+    // Remove values corresponding to empty rows 
     for (int i = x.size(); i--; ) {
       nremoves = 0;
+
       Int::ViewValues<View> it(x[i]);
       while (it()) {
         unsigned int row = offset[i] + it.val() - min_vals[i];
@@ -384,8 +406,14 @@ public:
       }
 
       Iter::Values::Array r(nq,nremoves);
-      x[i].minus_v(home,r,false);
+      GECODE_ME_CHECK(x[i].minus_v(home,r,false));
+      if (x[i].size() > max_dom_size)
+        max_dom_size = x[i].size();
+    }
 
+    // post advisors
+    for (int i = x.size(); i--; ) {
+            
       if (!x[i].assigned()) {
         
         // Decide whether to use an array or a hash table
@@ -407,7 +435,7 @@ public:
       } else
         unassigned--;      
     }
-    
+    tupleSet.finalize();
     return support_cnt;
   }
 
@@ -432,12 +460,14 @@ public:
       domsum(p.domsum),
       status(p.status),
       arity(p.arity),
-      unassigned(p.unassigned)
+      unassigned(p.unassigned),
+      max_dom_size(p.max_dom_size)
   {
     // Update views and advisors
     c.update(home,share,p.c);
+    tupleSet.update(home,share,p.tupleSet);
   }
-  
+
   // Create copy during cloning
   forceinline virtual Propagator*
   copy(Space& home, bool share) {
@@ -464,9 +494,13 @@ public:
     if (validTuples.is_empty()) {
       DEBUG_PRINT(("FAIL\n"));
       return ES_FAILED;
-    }
+    } 
 
-    ExecStatus msg = filterDomains(home);
+    ExecStatus msg;
+    if (validTuples.one()) 
+      msg = fixDomains(home);
+    else
+      msg = filterDomains(home);
 
     modified = NONE;
     status = NOT_PROPAGATING;
@@ -487,9 +521,10 @@ public:
     }
     return validTuples.intersect_with_mask(mask);
   }
-
+  
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
+    
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
 
     /** 
@@ -510,7 +545,8 @@ public:
       if (modified == NONE) {
         modified = ONE;
         last = a.index;
-      } else modified = SEVERAL;
+      } else if (last != a.index)
+        modified = SEVERAL;
       
       if (a.view().assigned()) {
         unassigned--;
@@ -534,16 +570,25 @@ public:
     int count_unassigned = 0;
    
     Region r(home);
-    int* nq = r.alloc<int>(domsum);
+    int* nq = r.alloc<int>(max_dom_size);
+    max_dom_size = 1; // Smallest possible domain size
     
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       int i = a.index;
-
-      if (v.assigned() || (modified == ONE && last == i))
+      
+      // No point filtering assigned variables
+      if (v.assigned())
         continue;
 
+      // No point filtering variable if it was the only modified variable
+      if (modified == ONE && last == i) {
+        if (v.size() > max_dom_size)
+          max_dom_size = v.size();
+        continue;
+      }
+      
       unsigned int nremoves = 0;
       Int::ViewValues<View> it(v);
       while (it()) {
@@ -564,6 +609,9 @@ public:
       Iter::Values::Array r(nq,nremoves);
       v.minus_v(home,r,false);
 
+      if (v.size() > max_dom_size)
+        max_dom_size = v.size();
+
       if (v.assigned()) {
         --unassigned;
         a.dispose(home,c);
@@ -573,6 +621,21 @@ public:
 
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
+  }
+
+  forceinline ExecStatus
+  fixDomains(Space& home) {
+    // Only one valid tuple left, so we can fix all vars to that tuple
+    unsigned int tuple_index = validTuples.index_of_fixed();
+    TupleSet::Tuple t = tupleSet[tuple_index];
+    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+      CTAdvisor<View> a = a0.advisor();
+      View v = a.view();
+      v.eq(home,t[a.index]);
+      a.dispose(home,c);
+    }
+
+    return home.ES_SUBSUMED(*this);
   }
   
   // Dispose propagator and return its size
