@@ -710,10 +710,10 @@ public:
             break;
           }
           // Trim nremoves
-          while (nremoves >= 0 && nq[nremoves] > new_max)
+          while (nremoves > 0 && nq[nremoves-1] > new_max)
             nremoves--;
         }
-        // Final domain propagation
+        // Domain propagation
         if (nremoves > 0) {
           Iter::Values::Array r(nq,nremoves);
           v.minus_v(home,r,false);
