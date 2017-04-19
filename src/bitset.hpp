@@ -21,6 +21,8 @@ public:
   /// Allocate for \a sz bits and allocator \a a (only after default constructor)
   template<class A>
   void allocate(A& a, unsigned int sz);
+  /// Empty set
+  bool empty() const;
   /// Perform "or" with \a a of word index \a i
   void o(const BitSet& a, unsigned int i);
   /// Perform "and" with \a a of word index \a 
@@ -124,7 +126,9 @@ private:
  * Bit set
  */
 forceinline
-BitSet::BitSet(void) {}
+BitSet::BitSet(void) {
+  sz = 0;
+}
 
 template<class A>
 forceinline
@@ -176,6 +180,10 @@ BitSet::allocate(A& a, unsigned int sz0) {
   sz = sz0;
 }
 
+forceinline bool
+BitSet::empty() const {
+  return sz == 0;
+}
 
 forceinline void
 BitSet::copy(unsigned int sz, const BitSet& bs) {
