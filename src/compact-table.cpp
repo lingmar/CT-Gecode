@@ -563,22 +563,24 @@ public:
   forceinline ExecStatus
   filterDomains(Space& home) {
     if (unassigned == 0) return home.ES_SUBSUMED(*this);
-        
+    // Count the number of scanned unassigned variables
     int count_unassigned = 0;
-   
+    // Array to collect values to remove
     Region r(home);
     int* nq = r.alloc<int>(max_dom_size);
-    max_dom_size = 1; // Smallest possible domain size
     
-    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+    // Smallest possible domain size
+    max_dom_size = 1;
+
+    // Scan all values of all unassigned variables to see if they
+    // are still supported.
+    for (Advisors<CTAdvisor<View> > a0(c);
+         a0() && count_unassigned < unassigned; // End if only assigned variables left
+         ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       int i = a.index;
       
-      // No point filtering assigned variables
-      if (v.assigned())
-        continue;
-
       // No point filtering variable if it was the only modified variable
       if (touched_var == i) {
         touched_var = -1;
@@ -586,39 +588,139 @@ public:
           max_dom_size = v.size();
         continue;
       }
-      
-      unsigned int nremoves = 0;
-      Int::ViewValues<View> it(v);
-      while (it()) {
-        int index = a.residue(it.val());
-        Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
-        
-        if (w.none()) {
-          index = validTuples.intersect_index(a.supports[it.val()]);
 
-          if (index != -1) 
-            a.set_residue(it.val(),index);
-          else 
-            nq[nremoves++] = it.val(); // Value not supported
-        }
-        ++it;
-      }
-      
-      Iter::Values::Array r(nq,nremoves);
-      v.minus_v(home,r,false);
-
-      if (v.size() > max_dom_size)
-        max_dom_size = v.size();
-
-      if (v.assigned()) {
-        --unassigned;
-        a.dispose(home,c);
-      } else if (++count_unassigned == unassigned) // Rest of the variables assigned 
+      switch (v.size()) {
+      case 1: {  // Variable assigned, nothing to be done.
         break;
-    }
+      }
+      case 2: { // Consider min and max values
+        const int min_val = v.min();
+        const int max_val = v.max();
 
+        // Fix to max_val if min_val not supported
+        if (!supported(a,min_val)) {
+          v.eq(home,max_val);
+          --unassigned;
+          a.dispose(home,c);
+          break;
+        }
+
+        // Fix to min_val if max_val not supported
+        if (!supported(a,max_val)) {
+          v.eq(home,min_val);
+          --unassigned;
+          a.dispose(home,c);
+          break;
+        }
+
+        // Otherwise v is still unassigned
+        count_unassigned++;
+        break;
+      } default:
+        const int min_val = v.min();
+        const int max_val = v.max();
+        int new_min = min_val;
+        int new_max = max_val;
+        int nremoves = 0;
+        
+        // Iterate over single range if domain is an interval
+        if (v.range()) {
+          // Increase new_min to smallest supported value
+          for (; new_min <= max_val; ++new_min) {
+            if (supported(a,new_min))
+              break;
+          }
+          v.gq(home,new_min);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          // Decrease new_max to largest supported value
+          for (; new_max >= new_min; --new_max) {
+            if (supported(a,new_max))
+              break;
+          }
+          v.lq(home,new_max);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          // Filter out values in between min and max
+          for (int val = new_min + 1; val < new_max; ++val) {
+            if (!supported(a,val))
+              nq[nremoves++] = val;
+          }
+          
+        } else { // Domain is not a range
+          new_min = Limits::max; // Escape value
+
+          Int::ViewValues<View> it(v);
+          while (it()) {
+            if (!supported(a,it.val()))
+              nq[nremoves++] = it.val();
+            else {
+              if (new_min == Limits::max) {
+                new_min = it.val();
+                nremoves = 0; // Will be covered by gq
+              }
+              new_max = it.val(); // Will collect the largest supported value
+            }
+            ++it;
+          }
+          // Perform bounds propagation first
+          v.gq(home,new_min);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          v.lq(home,new_max);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          // Trim nremoves
+          while (nremoves > 0 && nq[nremoves-1] > new_max)
+            nremoves--;
+        }
+        // Domain propagation
+        if (nremoves > 0) {
+          Iter::Values::Array r(nq,nremoves);
+          v.minus_v(home,r,false);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+        }
+        
+        if (v.size() > max_dom_size)
+          max_dom_size = v.size();
+
+        ++count_unassigned;
+      }
+    }
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
+  }
+
+  forceinline bool
+  supported(CTAdvisor<View>& a, int val) {
+    int index = a.residue(val);
+    Support::BitSetData w = validTuples.a(a.supports[val],index);
+        
+    if (w.none()) {
+      index = validTuples.intersect_index(a.supports[val]);
+      if (index != -1) {
+        a.set_residue(val,index);
+        return true;
+      }
+      return false;
+    }
+    return true;
   }
 
   forceinline ExecStatus

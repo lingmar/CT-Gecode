@@ -50,19 +50,14 @@ public:
   void dispose(A& a);
   /// Next (disabled)
   unsigned int next(unsigned int i) const;
-  /// Return number of set bits among the bits 0 to \a i
-  unsigned int nset(unsigned int i) const;
   /// Test whether exactly one bit is set for word index \i
   bool one(unsigned int i) const;
+
   /** Debugging **/
   /// Print bit set
   void print() const;
   /// Get size
   unsigned int size() const;
-  /// Get number of set bits
-  unsigned int nset() const;
-  /// Get number of non-zero words
-  unsigned int nset_words() const;
 };
 
 template<class A>
@@ -101,22 +96,20 @@ public:
   Gecode::Support::BitSetData a(const BitSet& b, unsigned int i);
   /// Get the number of bits
   unsigned int size() const;
-  
-  /** Debugging purpose **/
-  /// Print bit set
-  void print() const;
-  /// Get number of set bits
-  unsigned int nset() const;
-  /// Get limit
-  unsigned int get_limit() const;
-  /// Check if none bit is set in words
+  /// Check if no bit is set in words
   bool none() const;
-  /// Print mask
-  void print_mask() const;
   /// Test whether exactly one bit is set
   bool one() const;
   /// Get the index of the set bit (only after one() returns true)
   unsigned int index_of_fixed() const;
+  
+  /** Debugging purpose **/
+  /// Print bit set
+  void print() const;
+  /// Get limit
+  unsigned int get_limit() const;
+  /// Print mask
+  void print_mask() const;
 private: 
   /// Clear \a set bits in words
   void clearall(unsigned int sz, bool setbits);
@@ -295,41 +288,6 @@ BitSet::size() const {
   return sz;
 }
 
-forceinline unsigned int
-BitSet::nset() const {
-  int count = 0;
-  for (unsigned int i = 0; i < sz; i++) {
-    if (get(i)) {
-      count++;
-    }
-  }
-  return count;
-}
-
-forceinline unsigned int
-BitSet::nset_words() const {
-  int count = 0;
-  bool verbose = false;
-  if (none()) {
-    verbose = true;
-  }
-  for (unsigned int i = Gecode::Support::BitSetData::data(sz+1); i--; ) {
-    count += !data[i].none();
-    if (verbose) {
-      std::cout << "i=" << i << std::endl;
-    }
-    if (verbose && !data[i].none()) {
-      std::cout << "word " << i << "is not none " << std::endl;
-      std::cout << "get(sz)" << RawBitSetBase::get(sz) << std::endl;
-      std::cout << "nwords (?) = " << Gecode::Support::BitSetData::data(sz+1) << std::endl;
-      std::cout << "nbits: " << sz << std::endl; 
-      print();
-      assert(false);
-    }
-  }
-  return count;
-}
-
 /**
  * Sparse bit set
  */
@@ -476,12 +434,6 @@ SparseBitSet<A>::print() const {
   std::cout << std::endl;
   std::cout << "limit: " << limit << std::endl;
   //std::cout << "words.none() = " << words.none() << std::endl;
-}
-
-template<class A>
-forceinline unsigned int
-SparseBitSet<A>::nset() const {
-  return words.nset();
 }
 
 template<class A>
