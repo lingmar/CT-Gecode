@@ -563,10 +563,8 @@ public:
   forceinline ExecStatus
   filterDomains(Space& home) {
     if (unassigned == 0) return home.ES_SUBSUMED(*this);
-
     // Count the number of scanned unassigned variables
     int count_unassigned = 0;
-
     // Array to collect values to remove
     Region r(home);
     int* nq = r.alloc<int>(max_dom_size);
@@ -574,7 +572,8 @@ public:
     // Smallest possible domain size
     max_dom_size = 1;
 
-    // Scan all values of all variables to see if they are still supported.
+    // Scan all values of all unassigned variables to see if they
+    // are still supported.
     for (Advisors<CTAdvisor<View> > a0(c);
          a0() && count_unassigned < unassigned; // End if only assigned variables left
          ++a0) {
@@ -598,42 +597,16 @@ public:
         const int min_val = v.min();
         const int max_val = v.max();
 
-        bool min_supported = true;
-        int min_index = a.residue(min_val);
-        // Perform "and" with last supportive word
-        Support::BitSetData w_min = validTuples.a(a.supports[min_val],min_index);
-        if (w_min.none()) {
-          min_index = validTuples.intersect_index(a.supports[min_val]);
-          if (min_index != -1)
-            a.set_residue(min_val,min_index); // Supported
-          else
-            min_supported = false;            // Not supported
-        }
-        
-        // Fix value to max_val if min_val not supported
-        if (!min_supported) {
+        // Fix to max_val if min_val not supported
+        if (!supported(a,min_val)) {
           v.eq(home,max_val);
           --unassigned;
           a.dispose(home,c);
           break;
         }
 
-        // min_val supported, must check if max_val is supported
-        bool max_supported = true;
-        int max_index = a.residue(max_val);
-        // Perform "and" with last supportive word
-        Support::BitSetData w_max = validTuples.a(a.supports[max_val],max_index);
-        if (w_max.none()) {
-          max_index = validTuples.intersect_index(a.supports[max_val]);
-          if (max_index != -1)
-            a.set_residue(max_val,min_index); // Supported
-          else
-            max_supported = false;            // Not supported
-        }
-
-        // Fix value to min_val if max_val not supported
-        if (!max_supported) {
-          assert(min_supported);
+        // Fix to min_val if max_val not supported
+        if (!supported(a,max_val)) {
           v.eq(home,min_val);
           --unassigned;
           a.dispose(home,c);
@@ -643,6 +616,7 @@ public:
         // Otherwise v is still unassigned
         count_unassigned++;
         break;
+
       } default:
         const int min_val = v.min();
         const int max_val = v.max();
@@ -652,7 +626,7 @@ public:
         
         // Iterate over single range if domain is an interval
         if (v.range()) {
-          // Increase new_min to smallest suppored value
+          // Increase new_min to smallest supported value
           for (; new_min <= max_val; ++new_min) {
             if (supported(a,new_min))
               break;
@@ -680,15 +654,15 @@ public:
               nq[nremoves++] = val;
           }
           
-        } else { // Not range
-          new_min = Limits::max + 1; // Escape value
+        } else { // Domain is not a range
+          new_min = Limits::max; // Escape value
 
           Int::ViewValues<View> it(v);
           while (it()) {
             if (!supported(a,it.val()))
               nq[nremoves++] = it.val();
             else {
-              if (new_min == Limits::max + 1) {
+              if (new_min == Limits::max) {
                 new_min = it.val();
                 nremoves = 0; // Will be covered by gq
               }
