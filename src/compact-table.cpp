@@ -575,7 +575,9 @@ public:
     max_dom_size = 1;
 
     // Scan all values of all variables to see if they are still supported.
-    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+    for (Advisors<CTAdvisor<View> > a0(c);
+         a0() && count_unassigned < unassigned; // End if only assigned variables left
+         ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       int i = a.index;
@@ -593,9 +595,8 @@ public:
         break;
       }
       case 2: { // Consider min and max values
-        
-        int min_val = v.min();
-        int max_val = v.max();
+        const int min_val = v.min();
+        const int max_val = v.max();
 
         bool min_supported = true;
         int min_index = a.residue(min_val);
@@ -643,23 +644,60 @@ public:
         count_unassigned++;
         break;
       } default:
+        const int min_val = v.min();
+        const int max_val = v.max();
+        int new_min = min_val;
+        int new_max = max_val;
         unsigned int nremoves = 0;
-        Int::ViewValues<View> it(v);
-        while (it()) {
-          int index = a.residue(it.val());
-          Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
         
-          if (w.none()) {
-            index = validTuples.intersect_index(a.supports[it.val()]);
-
-            if (index != -1) 
-              a.set_residue(it.val(),index);
-            else 
-              nq[nremoves++] = it.val(); // Value not supported
+        // Iterate over range if domain is an interval
+        if (v.range()) {
+          // Increase new_min to smallest suppored value
+          for (; new_min <= max_val; ++new_min) {
+            if (supported(a,new_min))
+              break;
           }
-          ++it;
+          v.gq(home,new_min);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          // Decrease new_max to largest supported value
+          for (; new_max >= new_min; --new_max) {
+            if (supported(a,new_max))
+              break;
+          }
+          v.lq(home,new_max);
+          if (v.assigned()) {
+            --unassigned;
+            a.dispose(home,c);
+            break;
+          }
+          // Filter out values in between min and max
+          for (int val = new_min + 1; val < new_max; ++val) {
+            if (!supported(a,val))
+              nq[nremoves++] = val;
+          }
+          
+        } else { // Not range
+          Int::ViewValues<View> it(v);
+          while (it()) {
+            int index = a.residue(it.val());
+            Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
+        
+            if (w.none()) {
+              index = validTuples.intersect_index(a.supports[it.val()]);
+
+              if (index != -1) 
+                a.set_residue(it.val(),index);
+              else 
+                nq[nremoves++] = it.val(); // Value not supported
+            }
+            ++it;
+          }
         }
-      
+        
         Iter::Values::Array r(nq,nremoves);
         v.minus_v(home,r,false);
 
@@ -669,9 +707,10 @@ public:
         if (v.assigned()) {
           --unassigned;
           a.dispose(home,c);
-        } else if (++count_unassigned == unassigned) // Rest of the variables assigned 
           break;
+        }
 
+        ++count_unassigned;
         break;
       }
     }
@@ -680,6 +719,22 @@ public:
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
 
+  forceinline bool
+  supported(CTAdvisor<View>& a, int val) {
+    int index = a.residue(val);
+    Support::BitSetData w = validTuples.a(a.supports[val],index);
+        
+    if (w.none()) {
+      index = validTuples.intersect_index(a.supports[val]);
+      if (index != -1) {
+        a.set_residue(val,index);
+        return true;
+      }
+      return false;
+    }
+    return true;
+  }
+  
   forceinline ExecStatus
   fixDomains(Space& home) {
     // Only one valid tuple left, so we can fix all vars to that tuple
