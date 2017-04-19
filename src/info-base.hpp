@@ -34,8 +34,10 @@ public:
   void copy(const InfoBase& ib) {
     nvals = ib.nvals;
     for (int i = 0; i < nvals; i++) {
-      supports[i].init(heap,ib.supports[i].size());
-      supports[i].copy(ib.supports[i].size(), ib.supports[i]);
+      if (!ib.supports[i].empty()) {
+        supports[i].init(heap,ib.supports[i].size());
+        supports[i].copy(ib.supports[i].size(), ib.supports[i]);
+      }
     }
   }
   /// Allocate with allocator \a for \a n values
@@ -77,15 +79,14 @@ public:
     min = x.min();
     // Number of bitsets
     nvals = static_cast<unsigned int>(x.max() - min + 1);
-    DEBUG_PRINT(("init supports, nsupports = %d, nvals = %d\n",
-                 nsupports,nvals));
-    
     // Allocate memory and initialise
     supports = heap.alloc<BitSet>(nvals);
     for (int i = 0; i < nvals; i++) {
-      assert(nsupports <= s[offset + i].size());
-      supports[i].init(heap,nsupports);
-      supports[i].copy(nsupports,s[i + offset]);
+      if (!s[i + offset].empty()) { // Skip empty sets
+        assert(nsupports <= s[offset + i].size());
+        supports[i].init(heap,nsupports);
+        supports[i].copy(nsupports,s[i + offset]);
+      }
     }
   }
 
@@ -94,17 +95,10 @@ public:
   }
 
   virtual unsigned int row(int val) {
-    if (val < min) {
-      printf("val = %d, min = %d\n", val,min);
-    }
     assert(val >= min);
     return static_cast<unsigned int>(val - min);
   }
   
-  // virtual void copy(const InfoBase& ia) {
-  //   InfoBase::copy(ia);
-  //   min = ia.min;
-  // }
 };
 
 class InfoHash : public InfoBase {

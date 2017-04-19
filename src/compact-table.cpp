@@ -347,8 +347,6 @@ public:
     // Allocate temporary supports and residues
     BitSet* supports = r.alloc<BitSet>(domsum);
     unsigned int* residues = r.alloc<unsigned int>(domsum);
-    for (int i = 0; i < domsum; i++)
-      supports[i].init(r,ts.tuples(),false);
     
     // Save initial minimum value and widths for indexing supports and residues
     int* min_vals = r.alloc<int>(x.size());
@@ -376,6 +374,10 @@ public:
           int val = ts[i][j];
           tuple[j] = val;
           unsigned int row = offset[j] + val - min_vals[j];
+
+          if (supports[row].empty()) // Initialise in case not done
+            supports[row].init(r,ts.tuples(),false);
+
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
         }
@@ -400,7 +402,7 @@ public:
       Int::ViewValues<View> it(x[i]);
       while (it()) {
         unsigned int row = offset[i] + it.val() - min_vals[i];
-        if (supports[row].none())
+        if (supports[row].size() == 0)
           nq[nremoves++] = it.val();
         ++it;
       }
