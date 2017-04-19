@@ -253,13 +253,10 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
-  enum Modified {NONE, ONE, SEVERAL};
   /// Whether propagator is propagating
   Status status;
-  /// Number of variables that are modified since last propagation
-  Modified modified;
-  /// Index of the last modified variable
-  int last;
+  /// -2 if more than one touched var, -1 if none, else index of touched var
+  int touched_var;
   /// Council of advisors
   Council<CTAdvisor<View> > c;
   /// The indices of valid tuples
@@ -298,7 +295,7 @@ public:
     : Propagator(home), c(home),
       validTuples(static_cast<Space&>(home)),
       status(NOT_PROPAGATING),
-      modified(NONE),
+      touched_var(-1),
       arity(x0.size()),
       unassigned(x0.size())
   {
@@ -504,7 +501,6 @@ public:
     else
       msg = filterDomains(home);
 
-    modified = NONE;
     status = NOT_PROPAGATING;
     return msg;
   }
@@ -544,11 +540,10 @@ public:
 
     // Schedule propagator and dispose if assigned
     if (diff) {
-      if (modified == NONE) {
-        modified = ONE;
-        last = a.index;
-      } else if (last != a.index)
-        modified = SEVERAL;
+      if (touched_var == -1) // no touched variable yet!
+        touched_var = a.index;
+      else if (touched_var != a.index) // some other variable is touched
+        touched_var = -2;
       
       if (a.view().assigned()) {
         unassigned--;
@@ -585,7 +580,8 @@ public:
         continue;
 
       // No point filtering variable if it was the only modified variable
-      if (modified == ONE && last == i) {
+      if (touched_var == i) {
+        touched_var = -1;
         if (v.size() > max_dom_size)
           max_dom_size = v.size();
         continue;
