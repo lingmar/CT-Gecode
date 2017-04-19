@@ -616,7 +616,6 @@ public:
         // Otherwise v is still unassigned
         count_unassigned++;
         break;
-
       } default:
         const int min_val = v.min();
         const int max_val = v.max();
@@ -702,10 +701,8 @@ public:
           max_dom_size = v.size();
 
         ++count_unassigned;
-        break;
       }
     }
-
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
