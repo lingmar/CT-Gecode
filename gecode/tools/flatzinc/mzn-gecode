@@ -36,6 +36,6 @@
 #
 
 
-prefix=/usr/local
+prefix=/Users/linneaingmar/Documents/Kurser/exjobb/gecode
 datarootdir=${prefix}/share
 FLATZINC_CMD=fzn-gecode minizinc -I ${datarootdir}/gecode/mznlib "$@"
