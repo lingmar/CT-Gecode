@@ -563,22 +563,23 @@ public:
   forceinline ExecStatus
   filterDomains(Space& home) {
     if (unassigned == 0) return home.ES_SUBSUMED(*this);
-        
+
+    // Count the number of scanned unassigned variables
     int count_unassigned = 0;
-   
+
+    // Array to collect values to remove
     Region r(home);
     int* nq = r.alloc<int>(max_dom_size);
-    max_dom_size = 1; // Smallest possible domain size
     
+    // Smallest possible domain size
+    max_dom_size = 1;
+
+    // Scan all values of all variables to see if they are still supported.
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       int i = a.index;
       
-      // No point filtering assigned variables
-      if (v.assigned())
-        continue;
-
       // No point filtering variable if it was the only modified variable
       if (touched_var == i) {
         touched_var = -1;
@@ -586,35 +587,93 @@ public:
           max_dom_size = v.size();
         continue;
       }
-      
-      unsigned int nremoves = 0;
-      Int::ViewValues<View> it(v);
-      while (it()) {
-        int index = a.residue(it.val());
-        Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
-        
-        if (w.none()) {
-          index = validTuples.intersect_index(a.supports[it.val()]);
 
-          if (index != -1) 
-            a.set_residue(it.val(),index);
-          else 
-            nq[nremoves++] = it.val(); // Value not supported
-        }
-        ++it;
-      }
-      
-      Iter::Values::Array r(nq,nremoves);
-      v.minus_v(home,r,false);
-
-      if (v.size() > max_dom_size)
-        max_dom_size = v.size();
-
-      if (v.assigned()) {
-        --unassigned;
-        a.dispose(home,c);
-      } else if (++count_unassigned == unassigned) // Rest of the variables assigned 
+      switch (v.size()) {
+      case 1: {  // Variable assigned, nothing to be done.
         break;
+      }
+      case 2: { // Consider min and max values
+        
+        int min_val = v.min();
+        int max_val = v.max();
+
+        bool min_supported = true;
+        int min_index = a.residue(min_val);
+        // Perform "and" with last supportive word
+        Support::BitSetData w_min = validTuples.a(a.supports[min_val],min_index);
+        if (w_min.none()) {
+          min_index = validTuples.intersect_index(a.supports[min_val]);
+          if (min_index != -1)
+            a.set_residue(min_val,min_index); // Supported
+          else
+            min_supported = false;            // Not supported
+        }
+        
+        // Fix value to max_val if min_val not supported
+        if (!min_supported) {
+          v.eq(home,max_val);
+          --unassigned;
+          a.dispose(home,c);
+          break;
+        }
+
+        // min_val supported, must check if max_val is supported
+        bool max_supported = true;
+        int max_index = a.residue(max_val);
+        // Perform "and" with last supportive word
+        Support::BitSetData w_max = validTuples.a(a.supports[max_val],max_index);
+        if (w_max.none()) {
+          max_index = validTuples.intersect_index(a.supports[max_val]);
+          if (max_index != -1)
+            a.set_residue(max_val,min_index); // Supported
+          else
+            max_supported = false;            // Not supported
+        }
+
+        // Fix value to min_val if max_val not supported
+        if (!max_supported) {
+          assert(min_supported);
+          v.eq(home,min_val);
+          --unassigned;
+          a.dispose(home,c);
+          break;
+        }
+
+        // Otherwise v is still unassigned
+        count_unassigned++;
+        break;
+      } default:
+        unsigned int nremoves = 0;
+        Int::ViewValues<View> it(v);
+        while (it()) {
+          int index = a.residue(it.val());
+          Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
+        
+          if (w.none()) {
+            index = validTuples.intersect_index(a.supports[it.val()]);
+
+            if (index != -1) 
+              a.set_residue(it.val(),index);
+            else 
+              nq[nremoves++] = it.val(); // Value not supported
+          }
+          ++it;
+        }
+      
+        Iter::Values::Array r(nq,nremoves);
+        v.minus_v(home,r,false);
+
+        if (v.size() > max_dom_size)
+          max_dom_size = v.size();
+
+        if (v.assigned()) {
+          --unassigned;
+          a.dispose(home,c);
+        } else if (++count_unassigned == unassigned) // Rest of the variables assigned 
+          break;
+
+        break;
+      }
     }
 
     // Subsume if there is at most one non-assigned variable
