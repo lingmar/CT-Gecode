@@ -397,6 +397,8 @@ Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
 \Todo{Define the parts of the Gecode API that is used later (propagate(), status
   messages...)}
 
+% http://ceur-ws.org/Vol-810/paper-s08.pdf
+
 % definiera de delar av Gecodes API som dyker upp senare, såsom propagate(), status messages
 % använda inbyggda klasen BitSets?
 %Här bör du bl.a. skriva allt som är relevant för resten av rapporten om Gecodes API. T.ex. de tre returvärdena som propagerare ska returnera, ungefär som du har skrivit i 3.2.3, fast utan det CT-specifika.
@@ -990,6 +992,19 @@ proving~\Thmref{thm:prop} is trivial.
 \section{Implementation}
 \label{sec:implementation}
 
+\paragraph{Comparison with implementation in OR-tools}
+
+% Det här är vad jag hittar av värde när jag läser igenom OR-tools kod:
+
+% De har två versioner av CT: en stor (antal tupler > 64) och en liten (antal tupler <= 64). Den lilla versionen drar nytta av att alla aktiva tupler kan representeras med bara ett 64-bitars ord istället för en array av 64-bitars ord. Då kan man till exempel skippa arrayen residues, och arrayen index i SparseBitSet. Osäker på hur stor nytta en sån förändring skulle göra.
+% De allokerar arrayer som beror på domän-bredd och inte domän-storlek (för residues och supports), och lagrar initiala minsta domänvärdet för att indexera i dem, precis som jag gör i de fall jag inte använder en hashtabell. Eftersom de inte har en kopieringsbaserad lösare antar jag att det inte är ett problem i deras fall.
+% I filterDomains har de några specialfall:
+% x.size() == 2: kan titta på bara x.min() och x.max() och fixera x till rätt värde / rapportera fail om inget värde har stöd
+% om x’s domän är ett sammanhängande intervall
+% Resterande fall.
+% I fall 2 och 3 ovan undviker de att använda motsvarande minus_v-operatorn (den som tar bort alla värden i en array) så långt som möjligt eftersom den är dyr, utan använder <=, >=-operatorn på de värden som ska tas bort på x’s gränser och minus_v bara på de värden som ska tas bort mitt i domänen. Jag tror det gäller i Gecode också att minus_v är dyr så det borde jag kunna använda.
+% I updateTable har de det här specialfallet som jag kan använda: om variabeln x är fixerad till värdet a behöver jag inte allokera en temporär mask utan kan använda supports[x,a] direkt som mask.
+
 \Todo{Copy-function.}
 
 
@@ -1104,3 +1119,4 @@ This appendix presents the source code for the implementation described in \Chap
 % https://en.wikipedia.org/wiki/Pairing_function
 % https://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
 % http://stackoverflow.com/questions/37918951/what-is-a-minimal-hash-function-for-a-pair-of-ints-that-has-low-chance-of-collis
+
