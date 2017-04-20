@@ -490,10 +490,8 @@ public:
   propagate(Space& home, const ModEventDelta&) {
     status = PROPAGATING;
     
-    if (validTuples.is_empty()) {
-      DEBUG_PRINT(("FAIL\n"));
+    if (validTuples.is_empty())
       return ES_FAILED;
-    } 
 
     ExecStatus msg;
     if (validTuples.one()) 
@@ -507,11 +505,16 @@ public:
 
   forceinline bool
   updateTable(CTAdvisor<View> a, Space& home) {
+    // No need for temporary mask if only one value
+    if (a.view().assigned()) { 
+      return validTuples.intersect_with_mask(a.supports[a.view().val()]);
+    }
+    // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
     mask.allocate(r,validTuples.size());
-    //printf("Size = %d\n", mask.size());
     validTuples.clear_mask(mask);
+    
     Int::ViewValues<View> it(a.view());
     while (it()) {
       validTuples.add_to_mask(a.supports[it.val()],mask);
