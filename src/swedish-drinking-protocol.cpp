@@ -36,25 +36,35 @@ public:
     t.add(IntArgs(3,1,2,3));
     
     t.finalize();
-
-    IntArgs::create(INT_MAX + 1,0);
     
     TupleSet t0;
     //t0.add(IntArgs(3,1,2,3));
     t0.finalize();
 
+    REG expression;
+    for (int i = t.tuples(); i--; ) {
+      REG r;
+      for (int j = t.arity(); j--; ) {
+        r += REG(t[i][j]);
+      }
+      expression |= r;
+    }
+
+    DFA dfa(expression);
     
     //extensional(*this, x, t);
     switch (opt.model()) {
     case 0: {
       extensional(*this, x, t);
-      extensional(*this, x, t0);
       break;
     }
     case 1: {
       extensional2(*this, x, t);
       //extensional2(*this, x, t0);
       break;
+    }
+    case 2: {
+      extensional(*this, x, dfa);
     }
     default:
       break;
@@ -85,8 +95,9 @@ public:
 
 int main(int argc, char* argv[]) {
   Options opt("SwedishDrinkingProtocol");
-  opt.model(0, "g", "extensional");
+  opt.model(0, "g", "extensional with tuplesets");
   opt.model(1, "c", "compact table");
+  opt.model(2, "r", "extensional regular expression");
   opt.parse(argc, argv);
 
   Script::run<SwedishDrinkingProtocol,DFS,Options>(opt);

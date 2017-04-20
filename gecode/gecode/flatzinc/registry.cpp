@@ -44,8 +44,11 @@
 #include <gecode/int.hh>
 #include <gecode/minimodel.hh>
 
-#include "../../../src/compact-table.cpp"//"/Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp"
+#include "../../../src/compact-table.cpp"
 
+#define GECODE_REGULAR "gecode-regular"
+#define GECODE_TUPLESET "gecode-tupleset"
+#define COMPACT_TABLE "compact-table"
 
 #ifdef GECODE_HAS_SET_VARS
 #include <gecode/set.hh>
@@ -1089,7 +1092,6 @@ namespace Gecode { namespace FlatZinc {
       DFA dfa(q0,t,f);
       free(f);
       unshare(s, iv);
-      std::cout << "extensional dfa" << endl;
       extensional(s, iv, dfa, s.ann2ipl(ann));
     }
 
@@ -1144,33 +1146,67 @@ namespace Gecode { namespace FlatZinc {
       BoolVarArgs x = s.arg2boolvarargs(ce[0]);
       rel(s,x,IRT_GQ,s.ann2ipl(ann));
     }
-
+    
     void
     p_table_int(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
+      //char* buf;
+      //buf[120938102938] = 'a';
+
       IntVarArgs x = s.arg2intvarargs(ce[0]);
       IntArgs tuples = s.arg2intargs(ce[1]);
       int noOfVars   = x.size();
       int noOfTuples = tuples.size() == 0 ? 0 : (tuples.size()/noOfVars);
-      TupleSet ts;
-      for (int i=0; i<noOfTuples; i++) {
-        IntArgs t(noOfVars);
-        for (int j=0; j<x.size(); j++) {
-          t[j] = tuples[i*noOfVars+j];
-        }
-        ts.add(t);
-      }
-      ts.finalize();
-      char* prop = getenv("TABLE_PROPAGATOR");
-      if (prop != NULL && strcmp(prop, "compact-table")) {
-        extensional2(s,x,ts);
-      } else {
-        extensional(s,x,ts,s.ann2ipl(ann));
-      }
       
+      char* prop = getenv("TABLE_PROPAGATOR");
+               
+      if (prop != NULL && strcmp(prop, GECODE_REGULAR) == 0) {
+        printf("REGULAR\n");
+        
+        // Build regular expression
+        REG expression;
+        for (int i = noOfTuples; i--; ) {
+          REG r;
+          for (int j = noOfVars; j--; ) {
+            r += REG(tuples[i*noOfVars+j]);
+          }
+          expression |= r;
+        }
 
+        DFA dfa(expression);
+        extensional(s,x,dfa);
+        
+      } else if (prop != NULL &&
+                 (strcmp(prop, GECODE_TUPLESET) == 0||
+                  strcmp(prop, COMPACT_TABLE) == 0)) {
+        TupleSet ts;
+        for (int i=0; i<noOfTuples; i++) {
+          IntArgs t(noOfVars);
+          for (int j=0; j<x.size(); j++) {
+            t[j] = tuples[i*noOfVars+j];
+          }
+          ts.add(t);
+        }
+        ts.finalize();
+
+        if (strcmp(prop, COMPACT_TABLE) == 0) {
+          printf("COMPACT TABLE\n");
+          extensional2(s,x,ts);
+        } else {
+          printf("GECODE TUPLESET\n");
+          extensional(s,x,ts,s.ann2ipl(ann));
+        }
+      } else {
+        printf("WARN: TABLE_PROPAGATOR not properly set, found: %s\n",prop);
+        printf("Legal values are: %s, %s, %s\n",
+               GECODE_REGULAR,GECODE_TUPLESET,COMPACT_TABLE);
+        GECODE_NEVER;
+      }
     }
+    
     void
     p_table_bool(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
+      // De-activate for benchmarks
+      GECODE_NEVER;
       BoolVarArgs x = s.arg2boolvarargs(ce[0]);
       IntArgs tuples = s.arg2boolargs(ce[1]);
       int noOfVars   = x.size();
@@ -1184,7 +1220,6 @@ namespace Gecode { namespace FlatZinc {
         ts.add(t);
       }
       ts.finalize();
-      //std::cout << "extensional bools" << endl;
       char* prop = getenv("TABLE_PROPAGATOR");
       if (prop != NULL && strcmp(prop, "compact-table")) {
         extensional2(s,x,ts);
