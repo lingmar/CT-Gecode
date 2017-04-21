@@ -17,6 +17,6 @@ FZN=$(echo $MZN | rev | cut -f 2- -d '.' | rev).fzn
 mzn2fzn -Ggecode -o $FZN $MZN
 
 # Compress xml and mzn files
-lzma ${T%.*} &
+lzma ${T%.*}
 lzma $FZN 
 
