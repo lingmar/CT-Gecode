@@ -5,6 +5,7 @@ unlzma $T
 FZN=${T%.*}
 
 OUT=$(echo $FZN | rev | cut -f 2- -d '.' | rev).res
+touch $OUT
 
 for prop in {"gecode-regular","gecode-tupleset","compact-table"}; do
     export TABLE_PROPAGATOR=$prop
