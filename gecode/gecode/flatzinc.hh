@@ -344,10 +344,10 @@ namespace Gecode { namespace FlatZinc {
     unsigned int node(void) const { return _node.value(); }
     unsigned int fail(void) const { return _fail.value(); }
     unsigned int time(void) const {
-      unsigned int t = 300000;
+      //unsigned int t = 300000;
       //std::cout << "Manually set the time from " << _time.value() << " to " << t << std::endl;
-      return t;
-      //return _time.value();
+      //return t;
+      return _time.value();
     }
     int seed(void) const { return _seed.value(); }
     double step(void) const { return _step.value(); }
