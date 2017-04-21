@@ -1,0 +1,17 @@
+output ["V0 = ",show(V0),"\n","V1 = ",show(V1),"\n","V2 = ",show(V2),"\n","V3 = ",show(V3),"\n","V4 = ",show(V4),"\n","V5 = ",show(V5),"\n","V6 = ",show(V6),"\n","V7 = ",show(V7),"\n","V8 = ",show(V8),"\n","V9 = ",show(V9),"\n","V10 = ",show(V10),"\n","V11 = ",show(V11),"\n","V12 = ",show(V12),"\n","V13 = ",show(V13),"\n","V14 = ",show(V14),"\n","V15 = ",show(V15),"\n"];
+int: V0;
+int: V1;
+int: V2;
+int: V3;
+int: V4;
+int: V5;
+int: V6;
+int: V7;
+int: V8;
+int: V9;
+int: V10;
+int: V11;
+int: V12;
+int: V13;
+int: V14;
+int: V15;
