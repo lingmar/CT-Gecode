@@ -1,0 +1,96 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       14.476 (14476.981 ms)
+%%  solvetime:     8.455 (8455.897 ms)
+%%  solutions:     0
+%%  variables:     90
+%%  propagators:   19
+%%  propagations:  195293
+%%  nodes:         4795
+%%  failures:      2398
+%%  restarts:      0
+%%  peak depth:    25
+
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+GECODE TUPLESET
+=====UNSATISFIABLE=====
+
+%%  runtime:       18.128 (18128.963 ms)
+%%  solvetime:     17.910 (17910.213 ms)
+%%  solutions:     0
+%%  variables:     90
+%%  propagators:   19
+%%  propagations:  181764
+%%  nodes:         4989
+%%  failures:      2495
+%%  restarts:      0
+%%  peak depth:    20
+
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+COMPACT TABLE
+=====UNSATISFIABLE=====
+
+%%  runtime:       4.570 (4570.073 ms)
+%%  solvetime:     4.239 (4239.600 ms)
+%%  solutions:     0
+%%  variables:     90
+%%  propagators:   19
+%%  propagations:  197675
+%%  nodes:         4989
+%%  failures:      2495
+%%  restarts:      0
+%%  peak depth:    20
+

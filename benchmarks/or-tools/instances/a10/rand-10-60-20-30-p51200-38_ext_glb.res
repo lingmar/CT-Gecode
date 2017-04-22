@@ -1,0 +1,43 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNKNOWN=====
+
+%%  runtime:       16:38:33.465 (59913465.372 ms)
+%%  solvetime:     59:16.625 (3556625.418 ms)
+%%  solutions:     0
+%%  variables:     60
+%%  propagators:   30
+%%  propagations:  494163
+%%  nodes:         13935
+%%  failures:      6964
+%%  restarts:      0
+%%  peak depth:    16
+
