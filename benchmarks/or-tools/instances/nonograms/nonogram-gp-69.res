@@ -56,31 +56,19 @@ GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
 =====UNKNOWN=====
 
-%%  runtime:       16:58.875 (1018875.689 ms)
-%%  solvetime:     16:52.105 (1012105.661 ms)
+%%  runtime:       1:31:07.030 (5467030.283 ms)
+%%  solvetime:     16:42.656 (1002656.771 ms)
 %%  solutions:     0
-%%  variables:     1024
-%%  propagators:   64
-%%  propagations:  1482765
-%%  nodes:         110755
-%%  failures:      55305
+%%  variables:     825
+%%  propagators:   56
+%%  propagations:  106879
+%%  nodes:         6838
+%%  failures:      3387
 %%  restarts:      0
-%%  peak depth:    180
+%%  peak depth:    83
 
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
 COMPACT TABLE
 COMPACT TABLE
 COMPACT TABLE
@@ -141,14 +129,14 @@ COMPACT TABLE
 COMPACT TABLE
 =====UNKNOWN=====
 
-%%  runtime:       18:42.136 (1122136.425 ms)
-%%  solvetime:     16:52.089 (1012089.886 ms)
+%%  runtime:       37:06.683 (2226683.574 ms)
+%%  solvetime:     16:45.035 (1005035.367 ms)
 %%  solutions:     0
-%%  variables:     1024
-%%  propagators:   64
-%%  propagations:  3664509
-%%  nodes:         161798
-%%  failures:      80822
+%%  variables:     825
+%%  propagators:   56
+%%  propagations:  14719602
+%%  nodes:         747911
+%%  failures:      373923
 %%  restarts:      0
-%%  peak depth:    180
+%%  peak depth:    99
 

@@ -1,3 +1,80 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       5:13.377 (313377.157 ms)
+%%  solvetime:     0.060 (60.367 ms)
+%%  solutions:     0
+%%  variables:     1024
+%%  propagators:   61
+%%  propagations:  7559
+%%  nodes:         343
+%%  failures:      172
+%%  restarts:      0
+%%  peak depth:    37
+
 GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
@@ -64,16 +141,16 @@ GECODE TUPLESET
 GECODE TUPLESET
 =====UNKNOWN=====
 
-%%  runtime:       16:58.875 (1018875.689 ms)
-%%  solvetime:     16:52.105 (1012105.661 ms)
+%%  runtime:       16:47.990 (1007990.583 ms)
+%%  solvetime:     16:56.726 (1016726.850 ms)
 %%  solutions:     0
 %%  variables:     1024
-%%  propagators:   64
-%%  propagations:  1482765
-%%  nodes:         110755
-%%  failures:      55305
+%%  propagators:   61
+%%  propagations:  7287692
+%%  nodes:         511382
+%%  failures:      255667
 %%  restarts:      0
-%%  peak depth:    180
+%%  peak depth:    92
 
 COMPACT TABLE
 COMPACT TABLE
@@ -141,14 +218,14 @@ COMPACT TABLE
 COMPACT TABLE
 =====UNKNOWN=====
 
-%%  runtime:       18:42.136 (1122136.425 ms)
-%%  solvetime:     16:52.089 (1012089.886 ms)
+%%  runtime:       17:09.051 (1029051.764 ms)
+%%  solvetime:     16:48.186 (1008186.518 ms)
 %%  solutions:     0
 %%  variables:     1024
-%%  propagators:   64
-%%  propagations:  3664509
-%%  nodes:         161798
-%%  failures:      80822
+%%  propagators:   61
+%%  propagations:  7989428
+%%  nodes:         333428
+%%  failures:      166682
 %%  restarts:      0
-%%  peak depth:    180
+%%  peak depth:    92
 

@@ -30,16 +30,16 @@ REGULAR
 REGULAR
 =====UNKNOWN=====
 
-%%  runtime:       16:38:33.465 (59913465.372 ms)
-%%  solvetime:     59:16.625 (3556625.418 ms)
+%%  runtime:       36:18.507 (2178507.278 ms)
+%%  solvetime:     17:54.118 (1074118.218 ms)
 %%  solutions:     0
-%%  variables:     60
+%%  variables:     61
 %%  propagators:   30
-%%  propagations:  494163
-%%  nodes:         13935
-%%  failures:      6964
+%%  propagations:  695448
+%%  nodes:         30515
+%%  failures:      15255
 %%  restarts:      0
-%%  peak depth:    16
+%%  peak depth:    18
 
 GECODE TUPLESET
 GECODE TUPLESET
@@ -73,14 +73,14 @@ GECODE TUPLESET
 GECODE TUPLESET
 =====UNKNOWN=====
 
-%%  runtime:       30:18.876 (1818876.694 ms)
-%%  solvetime:     18:03.874 (1083874.767 ms)
+%%  runtime:       16:50.408 (1010408.880 ms)
+%%  solvetime:     16:45.584 (1005584.136 ms)
 %%  solutions:     0
-%%  variables:     60
+%%  variables:     61
 %%  propagators:   30
-%%  propagations:  1195724
-%%  nodes:         36827
-%%  failures:      18411
+%%  propagations:  1142687
+%%  nodes:         56697
+%%  failures:      28347
 %%  restarts:      0
-%%  peak depth:    20
+%%  peak depth:    16
 

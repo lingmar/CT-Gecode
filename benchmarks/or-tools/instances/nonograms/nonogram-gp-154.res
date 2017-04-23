@@ -64,16 +64,16 @@ GECODE TUPLESET
 GECODE TUPLESET
 =====UNKNOWN=====
 
-%%  runtime:       16:58.875 (1018875.689 ms)
-%%  solvetime:     16:52.105 (1012105.661 ms)
+%%  runtime:       34:24.883 (2064883.217 ms)
+%%  solvetime:     17:04.936 (1024936.992 ms)
 %%  solutions:     0
 %%  variables:     1024
-%%  propagators:   64
-%%  propagations:  1482765
-%%  nodes:         110755
-%%  failures:      55305
+%%  propagators:   54
+%%  propagations:  738478
+%%  nodes:         83118
+%%  failures:      41523
 %%  restarts:      0
-%%  peak depth:    180
+%%  peak depth:    96
 
 COMPACT TABLE
 COMPACT TABLE
@@ -141,14 +141,14 @@ COMPACT TABLE
 COMPACT TABLE
 =====UNKNOWN=====
 
-%%  runtime:       18:42.136 (1122136.425 ms)
-%%  solvetime:     16:52.089 (1012089.886 ms)
+%%  runtime:       36:55.262 (2215262.648 ms)
+%%  solvetime:     16:41.111 (1001111.299 ms)
 %%  solutions:     0
 %%  variables:     1024
-%%  propagators:   64
-%%  propagations:  3664509
-%%  nodes:         161798
-%%  failures:      80822
+%%  propagators:   54
+%%  propagations:  11367898
+%%  nodes:         628994
+%%  failures:      314468
 %%  restarts:      0
-%%  peak depth:    180
+%%  peak depth:    111
 
