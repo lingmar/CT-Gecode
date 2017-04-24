@@ -1,0 +1,7 @@
+output ["V0 = ",show(V0),"\n","V1 = ",show(V1),"\n","V2 = ",show(V2),"\n","V3 = ",show(V3),"\n","V4 = ",show(V4),"\n","V5 = ",show(V5),"\n"];
+int: V0;
+int: V1;
+int: V2;
+int: V3;
+int: V4;
+int: V5;
