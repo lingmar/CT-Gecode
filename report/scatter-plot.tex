@@ -1,7 +1,30 @@
+% \begin{tikzpicture}[scale=1.0]
+%   \begin{axis}[xmode=log, ymode=log, xmin=1000, ymin=1000, xmax=200000, ymax=200000, xlabel={Ch (ms)}, ylabel={Ge (ms)}]
+%     \draw[line width=0.1mm] (axis cs:1000,1000) -- (axis cs:200000,200000);
+%     \addplot[scatter, only marks, scatter src=\thisrow{class}, scatter/classes={0={mark=o}}]
+%     table[x=ch,y=ge] {plot.dat};
+%   \end{axis}
+% \end{tikzpicture}
+
 \begin{tikzpicture}[scale=1.0]
-  \begin{axis}[xmode=log, ymode=log, xmin=1000, ymin=1000, xmax=200000, ymax=200000, xlabel={Ch (ms)}, ylabel={Ge (ms)}]
-    \draw[line width=0.1mm] (axis cs:1000,1000) -- (axis cs:200000,200000);
-    \addplot[scatter, only marks, scatter src=\thisrow{class}, scatter/classes={0={mark=o}}]
-    table[x=ch,y=ge] {plot.dat};
+  \begin{axis}[
+    xmode=log,
+    ymin=0,ymax=600,
+    xmin=0, xmax=1000000,
+    every axis plot/.style={very thick},
+    xlabel={timeout limit (ms)},
+    ylabel={\# solved}
+    % table/create on use/cumulative distribution/.style={
+    %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
+    % }
+    ]
+    \addplot [green] table {reg.data};
+    \addplot [blue] table {tup.data};
+    \addplot [red] table {ct.data};
+    \legend{Reg,Tup,CT}
   \end{axis}
 \end{tikzpicture}
+
+% https://gist.github.com/albins/43a7cf0238a14173e036f0d5f3eb3427
+
+% cat out.log | grep tup | cut -d "(" -f2 | cut -d ")" -f1 | wc -l

@@ -55,6 +55,14 @@ public:
             View x);
 
   virtual unsigned int row(int val) = 0;
+
+  virtual ~InfoBase(void) {
+    for (int i = nvals; i--; ) {
+      (void) supports[i].dispose(heap);
+    }
+    heap.rfree(supports);
+  }
+    
  };
 
 class InfoArray : public InfoBase {
@@ -97,8 +105,7 @@ public:
   virtual unsigned int row(int val) {
     assert(val >= min);
     return static_cast<unsigned int>(val - min);
-  }
-  
+  }  
 };
 
 class InfoHash : public InfoBase {
@@ -174,7 +181,9 @@ private:
         t0 += inc;
       }
     }
-
+    ~HashTable(void) {
+      heap.rfree(table);
+    }
   };
   /// Hash table for indexing supports
   HashTable index_table;

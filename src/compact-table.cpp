@@ -14,7 +14,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 2
+#define HASHH_THRESHOLD 0
 
 typedef BitSet* Dom;
 
@@ -110,13 +110,19 @@ public:
           GECODE_NEVER;
           break;
         }
-
+        heap.rfree(info);
       }
     };
   public:
-    /// Default constructor
-    Supports(void)
-      : SharedHandle(new SupportsI()) {}
+
+    Supports(void) {}
+
+    Supports(BitSet* s, int nsupports, int offset,
+              int domain_offset, IndexType type, View x)
+      : SharedHandle(new SupportsI()) {
+        init(s,nsupports,offset,domain_offset,type,x);
+    }
+
     /// Copy \a s
     Supports(const Supports& s)
       : SharedHandle(s) {
@@ -135,6 +141,7 @@ public:
     void init(BitSet* s,
               int nsupports, int offset,
               int domain_offset, IndexType type, View x) {
+      
       static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,domain_offset,type,x);
     }
@@ -175,9 +182,10 @@ public:
             int offset,                    /** Start index in s0 and res **/
             int dom_offset,                /** ts.min() **/
             IndexType type)
-    : ViewAdvisor<View>(home,p,c,x0), index(i) {
-    supports.init(s0,nsupports,offset,
-                  dom_offset,type,x0);    
+    : ViewAdvisor<View>(home,p,c,x0),
+    supports(s0,nsupports,offset,dom_offset,type,x0),
+    index(i)
+  {
     // Initialise residues
     switch (type) {
     case ARRAYY: {
@@ -237,12 +245,11 @@ public:
     residues[supports.row(val)] = r;
   }
     
-  /// Dispose function. TODO: dispose shared handle?
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
-    //DEBUG_PRINT(("Advisor %d disposed\n",index));
-    // TODO: call destructor for supports?
-    ViewAdvisor<View>::dispose(home,c);
+    //home.ignore(*this,AP_DISPOSE);
+    (void) supports.~Supports();
+    (void) ViewAdvisor<View>::dispose(home,c);
   }
 };
 
@@ -324,6 +331,8 @@ public:
       home.fail();
       return;
     }
+
+    home.notice(*this,AP_DISPOSE);
     
     // Schedule in case no advisors have been posted
     if (unassigned == 0)
@@ -460,6 +469,7 @@ public:
       status(p.status),
       arity(p.arity),
       unassigned(p.unassigned),
+      touched_var(p.touched_var),
       max_dom_size(p.max_dom_size)
   {
     // Update views and advisors
@@ -744,10 +754,9 @@ public:
   // Dispose propagator and return its size
   forceinline virtual size_t
   dispose(Space& home) {
-    //x.cancel(home,*this,PC_INT_DOM);
-    // TODO: dispose t?
-    //home.ignore(*this,AP_DISPOSE);
+    home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
+    (void) tupleSet.~TupleSet();
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }

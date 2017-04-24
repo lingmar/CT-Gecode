@@ -52,7 +52,6 @@ public:
   unsigned int next(unsigned int i) const;
   /// Test whether exactly one bit is set for word index \i
   bool one(unsigned int i) const;
-
   /** Debugging **/
   /// Print bit set
   void print() const;

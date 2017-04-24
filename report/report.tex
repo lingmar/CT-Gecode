@@ -3,6 +3,7 @@
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{pgfplots}
+\usepackage{pgfplotstable}
 \pgfplotsset{plot coordinates/math parser=false}
 \usetikzlibrary{calc}
 \usepackage{astra}
@@ -1060,7 +1061,15 @@ the results of the evaluation. The results are discussed in \Secref{evaluation:d
 \subsection{Results}
 \label{evaluation:results}
 
-\Todo{Not real data.}
+\subsubsection{Benchmarks from \cite{\CTpaper}}
+
+The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
+were also used here. The instances were compiled (using~\cite{xcsp2mzn})
+from XCSP 2.1~\cite{DBLP:journals/corr/abs-0902-2362} format 
+-- an XML based format to represent combinatorial constraint problems -- to
+MiniZinc~\cite{MiniZinc} -- a solver-independent constraint modeling language.
+\todo{By various reasons, only X instances were used}
+
 
 \input{scatter-plot.tex}
 
