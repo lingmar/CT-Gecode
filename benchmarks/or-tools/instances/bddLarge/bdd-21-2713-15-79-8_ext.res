@@ -2711,18 +2711,39 @@ REGULAR
 REGULAR
 REGULAR
 REGULAR
-=====UNSATISFIABLE=====
+V0 = 0;
+V1 = 0;
+V10 = 0;
+V11 = 0;
+V12 = 0;
+V13 = 0;
+V14 = 0;
+V15 = 0;
+V16 = 0;
+V17 = 0;
+V18 = 0;
+V19 = 0;
+V2 = 0;
+V20 = 0;
+V3 = 0;
+V4 = 0;
+V5 = 0;
+V6 = 0;
+V7 = 0;
+V8 = 0;
+V9 = 0;
+----------
 
-%%  runtime:       1 days, 17:30:39.883 (149439883.670 ms)
-%%  solvetime:     2:32.827 (152827.311 ms)
-%%  solutions:     0
+%%  runtime:       19:50.613 (1190613.140 ms)
+%%  solvetime:     1.919 (1919.899 ms)
+%%  solutions:     1
 %%  variables:     21
 %%  propagators:   2713
-%%  propagations:  5815991
-%%  nodes:         4467
-%%  failures:      2234
+%%  propagations:  30866
+%%  nodes:         16
+%%  failures:      0
 %%  restarts:      0
-%%  peak depth:    12
+%%  peak depth:    15
 
 GECODE TUPLESET
 GECODE TUPLESET
@@ -5437,18 +5458,39 @@ GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
-=====UNKNOWN=====
+V0 = 0;
+V1 = 0;
+V10 = 0;
+V11 = 0;
+V12 = 0;
+V13 = 0;
+V14 = 0;
+V15 = 0;
+V16 = 0;
+V17 = 0;
+V18 = 0;
+V19 = 0;
+V2 = 0;
+V20 = 0;
+V3 = 0;
+V4 = 0;
+V5 = 0;
+V6 = 0;
+V7 = 0;
+V8 = 0;
+V9 = 0;
+----------
 
-%%  runtime:       18:40.479 (1120479.649 ms)
-%%  solvetime:     17:53.462 (1073462.816 ms)
-%%  solutions:     0
+%%  runtime:       14:50.094 (890094.292 ms)
+%%  solvetime:     0.172 (172.607 ms)
+%%  solutions:     1
 %%  variables:     21
 %%  propagators:   2713
-%%  propagations:  1667617
-%%  nodes:         2736
-%%  failures:      1366
+%%  propagations:  4657
+%%  nodes:         14
+%%  failures:      0
 %%  restarts:      0
-%%  peak depth:    12
+%%  peak depth:    13
 
 COMPACT TABLE
 COMPACT TABLE
@@ -8163,16 +8205,37 @@ COMPACT TABLE
 COMPACT TABLE
 COMPACT TABLE
 COMPACT TABLE
-=====UNSATISFIABLE=====
+V0 = 0;
+V1 = 0;
+V10 = 0;
+V11 = 0;
+V12 = 0;
+V13 = 0;
+V14 = 0;
+V15 = 0;
+V16 = 0;
+V17 = 0;
+V18 = 0;
+V19 = 0;
+V2 = 0;
+V20 = 0;
+V3 = 0;
+V4 = 0;
+V5 = 0;
+V6 = 0;
+V7 = 0;
+V8 = 0;
+V9 = 0;
+----------
 
-%%  runtime:       39:47.783 (2387783.712 ms)
-%%  solvetime:     1:21.615 (81615.073 ms)
-%%  solutions:     0
+%%  runtime:       2:31.210 (151210.257 ms)
+%%  solvetime:     0.134 (134.924 ms)
+%%  solutions:     1
 %%  variables:     21
 %%  propagators:   2713
-%%  propagations:  7019862
-%%  nodes:         4757
-%%  failures:      2379
+%%  propagations:  24547
+%%  nodes:         14
+%%  failures:      0
 %%  restarts:      0
-%%  peak depth:    12
+%%  peak depth:    13
 

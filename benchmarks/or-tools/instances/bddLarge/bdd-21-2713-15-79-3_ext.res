@@ -2713,14 +2713,14 @@ REGULAR
 REGULAR
 =====UNSATISFIABLE=====
 
-%%  runtime:       1 days, 17:30:39.883 (149439883.670 ms)
-%%  solvetime:     2:32.827 (152827.311 ms)
+%%  runtime:       19:02.737 (1142737.716 ms)
+%%  solvetime:     1:30.129 (90129.584 ms)
 %%  solutions:     0
 %%  variables:     21
 %%  propagators:   2713
-%%  propagations:  5815991
-%%  nodes:         4467
-%%  failures:      2234
+%%  propagations:  5673507
+%%  nodes:         4409
+%%  failures:      2205
 %%  restarts:      0
 %%  peak depth:    12
 
@@ -5437,18 +5437,18 @@ GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
 GECODE TUPLESET
-=====UNKNOWN=====
+=====UNSATISFIABLE=====
 
-%%  runtime:       18:40.479 (1120479.649 ms)
-%%  solvetime:     17:53.462 (1073462.816 ms)
+%%  runtime:       22:10.566 (1330566.090 ms)
+%%  solvetime:     4:30.162 (270162.065 ms)
 %%  solutions:     0
 %%  variables:     21
 %%  propagators:   2713
-%%  propagations:  1667617
-%%  nodes:         2736
-%%  failures:      1366
+%%  propagations:  2676092
+%%  nodes:         4567
+%%  failures:      2284
 %%  restarts:      0
-%%  peak depth:    12
+%%  peak depth:    13
 
 COMPACT TABLE
 COMPACT TABLE
@@ -8165,14 +8165,14 @@ COMPACT TABLE
 COMPACT TABLE
 =====UNSATISFIABLE=====
 
-%%  runtime:       39:47.783 (2387783.712 ms)
-%%  solvetime:     1:21.615 (81615.073 ms)
+%%  runtime:       6:03.524 (363524.161 ms)
+%%  solvetime:     38.969 (38969.062 ms)
 %%  solutions:     0
 %%  variables:     21
 %%  propagators:   2713
-%%  propagations:  7019862
-%%  nodes:         4757
-%%  failures:      2379
+%%  propagations:  6902027
+%%  nodes:         4567
+%%  failures:      2284
 %%  restarts:      0
-%%  peak depth:    12
+%%  peak depth:    13
 
