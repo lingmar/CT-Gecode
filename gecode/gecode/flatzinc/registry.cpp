@@ -1177,9 +1177,9 @@ namespace Gecode { namespace FlatZinc {
         extensional(s,x,dfa);
         
       } else if (prop != NULL &&
-                 (strcmp(prop, GECODE_TUPLESET_MEM) == 0||
+                 (strcmp(prop, GECODE_TUPLESET_MEM) == 0 ||
                   strcmp(prop, COMPACT_TABLE) == 0 ||
-                  strcmp(prop, GECODE_TUPLESET_SPEED))) {
+                  strcmp(prop, GECODE_TUPLESET_SPEED) == 0)) {
         TupleSet ts;
         for (int i=0; i<noOfTuples; i++) {
           IntArgs t(noOfVars);
