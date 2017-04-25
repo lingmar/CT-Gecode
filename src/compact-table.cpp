@@ -7,7 +7,8 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-//#define DELTA
+#define DELTA
+//#define LONG_FILTER
 
 //#define DEBUG
 
@@ -17,8 +18,6 @@
  * (0->always hash, infinity->never hash)
  */
 #define HASHH_THRESHOLD 3
-
-typedef BitSet* Dom;
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -657,6 +656,7 @@ public:
         count_unassigned++;
         break;
       } default:
+#ifdef LONG_FILTER
         const int min_val = v.min();
         const int max_val = v.max();
         int new_min = min_val;
@@ -726,7 +726,17 @@ public:
           while (nremoves > 0 && nq[nremoves-1] > new_max)
             nremoves--;
         }
-        // Domain propagation
+#else
+        unsigned int nremoves = 0;
+        Int::ViewValues<View> it(v);
+        while (it()) {
+          if (!supported(a,it.val()))
+            nq[nremoves++] = it.val();
+          ++it;
+        }
+#endif // LONG_FILTER
+        
+        // Remove collected values
         if (nremoves > 0) {
           Iter::Values::Array r(nq,nremoves);
           v.minus_v(home,r,false);
