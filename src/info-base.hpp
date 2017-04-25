@@ -46,7 +46,12 @@ public:
     supports = heap.alloc<BitSet>(nvals);
   }
   /// Abstract functions
-  virtual const BitSet& get_supports(int val) = 0;
+  virtual const BitSet& get_supports(int val) {
+    return supports[row(val)];
+  }
+  virtual const BitSet& get_supports_raw(int row) {
+    return supports[row];
+  }
 
   template<class View>
   void init(const BitSet* supports,
@@ -54,7 +59,7 @@ public:
             int dom_offset,
             View x);
 
-  virtual unsigned int row(int val) = 0;
+  virtual int row(int val) = 0;
 
   virtual ~InfoBase(void) {
     for (int i = nvals; i--; ) {
@@ -69,24 +74,27 @@ class InfoArray : public InfoBase {
 private:
   /// Initial minimum value for x
   int min;
+  /// Initial maximum value for x
+  int max;
 public:
   /// Default constructor
   InfoArray(void) {}
   /// Copy constructor
   InfoArray(const InfoArray& s)
-    : InfoBase(s), min(s.min) {}
+    : InfoBase(s), min(s.min), max(s.max) {}
 
-  virtual const BitSet& get_supports(int val) {
-    return supports[val - min];
-  }
+  // virtual const BitSet& get_supports(int val) {
+  //   return suports[row(val)];
+  // }
   
   template<class View>
   void init(const BitSet* s,
             int nsupports, int offset,
             int dom_offset, View x) {
     min = x.min();
+    max = x.max();
     // Number of bitsets
-    nvals = static_cast<unsigned int>(x.max() - min + 1);
+    nvals = static_cast<unsigned int>(max - min + 1);
     // Allocate memory and initialise
     supports = heap.alloc<BitSet>(nvals);
     for (int i = 0; i < nvals; i++) {
@@ -102,9 +110,9 @@ public:
     InfoBase::allocate(n);
   }
 
-  virtual unsigned int row(int val) {
-    assert(val >= min);
-    return static_cast<unsigned int>(val - min);
+  virtual int row(int val) {
+    //printf("val - min = %d - %d = %d\n",val,min,val-min );
+    return val >= min && val <= max ? val - min : -1;
   }  
 };
 
@@ -126,18 +134,18 @@ private:
     int size;
     /// Default constructor
     HashTable() {}
-    /// Allocate space a hash table with room for \a pop elements
+    /// Allocate space for a hash table with room for \a pop elements
     void allocate(int pop) {
-      DEBUG_PRINT(("Allocate hash with size %d\n",pop));
       size=2;
       while (size <= 2*pop)
         size *= 2;
 
+      DEBUG_PRINT(("Allocate hash with pop %d, size %d\n",pop,size));
       table = heap.alloc<HashNode>(size);
       mask = size-1;
       factor = 0.618 * size;
       for (int i = 0; i < size; i++) 
-        table[i].value = -1; 	/* mark as free */
+        (&table[i])->value = -1; 	/* mark as free */
     }
     /// Copy constructor
     HashTable(const HashTable& h)
@@ -151,12 +159,12 @@ private:
     
     /// Insert element into hash table
     void insert(int key, int value) {
-      DEBUG_PRINT(("Insert {%d,%d}\n",key,value));
       long t0 = key*factor;
       int inc=0;
       while (1) {
         HashNode* hnode = &table[t0 & mask];
         if (hnode->value == -1) {	/* value=-1 means free */
+          DEBUG_PRINT(("Insert {%d,%d} at row %ld\n",key,value,(t0 & mask)));
           hnode->key = key;
           hnode->value = value;
           return;
@@ -173,12 +181,18 @@ private:
   
       while (1) {
         HashNode* hnode = &table[t0 & mask];
-        if (hnode->key == key) {
-          DEBUG_PRINT(("Access {%d,%d}\n",key,hnode->value));
+        if (hnode->key == key || hnode->value == -1) {
+          DEBUG_PRINT(("Access {%d,%d} at row %ld\n",key,hnode->value, (t0 & mask)));
           return hnode->value;
         }
         inc++;
         t0 += inc;
+      }
+    }
+    /// Print
+    void print() {
+      for (int i = 0; i < size; i++) {
+        DEBUG_PRINT(("%d: {%d,%d}\n",i,table[i].key,table[i].value));
       }
     }
     ~HashTable(void) {
@@ -197,9 +211,9 @@ public:
     DEBUG_PRINT(("Copy InfoHash\n"));
   }
 
-  virtual const BitSet& get_supports(int val) {
-    return supports[index_table.get(val)];
-  }  
+  // virtual const BitSet& get_supports(int val) {
+  //   return supports[row(val)];
+  // }  
   
   virtual void allocate(int n) {
     InfoBase::allocate(n);
@@ -231,9 +245,10 @@ public:
       ++count;
       ++it;
     }
+    index_table.print();
   }
 
-  virtual unsigned int row(int val) {
+  virtual int row(int val) {
     return index_table.get(val);
   }
   

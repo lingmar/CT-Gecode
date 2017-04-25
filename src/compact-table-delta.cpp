@@ -7,8 +7,6 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-#define DELTA
-
 //#define DEBUG
 
 /** 
@@ -16,7 +14,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 100
+#define HASHH_THRESHOLD 2
 
 typedef BitSet* Dom;
 
@@ -37,7 +35,7 @@ typedef enum {ARRAYY,HASHH} IndexType;
  * Advisor
  **/
 template<class View>
-class CTAdvisor : public ViewAdvisor<View> {
+class CTAdvisor : public ViewAdvisor<CachedView<View> > {
 public:
   /**
    * Shared handle for maintaining supports
@@ -72,7 +70,7 @@ public:
       /// Initialise from \a s, \a init_min, \a nsupports, \a offset
       void init(const BitSet* s,
                 int nsupports, int offset,
-                int domain_offset, IndexType t, View x) {
+                int domain_offset, IndexType t, CachedView<View> x) {
         type = t;
         switch (type) {
         case ARRAYY:  {
@@ -112,19 +110,13 @@ public:
           GECODE_NEVER;
           break;
         }
-        heap.rfree(info);
+
       }
     };
   public:
-
-    Supports(void) {}
-
-    Supports(BitSet* s, int nsupports, int offset,
-              int domain_offset, IndexType type, View x)
-      : SharedHandle(new SupportsI()) {
-        init(s,nsupports,offset,domain_offset,type,x);
-    }
-
+    /// Default constructor
+    Supports(void)
+      : SharedHandle(new SupportsI()) {}
     /// Copy \a s
     Supports(const Supports& s)
       : SharedHandle(s) {
@@ -138,16 +130,11 @@ public:
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
     }
-    /// () operator returns the actual row
-    const BitSet& operator ()(unsigned int i) {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->info->get_supports_raw(i);
-    }
+    
     /// Initialise from parameters
     void init(BitSet* s,
               int nsupports, int offset,
-              int domain_offset, IndexType type, View x) {
-      
+              int domain_offset, IndexType type, CachedView<View> x) {
       static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,domain_offset,type,x);
     }
@@ -156,13 +143,13 @@ public:
       SharedHandle::update(home,share,sh);
     }
     /// Get the index for a value
-    int row(int val) {
+    unsigned int row(int val) {
       return static_cast<SupportsI*>(object())->info->row(val);
     }
     /// Print
     void print() const {
       const SupportsI* si = static_cast<SupportsI*>(object());
-      printf("nvals=%d, min=%d\n",si->nvals,si->min);
+      DEBUG_PRINT(("nvals=%d, min=%d\n",si->nvals,si->min));
       for (int j = 0; j < si->nvals; j++) {
         si->info->get_supports(j).print();
       }
@@ -181,21 +168,17 @@ public:
   forceinline
   CTAdvisor(Space& home, Propagator& p,
             Council<CTAdvisor<View> >& c,
-            View x0, int i,
+            CachedView<View> x0, int i,
             BitSet* s0,                    /*** Support information ***/
             unsigned int* res,             /*** Initial residues ***/
             int nsupports,
             int offset,                    /** Start index in s0 and res **/
             int dom_offset,                /** ts.min() **/
             IndexType type)
-    : ViewAdvisor<View>(home,p,c,x0),
-    supports(s0,nsupports,offset,dom_offset,type,x0),
-    index(i)
-  {
-#ifdef DEBUG
-    cout << i << ": " << x0 << endl;    
-#endif // DEBUG
-
+    : ViewAdvisor<CachedView<View> >(home,p,c,x0), index(i) {
+    
+    supports.init(s0,nsupports,offset,
+                  dom_offset,type,x0);    
     // Initialise residues
     switch (type) {
     case ARRAYY: {
@@ -214,7 +197,7 @@ public:
       int count = 0;
       int diff = x0.min();
 
-      Int::ViewValues<View> it(x0);
+      Int::ViewValues<CachedView<View> > it(x0);
       while (it()) {
         residues[count] = res[it.val() + offset - diff];
         ++count;
@@ -232,7 +215,7 @@ public:
   /// Copy constructor
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
-    : ViewAdvisor<View>(home,share,a),
+    : ViewAdvisor<CachedView<View> >(home,share,a),
     index(a.index), nvals(a.nvals)
   {
     // Update shared handle
@@ -255,11 +238,12 @@ public:
     residues[supports.row(val)] = r;
   }
     
+  /// Dispose function. TODO: dispose shared handle?
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
-    //home.ignore(*this,AP_DISPOSE);
-    (void) supports.~Supports();
-    (void) ViewAdvisor<View>::dispose(home,c);
+    //DEBUG_PRINT(("Advisor %d disposed\n",index));
+    // TODO: call destructor for supports?
+    ViewAdvisor<CachedView<View> >::dispose(home,c);
   }
 };
 
@@ -270,10 +254,13 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
+  enum Modified {NONE, ONE, SEVERAL};
   /// Whether propagator is propagating
   Status status;
-  /// -2 if more than one touched var, -1 if none, else index of touched var
-  int touched_var;
+  /// Number of variables that are modified since last propagation
+  Modified modified;
+  /// Index of the last modified variable
+  int last;
   /// Council of advisors
   Council<CTAdvisor<View> > c;
   /// The indices of valid tuples
@@ -284,50 +271,46 @@ protected:
   unsigned int arity;
   /// Number of unassigned variables
   unsigned int unassigned;
-  /// Tuple-set
-  TupleSet tupleSet;
-  /// Largest domain size
-  int max_dom_size;
-  /// Whether it is the first time the advisor executes
-  //  bool first;
   
 public:
   // Post table propagator
   forceinline static ExecStatus
-  post(Home home, ViewArray<View>& x, TupleSet t) {
+  post(Home home, ViewArray<CachedView<View> >& x, TupleSet t) {
     // All variables in the correct domain
     for (int i = x.size(); i--; ) {
       GECODE_ME_CHECK(x[i].gq(home, t.min()));
       GECODE_ME_CHECK(x[i].lq(home, t.max()));
     }
     (void) new (home) CompactTable(home,x,t);
-    if (home.failed())
+    if (home.failed()) {
       return ES_FAILED;
+    }
     return ES_OK;
   }
   
   // Create propagator and initialize
   forceinline
   CompactTable(Home home,
-               ViewArray<View>& x0,
+               ViewArray<CachedView<View> >& x0,
                TupleSet t0)
     : Propagator(home), c(home),
       validTuples(static_cast<Space&>(home)),
       status(NOT_PROPAGATING),
-      touched_var(-1),
+      modified(NONE),
       arity(x0.size()),
       unassigned(x0.size())
-      //first(true)
   {
-    DEBUG_PRINT(("******* Constructor *******\n"));
-    // Calculate sum of domain widths and maximum domain size
+    // Calculate domain sum
     domsum = 0;
-    max_dom_size = 1;
-    for (int i = x0.size(); i--; ) {
+    for (int i = x0.size(); i--; )
       domsum += x0[i].width();
-      if (x0[i].size() > max_dom_size)
-        max_dom_size = x0[i].size();
-    }
+
+#ifdef DEBUG
+    for (int i = x0.size(); i--; )
+      cout << i << ": " << x0[i] << endl;
+#endif // DEBUG
+
+    
     // Initialise supports
     int nsupports = init_supports(home, t0, x0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
@@ -341,20 +324,13 @@ public:
     //validTuples.init(t0.tuples(), nsupports);
     validTuples.init(nsupports);
 
-    if (validTuples.is_empty()) {
-      home.fail();
-      return;
-    }
-
-    home.notice(*this,AP_DISPOSE);
-    
     // Schedule in case no advisors have been posted
     if (unassigned == 0)
-      View::schedule(home,*this,Int::ME_INT_VAL);
+      CachedView<View>::schedule(home,*this,Int::ME_INT_VAL);
   }
 
   forceinline unsigned int
-  init_supports(Home home, TupleSet ts, ViewArray<View>& x) {
+  init_supports(Home home, TupleSet ts, ViewArray<CachedView<View> >& x) {
     static int ts_min = ts.min();
     
     Region r(home);
@@ -362,11 +338,11 @@ public:
     Dom dom = r.alloc<BitSet>(x.size());
     init_dom(home,dom,ts_min,ts.max(),x);
 
-    int* tuple = r.alloc<int>(x.size());
-    
     // Allocate temporary supports and residues
     BitSet* supports = r.alloc<BitSet>(domsum);
     unsigned int* residues = r.alloc<unsigned int>(domsum);
+    for (int i = 0; i < domsum; i++)
+      supports[i].init(r,ts.tuples(),false);
     
     // Save initial minimum value and widths for indexing supports and residues
     int* min_vals = r.alloc<int>(x.size());
@@ -392,52 +368,31 @@ public:
         // Set tuple as valid and save word index in residue
         for (int j = ts.arity(); j--; ) {
           int val = ts[i][j];
-          tuple[j] = val;
           unsigned int row = offset[j] + val - min_vals[j];
-
-          if (supports[row].empty()) // Initialise in case not done
-            supports[row].init(r,ts.tuples(),false);
-
           supports[row].set(support_cnt);
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
-        tupleSet.add(IntArgs(x.size(),tuple));
       }
     }
 
-    int* nq = r.alloc<int>(max_dom_size);
-    for (int i = x.size(); i--; ) {
-      assert(x[i].size() <= max_dom_size);
-    }
-
-    
+    int* nq = r.alloc<int>(domsum);
     int nremoves;
-    max_dom_size = 1; // Reset maximal domain size
     
-    // Remove values corresponding to empty rows 
+    // Remove values corresponding to empty rows and post advisors
     for (int i = x.size(); i--; ) {
       nremoves = 0;
-
-      Int::ViewValues<View> it(x[i]);
+      Int::ViewValues<CachedView<View> > it(x[i]);
       while (it()) {
         unsigned int row = offset[i] + it.val() - min_vals[i];
-        if (supports[row].size() == 0) {
+        if (supports[row].none())
           nq[nremoves++] = it.val();
-          DEBUG_PRINT(("Pruned %d from variable %d\n",it.val(),i));
-        }
         ++it;
       }
 
       Iter::Values::Array r(nq,nremoves);
-      GECODE_ME_CHECK(x[i].minus_v(home,r,false));
-      if (x[i].size() > max_dom_size)
-        max_dom_size = x[i].size();
-    }
+      x[i].minus_v(home,r,false);
 
-    // Post advisors
-    for (int i = x.size(); i--; ) {
-            
       if (!x[i].assigned()) {
         
         // Decide whether to use an array or a hash table
@@ -448,7 +403,13 @@ public:
 
         // To shift the offset
         int diff = x[i].min() - min_vals[i];
+        x[i].initCache(home,IntSet(x[i].min(),x[i].max()));
+        x[i].cache(home);
 
+#ifdef DEBUG
+        cout << "Posting advisor for " << x[i] << endl;
+#endif // DEBUG
+        
         (void) new (home) CTAdvisor<View>(home,*this,c,x[i],i,
                                           supports,
                                           residues,
@@ -459,16 +420,17 @@ public:
       } else
         unassigned--;      
     }
-    tupleSet.finalize();
+    
     return support_cnt;
   }
 
   forceinline void
-  init_dom(Space& home, Dom dom, int min, int max, ViewArray<View>& x) {
+  init_dom(Space& home, Dom dom, int min, int max,
+           ViewArray<CachedView<View> >& x) {
     unsigned int domsize = static_cast<unsigned int>(max - min + 1);
     for (int i = x.size(); i--; ) {
       dom[i].init(home, domsize, false);
-      Int::ViewValues<View> it(x[i]);
+      Int::ViewValues<CachedView<View> > it(x[i]);
       while(it()) {
         dom[i].set(static_cast<unsigned int>(it.val() - min));
         ++it;
@@ -484,16 +446,13 @@ public:
       domsum(p.domsum),
       status(p.status),
       arity(p.arity),
-      unassigned(p.unassigned),
-      touched_var(p.touched_var),
-      //first(p.first),
-      max_dom_size(p.max_dom_size)
+      unassigned(p.unassigned)
   {
-    // Update views and advisors
+    DEBUG_PRINT(("Copy\n"));
+    // Update advisors
     c.update(home,share,p.c);
-    tupleSet.update(home,share,p.tupleSet);
   }
-
+  
   // Create copy during cloning
   forceinline virtual Propagator*
   copy(Space& home, bool share) {
@@ -509,7 +468,7 @@ public:
 
   forceinline virtual void
   reschedule(Space& home) {
-    View::schedule(home,*this,ME_INT_DOM);
+    CachedView<View>::schedule(home,*this,ME_INT_DOM);
   }
   
   // Perform propagation
@@ -517,93 +476,58 @@ public:
   propagate(Space& home, const ModEventDelta&) {
     status = PROPAGATING;
     
-    if (validTuples.is_empty())
+    if (validTuples.is_empty()) {
+      DEBUG_PRINT(("FAIL\n"));
       return ES_FAILED;
+    }
 
-    ExecStatus msg;
-    if (validTuples.one()) 
-      msg = fixDomains(home);
-    else
-      msg = filterDomains(home);
-
+    ExecStatus msg = filterDomains(home);
+    
+    modified = NONE;
     status = NOT_PROPAGATING;
     return msg;
   }
 
   forceinline bool
   updateTable(CTAdvisor<View> a, Space& home) {
-    // No need for temporary mask if only one value
-    if (a.view().assigned()) { 
-      return validTuples.intersect_with_mask(a.supports[a.view().val()]);
-    }
-    // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
     mask.allocate(r,validTuples.size());
+    //DEBUG_PRINT(("Size = %d\n", mask.size());
     validTuples.clear_mask(mask);
-    
-    Int::ViewValues<View> it(a.view());
-    while (it()) {
-      assert(!a.supports[it.val()].empty());
 
+#ifdef DEBUG
+    Gecode::Int::ViewDiffRanges<Gecode::Int::IntView> d(a.view());
+    Iter::Ranges::ToValues<Gecode::Int::ViewDiffRanges<
+      Gecode::Int::IntView> > dv(d);
+    DEBUG_PRINT(("Values that have changed for %d:\n",a.index));
+    cout << "Current domain: " << a.view() << endl;
+      
+    for (; dv(); ++dv) 
+      printf("%d\n", dv.val());
+#endif // DEBUG
+    
+    Int::ViewValues<CachedView<View> > it(a.view());
+    while (it()) {
       validTuples.add_to_mask(a.supports[it.val()],mask);
       ++it;
     }
     return validTuples.intersect_with_mask(mask);
   }
-  
+
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
-    // Do not schedule if propagator is performing propagation,
-    // and dispose if assigned
+    CTAdvisor<View> a =
+      static_cast<CTAdvisor<View>&>(a0);
+
+    /** 
+     * Do not schedule if propagator is performing propagation,
+     * and dispose if assigned
+     **/
     if (status == PROPAGATING)
       return ES_FIX; // Advisor is disposed in propagate() if assigned
-
-    CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
-    ModEvent me = View::modevent(d);
-    View x = a.view();
-    bool diff;
-#ifdef DELTA
-    if (me == ME_INT_VAL) {
-      diff = validTuples.intersect_with_mask(a.supports[x.val()]);
-    } else if (x.any(d)){
-      diff = updateTable(a,home);
-    } else if (!x.any(d)) {
-      int min_rm = x.min(d);
-      int max_rm = x.max(d);
-      int min_row = a.supports.row(min_rm);
-      int max_row = a.supports.row(max_rm);
-      DEBUG_PRINT(("init: %d: (min,max)=(%d,%d)->(%d,%d)\n",
-                   a.index,x.min(d),x.max(d),min_row,max_row));
-      while (min_row == -1) {
-        min_row = a.supports.row(++min_rm);
-        DEBUG_PRINT(("min_row=%d\n", min_row));
-      }
-      while (max_row == -1) {
-        max_row = a.supports.row(--max_rm);
-        DEBUG_PRINT(("max_row=%d\n", max_row));
-      }
-      DEBUG_PRINT(("%d: (min,max)=(%d,%d)->(%d,%d)\n",
-                   a.index,x.min(d),x.max(d),min_row,max_row));
-      assert(max_row >= min_row);
       
-      Region r(home);
-      BitSet mask;
-      mask.allocate(r,validTuples.size());
-      validTuples.clear_mask(mask);
-      for (int i = min_row; i <= max_row; i++) {
-        if (!a.supports(i).empty()) { // empty if val not in initial domain
-          validTuples.add_to_mask(a.supports(i),mask);
-        }
-      }
-      validTuples.reverse_mask(mask);
-      diff = validTuples.intersect_with_mask(mask);
-    } 
-#else
-    diff = updateTable(a,home);
-#endif // DELTA
-    
-    
+    bool diff = updateTable(a,home);
 
     // Do not fail a disabled propagator
     if (validTuples.is_empty())
@@ -611,10 +535,10 @@ public:
 
     // Schedule propagator and dispose if assigned
     if (diff) {
-      if (touched_var == -1) // no touched variable yet!
-        touched_var = a.index;
-      else if (touched_var != a.index) // some other variable is touched
-        touched_var = -2;
+      if (modified == NONE) {
+        modified = ONE;
+        last = a.index;
+      } else modified = SEVERAL;
       
       if (a.view().assigned()) {
         unassigned--;
@@ -634,187 +558,65 @@ public:
   forceinline ExecStatus
   filterDomains(Space& home) {
     if (unassigned == 0) return home.ES_SUBSUMED(*this);
-    // Count the number of scanned unassigned variables
+        
     int count_unassigned = 0;
-    // Array to collect values to remove
+   
     Region r(home);
-    int* nq = r.alloc<int>(max_dom_size);
+    int* nq = r.alloc<int>(domsum);
     
-    // Smallest possible domain size
-    max_dom_size = 1;
-
-    // Scan all values of all unassigned variables to see if they
-    // are still supported.
-    for (Advisors<CTAdvisor<View> > a0(c);
-         a0() && count_unassigned < unassigned; // End if only assigned variables left
-         ++a0) {
-      CTAdvisor<View> a = a0.advisor();
-      View v = a.view();
-      int i = a.index;
-      
-      // No point filtering variable if it was the only modified variable
-      if (touched_var == i) {
-        touched_var = -1;
-        if (v.size() > max_dom_size)
-          max_dom_size = v.size();
-        continue;
-      }
-
-      switch (v.size()) {
-      case 1: {  // Variable assigned, nothing to be done.
-        break;
-      }
-      case 2: { // Consider min and max values
-        const int min_val = v.min();
-        const int max_val = v.max();
-
-        // Fix to max_val if min_val not supported
-        if (!supported(a,min_val)) {
-          v.eq(home,max_val);
-          --unassigned;
-          a.dispose(home,c);
-          break;
-        }
-
-        // Fix to min_val if max_val not supported
-        if (!supported(a,max_val)) {
-          v.eq(home,min_val);
-          --unassigned;
-          a.dispose(home,c);
-          break;
-        }
-
-        // Otherwise v is still unassigned
-        count_unassigned++;
-        break;
-      } default:
-        const int min_val = v.min();
-        const int max_val = v.max();
-        int new_min = min_val;
-        int new_max = max_val;
-        int nremoves = 0;
-        
-        // Iterate over single range if domain is an interval
-        if (v.range()) {
-          // Increase new_min to smallest supported value
-          for (; new_min <= max_val; ++new_min) {
-            if (supported(a,new_min))
-              break;
-          }
-          v.gq(home,new_min);
-          if (v.assigned()) {
-            --unassigned;
-            a.dispose(home,c);
-            break;
-          }
-          // Decrease new_max to largest supported value
-          for (; new_max >= new_min; --new_max) {
-            if (supported(a,new_max))
-              break;
-          }
-          v.lq(home,new_max);
-          if (v.assigned()) {
-            --unassigned;
-            a.dispose(home,c);
-            break;
-          }
-          // Filter out values in between min and max
-          for (int val = new_min + 1; val < new_max; ++val) {
-            if (!supported(a,val))
-              nq[nremoves++] = val;
-          }
-          
-        } else { // Domain is not a range
-          new_min = Limits::max; // Escape value
-
-          Int::ViewValues<View> it(v);
-          while (it()) {
-            if (!supported(a,it.val()))
-              nq[nremoves++] = it.val();
-            else {
-              if (new_min == Limits::max) {
-                new_min = it.val();
-                nremoves = 0; // Will be covered by gq
-              }
-              new_max = it.val(); // Will collect the largest supported value
-            }
-            ++it;
-          }
-          // Perform bounds propagation first
-          v.gq(home,new_min);
-          if (v.assigned()) {
-            --unassigned;
-            a.dispose(home,c);
-            break;
-          }
-          v.lq(home,new_max);
-          if (v.assigned()) {
-            --unassigned;
-            a.dispose(home,c);
-            break;
-          }
-          // Trim nremoves
-          while (nremoves > 0 && nq[nremoves-1] > new_max)
-            nremoves--;
-        }
-        // Domain propagation
-        if (nremoves > 0) {
-          Iter::Values::Array r(nq,nremoves);
-          v.minus_v(home,r,false);
-          if (v.assigned()) {
-            --unassigned;
-            a.dispose(home,c);
-            break;
-          }
-        }
-        
-        if (v.size() > max_dom_size)
-          max_dom_size = v.size();
-
-        ++count_unassigned;
-      }
-    }
-    // Subsume if there is at most one non-assigned variable
-    return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
-  }
-
-  forceinline bool
-  supported(CTAdvisor<View>& a, int val) {
-    int index = a.residue(val);
-    Support::BitSetData w = validTuples.a(a.supports[val],index);
-        
-    if (w.none()) {
-      index = validTuples.intersect_index(a.supports[val]);
-      if (index != -1) {
-        a.set_residue(val,index);
-        return true;
-      }
-      return false;
-    }
-    return true;
-  }
-
-  forceinline ExecStatus
-  fixDomains(Space& home) {
-    // Only one valid tuple left, so we can fix all vars to that tuple
-    unsigned int tuple_index = validTuples.index_of_fixed();
-    TupleSet::Tuple t = tupleSet[tuple_index];
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
-      View v = a.view();
-      v.eq(home,t[a.index]);
-      a.dispose(home,c);
+      CachedView<View> v = a.view();
+      int i = a.index;
+
+#ifdef DEBUG
+      DEBUG_PRINT(("Domain for variable %d before pruning:\n", i));      
+      cout << v << endl;
+#endif // DEBUG
+      if (v.assigned() || (modified == ONE && last == i))
+        continue;
+
+      unsigned int nremoves = 0;
+      Int::ViewValues<CachedView<View> > it(v);
+      while (it()) {
+        DEBUG_PRINT(("{var,val} = {%d,%d}\n", i, it.val()));
+        int index = a.residue(it.val());
+        Support::BitSetData w = validTuples.a(a.supports[it.val()],index);
+        
+        if (w.none()) {
+          index = validTuples.intersect_index(a.supports[it.val()]);
+
+          if (index != -1) 
+            a.set_residue(it.val(),index);
+          else 
+            nq[nremoves++] = it.val(); // Value not supported
+        }
+        ++it;
+      }
+      
+      Iter::Values::Array r(nq,nremoves);
+      v.minus_v(home,r,false);
+      v.cache(home);
+      
+      if (v.assigned()) {
+        --unassigned;
+        a.dispose(home,c);
+      }
+      // else if (++count_unassigned == unassigned) // Rest of the variables assigned 
+      //break;
     }
 
-    return home.ES_SUBSUMED(*this);
+    // Subsume if there is at most one non-assigned variable
+    return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
   
   // Dispose propagator and return its size
   forceinline virtual size_t
   dispose(Space& home) {
-    home.ignore(*this,AP_DISPOSE);
+    //x.cancel(home,*this,PC_INT_DOM);
+    // TODO: dispose t?
+    //home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
-    (void) tupleSet.~TupleSet();
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }
@@ -842,27 +644,36 @@ namespace Gecode {
       return;
     }
     // Construct view array
-    ViewArray<IntView> vx(home,x);
-    GECODE_ES_FAIL(CompactTable<IntView>::post(home,vx,t));
+    ViewArray<CachedView<IntView> > xc(home,x.size());
+    for (int i = x.size(); i--; ) {
+      new (&xc[i]) CachedView<IntView>(x[i]);
+#ifdef DEBUG
+      cout << "In post: " << xc[i] << ", assigned=" << xc[i].assigned() << endl;      
+#endif // DEBUG
+
+    }
+    GECODE_ES_FAIL(CompactTable<IntView>::post(home,xc,t));
   }
 
-  forceinline void
-  extensional2(Home home, const BoolVarArgs& x, const TupleSet& t) {
-    using namespace Int;
-    if (!t.finalized())
-      throw NotYetFinalized("Int::extensional2");
-    if (t.arity() != x.size())
-      throw ArgumentSizeMismatch("Int::extensional2");
-    // Never post a propagator in a failed space
-    GECODE_POST;
-    if (t.tuples()==0) {
-      if (x.size()!=0) {
-        home.fail();
-      }
-      return;
-    }
-    // Construct view array
-    ViewArray<BoolView> vx(home,x);
-    GECODE_ES_FAIL(CompactTable<BoolView>::post(home,vx,t));
-  }
+  // forceinline void
+  // extensional2(Home home, const BoolVarArgs& x, const TupleSet& t) {
+  //   using namespace Int;
+  //   if (!t.finalized())
+  //     throw NotYetFinalized("Int::extensional2");
+  //   if (t.arity() != x.size())
+  //     throw ArgumentSizeMismatch("Int::extensional2");
+  //   // Never post a propagator in a failed space
+  //   GECODE_POST;
+  //   if (t.tuples()==0) {
+  //     if (x.size()!=0)
+  //       home.fail(); 
+  //     return;
+  //   }
+  //   // Construct view array
+  //   ViewArray<CachedView<BoolView> > xc(home,x.size());
+  //   for (int i = x.size(); i--; )
+  //     new (&xc[i]) CachedView<BoolView>(x[i]);
+    
+  //   GECODE_ES_FAIL(CompactTable<BoolView>::post(home,xc,t));
+  // }
 }

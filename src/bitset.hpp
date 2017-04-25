@@ -101,6 +101,8 @@ public:
   bool one() const;
   /// Get the index of the set bit (only after one() returns true)
   unsigned int index_of_fixed() const;
+  /// Reverse mask
+  void reverse_mask(BitSet& b) const;
   
   /** Debugging purpose **/
   /// Print bit set
@@ -195,7 +197,11 @@ BitSet::dispose(A& a) {
 
 forceinline void
 BitSet::o(const BitSet& a, unsigned int i) {
-  assert(i < sz && i < a.sz);
+  if (i >= sz || i >= a.sz) {
+    printf("sz=%d,a.sz=%d\n", sz,a.sz);
+  }
+  assert(i < sz);
+  assert(i < a.sz);
   data[i].o(a.data[i]);
 }
 
@@ -415,6 +421,16 @@ SparseBitSet<A>::index_of_fixed() const {
   return index[limit] * words.get_bpb() + bit_index;
 }
 
+template<class A>
+forceinline void
+SparseBitSet<A>::reverse_mask(BitSet& b) const {
+  using namespace Gecode::Support;
+  for (int i = 0; i <= limit; i++) {
+    int offset = index[i];
+    BitSetData new_word = BitSetData::reverse(b.getword(offset));
+    b.setword(new_word,offset);
+  }
+}
 
 /** Debugging purpose **/
 
