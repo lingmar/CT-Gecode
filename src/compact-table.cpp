@@ -7,7 +7,7 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-#define DELTA
+//#define DELTA
 
 //#define DEBUG
 
@@ -276,8 +276,6 @@ protected:
   int touched_var;
   /// The indices of valid tuples
   SparseBitSet<Space&> validTuples;
-  /// Sum of domain widths
-  int domsum;
   /// Arity
   unsigned int arity;
   /// Number of unassigned variables
@@ -317,14 +315,6 @@ public:
       unassigned(x0.size())
   {
     DEBUG_PRINT(("******* Constructor *******\n"));
-    // Calculate sum of domain widths and maximum domain size
-    domsum = 0;
-    max_dom_size = 1;
-    for (int i = x0.size(); i--; ) {
-      domsum += x0[i].width();
-      if (x0[i].size() > max_dom_size)
-        max_dom_size = x0[i].size();
-    }
     // Initialise supports and post advisors
     int nsupports = init_supports(home, t0, x0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
@@ -347,15 +337,18 @@ public:
 
   forceinline unsigned int
   init_supports(Home home, TupleSet ts, ViewArray<View>& x) {
-    static int ts_min = ts.min();
-    
-    Region r(home);
-    // Bitsets for O(1) access to domains
-    Dom dom = r.alloc<BitSet>(x.size());
-    init_dom(home,dom,ts_min,ts.max(),x);
+    // Find maximum domain size and total domain width
+    max_dom_size = 1;
+    unsigned int domsum = 0;
+    for (int i = x.size(); i--; ) {
+      domsum += x[i].width();
+      if (x[i].size() > max_dom_size)
+        max_dom_size = x[i].size();
+    }
 
+    Region r(home);
+    // Temporary array to create tupleset
     int* tuple = r.alloc<int>(x.size());
-    
     // Allocate temporary supports and residues
     BitSet* supports = r.alloc<BitSet>(domsum);
     unsigned int* residues = r.alloc<unsigned int>(domsum);
@@ -375,7 +368,7 @@ public:
     for (int i = 0; i < ts.tuples(); i++) {
       bool supported = true;
       for (int j = ts.arity(); j--; ) {
-        if (!dom[j].get(ts[i][j] - ts_min)) {
+        if (!x[j].in(ts[i][j])) {
           supported = false;
           break;
         } 
@@ -424,14 +417,10 @@ public:
 
     // Post advisors
     for (int i = x.size(); i--; ) {
-            
       if (!x[i].assigned()) {
-        
         // Decide whether to use an array or a hash table
         double sparseness = x[i].width() / x[i].size();
-        IndexType type = ARRAYY;
-        if (sparseness >= HASHH_THRESHOLD)
-          type = HASHH;
+        IndexType type = sparseness < HASHH_THRESHOLD ? ARRAYY : HASHH;
 
         // To shift the offset
         int diff = x[i].min() - min_vals[i];
@@ -449,19 +438,6 @@ public:
     return support_cnt;
   }
 
-  forceinline void
-  init_dom(Space& home, Dom dom, int min, int max, ViewArray<View>& x) {
-    unsigned int domsize = static_cast<unsigned int>(max - min + 1);
-    for (int i = x.size(); i--; ) {
-      dom[i].init(home, domsize, false);
-      Int::ViewValues<View> it(x[i]);
-      while(it()) {
-        dom[i].set(static_cast<unsigned int>(it.val() - min));
-        ++it;
-      }
-    }
-  }
-
   // Copy constructor during cloning
   forceinline
   CompactTable(Space& home, bool share, CompactTable& p)
@@ -469,7 +445,6 @@ public:
       status(p.status),
       touched_var(p.touched_var),
       validTuples(home, p.validTuples),
-      domsum(p.domsum),
       arity(p.arity),
       unassigned(p.unassigned),
       max_dom_size(p.max_dom_size)
