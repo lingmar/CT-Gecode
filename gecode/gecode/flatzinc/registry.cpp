@@ -47,7 +47,8 @@
 #include "../../../src/compact-table.cpp"
 
 #define GECODE_REGULAR "gecode-regular"
-#define GECODE_TUPLESET "gecode-tupleset"
+#define GECODE_TUPLESET_MEM "gecode-tupleset-mem"
+#define GECODE_TUPLESET_SPEED "gecode-tupleset-speed"
 #define COMPACT_TABLE "compact-table"
 
 #ifdef GECODE_HAS_SET_VARS
@@ -1176,8 +1177,9 @@ namespace Gecode { namespace FlatZinc {
         extensional(s,x,dfa);
         
       } else if (prop != NULL &&
-                 (strcmp(prop, GECODE_TUPLESET) == 0||
-                  strcmp(prop, COMPACT_TABLE) == 0)) {
+                 (strcmp(prop, GECODE_TUPLESET_MEM) == 0||
+                  strcmp(prop, COMPACT_TABLE) == 0 ||
+                  strcmp(prop, GECODE_TUPLESET_SPEED))) {
         TupleSet ts;
         for (int i=0; i<noOfTuples; i++) {
           IntArgs t(noOfVars);
@@ -1189,16 +1191,19 @@ namespace Gecode { namespace FlatZinc {
         ts.finalize();
 
         if (strcmp(prop, COMPACT_TABLE) == 0) {
-          printf("COMPACT TABLE\n");
+          printf("COMPACT_TABLE\n");
           extensional2(s,x,ts);
+        } else if (strcmp(prop, GECODE_TUPLESET_MEM) == 0){
+          printf("GECODE_TUPLESET_MEM\n");
+          extensional(s,x,ts,IPL_MEMORY);
         } else {
-          printf("GECODE TUPLESET\n");
-          extensional(s,x,ts,s.ann2ipl(ann));
+          printf("GECODE_TUPLESET_SPEED\n");
+          extensional(s,x,ts,IPL_SPEED);
         }
       } else {
         printf("WARN: TABLE_PROPAGATOR not properly set, found: %s\n",prop);
         printf("Legal values are: %s, %s, %s\n",
-               GECODE_REGULAR,GECODE_TUPLESET,COMPACT_TABLE);
+               GECODE_REGULAR,GECODE_TUPLESET_MEM,GECODE_TUPLESET_SPEED,COMPACT_TABLE);
         GECODE_NEVER;
       }
     }
