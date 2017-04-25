@@ -16,7 +16,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 0
+#define HASHH_THRESHOLD 3
 
 typedef BitSet* Dom;
 
@@ -72,19 +72,19 @@ public:
       /// Initialise from \a s, \a init_min, \a nsupports, \a offset
       void init(const BitSet* s,
                 int nsupports, int offset,
-                int domain_offset, IndexType t, View x) {
+                IndexType t, View x) {
         type = t;
         switch (type) {
         case ARRAYY:  {
           info = heap.alloc<InfoArray>(1);
           static_cast<InfoArray*>(info)->
-            InfoArray::init(s,nsupports,offset,domain_offset,x);
+            InfoArray::init(s,nsupports,offset,x);
           break;
         }
         case HASHH: {
           info = heap.alloc<InfoHash>(1);
           static_cast<InfoHash*>(info)->
-            InfoHash::init(s,nsupports,offset,domain_offset,x);
+            InfoHash::init(s,nsupports,offset,x);
           break;
         } 
         default:
@@ -120,9 +120,9 @@ public:
     Supports(void) {}
 
     Supports(BitSet* s, int nsupports, int offset,
-              int domain_offset, IndexType type, View x)
+             IndexType type, View x)
       : SharedHandle(new SupportsI()) {
-        init(s,nsupports,offset,domain_offset,type,x);
+        init(s,nsupports,offset,type,x);
     }
 
     /// Copy \a s
@@ -146,10 +146,10 @@ public:
     /// Initialise from parameters
     void init(BitSet* s,
               int nsupports, int offset,
-              int domain_offset, IndexType type, View x) {
+              IndexType type, View x) {
       
       static_cast<SupportsI*>(object())->
-        init(s,nsupports,offset,domain_offset,type,x);
+        init(s,nsupports,offset,type,x);
     }
     /// Update function
     void update(Space& home, bool share, SharedHandle& sh) {
@@ -186,11 +186,10 @@ public:
             unsigned int* res,             /*** Initial residues ***/
             int nsupports,
             int offset,                    /** Start index in s0 and res **/
-            int dom_offset,                /** ts.min() **/
             IndexType type)
     : ViewAdvisor<View>(home,p,c,x0),
-    supports(s0,nsupports,offset,dom_offset,type,x0),
-    index(i)
+    index(i),
+    supports(s0,nsupports,offset,type,x0)
   {
 #ifdef DEBUG
     cout << i << ": " << x0 << endl;    
@@ -202,9 +201,8 @@ public:
       // Sparse array
       nvals = x0.max() - x0.min() + 1;
       residues = home.alloc<unsigned int>(nvals);
-      for (int i = 0; i < nvals; i++) {
+      for (unsigned int i = 0; i < nvals; i++)
         residues[i] = res[i + offset];
-      }
       break;
     }
     case HASHH: {
@@ -270,12 +268,12 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
+  /// Council of advisors
+  Council<CTAdvisor<View> > c;
   /// Whether propagator is propagating
   Status status;
   /// -2 if more than one touched var, -1 if none, else index of touched var
   int touched_var;
-  /// Council of advisors
-  Council<CTAdvisor<View> > c;
   /// The indices of valid tuples
   SparseBitSet<Space&> validTuples;
   /// Sum of domain widths
@@ -287,7 +285,7 @@ protected:
   /// Tuple-set
   TupleSet tupleSet;
   /// Largest domain size
-  int max_dom_size;
+  unsigned int max_dom_size;
   /// Whether it is the first time the advisor executes
   //  bool first;
   
@@ -312,12 +310,11 @@ public:
                ViewArray<View>& x0,
                TupleSet t0)
     : Propagator(home), c(home),
-      validTuples(static_cast<Space&>(home)),
       status(NOT_PROPAGATING),
       touched_var(-1),
+      validTuples(static_cast<Space&>(home)),
       arity(x0.size()),
       unassigned(x0.size())
-      //first(true)
   {
     DEBUG_PRINT(("******* Constructor *******\n"));
     // Calculate sum of domain widths and maximum domain size
@@ -328,7 +325,7 @@ public:
       if (x0[i].size() > max_dom_size)
         max_dom_size = x0[i].size();
     }
-    // Initialise supports
+    // Initialise supports and post advisors
     int nsupports = init_supports(home, t0, x0);
     DEBUG_PRINT(("nsupports=%d\n",nsupports));
     
@@ -338,14 +335,9 @@ public:
     } 
     
     // Initialise validTupels with nsupports bit set
-    //validTuples.init(t0.tuples(), nsupports);
     validTuples.init(nsupports);
 
-    if (validTuples.is_empty()) {
-      home.fail();
-      return;
-    }
-
+    // Because we use heap allocated data
     home.notice(*this,AP_DISPOSE);
     
     // Schedule in case no advisors have been posted
@@ -407,11 +399,6 @@ public:
     }
 
     int* nq = r.alloc<int>(max_dom_size);
-    for (int i = x.size(); i--; ) {
-      assert(x[i].size() <= max_dom_size);
-    }
-
-    
     int nremoves;
     max_dom_size = 1; // Reset maximal domain size
     
@@ -454,7 +441,6 @@ public:
                                           residues,
                                           support_cnt,
                                           offset[i] + diff,
-                                          ts.min(),
                                           type);
       } else
         unassigned--;      
@@ -475,18 +461,17 @@ public:
       }
     }
   }
-  
+
   // Copy constructor during cloning
   forceinline
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
+      status(p.status),
+      touched_var(p.touched_var),
       validTuples(home, p.validTuples),
       domsum(p.domsum),
-      status(p.status),
       arity(p.arity),
       unassigned(p.unassigned),
-      touched_var(p.touched_var),
-      //first(p.first),
       max_dom_size(p.max_dom_size)
   {
     // Update views and advisors
@@ -581,7 +566,7 @@ public:
         max_row = a.supports.row(--max_rm);
       assert(max_row >= min_row);
 
-      if (max_row - min_row + 1 <= x.size()) { // Delta is smaller 
+      if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
                                                // Reset-based update
         // if (min_row == max_row) { // Only one value -- don't use a mask
         //   validTuples.nand(a.supports(min_row));
@@ -644,7 +629,7 @@ public:
   filterDomains(Space& home) {
     if (unassigned == 0) return home.ES_SUBSUMED(*this);
     // Count the number of scanned unassigned variables
-    int count_unassigned = 0;
+    unsigned int count_unassigned = 0;
     // Array to collect values to remove
     Region r(home);
     int* nq = r.alloc<int>(max_dom_size);
