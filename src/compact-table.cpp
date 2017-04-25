@@ -564,40 +564,53 @@ public:
     View x = a.view();
     bool diff;
 #ifdef DELTA
-    if (me == ME_INT_VAL) {
+    if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
       diff = validTuples.intersect_with_mask(a.supports[x.val()]);
-    } else if (x.any(d)){
+    } else if (x.any(d)){ // No delta information
       diff = updateTable(a,home);
-    } else if (!x.any(d)) {
+    } else { // Delta information available -- let's compare the size of
+             // the domain with the size of delta
       int min_rm = x.min(d);
       int max_rm = x.max(d);
       int min_row = a.supports.row(min_rm);
       int max_row = a.supports.row(max_rm);
-      DEBUG_PRINT(("init: %d: (min,max)=(%d,%d)->(%d,%d)\n",
-                   a.index,x.min(d),x.max(d),min_row,max_row));
-      while (min_row == -1) {
+      // Push min_row and max_row to closest corresponding tabulated values.
+      // This happens if min_rm or max_rm were not in the domain of x
+      // when the advisor was posted. Those values need not be considered since
+      // we were at fixpoint when the advisor was posted.
+      while (min_row == -1) { // -1 means value is not tabulated
         min_row = a.supports.row(++min_rm);
-        DEBUG_PRINT(("min_row=%d\n", min_row));
       }
       while (max_row == -1) {
         max_row = a.supports.row(--max_rm);
-        DEBUG_PRINT(("max_row=%d\n", max_row));
       }
-      DEBUG_PRINT(("%d: (min,max)=(%d,%d)->(%d,%d)\n",
-                   a.index,x.min(d),x.max(d),min_row,max_row));
       assert(max_row >= min_row);
-      
-      Region r(home);
-      BitSet mask;
-      mask.allocate(r,validTuples.size());
-      validTuples.clear_mask(mask);
-      for (int i = min_row; i <= max_row; i++) {
-        if (!a.supports(i).empty()) { // empty if val not in initial domain
-          validTuples.add_to_mask(a.supports(i),mask);
+
+      if (max_row - min_row + 1 <= x.size()) { // Delta is smaller
+        // if (min_row == max_row) { // Only one value -- don't use a mask
+        //   validTuples.nand(a.supports(min_row));
+        // } else {
+        // Region r(home);
+        // BitSet mask;
+        // mask.allocate(r,validTuples.size());
+        // validTuples.clear_mask(mask);
+        // for (int i = min_row; i <= max_row; i++) {
+        //   if (!a.supports(i).empty()) { // empty if val not in initial domain
+        //     validTuples.add_to_mask(a.supports(i),mask);
+        //   }
+        // }
+        // validTuples.reverse_mask(mask);
+        // diff = validTuples.intersect_with_mask(mask);
+
+        diff = false;
+        for (int i = min_row; i <= max_row; i++) {
+          if (!a.supports(i).empty() && validTuples.nand(a.supports(i))) {
+            diff = true;
+          }
         }
+      } else { // Domain size smaller than delta
+        diff = updateTable(a,home);
       }
-      validTuples.reverse_mask(mask);
-      diff = validTuples.intersect_with_mask(mask);
     } 
 #else
     diff = updateTable(a,home);
