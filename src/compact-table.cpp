@@ -68,7 +68,7 @@ public:
         }
       }
       
-      /// Initialise from \a s, \a init_min, \a nsupports, \a offset
+      /// Initialise from parameters
       void init(const BitSet* s,
                 int nsupports, int offset,
                 IndexType t, View x) {
@@ -238,18 +238,6 @@ public:
     residues = home.alloc<unsigned int>(nvals);
     for (int i = nvals; i--; )
       residues[i] = a.residues[i];
-  }
-
-  /// Access residue for value \a val
-  forceinline unsigned int
-  residue(int val) {
-    return residues[supports.row(val)];
-  }
-
-  /// Set residue for value \a val
-  forceinline void
-  set_residue(int val, int r) {
-    residues[supports.row(val)] = r;
   }
     
   forceinline void
@@ -499,8 +487,6 @@ public:
     
     Int::ViewValues<View> it(a.view());
     while (it()) {
-      assert(!a.supports[it.val()].empty());
-
       validTuples.add_to_mask(a.supports[it.val()],mask);
       ++it;
     }
@@ -759,13 +745,15 @@ public:
 
   forceinline bool
   supported(CTAdvisor<View>& a, int val) {
-    int index = a.residue(val);
-    Support::BitSetData w = validTuples.a(a.supports[val],index);
+    const unsigned int row = a.supports.row(val);
+    int index = a.residues[row];
+    const BitSet& support_row = a.supports(row);
+    Support::BitSetData w = validTuples.a(support_row,index);
         
     if (w.none()) {
-      index = validTuples.intersect_index(a.supports[val]);
+      index = validTuples.intersect_index(support_row);
       if (index != -1) {
-        a.set_residue(val,index);
+        a.residues[row] = index;
         return true;
       }
       return false;
