@@ -160,10 +160,14 @@ public:
       for (int i = 51; i--; ) {
         switch (opt.model()) {
         case 0: {
-          extensional(*this, IntVarArgs() << x[i] << x[i+1], tupleSet);
+          extensional(*this, IntVarArgs() << x[i] << x[i+1], tupleSet, IPL_SPEED);
           break;
         }
         case 1: {
+          extensional(*this, IntVarArgs() << x[i] << x[i+1], tupleSet, IPL_MEMORY);
+          break;
+        }
+        case 2: {
           extensional2(*this, IntVarArgs() << x[i] << x[i+1], tupleSet);
           break;
         }
@@ -291,8 +295,9 @@ main(int argc, char* argv[]) {
   opt.propagation(BlackHole::PROPAGATION_TUPLE_SET,
                   "tuple-set", "use TupleSet-based extensional propagation");
   opt.ipl(IPL_DOM);
-  opt.model(0, "g", "extensional");
-  opt.model(1, "c", "compact table");
+  opt.model(0, "s", "extensional ipl speed");
+  opt.model(1, "m", "extensional ipl memory");
+  opt.model(2, "c", "compact table");
   opt.parse(argc,argv);
   // Generates the new board
   generate(opt.size());
