@@ -16,7 +16,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 100
+#define HASHH_THRESHOLD 0
 
 typedef BitSet* Dom;
 
@@ -531,11 +531,7 @@ public:
   }
 
   forceinline bool
-  updateTable(CTAdvisor<View> a, Space& home) {
-    // No need for temporary mask if only one value
-    if (a.view().assigned()) { 
-      return validTuples.intersect_with_mask(a.supports[a.view().val()]);
-    }
+  incremental_update(CTAdvisor<View> a, Space& home) {
     // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
@@ -566,10 +562,11 @@ public:
 #ifdef DELTA
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
       diff = validTuples.intersect_with_mask(a.supports[x.val()]);
-    } else if (x.any(d)){ // No delta information
-      diff = updateTable(a,home);
+    } else if (x.any(d)){ // No delta information -- do incremental update
+      diff = incremental_update(a,home);
     } else { // Delta information available -- let's compare the size of
-             // the domain with the size of delta
+             // the domain with the size of delta to decide whether or not
+             // to do reset-based or incremental update
       int min_rm = x.min(d);
       int max_rm = x.max(d);
       int min_row = a.supports.row(min_rm);
@@ -578,15 +575,14 @@ public:
       // This happens if min_rm or max_rm were not in the domain of x
       // when the advisor was posted. Those values need not be considered since
       // we were at fixpoint when the advisor was posted.
-      while (min_row == -1) { // -1 means value is not tabulated
+      while (min_row == -1) // -1 means value is not tabulated
         min_row = a.supports.row(++min_rm);
-      }
-      while (max_row == -1) {
+      while (max_row == -1)
         max_row = a.supports.row(--max_rm);
-      }
       assert(max_row >= min_row);
 
-      if (max_row - min_row + 1 <= x.size()) { // Delta is smaller
+      if (max_row - min_row + 1 <= x.size()) { // Delta is smaller 
+                                               // Reset-based update
         // if (min_row == max_row) { // Only one value -- don't use a mask
         //   validTuples.nand(a.supports(min_row));
         // } else {
@@ -608,12 +604,12 @@ public:
             diff = true;
           }
         }
-      } else { // Domain size smaller than delta
-        diff = updateTable(a,home);
+      } else { // Domain size smaller than delta, incremental update
+        diff = incremental_update(a,home);
       }
     } 
 #else
-    diff = updateTable(a,home);
+    diff = incremental_update(a,home);
 #endif // DELTA
     
     
