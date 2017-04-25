@@ -116,6 +116,8 @@ namespace Gecode { namespace Support {
     bool same(BitSetData a);
     /// Check whether exactly one bit is set
     bool one() const;
+    /// Reverse all bits in \a b
+    static BitSetData reverse(BitSetData b);
   };
 
   /// Status of a bitset
@@ -316,7 +318,13 @@ namespace Gecode { namespace Support {
     ab.bits = a.bits & b.bits;
     return ab;
   }
-
+  forceinline BitSetData
+  BitSetData::reverse(BitSetData b) {
+    BitSetData rv;
+    rv.bits = ~b.bits;
+    return rv;
+  }
+    
   forceinline void
   BitSetData::o(BitSetData a) {
     bits |= a.bits;
