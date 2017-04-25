@@ -91,6 +91,8 @@ public:
   bool intersect_with_mask(const BitSet& mask);
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   int intersect_index(const BitSet& b) const;
+  /// Perform "nand" with \a b
+  bool nand(const BitSet& b);
   /// Perform "and" with words and \a b at word index \a i
   Gecode::Support::BitSetData a(const BitSet& b, unsigned int i);
   /// Get the number of bits
@@ -370,6 +372,29 @@ SparseBitSet<A>::intersect_with_mask(const BitSet& mask) {
 }
 
 template<class A>
+forceinline bool
+SparseBitSet<A>::nand(const BitSet& b) {
+  using namespace Gecode;
+  bool changed = false;
+  for (int i = limit; i >= 0; i--) {
+    int offset = index[i];
+    Support::BitSetData rev = Support::BitSetData::reverse(b.getword(offset));
+    Support::BitSetData na = Support::BitSetData::a(words.getword(offset), rev);
+    
+    if (!words.same(na,offset)) {
+      changed = true;
+      words.setword(na, offset);
+      if (na.none()) {
+        index[i] = index[limit];
+        limit--;
+      }
+    }
+  }
+  return changed;
+}
+
+
+template<class A>
 forceinline int
 SparseBitSet<A>::intersect_index(const BitSet& b) const {
   for (int i = 0; i <= limit; i++) {
@@ -416,7 +441,7 @@ template<class A>
 forceinline unsigned int
 SparseBitSet<A>::index_of_fixed() const {
   // The word index is index[limit]
-  // Total index is word_index*bpb + bit_index
+  // Bit index is word_index*bpb + bit_index
   unsigned int bit_index = words.getword(index[limit]).next();
   return index[limit] * words.get_bpb() + bit_index;
 }
