@@ -54,10 +54,7 @@ public:
   }
 
   template<class View>
-  void init(const BitSet* supports,
-            int nsupports, int offset,
-            int dom_offset,
-            View x);
+  void init(const BitSet* supports,int nsupports, int offset,View x);
 
   virtual int row(int val) = 0;
 
@@ -88,9 +85,7 @@ public:
   // }
   
   template<class View>
-  void init(const BitSet* s,
-            int nsupports, int offset,
-            int dom_offset, View x) {
+  void init(const BitSet* s,int nsupports, int offset,View x) {
     min = x.min();
     max = x.max();
     // Number of bitsets
@@ -221,9 +216,7 @@ public:
   }
 
   template<class View>
-  void init(const BitSet* s,
-            int nsupports, int offset,
-            int dom_offset, View x) {
+  void init(const BitSet* s,int nsupports, int offset,View x) {
     // Initial domain size
     nvals = x.size();
     // Allocate memory
