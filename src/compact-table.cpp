@@ -495,14 +495,17 @@ public:
   
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
+    CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
+    View x = a.view();
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
-    if (status == PROPAGATING)
-      return ES_FIX; // Advisor is disposed in propagate() if assigned
+    if (status == PROPAGATING) {
+      if (x.assigned())
+        return home.ES_FIX_DISPOSE(c,a);
+      return ES_FIX;
+    }
 
-    CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     ModEvent me = View::modevent(d);
-    View x = a.view();
     bool diff;
 #ifdef DELTA
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
@@ -557,8 +560,6 @@ public:
     diff = incremental_update(a,home);
 #endif // DELTA
     
-    
-
     // Do not fail a disabled propagator
     if (validTuples.is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
@@ -626,7 +627,7 @@ public:
         if (!supported(a,min_val)) {
           v.eq(home,max_val);
           --unassigned;
-          a.dispose(home,c);
+          //a.dispose(home,c);
           break;
         }
 
@@ -634,7 +635,7 @@ public:
         if (!supported(a,max_val)) {
           v.eq(home,min_val);
           --unassigned;
-          a.dispose(home,c);
+          //a.dispose(home,c);
           break;
         }
 
@@ -728,7 +729,7 @@ public:
           v.minus_v(home,r,false);
           if (v.assigned()) {
             --unassigned;
-            a.dispose(home,c);
+            //a.dispose(home,c);
             break;
           }
         }
@@ -770,7 +771,7 @@ public:
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       v.eq(home,t[a.index]);
-      a.dispose(home,c);
+      //      a.dispose(home,c);
     }
 
     return home.ES_SUBSUMED(*this);
