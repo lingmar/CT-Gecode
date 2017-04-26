@@ -1,0 +1,5 @@
+output [basechar(fix(x[i,j]))++if j==8 then "\n" else "" endif | i in 1..N, j in 1..8, ];
+function string : basechar(base: b) = ["A","C","G","T"][b];
+int: N = 90;
+set of int: base = 1..4;
+array [1..N,1..8] of int: x;
