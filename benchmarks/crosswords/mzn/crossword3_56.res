@@ -1,0 +1,136 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+L = array1d(0..30, [1, 1, 12, 18, 1, 3, 2, 1, 2, 5, 18, 1, 1, 2, 24, 1, 1, 14, 5, 5, 2, 11, 1, 5, 2, 1, 4, 18, 1, 5, 2]);
+----------
+
+%%  runtime:       0.332 (332.305 ms)
+%%  solvetime:     0.002 (2.255 ms)
+%%  solutions:     1
+%%  variables:     406
+%%  propagators:   585
+%%  propagations:  2321
+%%  nodes:         22
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    21
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+L = array1d(0..30, [1, 15, 13, 1, 8, 1, 18, 6, 1, 8, 4, 2, 1, 20, 1, 18, 9, 4, 1, 2, 5, 20, 1, 12, 3, 1, 13, 1, 20, 5, 4]);
+----------
+
+%%  runtime:       0.053 (53.054 ms)
+%%  solvetime:     0.002 (2.414 ms)
+%%  solutions:     1
+%%  variables:     406
+%%  propagators:   585
+%%  propagations:  2537
+%%  nodes:         21
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    20
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+L = array1d(0..30, [1, 15, 13, 1, 8, 1, 18, 6, 1, 8, 4, 2, 1, 20, 1, 18, 9, 4, 1, 2, 5, 20, 1, 12, 3, 1, 13, 1, 20, 5, 4]);
+----------
+
+%%  runtime:       0.053 (53.407 ms)
+%%  solvetime:     0.002 (2.481 ms)
+%%  solutions:     1
+%%  variables:     406
+%%  propagators:   585
+%%  propagations:  2478
+%%  nodes:         21
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    20
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+L = array1d(0..30, [1, 15, 13, 1, 8, 1, 18, 6, 1, 8, 4, 2, 1, 20, 1, 18, 9, 4, 1, 2, 5, 20, 1, 12, 3, 1, 13, 1, 20, 5, 4]);
+----------
+
+%%  runtime:       0.072 (72.162 ms)
+%%  solvetime:     0.001 (1.104 ms)
+%%  solutions:     1
+%%  variables:     406
+%%  propagators:   585
+%%  propagations:  2480
+%%  nodes:         21
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    20
+
