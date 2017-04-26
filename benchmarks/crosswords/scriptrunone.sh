@@ -12,7 +12,7 @@ touch $OUT
 
 for prop in "gecode-regular" "gecode-tupleset-mem" "gecode-tupleset-speed" "compact-table"; do
     export TABLE_PROPAGATOR=$prop
-    ${GECODE_PATH}/bin/fzn-gecode -time 1 -s $FZN >> $OUT
+    ${GECODE_PATH}/bin/fzn-gecode -time 1000000 -s $FZN >> $OUT
 done
 
 # Compress fzn file 
