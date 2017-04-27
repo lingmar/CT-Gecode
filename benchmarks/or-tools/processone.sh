@@ -1,13 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 # Script for processing results
 T=$1
 
-ERR="err.log"
+ERR=`dirname $T`/err.log
 touch $ERR
+rm $ERR
 
-OUT="out.log"
+OUT=`dirname $T`/out.log
 touch $OUT
+rm $OUT
 
 missing=""
 
@@ -33,7 +35,7 @@ grep -q "COMPACT" $T ||
 #do
 if [ "$missing" != "" ]
 then
-    echo "Missing $missing: $T" >> err.log
+    echo "Missing $missing: $T" >> $ERR
     exit 2
 fi
 
@@ -41,20 +43,17 @@ nsolved=$(grep "solvetime" $T | wc -l | grep -o "[0-9]")
 
 if [ $nsolved != 4 ]
 then
-    echo "Solved $nsolved: $T" >> err.log
+    echo "Solved $nsolved: $T" >> $ERR
     exit 2
 fi
 
-prop[0]="reg"
-prop[1]="tup_mem"
-prop[1]="tup_speed"
-prop[2]="ct"
+prop=(reg tup_mem tup_speed ct)
 
 count=0
 
 for time in `grep "solvetime" $T | grep -o "([0-9]*.[0-9][0-9][0-9]" | cut -d "(" -f2`; do
     echo "${prop[$count]}($time)" >> $OUT
-    let count=$count+1
+    count=$(($count+1))
 done
 
 

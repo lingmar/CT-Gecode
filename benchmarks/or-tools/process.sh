@@ -20,7 +20,7 @@ cat out.log | grep "ct" | cut -d "(" -f2 | cut -d ")" -f1 | sort -n > $CT
 for f in $REG $TUP_MEM $TUP_SPEED $CT; do
     count=1
     for line in `cat $f`; do
-        echo "$line $count" >> "$(echo $f | cut -d '.' -f1).data"
-        let "count+=1"
+        echo "$line $count" >> "$(echo $f | cut -d '.' -f1)-ot.data"
+	count=$(($count+1))
     done
 done
