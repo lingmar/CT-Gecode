@@ -31,7 +31,8 @@ public:
     copy(ib);
   }
   /// Copy \a ib
-  void copy(const InfoBase& ib) {
+  forceinline void
+  copy(const InfoBase& ib) {
     nvals = ib.nvals;
     for (int i = 0; i < nvals; i++) {
       if (!ib.supports[i].empty()) {
@@ -41,24 +42,29 @@ public:
     }
   }
   /// Allocate with allocator \a for \a n values
-  virtual void allocate(int n) {
+  forceinline virtual void
+  allocate(int n) {
     nvals = n;
     supports = heap.alloc<BitSet>(nvals);
   }
   /// Abstract functions
-  virtual const BitSet& get_supports(int val) {
+  forceinline virtual const BitSet&
+  get_supports(int val) {
     return supports[row(val)];
   }
-  virtual const BitSet& get_supports_raw(int row) {
+  forceinline virtual const BitSet&
+  get_supports_raw(int row) {
     return supports[row];
   }
-
+  
   template<class View>
+  forceinline
   void init(const BitSet* supports,int nsupports, int offset,View x);
 
-  virtual int row(int val) = 0;
+  forceinline virtual int
+  row(int val) = 0;
 
-  virtual ~InfoBase(void) {
+  forceinline virtual ~InfoBase(void) {
     for (int i = nvals; i--; ) {
       (void) supports[i].dispose(heap);
     }
@@ -85,7 +91,8 @@ public:
   // }
   
   template<class View>
-  void init(const BitSet* s,int nsupports, int offset,View x) {
+  forceinline void
+  init(const BitSet* s,int nsupports, int offset,View x) {
     min = x.min();
     max = x.max();
     // Number of bitsets
@@ -101,11 +108,13 @@ public:
     }
   }
 
-  virtual void allocate(int n) {
+  forceinline virtual void
+  allocate(int n) {
     InfoBase::allocate(n);
   }
 
-  virtual int row(int val) {
+  forceinline virtual int
+  row(int val) {
     //printf("val - min = %d - %d = %d\n",val,min,val-min );
     return val >= min && val <= max ? val - min : -1;
   }  
@@ -130,7 +139,8 @@ private:
     /// Default constructor
     HashTable() {}
     /// Allocate space for a hash table with room for \a pop elements
-    void allocate(int pop) {
+    forceinline void
+    allocate(int pop) {
       size=2;
       while (size <= 2*pop)
         size *= 2;
@@ -143,6 +153,7 @@ private:
         (&table[i])->value = -1; 	/* mark as free */
     }
     /// Copy constructor
+    forceinline
     HashTable(const HashTable& h)
       : mask(h.mask), factor(h.factor), size(h.size)
     {
@@ -153,7 +164,8 @@ private:
     }
     
     /// Insert element into hash table
-    void insert(int key, int value) {
+    forceinline void
+    insert(int key, int value) {
       long t0 = key*factor;
       int inc=0;
       while (1) {
@@ -169,7 +181,8 @@ private:
       }
     }
     /// Get value of element with key \a key
-    int get(int key) const {
+    forceinline int
+    get(int key) const {
       DEBUG_PRINT(("Looking for key %d\n", key));
       long t0 = key*factor;
       int inc=0;
@@ -185,7 +198,8 @@ private:
       }
     }
     /// Print
-    void print() {
+    forceinline void
+    print() {
       for (int i = 0; i < size; i++) {
         DEBUG_PRINT(("%d: {%d,%d}\n",i,table[i].key,table[i].value));
       }
@@ -199,8 +213,10 @@ private:
   
 public:
   /// Default constructor
+  forceinline
   InfoHash(void) {}
   /// Copy constructor
+  forceinline
   InfoHash(const InfoHash& ih)
     : InfoBase(ih), index_table(ih.index_table) {
     DEBUG_PRINT(("Copy InfoHash\n"));
@@ -210,13 +226,15 @@ public:
   //   return supports[row(val)];
   // }  
   
-  virtual void allocate(int n) {
+  forceinline virtual void
+  allocate(int n) {
     InfoBase::allocate(n);
     index_table.allocate(n);
   }
 
   template<class View>
-  void init(const BitSet* s,int nsupports, int offset,View x) {
+  forceinline void
+  init(const BitSet* s,int nsupports, int offset,View x) {
     // Initial domain size
     nvals = x.size();
     // Allocate memory
@@ -241,7 +259,8 @@ public:
     index_table.print();
   }
 
-  virtual int row(int val) {
+  forceinline virtual int
+  row(int val) {
     return index_table.get(val);
   }
   

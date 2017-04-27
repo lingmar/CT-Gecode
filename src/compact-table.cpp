@@ -7,10 +7,14 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-#define DELTA
 //#define LONG_FILTER
 
 //#define DEBUG
+
+//#define FIX
+#define DELTA
+
+#define forceinline __attribute__ ((noinline))
 
 /** 
  * Threshold value for using hash table
@@ -267,8 +271,10 @@ protected:
   unsigned int arity;
   /// Number of unassigned variables
   unsigned int unassigned;
+#ifdef FIX
   /// Tuple-set
   TupleSet tupleSet;
+#endif // FIX
   /// Largest domain size
   unsigned int max_dom_size;
   /// Whether it is the first time the advisor executes
@@ -334,8 +340,10 @@ public:
     }
 
     Region r(home);
+#ifdef FIX
     // Temporary array to create tupleset
     int* tuple = r.alloc<int>(x.size());
+#endif // FIX
     // Allocate temporary supports and residues
     BitSet* supports = r.alloc<BitSet>(domsum);
     unsigned int* residues = r.alloc<unsigned int>(domsum);
@@ -364,7 +372,9 @@ public:
         // Set tuple as valid and save word index in residue
         for (int j = ts.arity(); j--; ) {
           int val = ts[i][j];
+#ifdef FIX
           tuple[j] = val;
+#endif // FIX
           unsigned int row = offset[j] + val - min_vals[j];
 
           if (supports[row].empty()) // Initialise in case not done
@@ -374,7 +384,9 @@ public:
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
-        tupleSet.add(IntArgs(x.size(),tuple));
+#ifdef FIX
+        tupleSet.add(IntArgs(x.size(),tuple));        
+#endif // FIX
       }
     }
 
@@ -421,7 +433,9 @@ public:
       } else
         unassigned--;      
     }
-    tupleSet.finalize();
+#ifdef FIX
+    tupleSet.finalize();    
+#endif // FIX
     return support_cnt;
   }
 
@@ -438,7 +452,9 @@ public:
   {
     // Update views and advisors
     c.update(home,share,p.c);
+#ifdef FIX
     tupleSet.update(home,share,p.tupleSet);
+#endif // FIX
   }
 
   // Create copy during cloning
@@ -467,11 +483,15 @@ public:
     if (validTuples.is_empty())
       return ES_FAILED;
 
+#ifdef FIX
     ExecStatus msg;
     if (validTuples.one()) 
       msg = fixDomains(home);
     else
       msg = filterDomains(home);
+#else
+    ExecStatus msg = filterDomains(home);
+#endif // FIX
 
     status = NOT_PROPAGATING;
     return msg;
@@ -762,6 +782,7 @@ public:
     return true;
   }
 
+#ifdef FIX
   forceinline ExecStatus
   fixDomains(Space& home) {
     // Only one valid tuple left, so we can fix all vars to that tuple
@@ -776,13 +797,16 @@ public:
 
     return home.ES_SUBSUMED(*this);
   }
+#endif // FIX
   
   // Dispose propagator and return its size
   forceinline virtual size_t
   dispose(Space& home) {
     home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
-    (void) tupleSet.~TupleSet();
+#ifdef FIX
+    (void) tupleSet.~TupleSet();    
+#endif // FIX
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }

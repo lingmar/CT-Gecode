@@ -1,3 +1,5 @@
+#define forceinline __attribute__ ((noinline))
+
 class BitSet : public Gecode::Support::BitSetBase {
 public:
   /// Default constructor (yields empty set)
