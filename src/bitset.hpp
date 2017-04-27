@@ -201,17 +201,18 @@ BitSet::dispose(A& a) {
 
 forceinline void
 BitSet::o(const BitSet& a, unsigned int i) {
-  if (i >= sz || i >= a.sz) {
-    printf("sz=%d,a.sz=%d\n", sz,a.sz);
-  }
-  assert(i < sz);
-  assert(i < a.sz);
+#ifdef DEBUG
+    assert(i < sz);
+    assert(i < a.sz);
+#endif // DEBUG
   data[i].o(a.data[i]);
 }
 
 forceinline void
 BitSet::a(const BitSet& a, unsigned int i) {
-  assert(i < sz && i < a.sz);
+#ifdef DEBUG
+  assert(i < sz && i < a.sz);  
+#endif // DEBUG
   data[i].a(a.data[i]);
 }
 
