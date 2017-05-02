@@ -1,0 +1,117 @@
+\begin{tikzpicture}[scale=1.0]
+  \begin{axis}[
+    xmode=log,
+    ymin=0,ymax=20,
+    xmin=0.1, xmax=1000000,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\# solved},
+    legend pos=south east
+    % table/create on use/cumulative distribution/.style={
+    %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
+    % }
+    ]
+    \addplot 
+    [mark=triangle*,
+    mark size=1.5,
+    mark options={solid},
+    green] 
+    coordinates {0.088 1
+0.182 2
+0.233 3
+0.942 4
+1.622 5
+4.020 6
+7.439 7
+7.733 8
+8.229 9
+10.629 10
+16.624 11
+40.292 12
+67.440 13
+1244.797 14
+7858.266 15
+1000001.583 16
+1000001.852 17
+1009212.178 18
+1012657.780 19
+1012814.040 20};
+
+    \addplot 
+    [blue,
+    mark=*,
+    mark size=1.5,
+    mark options={solid}]
+    coordinates {0.084 1
+0.206 2
+0.217 3
+0.871 4
+1.393 5
+4.322 6
+7.026 7
+7.901 8
+7.904 9
+10.663 10
+18.990 11
+50.266 12
+96.214 13
+1467.636 14
+9916.340 15
+1000001.971 16
+1000002.938 17
+1000004.363 18
+1000005.402 19
+1000011.197 20};
+
+    \addplot [brown!60!black,
+    mark options={fill=brown!40},
+    mark=otimes*,
+    mark size=1.5]
+    table {0.087 1
+0.236 2
+0.311 3
+1.152 4
+1.786 5
+5.762 6
+8.968 7
+10.301 8
+10.566 9
+15.086 10
+23.403 11
+63.558 12
+119.651 13
+1877.973 14
+13098.088 15
+1000002.296 16
+1000003.170 17
+1000007.159 18
+1000007.877 19
+1000015.365 20};
+
+    \addplot 
+    [red,
+    mark size=1.5,
+    mark=square*]
+    table {0.081 1
+0.157 2
+0.223 3
+0.596 4
+0.895 5
+2.233 6
+4.192 7
+4.233 8
+4.349 9
+5.717 10
+8.703 11
+21.423 12
+37.126 13
+669.099 14
+4203.782 15
+1000000.429 16
+1000000.554 17
+1000000.652 18
+1000000.873 19
+1000001.178 20};
+    \legend{Reg,Tup\_mem,Tup\_speed,CT}
+  \end{axis}
+\end{tikzpicture}
