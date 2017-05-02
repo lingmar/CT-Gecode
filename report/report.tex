@@ -1,11 +1,13 @@
 \documentclass[a4paper,11pt]{article}
+\usepackage{float}
 \usepackage{fullpage}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
-\pgfplotsset{plot coordinates/math parser=false}
+%\pgfplotsset{plot coordinates/math parser=false}
 \usetikzlibrary{calc}
+\usepackage{cwpuzzle}
 \usepackage{astra}
 %\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
 %\usepackage{algorithm2e}
@@ -21,7 +23,7 @@
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
 
-\newcommand{\CT}[0]{\emph{CT~}}
+\newcommand{\CT}[0]{CT~}
 
 % Silly but saves space
 \newcommand{\T}[1]{\texttt{#1}}
@@ -41,6 +43,9 @@
 \newcommand{\Thmref}[1]{Theorem~\ref{#1}}
 \newcommand{\Lemmaref}[1]{Lemma~\ref{#1}}
 
+\newcommand{\Reg}[0]{Reg~}
+\newcommand{\Tups}[0]{Tup\_speed~}
+\newcommand{\Tupm}[0]{Tup\_mem~}
 
 \newcommand{\Eqref}[1]{\eqref{#1}}
 
@@ -203,25 +208,6 @@ from their domains, so that all the constraints of the problem
 are satisfied. Sometimes the solution should not only satisfy the set of constraints for the
 problem, but should also maximise or minimise some given function.
 
-\Todo{Perhaps add an example somewhere here.}
-
-%  There need not
-% exist a solution to a given problem, and a solution need not
-% be unique; zero or more assignments of values to the variables may 
-% satisfy the constraints.
-% One small example is the set of variables~$\Set{x,y}$ with
-% domain~$\Set{1,2,3}$,
-% together with the constraint~$x<y$. This problem has two solutions, 
-% namely~$(x,y) = (1,2), (x,y) = (1,3)$ and~$(x,y) = (2,3)$.
-% If, on the other hand, the domains of~$x$ and~$y$ would have been~$\Set{2,3}$
-% and~$\Set{1,2}$, respectively, then there would exist no solution since none of
-% the possible assignments of~$x$ and~$y$ would have satisfied the constraint~$x<y$.
-
-
-% Take the same small example as above, with
-% the domains of~$x,y$ being~$\Set{1,2,3}$, and suppose that the solution
-% should maximise the sum of~$x$ and~$y$. Then the solution is~$(x,y) = (2,3)$.
-
 A constraint solver (CP solver) is a software that solves constraint problems.
 The solving of a problem consists of generating a search tree by branching
 on possible values for the variables. At each node in the search tree,
@@ -231,16 +217,72 @@ associated with at least one propagator algorithm, whose task is to detect
 values that would violate the constraint if the variables were to be assigned
 any of those values, and remove those values from the domain of the variables.
 
-% Intuition
-% Example
-% Definitions
-% - CSP
+To build intuition and understand the ideas of CP,
+the concepts can successfully be demonstrated with logical puzzles. One such
+puzzle is Kakuro, a kind of mathematical crossword where the "words" consist
+of numbers instead of letters, see Figure~\ref{fig:kakuro}.
+The game board consists of 
+blank cells forming rows and columns, called \emph{entries}.
+Each entry has a \emph{clue}, a prefilled number indicating the sum of that entry.
+The size of the board can vary.
+The objective is to fill
+in digits from 1 to 9 inclusive into each cell such that for each entry,
+the sum of all the digits in the entry is equal to the clue of that entry,
+and such that each digit appears at most once in each entry.
 
-% Propagation
-% - Constistency levels (value-, bounds-, domain-)
-% 
+\begin{figure}
+  \centering
+  \begin{minipage}{.45\textwidth}
+    \begin{Kakuro}{6}{6}
+      |  -   |<:9>  |<:26> |  -   |<:19> |<:5>  |  -   |.
+      |<16:> |  7   |  9   |<4:9> |  3   |  1   |  -   |.
+      |<23:> |  1   |  1   |  1   |  1   |  4   |  -   |.
+      |  -   |<6:10>|  1   |  1   |  1   |<:14> |  -   |.
+      |<24:> |  1   |  1   |  1   |  1   |  1   |  -   |.
+      |<4:>  |  1   |  1   |<15:> |  1   |  1   |  -   |.
+    \end{Kakuro}
+  \end{minipage}
+  \begin{minipage}{.45\textwidth}
+    \PuzzleSolution
+    %\PuzzleUnitlength=14pt
+    %\footnotesize\sf
+    \begin{Kakuro}{6}{6}
+      |  -   |<:9>  |<:26> |  -   |<:19> |<:5>  |  -   |.
+      |<16:> |  7   |  9   |<4:9> |  3   |  1   |  -   |.
+      |<23:> |  1   |  1   |  1   |  1   |  4   |  -   |.
+      |  -   |<10:6>|  1   |  1   |  1   |<:14> |  -   |.
+      |<24:> |  1   |  1   |  1   |  1   |  1   |  -   |.
+      |<4:>  |  1   |  1   |<15:> |  1   |  1   |  -   |.
+    \end{Kakuro}
+  \end{minipage}
+  \caption{A Kakuro puzzle~\protect\footnotemark (left) and its solution (right).}
+\end{figure}
 
-The following definitions are taken from
+\footnotetext{From \emph{200 Crazy Clever Kakuro Puzzles - Volume 2}, LeCompte, Dave, 2010.}
+
+A Kakuro puzzle can be modelled as a constraint satisfaction problem with one variable
+for each cell, and the domain of each variable being the set $\Set{1,..,9}$.
+The constraints of the problem is that the sum of the variables that
+belong to a given entry must be equal to the clue for that entry, and the
+values of the variables for each entry must be distinct.
+
+An alternative way of phrasing the constraints of Kakuro, is to for each entry
+explicitly list all the possible combinations
+of values that the variables in that entry can take.
+For example, consider an entry of size 2 with clue 4. The only
+possible combinations of values are $\Tuple{1,3}$ and $\Tuple{3,1}$, since
+these are the only tuples of $2$ distinct digits whose sums are 
+equal to~$4$. This way of listing the possible combinations of 
+values for the variables is in essence the 
+\Table~constraint -- the constraint that is
+addressed in this thesis.
+
+\Todo{Really solve the Kakuro in Figure \ref{fig:kakuro}. Kvällspyssel!}
+
+\smallskip 
+
+After gaining some intuition of CP, now follows some formal definitions.
+The definitions are based on
 \cite{SchulteCarlsson:FDsys}, \cite{Apt:constraintsBook}, and \cite{Gecode:MPG}.
 
 \begin{definition}
@@ -315,7 +357,7 @@ values that are in conflict with its respective constraint.
 
 To have a well-defined behaviour of propagators, there are some properties that
 they must fulfill. Now follows a definition of a propagator and the obligations
-that they must meet, taken from \Todo{Chapter 14 in handbook} and \Todo{MPG}.
+that they must meet, taken from \cite{SchulteCarlsson:FDsys} and \cite{Gecode:MPG}.
 
 \begin{definition} \label{def:prop}
   \textbf{Propagators.} A \emph{propagator}~$p$ is a function mapping stores to stores:
@@ -350,7 +392,7 @@ that they must meet, taken from \Todo{Chapter 14 in handbook} and \Todo{MPG}.
   \item A propagator must be \emph{honest}: it must be 
     \emph{fixpoint honest} and \emph{subsumption honest}. 
     A propagator~$p$ is fixpoint honest if and only if it does not signal 
-    fixpoint if does not return a fixpoint, and it is subsumption honest
+    fixpoint if it does not return a fixpoint, and it is subsumption honest
     if and only if it does
     not signal subsumption if it is not subsumed by an input store~$s$.
     
@@ -367,7 +409,7 @@ that they must meet, taken from \Todo{Chapter 14 in handbook} and \Todo{MPG}.
 \end{definition}
 Note that the honest property of a propagator does not mean that a
 propagator is obliged to signal fixpoint or subsumption
-if it has computed a fixpoint or is subsumed, only that it may not 
+if it has computed a fixpoint or is subsumed, only that it must not 
 claim that it is at fixpoint or is subsumed if it is not. 
 Thus, it is always safe 
 (though in many cases not so efficient for the CP-solver)
@@ -539,8 +581,8 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
   \item intersectWithMask() in~\linesref{line:intersect:1}{line:intersect:9}
     considers each non-zero word of~\Words~in turn
     and replaces it by its intersection with the corresponding word of~\Mask.
-    In case the resulting new word is~$0$, it (its index) is switched
-    by (the index of) the last non-zero word, and~\Limit~is
+    In case the resulting new word is~$0$, it (its index) is swapped with
+    (the index of) the last non-zero word, and~\Limit~is
     decreased by one.
     
     In~\Secref{sec:implementation} we will see that the implementation
@@ -632,11 +674,12 @@ is a support on~$c$ for the initial domains of the variables.
     the bit at position~$i$ is set to~$1$ if and only if the 
     tuple~$\tau_i$ in the initial valid table of~$c$ is initially a support for~$(x,a)$:
 
-    \begin{equation}
-      \forall x \in vars(c): \forall a \in \Dom{x}:
-      \Supports[x,a][i] = 1 \Leftrightarrow \tau_i[x] = a \ \land \
-      \forall y \in vars(c): \tau_i[y] \in \Dominit{y}
-    \end{equation}
+    \begin{alignat}{1}
+      \forall x \in vars(c): \ \forall a \in \Dominit{x}:& \\
+      \Supports[x,a][i] = 1 &\quad \Leftrightarrow \\
+      (\tau_i[x] = a \quad \land \quad
+      \forall y \in vars(c): \ &\tau_i[y] \in \Dominit{y})
+    \end{alignat}
 
     % One can optimise this definition slighty since it is unnecessary to keep track of
     % invalid supports. Instead, only the tuples that are valid supports for~$c$
@@ -787,7 +830,10 @@ We now describe these processes in more detail.
     \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
       \input{filterDomains.tex}
     \end{algorithmic}
-    \caption{Method filterDomains() in Class CT-Propagator.}
+    \caption{Method filterDomains() in Class CT-Propagator. The
+    infrastructure is such that this method is called after updateTable()
+  in \Algoref{algo:updateTable} has been called for each variable
+whose domain is modified, and only if at least one variable x}
     \label{algo:filterDomains}
   \end{algorithm}
 
@@ -806,7 +852,7 @@ We now describe these processes in more detail.
 
   In \Linesref{line:filterDom:res1}{line:filterDom:res2} we see if the
   cached word index still has a support for~$(x,a)$. It it has not, we
-  we search for an index in line~\ref{line:filterDom:4}in~$\CurrTable$
+  we search for an index in line~\ref{line:filterDom:4} in~$\CurrTable$
   where a valid support for the variable-value pair~$(x,a)$ is found, 
   thereby checking the condition in~\eqref{eq:validcond}.
   If such an index exists, we cache it in~$\Residues[x,a]$, and
@@ -844,11 +890,14 @@ in~\Algoref{algo:propagate}.
   \label{algo:propagate}
 \end{algorithm}
 
-\paragraph{Optimisation of propagate().} If~$x$ is the only variable
+\paragraph{Optimisations.} If~$x$ is the only variable
 that has been modified since the last invocation of~$CT$, it is
 not necessary to attempt to filter out values from~$x$, because
-every value of of~$x$ will have a support in~$\CurrTable$. 
-\Todo{Show the implementation of this explicitly?}
+every value of of~$x$ will have a support in~$\CurrTable$.
+Hence, in \Algoref{algo:filterDomains}, we only execute
+\Linesref{line:filterDom:3}{line:filterDom:7} for a variable~$x$
+if~$x$ was not the only modified variable.
+
  
 \subsubsection{Proof of properties for CT}
 This section proves that the CT Propagator is indeed a well-defined propagator
@@ -864,7 +913,6 @@ To prove~\Thmref{thm:prop}, we formulate and prove the following lemmas.
 In what follows, we denote~$CT(s)$ the resulting store of running 
 either \T{initCT()} or \texttt{propagate()} on an input store~$s$,
 depending on if it is the first time or not that the propagator is called.
-\Todo{Or skip initCT() and only count calls to propagate()?}
 
 \begin{lemma} \label{lemma:decreasing}
   CT is a decreasing function.
@@ -935,7 +983,8 @@ depending on if it is the first time or not that the propagator is called.
   If it is the first time, then \T{initCT()} is called.
   Since $\tau$ is not a solution to~$c$, there is at least one variable-value
   pair~$(x_i,s(x_i))$ which is not supported, so~$s(x_i)$ will be pruned
-  from~$x$ in \T{initCT()}, which reports failure in line \Todo{which line}.
+  from~$x$ in \T{initCT()}, which will report failure in line~\Lineref{line:init:wipeoout0}
+  in~\Algoref{algo:initialise-CT}.
   
   If it is not the first time that $CT$ is called, \T{propagate()} is called.
   Since there are no valid tuples left, \CurrTable~will be empty after
@@ -943,7 +992,7 @@ depending on if it is the first time or not that the propagator is called.
   
   Now assume that~$s$ is a solution store. 
   $CT$ signals failure in \T{filterDomains()} because all variables are assigned.
-  \Todo{Initialisation?}
+  \Todo{Initialisation? Maybe change so that initCT detects subsumption.}
 \end{proof}
 
 \begin{lemma}\label{lemma:honest}
@@ -1058,33 +1107,180 @@ the results of the evaluation. The results are discussed in \Secref{evaluation:d
 
 \subsection{Evaluation Setup}
 \label{evaluation:setup}
+The correctness of the CT propagator was validated with the existing unit tests
+in Gecode for the table constrataint.
+
+A large number of benchmarks were run, comparing the performance of the CT propagator
+with the three other existing propagators in Gecode for the table constraint.
+The instances used in the benchmarks were written in MiniZinc~\cite{MiniZinc},
+a solver-independent constraint modeling language. The experiments were run
+under Gecode 5.0 on a 16-core machine with Linux Ubuntu 14.04.5 (64 bit),
+Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
+were accessed via a shared server.
+
+\Todo{\Tupm, \Tups should have better names}
+
+The following section presents the results of the experiments.
+
 \subsection{Results}
 \label{evaluation:results}
 
+\subsubsection{Comparing CT and CT(fix)}
+
+The main purpose of this benchmark is to compare the performance of CT and CT(fix).
+Figure~\ref{fig:fix} shows that the performance of CT and CT(fix) are the same.
+CT and CT(fix) outperform all other methods. Among the
+other methods, the performance is essentially the same.
+
+\begin{figure}[H]
+  \label{fig:fix}
+  \centering
+  %\begin{tikzpicture}[scale=1.0]
+    \input{crossword-plot.tex}
+  %\end{tikzpicture}
+\caption{\textbf{Crosswords.} Number of solved instances as a function of time
+  for 5 methods.
+  The benchmark consists of 72 instances, using a timeout
+  of 1000 seconds. Within the timeout,
+  CT and CT(fix) could solve 60 instances, \Tupm, and \Tups could
+  solve 59 instances, and \Reg could solve 58 instances.}
+\end{figure}
+
+
+
 \subsubsection{Benchmarks from \cite{\CTpaper}}
 
-The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
-were also used here. The instances were compiled (using~\cite{xcsp2mzn})
-from XCSP 2.1~\cite{DBLP:journals/corr/abs-0902-2362} format 
--- an XML based format to represent combinatorial constraint problems -- to
-MiniZinc~\cite{MiniZinc} -- a solver-independent constraint modeling language.
-\todo{By various reasons, only X instances were used}
+% The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
+% were also used here. The instances were compiled (using~\cite{xcsp2mzn})
+% from XCSP 2.1~\cite{DBLP:joxurnals/corr/abs-0902-2362} format 
+% -- an XML based format to represent combinatorial constraint problems -- to
+% MiniZinc~\cite{MiniZinc} -- a solver-independent constraint modeling language.
+% \Todo{By various reasons, only X instances were used.} The instances were run
+% once on a \todo{quantum computer} for every propagator and a timeout of
+% 1,000 seconds was used.
 
+This set of benchmarks contains 1,621 CSP instances that where used in the
+experiments in~\cite{\CTpaper}, written in XCSP2.1.
+This corresponds to a large variety of instances,
+taken from 37 series. 117 instances were skipped due to parse problems.
+Due to the high number of instances, the runtime for
+each instance was only measured once. A timeout of 1000 seconds was used.
 
-\input{scatter-plot.tex}
+\Todo{Add more graphs and captions.}
 
-\begin{table}[t] \tiny
+\begin{figure}[H]
   \centering
-  \begin{tabular}{rrrrrrr}  % right alignment --> decimal point alignment
-    $n$ & $runtime_g$ & $fail_g$ & $nprops_g$ & $runtime_c$ & $fail_c$ & $nprops_c$ \\
-    \midrule
-    \input{results-crosswords.tex} % let your experiment script write directly
-                            % into this file, making sure every number
-                            % in a column has the _same_ number of decimals
-  \end{tabular}
-  \caption{}
-  \label{tab:res:sat}
-\end{table}
+  \begin{tikzpicture}[scale=1.0]
+    \input{kakuroext_easy.tex}
+  \end{tikzpicture}
+\caption{\textbf{Kakuro easy}.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1.0]
+  \input{kakuroext_medium.tex}
+\end{tikzpicture}
+\caption{\textbf{Kakuro medium}.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1.0]
+    \input{mdd09.tex}
+  \end{tikzpicture}
+\caption{\textbf{MDD09}.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \input{nonograms.tex}
+  \end{tikzpicture}
+\caption{\textbf{Nonograms}.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1.0]
+    \input{randsJC2500.tex}
+  \end{tikzpicture}
+  \caption{\textbf{RandJC2500}.}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{tikzpicture}[scale=1.0]
+    \input{or-tools-plot.tex}
+  \end{tikzpicture}
+\caption{All instances.}
+\end{figure}
+
+
+% \paragraph{Crosswords}
+% Crosswords_lexVg
+% Crosswords_wordsPuzzle
+% Crosswords_wordsVg
+
+% \paragraph{Travelling Salesman Problem}
+% TSP_20
+% TSP_25
+% TSP_Quat_20
+
+
+% a10
+% a5
+% aim-100-pos
+% aim-200-pos
+% aim-50-pos
+% bddLarge
+% bddSmall
+% dubois
+% geom
+% k5_n10_d10_m15_p08
+
+% \paragraph{Kakuro}
+% kakuroext_easy
+% kakuroext_hard
+% kakuroext_medium
+
+% \paragraph{Langford}
+% langford2
+% langford3
+% langford4
+
+% \paragraph{MDD}
+% mdd05
+% mdd07
+% mdd09
+
+
+% modRenault
+
+% \paragraph{Nonograms}
+% nonograms
+
+% pigeonsplus
+
+% \paragraph{Randomised instances}
+% randsJC10000
+% randsJC2500
+% randsJC5000
+% randsJC7500
+
+% ssa
+
+% \begin{table}[t] \tiny
+%   \centering
+%   \begin{tabular}{rrrrrrr}  % right alignment --> decimal point alignment
+%     $n$ & $runtime_g$ & $fail_g$ & $nprops_g$ & $runtime_c$ & $fail_c$ & $nprops_c$ \\
+%     \midrule
+%     \input{results-crosswords.tex} % let your experiment script write directly
+%                             % into this file, making sure every number
+%                             % in a column has the _same_ number of decimals
+%   \end{tabular}
+%   \caption{}
+%   \label{tab:res:sat}
+% \end{table}
 
 
 \subsection{Discussion}
