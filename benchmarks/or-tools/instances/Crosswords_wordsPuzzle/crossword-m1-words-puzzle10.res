@@ -1,0 +1,292 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+V0 = 1;
+V1 = 0;
+V10 = 11;
+V11 = 0;
+V12 = 1;
+V13 = 0;
+V14 = 2;
+V15 = 8;
+V16 = 23;
+V17 = 0;
+V18 = 19;
+V19 = 0;
+V2 = 13;
+V20 = 0;
+V21 = 3;
+V22 = 0;
+V23 = 7;
+V24 = 0;
+V25 = 11;
+V26 = 0;
+V27 = 6;
+V28 = 3;
+V29 = 4;
+V3 = 3;
+V30 = 19;
+V31 = 4;
+V32 = 3;
+V33 = 14;
+V34 = 14;
+V35 = 19;
+V36 = 8;
+V37 = 17;
+V38 = 8;
+V39 = 5;
+V4 = 8;
+V5 = 1;
+V6 = 14;
+V7 = 3;
+V8 = 0;
+V9 = 4;
+----------
+
+%%  runtime:       1.186 (1186.942 ms)
+%%  solvetime:     0.002 (2.622 ms)
+%%  solutions:     1
+%%  variables:     382
+%%  propagators:   488
+%%  propagations:  2633
+%%  nodes:         19
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    18
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+V0 = 2;
+V1 = 0;
+V10 = 6;
+V11 = 14;
+V12 = 1;
+V13 = 14;
+V14 = 0;
+V15 = 17;
+V16 = 3;
+V17 = 4;
+V18 = 3;
+V19 = 3;
+V2 = 12;
+V20 = 0;
+V21 = 8;
+V22 = 17;
+V23 = 14;
+V24 = 13;
+V25 = 8;
+V26 = 4;
+V27 = 18;
+V28 = 2;
+V29 = 0;
+V3 = 3;
+V30 = 22;
+V31 = 18;
+V32 = 10;
+V33 = 8;
+V34 = 24;
+V35 = 4;
+V36 = 18;
+V37 = 12;
+V38 = 4;
+V39 = 19;
+V4 = 0;
+V5 = 13;
+V6 = 0;
+V7 = 1;
+V8 = 4;
+V9 = 0;
+----------
+
+%%  runtime:       0.069 (69.000 ms)
+%%  solvetime:     0.004 (4.094 ms)
+%%  solutions:     1
+%%  variables:     382
+%%  propagators:   488
+%%  propagations:  2750
+%%  nodes:         23
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    22
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+V0 = 2;
+V1 = 0;
+V10 = 6;
+V11 = 14;
+V12 = 1;
+V13 = 14;
+V14 = 0;
+V15 = 17;
+V16 = 3;
+V17 = 4;
+V18 = 3;
+V19 = 3;
+V2 = 12;
+V20 = 0;
+V21 = 8;
+V22 = 17;
+V23 = 14;
+V24 = 13;
+V25 = 8;
+V26 = 4;
+V27 = 18;
+V28 = 2;
+V29 = 0;
+V3 = 3;
+V30 = 22;
+V31 = 18;
+V32 = 10;
+V33 = 8;
+V34 = 24;
+V35 = 4;
+V36 = 18;
+V37 = 12;
+V38 = 4;
+V39 = 19;
+V4 = 0;
+V5 = 13;
+V6 = 0;
+V7 = 1;
+V8 = 4;
+V9 = 0;
+----------
+
+%%  runtime:       0.068 (68.412 ms)
+%%  solvetime:     0.004 (4.459 ms)
+%%  solutions:     1
+%%  variables:     382
+%%  propagators:   488
+%%  propagations:  2682
+%%  nodes:         23
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    22
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+V0 = 2;
+V1 = 0;
+V10 = 6;
+V11 = 14;
+V12 = 1;
+V13 = 14;
+V14 = 0;
+V15 = 17;
+V16 = 3;
+V17 = 4;
+V18 = 3;
+V19 = 3;
+V2 = 12;
+V20 = 0;
+V21 = 8;
+V22 = 17;
+V23 = 14;
+V24 = 13;
+V25 = 8;
+V26 = 4;
+V27 = 18;
+V28 = 2;
+V29 = 0;
+V3 = 3;
+V30 = 22;
+V31 = 18;
+V32 = 10;
+V33 = 8;
+V34 = 24;
+V35 = 4;
+V36 = 18;
+V37 = 12;
+V38 = 4;
+V39 = 19;
+V4 = 0;
+V5 = 13;
+V6 = 0;
+V7 = 1;
+V8 = 4;
+V9 = 0;
+----------
+
+%%  runtime:       0.095 (95.540 ms)
+%%  solvetime:     0.001 (1.085 ms)
+%%  solutions:     1
+%%  variables:     382
+%%  propagators:   488
+%%  propagations:  2687
+%%  nodes:         23
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    22
+

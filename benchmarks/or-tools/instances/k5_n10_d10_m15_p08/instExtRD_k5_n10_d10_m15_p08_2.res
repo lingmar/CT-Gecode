@@ -1,0 +1,112 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       9.140 (9140.777 ms)
+%%  solvetime:     5.243 (5243.411 ms)
+%%  solutions:     0
+%%  variables:     10
+%%  propagators:   15
+%%  propagations:  410264
+%%  nodes:         19117
+%%  failures:      9559
+%%  restarts:      0
+%%  peak depth:    14
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+=====UNSATISFIABLE=====
+
+%%  runtime:       18.156 (18156.956 ms)
+%%  solvetime:     17.701 (17701.661 ms)
+%%  solutions:     0
+%%  variables:     10
+%%  propagators:   15
+%%  propagations:  352329
+%%  nodes:         19061
+%%  failures:      9531
+%%  restarts:      0
+%%  peak depth:    14
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+=====UNSATISFIABLE=====
+
+%%  runtime:       20.700 (20700.530 ms)
+%%  solvetime:     20.258 (20258.447 ms)
+%%  solutions:     0
+%%  variables:     10
+%%  propagators:   15
+%%  propagations:  365694
+%%  nodes:         19061
+%%  failures:      9531
+%%  restarts:      0
+%%  peak depth:    14
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+=====UNSATISFIABLE=====
+
+%%  runtime:       2.462 (2462.919 ms)
+%%  solvetime:     1.877 (1877.322 ms)
+%%  solutions:     0
+%%  variables:     10
+%%  propagators:   15
+%%  propagations:  409506
+%%  nodes:         19061
+%%  failures:      9531
+%%  restarts:      0
+%%  peak depth:    14
+

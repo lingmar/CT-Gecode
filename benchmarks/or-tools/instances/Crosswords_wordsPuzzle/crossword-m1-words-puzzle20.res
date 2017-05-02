@@ -1,0 +1,356 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+V0 = 3;
+V1 = 0;
+V10 = 7;
+V11 = 0;
+V12 = 11;
+V13 = 0;
+V14 = 6;
+V15 = 19;
+V16 = 11;
+V17 = 4;
+V18 = 2;
+V19 = 18;
+V2 = 1;
+V20 = 17;
+V21 = 8;
+V22 = 0;
+V23 = 0;
+V24 = 14;
+V25 = 1;
+V26 = 6;
+V27 = 0;
+V28 = 17;
+V29 = 4;
+V3 = 12;
+V30 = 2;
+V31 = 13;
+V32 = 14;
+V33 = 24;
+V34 = 0;
+V35 = 17;
+V36 = 1;
+V37 = 18;
+V38 = 20;
+V39 = 8;
+V4 = 0;
+V40 = 18;
+V41 = 11;
+V42 = 4;
+V43 = 2;
+V44 = 18;
+V45 = 17;
+V46 = 20;
+V47 = 11;
+V48 = 18;
+V49 = 19;
+V5 = 3;
+V50 = 15;
+V51 = 0;
+V6 = 0;
+V7 = 12;
+V8 = 3;
+V9 = 0;
+----------
+
+%%  runtime:       1.246 (1246.521 ms)
+%%  solvetime:     0.029 (29.816 ms)
+%%  solutions:     1
+%%  variables:     300
+%%  propagators:   340
+%%  propagations:  44104
+%%  nodes:         344
+%%  failures:      162
+%%  restarts:      0
+%%  peak depth:    22
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+V0 = 2;
+V1 = 0;
+V10 = 18;
+V11 = 4;
+V12 = 12;
+V13 = 0;
+V14 = 13;
+V15 = 3;
+V16 = 14;
+V17 = 11;
+V18 = 4;
+V19 = 0;
+V2 = 12;
+V20 = 6;
+V21 = 0;
+V22 = 17;
+V23 = 20;
+V24 = 17;
+V25 = 8;
+V26 = 14;
+V27 = 3;
+V28 = 4;
+V29 = 3;
+V3 = 2;
+V30 = 8;
+V31 = 15;
+V32 = 18;
+V33 = 21;
+V34 = 14;
+V35 = 8;
+V36 = 3;
+V37 = 2;
+V38 = 7;
+V39 = 8;
+V4 = 0;
+V40 = 2;
+V41 = 0;
+V42 = 13;
+V43 = 0;
+V44 = 18;
+V45 = 19;
+V46 = 0;
+V47 = 13;
+V48 = 18;
+V49 = 4;
+V5 = 1;
+V50 = 17;
+V51 = 4;
+V6 = 0;
+V7 = 11;
+V8 = 1;
+V9 = 0;
+----------
+
+%%  runtime:       0.101 (101.584 ms)
+%%  solvetime:     0.005 (5.357 ms)
+%%  solutions:     1
+%%  variables:     300
+%%  propagators:   340
+%%  propagations:  2123
+%%  nodes:         26
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    24
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+V0 = 2;
+V1 = 0;
+V10 = 18;
+V11 = 4;
+V12 = 12;
+V13 = 0;
+V14 = 13;
+V15 = 3;
+V16 = 14;
+V17 = 11;
+V18 = 4;
+V19 = 0;
+V2 = 12;
+V20 = 6;
+V21 = 0;
+V22 = 17;
+V23 = 20;
+V24 = 17;
+V25 = 8;
+V26 = 14;
+V27 = 3;
+V28 = 4;
+V29 = 3;
+V3 = 2;
+V30 = 8;
+V31 = 15;
+V32 = 18;
+V33 = 21;
+V34 = 14;
+V35 = 8;
+V36 = 3;
+V37 = 2;
+V38 = 7;
+V39 = 8;
+V4 = 0;
+V40 = 2;
+V41 = 0;
+V42 = 13;
+V43 = 0;
+V44 = 18;
+V45 = 19;
+V46 = 0;
+V47 = 13;
+V48 = 18;
+V49 = 4;
+V5 = 1;
+V50 = 17;
+V51 = 4;
+V6 = 0;
+V7 = 11;
+V8 = 1;
+V9 = 0;
+----------
+
+%%  runtime:       0.103 (103.974 ms)
+%%  solvetime:     0.005 (5.697 ms)
+%%  solutions:     1
+%%  variables:     300
+%%  propagators:   340
+%%  propagations:  2131
+%%  nodes:         26
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    24
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+V0 = 2;
+V1 = 0;
+V10 = 18;
+V11 = 4;
+V12 = 12;
+V13 = 0;
+V14 = 13;
+V15 = 3;
+V16 = 14;
+V17 = 11;
+V18 = 4;
+V19 = 0;
+V2 = 12;
+V20 = 6;
+V21 = 0;
+V22 = 17;
+V23 = 20;
+V24 = 17;
+V25 = 8;
+V26 = 14;
+V27 = 3;
+V28 = 4;
+V29 = 3;
+V3 = 2;
+V30 = 8;
+V31 = 15;
+V32 = 18;
+V33 = 21;
+V34 = 14;
+V35 = 8;
+V36 = 3;
+V37 = 2;
+V38 = 7;
+V39 = 8;
+V4 = 0;
+V40 = 2;
+V41 = 0;
+V42 = 13;
+V43 = 0;
+V44 = 18;
+V45 = 19;
+V46 = 0;
+V47 = 13;
+V48 = 18;
+V49 = 4;
+V5 = 1;
+V50 = 17;
+V51 = 4;
+V6 = 0;
+V7 = 11;
+V8 = 1;
+V9 = 0;
+----------
+
+%%  runtime:       0.146 (146.525 ms)
+%%  solvetime:     0.001 (1.631 ms)
+%%  solutions:     1
+%%  variables:     300
+%%  propagators:   340
+%%  propagations:  2142
+%%  nodes:         26
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    24
+

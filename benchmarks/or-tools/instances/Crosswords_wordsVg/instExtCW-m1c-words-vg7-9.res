@@ -1,0 +1,116 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       1:19.265 (79265.402 ms)
+%%  solvetime:     1:15.593 (75593.251 ms)
+%%  solutions:     0
+%%  variables:     63
+%%  propagators:   16
+%%  propagations:  3614614
+%%  nodes:         110977
+%%  failures:      55489
+%%  restarts:      0
+%%  peak depth:    31
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+=====UNSATISFIABLE=====
+
+%%  runtime:       4:57.058 (297058.443 ms)
+%%  solvetime:     4:56.870 (296870.468 ms)
+%%  solutions:     0
+%%  variables:     63
+%%  propagators:   16
+%%  propagations:  4417601
+%%  nodes:         139515
+%%  failures:      69758
+%%  restarts:      0
+%%  peak depth:    34
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+=====UNSATISFIABLE=====
+
+%%  runtime:       5:38.668 (338668.570 ms)
+%%  solvetime:     5:38.304 (338304.442 ms)
+%%  solutions:     0
+%%  variables:     63
+%%  propagators:   16
+%%  propagations:  4141230
+%%  nodes:         139515
+%%  failures:      69758
+%%  restarts:      0
+%%  peak depth:    34
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+=====UNSATISFIABLE=====
+
+%%  runtime:       40.323 (40323.398 ms)
+%%  solvetime:     40.027 (40027.459 ms)
+%%  solutions:     0
+%%  variables:     63
+%%  propagators:   16
+%%  propagations:  4469267
+%%  nodes:         139515
+%%  failures:      69758
+%%  restarts:      0
+%%  peak depth:    34
+

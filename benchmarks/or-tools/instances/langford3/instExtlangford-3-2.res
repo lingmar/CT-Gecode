@@ -1,0 +1,128 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       0.037 (37.414 ms)
+%%  solvetime:     0.000 (0.101 ms)
+%%  solutions:     0
+%%  variables:     6
+%%  propagators:   0
+%%  propagations:  0
+%%  nodes:         0
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    0
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+=====UNSATISFIABLE=====
+
+%%  runtime:       0.001 (1.500 ms)
+%%  solvetime:     0.000 (0.076 ms)
+%%  solutions:     0
+%%  variables:     6
+%%  propagators:   0
+%%  propagations:  4
+%%  nodes:         0
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    0
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+=====UNSATISFIABLE=====
+
+%%  runtime:       0.001 (1.383 ms)
+%%  solvetime:     0.000 (0.090 ms)
+%%  solutions:     0
+%%  variables:     6
+%%  propagators:   0
+%%  propagations:  3
+%%  nodes:         0
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    0
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+=====UNSATISFIABLE=====
+
+%%  runtime:       0.001 (1.207 ms)
+%%  solvetime:     0.000 (0.084 ms)
+%%  solutions:     0
+%%  variables:     6
+%%  propagators:   0
+%%  propagations:  0
+%%  nodes:         0
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    0
+

@@ -1,0 +1,292 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+V0 = 3;
+V1 = 1;
+V10 = 1;
+V11 = 2;
+V12 = 4;
+V13 = 3;
+V14 = 1;
+V15 = 6;
+V16 = 3;
+V17 = 1;
+V18 = 2;
+V19 = 1;
+V2 = 1;
+V20 = 2;
+V21 = 1;
+V22 = 4;
+V23 = 5;
+V24 = 3;
+V25 = 2;
+V26 = 1;
+V27 = 4;
+V28 = 3;
+V29 = 3;
+V3 = 3;
+V30 = 1;
+V31 = 1;
+V32 = 3;
+V33 = 6;
+V34 = 8;
+V35 = 9;
+V4 = 2;
+V5 = 1;
+V6 = 2;
+V7 = 2;
+V8 = 3;
+V9 = 5;
+----------
+
+%%  runtime:       0.026 (26.152 ms)
+%%  solvetime:     0.000 (0.247 ms)
+%%  solutions:     1
+%%  variables:     36
+%%  propagators:   0
+%%  propagations:  34
+%%  nodes:         1
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    0
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+V0 = 3;
+V1 = 1;
+V10 = 1;
+V11 = 2;
+V12 = 4;
+V13 = 3;
+V14 = 1;
+V15 = 6;
+V16 = 3;
+V17 = 1;
+V18 = 2;
+V19 = 1;
+V2 = 1;
+V20 = 2;
+V21 = 1;
+V22 = 4;
+V23 = 5;
+V24 = 3;
+V25 = 2;
+V26 = 1;
+V27 = 4;
+V28 = 3;
+V29 = 3;
+V3 = 3;
+V30 = 1;
+V31 = 1;
+V32 = 3;
+V33 = 6;
+V34 = 8;
+V35 = 9;
+V4 = 2;
+V5 = 1;
+V6 = 2;
+V7 = 2;
+V8 = 3;
+V9 = 5;
+----------
+
+%%  runtime:       0.002 (2.730 ms)
+%%  solvetime:     0.000 (0.266 ms)
+%%  solutions:     1
+%%  variables:     36
+%%  propagators:   0
+%%  propagations:  47
+%%  nodes:         1
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    0
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+V0 = 3;
+V1 = 1;
+V10 = 1;
+V11 = 2;
+V12 = 4;
+V13 = 3;
+V14 = 1;
+V15 = 6;
+V16 = 3;
+V17 = 1;
+V18 = 2;
+V19 = 1;
+V2 = 1;
+V20 = 2;
+V21 = 1;
+V22 = 4;
+V23 = 5;
+V24 = 3;
+V25 = 2;
+V26 = 1;
+V27 = 4;
+V28 = 3;
+V29 = 3;
+V3 = 3;
+V30 = 1;
+V31 = 1;
+V32 = 3;
+V33 = 6;
+V34 = 8;
+V35 = 9;
+V4 = 2;
+V5 = 1;
+V6 = 2;
+V7 = 2;
+V8 = 3;
+V9 = 5;
+----------
+
+%%  runtime:       0.002 (2.714 ms)
+%%  solvetime:     0.000 (0.277 ms)
+%%  solutions:     1
+%%  variables:     36
+%%  propagators:   0
+%%  propagations:  39
+%%  nodes:         1
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    0
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+V0 = 3;
+V1 = 1;
+V10 = 1;
+V11 = 2;
+V12 = 4;
+V13 = 3;
+V14 = 1;
+V15 = 6;
+V16 = 3;
+V17 = 1;
+V18 = 2;
+V19 = 1;
+V2 = 1;
+V20 = 2;
+V21 = 1;
+V22 = 4;
+V23 = 5;
+V24 = 3;
+V25 = 2;
+V26 = 1;
+V27 = 4;
+V28 = 3;
+V29 = 3;
+V3 = 3;
+V30 = 1;
+V31 = 1;
+V32 = 3;
+V33 = 6;
+V34 = 8;
+V35 = 9;
+V4 = 2;
+V5 = 1;
+V6 = 2;
+V7 = 2;
+V8 = 3;
+V9 = 5;
+----------
+
+%%  runtime:       0.002 (2.947 ms)
+%%  solvetime:     0.000 (0.247 ms)
+%%  solutions:     1
+%%  variables:     36
+%%  propagators:   0
+%%  propagations:  34
+%%  nodes:         1
+%%  failures:      0
+%%  restarts:      0
+%%  peak depth:    0
+

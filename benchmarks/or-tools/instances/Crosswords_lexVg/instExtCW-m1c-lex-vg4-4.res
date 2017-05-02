@@ -24,8 +24,8 @@ V8 = 0;
 V9 = 11;
 ----------
 
-%%  runtime:       0.092 (92.037 ms)
-%%  solvetime:     0.001 (1.768 ms)
+%%  runtime:       0.110 (110.637 ms)
+%%  solvetime:     0.001 (1.791 ms)
 %%  solutions:     1
 %%  variables:     16
 %%  propagators:   8
@@ -35,14 +35,14 @@ V9 = 11;
 %%  restarts:      0
 %%  peak depth:    10
 
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
 V0 = 5;
 V1 = 4;
 V10 = 0;
@@ -61,8 +61,45 @@ V8 = 20;
 V9 = 11;
 ----------
 
-%%  runtime:       0.016 (16.784 ms)
-%%  solvetime:     0.001 (1.535 ms)
+%%  runtime:       0.015 (15.937 ms)
+%%  solvetime:     0.001 (1.284 ms)
+%%  solutions:     1
+%%  variables:     16
+%%  propagators:   8
+%%  propagations:  129
+%%  nodes:         13
+%%  failures:      2
+%%  restarts:      0
+%%  peak depth:    10
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+V0 = 5;
+V1 = 4;
+V10 = 0;
+V11 = 13;
+V12 = 13;
+V13 = 0;
+V14 = 18;
+V15 = 0;
+V2 = 0;
+V3 = 19;
+V4 = 0;
+V5 = 11;
+V6 = 0;
+V7 = 8;
+V8 = 20;
+V9 = 11;
+----------
+
+%%  runtime:       0.016 (16.497 ms)
+%%  solvetime:     0.001 (1.667 ms)
 %%  solutions:     1
 %%  variables:     16
 %%  propagators:   8
@@ -72,14 +109,14 @@ V9 = 11;
 %%  restarts:      0
 %%  peak depth:    10
 
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
 V0 = 5;
 V1 = 4;
 V10 = 0;
@@ -98,8 +135,8 @@ V8 = 20;
 V9 = 11;
 ----------
 
-%%  runtime:       0.023 (23.264 ms)
-%%  solvetime:     0.000 (0.812 ms)
+%%  runtime:       0.022 (22.549 ms)
+%%  solvetime:     0.000 (0.568 ms)
 %%  solutions:     1
 %%  variables:     16
 %%  propagators:   8

@@ -1,0 +1,948 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       0.081 (81.689 ms)
+%%  solvetime:     0.000 (0.089 ms)
+%%  solutions:     0
+%%  variables:     256
+%%  propagators:   0
+%%  propagations:  0
+%%  nodes:         0
+%%  failures:      1
+%%  restarts:      0
+%%  peak depth:    0
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+V0 = 0;
+V1 = 0;
+V10 = 0;
+V100 = 0;
+V101 = 0;
+V102 = 0;
+V103 = 0;
+V104 = 0;
+V105 = 0;
+V106 = 0;
+V107 = 0;
+V108 = 0;
+V109 = 0;
+V11 = 0;
+V110 = 1;
+V111 = 1;
+V112 = 0;
+V113 = 0;
+V114 = 0;
+V115 = 0;
+V116 = 1;
+V117 = 1;
+V118 = 1;
+V119 = 1;
+V12 = 0;
+V120 = 1;
+V121 = 1;
+V122 = 1;
+V123 = 0;
+V124 = 0;
+V125 = 0;
+V126 = 0;
+V127 = 0;
+V128 = 0;
+V129 = 0;
+V13 = 0;
+V130 = 1;
+V131 = 1;
+V132 = 1;
+V133 = 1;
+V134 = 1;
+V135 = 1;
+V136 = 1;
+V137 = 1;
+V138 = 1;
+V139 = 1;
+V14 = 0;
+V140 = 1;
+V141 = 0;
+V142 = 0;
+V143 = 0;
+V144 = 0;
+V145 = 1;
+V146 = 1;
+V147 = 0;
+V148 = 0;
+V149 = 1;
+V15 = 0;
+V150 = 1;
+V151 = 1;
+V152 = 1;
+V153 = 1;
+V154 = 0;
+V155 = 0;
+V156 = 1;
+V157 = 1;
+V158 = 0;
+V159 = 0;
+V16 = 0;
+V160 = 1;
+V161 = 0;
+V162 = 0;
+V163 = 0;
+V164 = 0;
+V165 = 1;
+V166 = 1;
+V167 = 0;
+V168 = 1;
+V169 = 1;
+V17 = 0;
+V170 = 0;
+V171 = 0;
+V172 = 0;
+V173 = 0;
+V174 = 1;
+V175 = 0;
+V176 = 0;
+V177 = 1;
+V178 = 0;
+V179 = 0;
+V18 = 0;
+V180 = 0;
+V181 = 1;
+V182 = 1;
+V183 = 1;
+V184 = 1;
+V185 = 1;
+V186 = 0;
+V187 = 0;
+V188 = 0;
+V189 = 1;
+V19 = 0;
+V190 = 0;
+V191 = 0;
+V192 = 0;
+V193 = 0;
+V194 = 1;
+V195 = 1;
+V196 = 0;
+V197 = 0;
+V198 = 1;
+V199 = 1;
+V2 = 0;
+V20 = 0;
+V200 = 1;
+V201 = 0;
+V202 = 0;
+V203 = 1;
+V204 = 1;
+V205 = 0;
+V206 = 0;
+V207 = 0;
+V208 = 0;
+V209 = 0;
+V21 = 0;
+V210 = 0;
+V211 = 1;
+V212 = 1;
+V213 = 1;
+V214 = 1;
+V215 = 1;
+V216 = 1;
+V217 = 1;
+V218 = 1;
+V219 = 1;
+V22 = 0;
+V220 = 0;
+V221 = 0;
+V222 = 0;
+V223 = 0;
+V224 = 0;
+V225 = 0;
+V226 = 0;
+V227 = 0;
+V228 = 0;
+V229 = 0;
+V23 = 0;
+V230 = 0;
+V231 = 0;
+V232 = 0;
+V233 = 0;
+V234 = 0;
+V235 = 0;
+V236 = 0;
+V237 = 0;
+V238 = 0;
+V239 = 0;
+V24 = 0;
+V240 = 0;
+V241 = 0;
+V242 = 0;
+V243 = 0;
+V244 = 0;
+V245 = 0;
+V246 = 0;
+V247 = 0;
+V248 = 0;
+V249 = 0;
+V25 = 0;
+V250 = 0;
+V251 = 0;
+V252 = 0;
+V253 = 0;
+V254 = 0;
+V255 = 0;
+V26 = 0;
+V27 = 0;
+V28 = 0;
+V29 = 0;
+V3 = 0;
+V30 = 0;
+V31 = 0;
+V32 = 0;
+V33 = 0;
+V34 = 0;
+V35 = 0;
+V36 = 0;
+V37 = 0;
+V38 = 1;
+V39 = 1;
+V4 = 0;
+V40 = 1;
+V41 = 1;
+V42 = 1;
+V43 = 0;
+V44 = 0;
+V45 = 0;
+V46 = 0;
+V47 = 0;
+V48 = 0;
+V49 = 0;
+V5 = 0;
+V50 = 0;
+V51 = 1;
+V52 = 1;
+V53 = 1;
+V54 = 1;
+V55 = 1;
+V56 = 1;
+V57 = 1;
+V58 = 1;
+V59 = 1;
+V6 = 0;
+V60 = 1;
+V61 = 0;
+V62 = 0;
+V63 = 0;
+V64 = 0;
+V65 = 1;
+V66 = 1;
+V67 = 1;
+V68 = 0;
+V69 = 0;
+V7 = 0;
+V70 = 0;
+V71 = 0;
+V72 = 0;
+V73 = 1;
+V74 = 1;
+V75 = 1;
+V76 = 1;
+V77 = 1;
+V78 = 1;
+V79 = 0;
+V8 = 0;
+V80 = 1;
+V81 = 1;
+V82 = 0;
+V83 = 0;
+V84 = 0;
+V85 = 0;
+V86 = 0;
+V87 = 0;
+V88 = 0;
+V89 = 0;
+V9 = 0;
+V90 = 0;
+V91 = 0;
+V92 = 1;
+V93 = 1;
+V94 = 1;
+V95 = 1;
+V96 = 0;
+V97 = 0;
+V98 = 0;
+V99 = 0;
+----------
+
+%%  runtime:       0.020 (20.291 ms)
+%%  solvetime:     0.001 (1.593 ms)
+%%  solutions:     1
+%%  variables:     256
+%%  propagators:   16
+%%  propagations:  239
+%%  nodes:         7
+%%  failures:      2
+%%  restarts:      0
+%%  peak depth:    4
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+V0 = 0;
+V1 = 0;
+V10 = 0;
+V100 = 0;
+V101 = 0;
+V102 = 0;
+V103 = 0;
+V104 = 0;
+V105 = 0;
+V106 = 0;
+V107 = 0;
+V108 = 0;
+V109 = 0;
+V11 = 0;
+V110 = 1;
+V111 = 1;
+V112 = 0;
+V113 = 0;
+V114 = 0;
+V115 = 0;
+V116 = 1;
+V117 = 1;
+V118 = 1;
+V119 = 1;
+V12 = 0;
+V120 = 1;
+V121 = 1;
+V122 = 1;
+V123 = 0;
+V124 = 0;
+V125 = 0;
+V126 = 0;
+V127 = 0;
+V128 = 0;
+V129 = 0;
+V13 = 0;
+V130 = 1;
+V131 = 1;
+V132 = 1;
+V133 = 1;
+V134 = 1;
+V135 = 1;
+V136 = 1;
+V137 = 1;
+V138 = 1;
+V139 = 1;
+V14 = 0;
+V140 = 1;
+V141 = 0;
+V142 = 0;
+V143 = 0;
+V144 = 0;
+V145 = 1;
+V146 = 1;
+V147 = 0;
+V148 = 0;
+V149 = 1;
+V15 = 0;
+V150 = 1;
+V151 = 1;
+V152 = 1;
+V153 = 1;
+V154 = 0;
+V155 = 0;
+V156 = 1;
+V157 = 1;
+V158 = 0;
+V159 = 0;
+V16 = 0;
+V160 = 1;
+V161 = 0;
+V162 = 0;
+V163 = 0;
+V164 = 0;
+V165 = 1;
+V166 = 1;
+V167 = 0;
+V168 = 1;
+V169 = 1;
+V17 = 0;
+V170 = 0;
+V171 = 0;
+V172 = 0;
+V173 = 0;
+V174 = 1;
+V175 = 0;
+V176 = 0;
+V177 = 1;
+V178 = 0;
+V179 = 0;
+V18 = 0;
+V180 = 0;
+V181 = 1;
+V182 = 1;
+V183 = 1;
+V184 = 1;
+V185 = 1;
+V186 = 0;
+V187 = 0;
+V188 = 0;
+V189 = 1;
+V19 = 0;
+V190 = 0;
+V191 = 0;
+V192 = 0;
+V193 = 0;
+V194 = 1;
+V195 = 1;
+V196 = 0;
+V197 = 0;
+V198 = 1;
+V199 = 1;
+V2 = 0;
+V20 = 0;
+V200 = 1;
+V201 = 0;
+V202 = 0;
+V203 = 1;
+V204 = 1;
+V205 = 0;
+V206 = 0;
+V207 = 0;
+V208 = 0;
+V209 = 0;
+V21 = 0;
+V210 = 0;
+V211 = 1;
+V212 = 1;
+V213 = 1;
+V214 = 1;
+V215 = 1;
+V216 = 1;
+V217 = 1;
+V218 = 1;
+V219 = 1;
+V22 = 0;
+V220 = 0;
+V221 = 0;
+V222 = 0;
+V223 = 0;
+V224 = 0;
+V225 = 0;
+V226 = 0;
+V227 = 0;
+V228 = 0;
+V229 = 0;
+V23 = 0;
+V230 = 0;
+V231 = 0;
+V232 = 0;
+V233 = 0;
+V234 = 0;
+V235 = 0;
+V236 = 0;
+V237 = 0;
+V238 = 0;
+V239 = 0;
+V24 = 0;
+V240 = 0;
+V241 = 0;
+V242 = 0;
+V243 = 0;
+V244 = 0;
+V245 = 0;
+V246 = 0;
+V247 = 0;
+V248 = 0;
+V249 = 0;
+V25 = 0;
+V250 = 0;
+V251 = 0;
+V252 = 0;
+V253 = 0;
+V254 = 0;
+V255 = 0;
+V26 = 0;
+V27 = 0;
+V28 = 0;
+V29 = 0;
+V3 = 0;
+V30 = 0;
+V31 = 0;
+V32 = 0;
+V33 = 0;
+V34 = 0;
+V35 = 0;
+V36 = 0;
+V37 = 0;
+V38 = 1;
+V39 = 1;
+V4 = 0;
+V40 = 1;
+V41 = 1;
+V42 = 1;
+V43 = 0;
+V44 = 0;
+V45 = 0;
+V46 = 0;
+V47 = 0;
+V48 = 0;
+V49 = 0;
+V5 = 0;
+V50 = 0;
+V51 = 1;
+V52 = 1;
+V53 = 1;
+V54 = 1;
+V55 = 1;
+V56 = 1;
+V57 = 1;
+V58 = 1;
+V59 = 1;
+V6 = 0;
+V60 = 1;
+V61 = 0;
+V62 = 0;
+V63 = 0;
+V64 = 0;
+V65 = 1;
+V66 = 1;
+V67 = 1;
+V68 = 0;
+V69 = 0;
+V7 = 0;
+V70 = 0;
+V71 = 0;
+V72 = 0;
+V73 = 1;
+V74 = 1;
+V75 = 1;
+V76 = 1;
+V77 = 1;
+V78 = 1;
+V79 = 0;
+V8 = 0;
+V80 = 1;
+V81 = 1;
+V82 = 0;
+V83 = 0;
+V84 = 0;
+V85 = 0;
+V86 = 0;
+V87 = 0;
+V88 = 0;
+V89 = 0;
+V9 = 0;
+V90 = 0;
+V91 = 0;
+V92 = 1;
+V93 = 1;
+V94 = 1;
+V95 = 1;
+V96 = 0;
+V97 = 0;
+V98 = 0;
+V99 = 0;
+----------
+
+%%  runtime:       0.015 (15.975 ms)
+%%  solvetime:     0.001 (1.648 ms)
+%%  solutions:     1
+%%  variables:     256
+%%  propagators:   16
+%%  propagations:  194
+%%  nodes:         7
+%%  failures:      2
+%%  restarts:      0
+%%  peak depth:    4
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+V0 = 0;
+V1 = 0;
+V10 = 0;
+V100 = 0;
+V101 = 0;
+V102 = 0;
+V103 = 0;
+V104 = 0;
+V105 = 0;
+V106 = 0;
+V107 = 0;
+V108 = 0;
+V109 = 0;
+V11 = 0;
+V110 = 1;
+V111 = 1;
+V112 = 0;
+V113 = 0;
+V114 = 0;
+V115 = 0;
+V116 = 1;
+V117 = 1;
+V118 = 1;
+V119 = 1;
+V12 = 0;
+V120 = 1;
+V121 = 1;
+V122 = 1;
+V123 = 0;
+V124 = 0;
+V125 = 0;
+V126 = 0;
+V127 = 0;
+V128 = 0;
+V129 = 0;
+V13 = 0;
+V130 = 1;
+V131 = 1;
+V132 = 1;
+V133 = 1;
+V134 = 1;
+V135 = 1;
+V136 = 1;
+V137 = 1;
+V138 = 1;
+V139 = 1;
+V14 = 0;
+V140 = 1;
+V141 = 0;
+V142 = 0;
+V143 = 0;
+V144 = 0;
+V145 = 1;
+V146 = 1;
+V147 = 0;
+V148 = 0;
+V149 = 1;
+V15 = 0;
+V150 = 1;
+V151 = 1;
+V152 = 1;
+V153 = 1;
+V154 = 0;
+V155 = 0;
+V156 = 1;
+V157 = 1;
+V158 = 0;
+V159 = 0;
+V16 = 0;
+V160 = 1;
+V161 = 0;
+V162 = 0;
+V163 = 0;
+V164 = 0;
+V165 = 1;
+V166 = 1;
+V167 = 0;
+V168 = 1;
+V169 = 1;
+V17 = 0;
+V170 = 0;
+V171 = 0;
+V172 = 0;
+V173 = 0;
+V174 = 1;
+V175 = 0;
+V176 = 0;
+V177 = 1;
+V178 = 0;
+V179 = 0;
+V18 = 0;
+V180 = 0;
+V181 = 1;
+V182 = 1;
+V183 = 1;
+V184 = 1;
+V185 = 1;
+V186 = 0;
+V187 = 0;
+V188 = 0;
+V189 = 1;
+V19 = 0;
+V190 = 0;
+V191 = 0;
+V192 = 0;
+V193 = 0;
+V194 = 1;
+V195 = 1;
+V196 = 0;
+V197 = 0;
+V198 = 1;
+V199 = 1;
+V2 = 0;
+V20 = 0;
+V200 = 1;
+V201 = 0;
+V202 = 0;
+V203 = 1;
+V204 = 1;
+V205 = 0;
+V206 = 0;
+V207 = 0;
+V208 = 0;
+V209 = 0;
+V21 = 0;
+V210 = 0;
+V211 = 1;
+V212 = 1;
+V213 = 1;
+V214 = 1;
+V215 = 1;
+V216 = 1;
+V217 = 1;
+V218 = 1;
+V219 = 1;
+V22 = 0;
+V220 = 0;
+V221 = 0;
+V222 = 0;
+V223 = 0;
+V224 = 0;
+V225 = 0;
+V226 = 0;
+V227 = 0;
+V228 = 0;
+V229 = 0;
+V23 = 0;
+V230 = 0;
+V231 = 0;
+V232 = 0;
+V233 = 0;
+V234 = 0;
+V235 = 0;
+V236 = 0;
+V237 = 0;
+V238 = 0;
+V239 = 0;
+V24 = 0;
+V240 = 0;
+V241 = 0;
+V242 = 0;
+V243 = 0;
+V244 = 0;
+V245 = 0;
+V246 = 0;
+V247 = 0;
+V248 = 0;
+V249 = 0;
+V25 = 0;
+V250 = 0;
+V251 = 0;
+V252 = 0;
+V253 = 0;
+V254 = 0;
+V255 = 0;
+V26 = 0;
+V27 = 0;
+V28 = 0;
+V29 = 0;
+V3 = 0;
+V30 = 0;
+V31 = 0;
+V32 = 0;
+V33 = 0;
+V34 = 0;
+V35 = 0;
+V36 = 0;
+V37 = 0;
+V38 = 1;
+V39 = 1;
+V4 = 0;
+V40 = 1;
+V41 = 1;
+V42 = 1;
+V43 = 0;
+V44 = 0;
+V45 = 0;
+V46 = 0;
+V47 = 0;
+V48 = 0;
+V49 = 0;
+V5 = 0;
+V50 = 0;
+V51 = 1;
+V52 = 1;
+V53 = 1;
+V54 = 1;
+V55 = 1;
+V56 = 1;
+V57 = 1;
+V58 = 1;
+V59 = 1;
+V6 = 0;
+V60 = 1;
+V61 = 0;
+V62 = 0;
+V63 = 0;
+V64 = 0;
+V65 = 1;
+V66 = 1;
+V67 = 1;
+V68 = 0;
+V69 = 0;
+V7 = 0;
+V70 = 0;
+V71 = 0;
+V72 = 0;
+V73 = 1;
+V74 = 1;
+V75 = 1;
+V76 = 1;
+V77 = 1;
+V78 = 1;
+V79 = 0;
+V8 = 0;
+V80 = 1;
+V81 = 1;
+V82 = 0;
+V83 = 0;
+V84 = 0;
+V85 = 0;
+V86 = 0;
+V87 = 0;
+V88 = 0;
+V89 = 0;
+V9 = 0;
+V90 = 0;
+V91 = 0;
+V92 = 1;
+V93 = 1;
+V94 = 1;
+V95 = 1;
+V96 = 0;
+V97 = 0;
+V98 = 0;
+V99 = 0;
+----------
+
+%%  runtime:       0.021 (21.191 ms)
+%%  solvetime:     0.001 (1.020 ms)
+%%  solutions:     1
+%%  variables:     256
+%%  propagators:   16
+%%  propagations:  225
+%%  nodes:         7
+%%  failures:      2
+%%  restarts:      0
+%%  peak depth:    4
+

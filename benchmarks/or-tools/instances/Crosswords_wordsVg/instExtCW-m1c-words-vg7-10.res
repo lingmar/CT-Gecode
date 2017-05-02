@@ -1,0 +1,120 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       33.716 (33716.949 ms)
+%%  solvetime:     29.111 (29111.360 ms)
+%%  solutions:     0
+%%  variables:     70
+%%  propagators:   17
+%%  propagations:  1101885
+%%  nodes:         31667
+%%  failures:      15834
+%%  restarts:      0
+%%  peak depth:    30
+
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+=====UNSATISFIABLE=====
+
+%%  runtime:       40.714 (40714.988 ms)
+%%  solvetime:     40.536 (40536.372 ms)
+%%  solutions:     0
+%%  variables:     70
+%%  propagators:   17
+%%  propagations:  711787
+%%  nodes:         21417
+%%  failures:      10709
+%%  restarts:      0
+%%  peak depth:    26
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+=====UNSATISFIABLE=====
+
+%%  runtime:       52.877 (52877.821 ms)
+%%  solvetime:     52.697 (52697.241 ms)
+%%  solutions:     0
+%%  variables:     70
+%%  propagators:   17
+%%  propagations:  695370
+%%  nodes:         21417
+%%  failures:      10709
+%%  restarts:      0
+%%  peak depth:    26
+
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+=====UNSATISFIABLE=====
+
+%%  runtime:       8.456 (8456.834 ms)
+%%  solvetime:     8.169 (8169.387 ms)
+%%  solutions:     0
+%%  variables:     70
+%%  propagators:   17
+%%  propagations:  756668
+%%  nodes:         21417
+%%  failures:      10709
+%%  restarts:      0
+%%  peak depth:    26
+

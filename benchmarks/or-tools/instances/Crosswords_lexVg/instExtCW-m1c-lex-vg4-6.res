@@ -34,8 +34,8 @@ V8 = 4;
 V9 = 13;
 ----------
 
-%%  runtime:       1.594 (1594.521 ms)
-%%  solvetime:     0.043 (43.730 ms)
+%%  runtime:       0.371 (371.743 ms)
+%%  solvetime:     0.041 (41.801 ms)
 %%  solutions:     1
 %%  variables:     24
 %%  propagators:   10
@@ -45,16 +45,16 @@ V9 = 13;
 %%  restarts:      0
 %%  peak depth:    15
 
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
-GECODE TUPLESET
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
+GECODE_TUPLESET_MEM
 V0 = 21;
 V1 = 0;
 V10 = 12;
@@ -81,8 +81,55 @@ V8 = 11;
 V9 = 0;
 ----------
 
-%%  runtime:       0.201 (201.684 ms)
-%%  solvetime:     0.169 (169.327 ms)
+%%  runtime:       0.172 (172.271 ms)
+%%  solvetime:     0.140 (140.413 ms)
+%%  solutions:     1
+%%  variables:     24
+%%  propagators:   10
+%%  propagations:  8313
+%%  nodes:         520
+%%  failures:      255
+%%  restarts:      0
+%%  peak depth:    18
+
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+GECODE_TUPLESET_SPEED
+V0 = 21;
+V1 = 0;
+V10 = 12;
+V11 = 4;
+V12 = 11;
+V13 = 0;
+V14 = 20;
+V15 = 17;
+V16 = 4;
+V17 = 13;
+V18 = 4;
+V19 = 17;
+V2 = 18;
+V20 = 17;
+V21 = 0;
+V22 = 13;
+V23 = 3;
+V3 = 18;
+V4 = 0;
+V5 = 11;
+V6 = 0;
+V7 = 5;
+V8 = 11;
+V9 = 0;
+----------
+
+%%  runtime:       0.204 (204.182 ms)
+%%  solvetime:     0.172 (172.182 ms)
 %%  solutions:     1
 %%  variables:     24
 %%  propagators:   10
@@ -92,16 +139,16 @@ V9 = 0;
 %%  restarts:      0
 %%  peak depth:    18
 
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
-COMPACT TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
+COMPACT_TABLE
 V0 = 21;
 V1 = 0;
 V10 = 12;
@@ -128,12 +175,12 @@ V8 = 11;
 V9 = 0;
 ----------
 
-%%  runtime:       3.699 (3699.425 ms)
-%%  solvetime:     0.037 (37.455 ms)
+%%  runtime:       0.072 (72.116 ms)
+%%  solvetime:     0.024 (24.430 ms)
 %%  solutions:     1
 %%  variables:     24
 %%  propagators:   10
-%%  propagations:  8634
+%%  propagations:  8628
 %%  nodes:         520
 %%  failures:      255
 %%  restarts:      0
