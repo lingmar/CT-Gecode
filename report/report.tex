@@ -1,5 +1,6 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage{float}
+\usepackage{subfig}
 \usepackage{fullpage}
 \usepackage{booktabs}
 \usepackage{tikz}
@@ -1166,54 +1167,10 @@ taken from 37 series. 117 instances were skipped due to parse problems.
 Due to the high number of instances, the runtime for
 each instance was only measured once. A timeout of 1000 seconds was used.
 
-\Todo{Add more graphs and captions.}
+\input{graphs.tex}
 
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[scale=1.0]
-    \input{kakuroext_easy.tex}
-  \end{tikzpicture}
-\caption{\textbf{Kakuro easy}.}
-\end{figure}
 
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[scale=1.0]
-  \input{kakuroext_medium.tex}
-\end{tikzpicture}
-\caption{\textbf{Kakuro medium}.}
-\end{figure}
 
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[scale=1.0]
-    \input{mdd09.tex}
-  \end{tikzpicture}
-\caption{\textbf{MDD09}.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}
-    \input{nonograms.tex}
-  \end{tikzpicture}
-\caption{\textbf{Nonograms}.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[scale=1.0]
-    \input{randsJC2500.tex}
-  \end{tikzpicture}
-  \caption{\textbf{RandJC2500}.}
-\end{figure}
-
-\begin{figure}[H]
-  \begin{tikzpicture}[scale=1.0]
-    \input{or-tools-plot.tex}
-  \end{tikzpicture}
-\caption{All instances.}
-\end{figure}
 
 
 % \paragraph{Crosswords}
