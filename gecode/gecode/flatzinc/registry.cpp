@@ -1202,7 +1202,7 @@ namespace Gecode { namespace FlatZinc {
         }
       } else {
         printf("WARN: TABLE_PROPAGATOR not properly set, found: %s\n",prop);
-        printf("Legal values are: %s, %s, %s\n",
+        printf("Legal values are: %s, %s, %s, %s\n",
                GECODE_REGULAR,GECODE_TUPLESET_MEM,GECODE_TUPLESET_SPEED,COMPACT_TABLE);
         GECODE_NEVER;
       }
