@@ -1,3 +1,80 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       1:13:32.151 (4412151.304 ms)
+%%  solvetime:     12.618 (12618.733 ms)
+%%  solutions:     0
+%%  variables:     1024
+%%  propagators:   58
+%%  propagations:  2375128
+%%  nodes:         92427
+%%  failures:      46214
+%%  restarts:      0
+%%  peak depth:    84
+
 GECODE_TUPLESET_MEM
 GECODE_TUPLESET_MEM
 GECODE_TUPLESET_MEM
@@ -1088,8 +1165,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       4:11.431 (251431.583 ms)
-%%  solvetime:     4:05.844 (245844.136 ms)
+%%  runtime:       4:11.788 (251788.612 ms)
+%%  solvetime:     4:06.808 (246808.914 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   58
@@ -2189,8 +2266,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       7:26.199 (446199.791 ms)
-%%  solvetime:     7:21.677 (441677.263 ms)
+%%  runtime:       7:12.302 (432302.057 ms)
+%%  solvetime:     7:07.852 (427852.909 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   58
@@ -3290,8 +3367,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       9.552 (9552.812 ms)
-%%  solvetime:     3.666 (3666.938 ms)
+%%  runtime:       9.388 (9388.538 ms)
+%%  solvetime:     3.552 (3552.603 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   58

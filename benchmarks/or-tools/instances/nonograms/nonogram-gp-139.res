@@ -64,14 +64,14 @@ GECODE_TUPLESET_MEM
 GECODE_TUPLESET_MEM
 =====UNKNOWN=====
 
-%%  runtime:       17:03.847 (1023847.079 ms)
-%%  solvetime:     16:40.088 (1000088.463 ms)
+%%  runtime:       17:03.852 (1023852.906 ms)
+%%  solvetime:     16:40.094 (1000094.463 ms)
 %%  solutions:     0
 %%  variables:     1024
 %%  propagators:   61
-%%  propagations:  2331541
-%%  nodes:         64001
-%%  failures:      31951
+%%  propagations:  2353563
+%%  nodes:         64691
+%%  failures:      32300
 %%  restarts:      0
 %%  peak depth:    134
 
@@ -141,14 +141,14 @@ GECODE_TUPLESET_SPEED
 GECODE_TUPLESET_SPEED
 =====UNKNOWN=====
 
-%%  runtime:       17:24.042 (1044042.155 ms)
-%%  solvetime:     17:05.850 (1025850.877 ms)
+%%  runtime:       17:00.673 (1020673.735 ms)
+%%  solvetime:     16:40.168 (1000168.658 ms)
 %%  solutions:     0
 %%  variables:     1024
 %%  propagators:   61
-%%  propagations:  579429
-%%  nodes:         24511
-%%  failures:      12207
+%%  propagations:  1203094
+%%  nodes:         51116
+%%  failures:      25501
 %%  restarts:      0
 %%  peak depth:    134
 
@@ -218,14 +218,14 @@ COMPACT_TABLE
 COMPACT_TABLE
 =====UNKNOWN=====
 
-%%  runtime:       34:55.130 (2095130.849 ms)
-%%  solvetime:     16:40.175 (1000175.380 ms)
+%%  runtime:       17:09.582 (1029582.677 ms)
+%%  solvetime:     16:40.003 (1000003.794 ms)
 %%  solutions:     0
 %%  variables:     1024
 %%  propagators:   61
-%%  propagations:  176320441
-%%  nodes:         5030812
-%%  failures:      2515352
+%%  propagations:  180296399
+%%  nodes:         5150832
+%%  failures:      2575370
 %%  restarts:      0
 %%  peak depth:    150
 

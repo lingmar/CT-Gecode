@@ -1088,8 +1088,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       1:00.252 (60252.878 ms)
-%%  solvetime:     42.301 (42301.534 ms)
+%%  runtime:       59.516 (59516.362 ms)
+%%  solvetime:     41.836 (41836.343 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   53
@@ -2189,8 +2189,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       1:26.110 (86110.885 ms)
-%%  solvetime:     1:09.817 (69817.025 ms)
+%%  runtime:       1:24.211 (84211.506 ms)
+%%  solvetime:     1:08.749 (68749.281 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   53
@@ -3290,8 +3290,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       19.748 (19748.199 ms)
-%%  solvetime:     0.435 (435.436 ms)
+%%  runtime:       18.553 (18553.278 ms)
+%%  solvetime:     0.435 (435.175 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   53
