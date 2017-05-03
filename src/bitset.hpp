@@ -7,7 +7,7 @@ public:
   /// Initialize for \a sz bits and allocator \a a
   template<class A>
   BitSet(A& a, unsigned int sz, bool setbits=false);
-  /// Copy constructor
+  /// Copy constructor (disabled)
   BitSet(const BitSet&);
   /// Copy from bitset \a bs with allocator \a a
   template<class A>
@@ -133,14 +133,6 @@ forceinline
 BitSet::BitSet(A& a,unsigned int sz,bool setbits)
   : BitSetBase(a,sz,setbits) {
   // Clear bit sz (set in RawBitSetBase)
-  Gecode::Support::RawBitSetBase::clear(sz);
-}
-
-forceinline
-BitSet::BitSet(const BitSet& bs) {
-  sz = bs.sz;
-  data = bs.data;
-  // Clear bit sz
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
