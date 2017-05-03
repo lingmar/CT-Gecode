@@ -1,4 +1,4 @@
-#define forceinline __attribute__ ((noinline))
+//#define forceinline __attribute__ ((noinline))
 
 class BitSet : public Gecode::Support::BitSetBase {
 public:
@@ -317,7 +317,7 @@ forceinline
 SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
   : al(a0), words(al,sbs.words),
     limit(sbs.limit), sz(sbs.sz)  {
-  // Copy limit nr of elements in index
+  // Copy limit+1 nr of elements in index
   index = al.template alloc<unsigned int>(limit + 1);
   for (int i = limit+1; i--; )
     index[i] = sbs.index[i];

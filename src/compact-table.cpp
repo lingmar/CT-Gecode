@@ -14,7 +14,7 @@
 //#define FIX
 #define DELTA
 
-#define forceinline __attribute__ ((noinline))
+//#define forceinline __attribute__ ((noinline))
 
 /** 
  * Threshold value for using hash table
@@ -644,7 +644,8 @@ public:
         const int max_val = v.max();
 
         // Fix to max_val if min_val not supported
-        if (!supported(a,min_val)) {
+        const int row_min = a.supports.row(min_val);
+        if (!supported(a,row_min)) {
           v.eq(home,max_val);
           --unassigned;
           //a.dispose(home,c);
@@ -652,7 +653,8 @@ public:
         }
 
         // Fix to min_val if max_val not supported
-        if (!supported(a,max_val)) {
+        const int row_max = a.supports.row(max_val);
+        if (!supported(a,row_max)) {
           v.eq(home,min_val);
           --unassigned;
           //a.dispose(home,c);
@@ -735,12 +737,30 @@ public:
         }
 #else
         unsigned int nremoves = 0;
-        Int::ViewValues<View> it(v);
-        while (it()) {
-          if (!supported(a,it.val()))
-            nq[nremoves++] = it.val();
-          ++it;
+        Int::ViewRanges<View> rngs(v);
+        int cur;
+        int max;
+        int row;
+        while (rngs()) {
+          cur = rngs.min();
+          max = rngs.max();
+          row = a.supports.row(cur);
+          while (cur <= max) {
+            if (!supported(a,row)) {
+              nq[nremoves++] = cur;
+            }
+            ++cur;
+            ++row;
+          }
+          ++rngs;
         }
+        
+        // Int::ViewValues<View> it(v);
+        // while (it()) {
+        //   if (!supported(a,it.val()))
+        //     nq[nremoves++] = it.val();
+        //   ++it;
+        // }
 #endif // LONG_FILTER
         
         // Remove collected values
@@ -765,8 +785,8 @@ public:
   }
 
   forceinline bool
-  supported(CTAdvisor<View>& a, int val) {
-    const unsigned int row = a.supports.row(val);
+  supported(CTAdvisor<View>& a, int row) {
+    //const unsigned int row = a.supports.row(val);
     int index = a.residues[row];
     const BitSet& support_row = a.supports(row);
     Support::BitSetData w = validTuples.a(support_row,index);
