@@ -7,7 +7,7 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-#define LONG_FILTER
+//#define LONG_FILTER
 
 //#define DEBUG
 
@@ -797,7 +797,6 @@ public:
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
       v.eq(home,t[a.index]);
-      //      a.dispose(home,c);
     }
 
     return home.ES_SUBSUMED(*this);

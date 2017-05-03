@@ -210,22 +210,25 @@ BitSet::a(const BitSet& a, unsigned int i) {
 
 forceinline Gecode::Support::BitSetData
 BitSet::o(const BitSet& a, const BitSet& b, unsigned int i) {
+#ifdef DEBUG
   assert(i < a.sz && i < b.sz);
+#endif // DEBUG
   return Gecode::Support::BitSetData::o(a.data[i], b.data[i]);
 }
 
 forceinline Gecode::Support::BitSetData
 BitSet::a(const BitSet& a, const BitSet& b, unsigned int i) {
-  if (i >= a.sz || i >= b.sz) {
-    printf("i = %d, a.sz = %d, b.sz = %d\n",i,a.sz,b.sz);
-  }
-  assert(i < a.sz && i < b.sz);
+#ifdef DEBUG
+  assert(i < a.sz && i < b.sz);  
+#endif // DEBUG
   return Gecode::Support::BitSetData::a(a.data[i], b.data[i]);;
 }
 
 forceinline void
 BitSet::clearword(unsigned int i, bool setbits) {
-  assert(i < sz);
+#ifdef DEBUG
+  assert(i < sz);  
+#endif // DEBUG
   data[i].init(setbits);
 #ifdef DEBUG
   if (setbits) {
@@ -238,13 +241,17 @@ BitSet::clearword(unsigned int i, bool setbits) {
 
 forceinline void
 BitSet::setword(Gecode::Support::BitSetData a, unsigned int i) {
-  assert(i < sz);
+#ifdef DEBUG
+  assert(i < sz);  
+#endif // DEBUG
   data[i] = a;
 }
 
 forceinline Gecode::Support::BitSetData
 BitSet::getword(unsigned int i) const {
-  assert(i < sz);
+#ifdef DEBUG
+  assert(i < sz);  
+#endif // DEBUG
   return data[i];
 }
 
