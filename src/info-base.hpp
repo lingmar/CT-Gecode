@@ -58,11 +58,9 @@ public:
   }
   
   template<class View>
-  forceinline
   void init(const BitSet* supports,int nsupports, int offset,View x);
 
-  forceinline virtual int
-  row(int val) = 0;
+  virtual int row(int val) = 0;
 
   forceinline virtual ~InfoBase(void) {
     for (int i = nvals; i--; ) {
