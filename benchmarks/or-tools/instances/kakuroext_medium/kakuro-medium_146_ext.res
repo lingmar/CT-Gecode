@@ -265,8 +265,8 @@ V98 = 8;
 V99 = 9;
 ----------
 
-%%  runtime:       5.568 (5568.993 ms)
-%%  solvetime:     0.127 (127.467 ms)
+%%  runtime:       4.420 (4420.283 ms)
+%%  solvetime:     0.106 (106.020 ms)
 %%  solutions:     1
 %%  variables:     173
 %%  propagators:   62
@@ -543,8 +543,8 @@ V98 = 8;
 V99 = 9;
 ----------
 
-%%  runtime:       4.763 (4763.734 ms)
-%%  solvetime:     0.138 (138.568 ms)
+%%  runtime:       4.168 (4168.018 ms)
+%%  solvetime:     0.127 (127.933 ms)
 %%  solutions:     1
 %%  variables:     173
 %%  propagators:   62
@@ -821,8 +821,8 @@ V98 = 8;
 V99 = 9;
 ----------
 
-%%  runtime:       8.439 (8439.950 ms)
-%%  solvetime:     0.001 (1.535 ms)
+%%  runtime:       5.334 (5334.249 ms)
+%%  solvetime:     0.002 (2.016 ms)
 %%  solutions:     1
 %%  variables:     173
 %%  propagators:   62

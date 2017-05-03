@@ -1,3 +1,80 @@
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+REGULAR
+=====UNSATISFIABLE=====
+
+%%  runtime:       5:57:44.315 (21464315.090 ms)
+%%  solvetime:     1.197 (1197.009 ms)
+%%  solutions:     0
+%%  variables:     1024
+%%  propagators:   51
+%%  propagations:  60154
+%%  nodes:         3173
+%%  failures:      1587
+%%  restarts:      0
+%%  peak depth:    52
+
 GECODE_TUPLESET_MEM
 GECODE_TUPLESET_MEM
 GECODE_TUPLESET_MEM
@@ -64,14 +141,14 @@ GECODE_TUPLESET_MEM
 GECODE_TUPLESET_MEM
 =====UNKNOWN=====
 
-%%  runtime:       16:46.695 (1006695.919 ms)
-%%  solvetime:     16:40.006 (1000006.233 ms)
+%%  runtime:       16:46.224 (1006224.760 ms)
+%%  solvetime:     16:40.007 (1000007.336 ms)
 %%  solutions:     0
 %%  variables:     1024
 %%  propagators:   51
-%%  propagations:  3371420
-%%  nodes:         133548
-%%  failures:      66751
+%%  propagations:  3482440
+%%  nodes:         137564
+%%  failures:      68751
 %%  restarts:      0
 %%  peak depth:    91
 
@@ -141,14 +218,14 @@ GECODE_TUPLESET_SPEED
 GECODE_TUPLESET_SPEED
 =====UNKNOWN=====
 
-%%  runtime:       17:00.705 (1020705.911 ms)
-%%  solvetime:     17:03.375 (1023375.202 ms)
+%%  runtime:       16:45.552 (1005552.392 ms)
+%%  solvetime:     16:40.010 (1000010.762 ms)
 %%  solutions:     0
 %%  variables:     1024
 %%  propagators:   51
-%%  propagations:  1094985
-%%  nodes:         65673
-%%  failures:      32803
+%%  propagations:  1211285
+%%  nodes:         72818
+%%  failures:      36378
 %%  restarts:      0
 %%  peak depth:    91
 
@@ -1242,8 +1319,8 @@ V998 = 0;
 V999 = 0;
 ----------
 
-%%  runtime:       46.739 (46739.005 ms)
-%%  solvetime:     39.880 (39880.214 ms)
+%%  runtime:       44.360 (44360.448 ms)
+%%  solvetime:     38.303 (38303.335 ms)
 %%  solutions:     1
 %%  variables:     1024
 %%  propagators:   51
