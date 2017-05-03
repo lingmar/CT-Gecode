@@ -7,7 +7,7 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-//#define LONG_FILTER
+#define LONG_FILTER
 
 //#define DEBUG
 
@@ -262,7 +262,7 @@ protected:
   Council<CTAdvisor<View> > c;
   /// Whether propagator is propagating
   Status status;
-  /// -2 if more than one touched var, -1 if none, else index of touched var
+  /// -2 if more than one touched var, -1 if none, else index of the only touched var
   int touched_var;
   /// The indices of valid tuples
   SparseBitSet<Space&> validTuples;
@@ -276,8 +276,6 @@ protected:
 #endif // FIX
   /// Largest domain size
   unsigned int max_dom_size;
-  /// Whether it is the first time the advisor executes
-  //  bool first;
   
 public:
   // Post table propagator
@@ -391,7 +389,6 @@ public:
 
     int* nq = r.alloc<int>(max_dom_size);
     int nremoves;
-    max_dom_size = 1; // Reset maximal domain size
     
     // Remove values corresponding to empty rows 
     for (int i = x.size(); i--; ) {
@@ -409,8 +406,6 @@ public:
 
       Iter::Values::Array r(nq,nremoves);
       GECODE_ME_CHECK(x[i].minus_v(home,r,false));
-      if (x[i].size() > max_dom_size)
-        max_dom_size = x[i].size();
     }
 
     // Post advisors
@@ -443,7 +438,7 @@ public:
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
       status(p.status),
-      touched_var(p.touched_var),
+      touched_var(-1),
       validTuples(home, p.validTuples),
       arity(p.arity),
       unassigned(p.unassigned),
@@ -615,9 +610,6 @@ public:
     Region r(home);
     int* nq = r.alloc<int>(max_dom_size);
     
-    // Smallest possible domain size
-    max_dom_size = 1;
-
     // Scan all values of all unassigned variables to see if they
     // are still supported.
     for (Advisors<CTAdvisor<View> > a0(c);
@@ -630,8 +622,6 @@ public:
       // No point filtering variable if it was the only modified variable
       if (touched_var == i) {
         touched_var = -1;
-        if (v.size() > max_dom_size)
-          max_dom_size = v.size();
         continue;
       }
 
@@ -675,60 +665,69 @@ public:
         // Iterate over single range if domain is an interval
         if (v.range()) {
           // Increase new_min to smallest supported value
+          int row = a.supports.row(new_min);
           for (; new_min <= max_val; ++new_min) {
-            if (supported(a,new_min))
+            if (supported(a,row))
               break;
+            ++row;
           }
-          v.gq(home,new_min);
-          if (v.assigned()) {
+          if (v.gq(home,new_min) == ME_INT_VAL) {
             --unassigned;
-            a.dispose(home,c);
             break;
           }
           // Decrease new_max to largest supported value
+          row = a.supports.row(new_max);
           for (; new_max >= new_min; --new_max) {
-            if (supported(a,new_max))
+            if (supported(a,row))
               break;
+            --row;
           }
-          v.lq(home,new_max);
-          if (v.assigned()) {
+          if (v.lq(home,new_max) == ME_INT_VAL) {
             --unassigned;
-            a.dispose(home,c);
             break;
           }
           // Filter out values in between min and max
+          row = a.supports.row(new_min + 1);
           for (int val = new_min + 1; val < new_max; ++val) {
-            if (!supported(a,val))
+            if (!supported(a,row))
               nq[nremoves++] = val;
+            ++row;
           }
           
         } else { // Domain is not a range
           new_min = Limits::max; // Escape value
 
-          Int::ViewValues<View> it(v);
-          while (it()) {
-            if (!supported(a,it.val()))
-              nq[nremoves++] = it.val();
-            else {
-              if (new_min == Limits::max) {
-                new_min = it.val();
-                nremoves = 0; // Will be covered by gq
+          Int::ViewRanges<View> rngs(v);
+          int cur;
+          int max;
+          int row;
+          while (rngs()) {
+            cur = rngs.min();
+            max = rngs.max();
+            row = a.supports.row(cur);
+            while (cur <= max) {
+              if (!supported(a,row)) {
+                nq[nremoves++] = cur;
+              } else {
+                if (new_min == Limits::max) {
+                  new_min = cur;
+                  nremoves = 0; // Will be covered by gq
+                }
+                new_max = cur; // Will collect the largest supported value
               }
-              new_max = it.val(); // Will collect the largest supported value
+              ++cur;
+              ++row;
             }
-            ++it;
+            ++rngs;
           }
+
           // Perform bounds propagation first
-          v.gq(home,new_min);
-          if (v.assigned()) {
+          if (v.gq(home,new_min) == ME_INT_VAL) {
             --unassigned;
-            a.dispose(home,c);
             break;
           }
-          v.lq(home,new_max);
-          if (v.assigned()) {
+          if (v.lq(home,new_max) == ME_INT_VAL) {
             --unassigned;
-            a.dispose(home,c);
             break;
           }
           // Trim nremoves
@@ -738,45 +737,31 @@ public:
 #else
         unsigned int nremoves = 0;
         Int::ViewRanges<View> rngs(v);
-        int cur;
-        int max;
-        int row;
+        int cur, max, row;
         while (rngs()) {
           cur = rngs.min();
           max = rngs.max();
           row = a.supports.row(cur);
           while (cur <= max) {
-            if (!supported(a,row)) {
+            if (!supported(a,row))
               nq[nremoves++] = cur;
-            }
             ++cur;
             ++row;
           }
           ++rngs;
         }
         
-        // Int::ViewValues<View> it(v);
-        // while (it()) {
-        //   if (!supported(a,it.val()))
-        //     nq[nremoves++] = it.val();
-        //   ++it;
-        // }
 #endif // LONG_FILTER
         
         // Remove collected values
         if (nremoves > 0) {
           Iter::Values::Array r(nq,nremoves);
-          v.minus_v(home,r,false);
-          if (v.assigned()) {
+          if (v.minus_v(home,r,false) == ME_INT_VAL) {
             --unassigned;
-            //a.dispose(home,c);
             break;
           }
         }
         
-        if (v.size() > max_dom_size)
-          max_dom_size = v.size();
-
         ++count_unassigned;
       }
     }
