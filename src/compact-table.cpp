@@ -229,7 +229,7 @@ public:
       break;
     }
   }
- 
+
   /// Copy constructor
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
@@ -246,7 +246,6 @@ public:
     
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
-    //home.ignore(*this,AP_DISPOSE);
     (void) supports.~Supports();
     (void) ViewAdvisor<View>::dispose(home,c);
   }
@@ -568,7 +567,8 @@ public:
 
         diff = false;
         for (int i = min_row; i <= max_row; i++) {
-          if (!a.supports(i).empty() && validTuples.nand(a.supports(i))) {
+          const BitSet& s = a.supports(i);
+          if (!s.empty() && validTuples.nand(s)) {
             diff = true;
           }
         }
