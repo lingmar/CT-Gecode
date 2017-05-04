@@ -89,7 +89,7 @@
 \newcommand{\Break}{\textbf{break~}}
 \newcommand{\While}[1]{\textbf{while~} {#1} \textbf{~do~}}
 
-\renewcommand{\algorithmicforall}{\textbf{for all}}
+\renewcommand{\algorithmicforall}{\textbf{Method}}
 \renewcommand{\algorithmicdo}{}
 \renewcommand{\algorithmicwhile}{\textbf{foreach}}
 
@@ -795,8 +795,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
     \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
       \input{filterDomains.tex}
     \end{algorithmic}
-    \caption{Filtering variable domains. This procedure is called if 
-    at least one variable was modified since last time.}
+    \caption{Filtering variable domains, enforcing domain consistency.}
         \label{algo:filterDomains}
   \end{algorithm}
 
@@ -942,6 +941,7 @@ intersecting it with~$\CurrTable$.
 
 \noindent
 \emph{One valid tuple left.} 
+This variant is the only addition made to the algorithm presented in~\cite{CTpaper}.
 If only one valid tuple is left after all calls to \UpdateTable() are finished,
 the domains of the variables can be fixed to the values for that tuple.
 \Algoref{algo:propagateFix} shows an alternative to lines 10-11 in~\Algoref{algo:CT}.
@@ -952,7 +952,8 @@ of tuples representing the initial valid table for~$c$.
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{propagateFix.tex}
   \end{algorithmic}
-  \caption{Alternative to lines 10-11 in \Algoref{algo:CT}.}
+  \caption{Alternative to lines 10-11 in \Algoref{algo:CT}, assuming
+  the initial valid table~$T$ is stored as a field.}
   \label{algo:propagateFix}
 \end{algorithm}
 
