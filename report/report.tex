@@ -174,7 +174,8 @@ related to the constraint. For the \Table constraint, several propagator
 algorithms are known. In 2016, a new propagator algorithm for the \Table
 constraint was published~\cite{\CTpaper}, called Compact Table (CT).
 Preliminary results indicate that CT outperforms the previously known algorithms.
-There has been no attempt to implement CT in the constraint solver Gecode~\cite{Gecode}, and consequently its performance in Gecode is unknown.
+There has been no attempt to implement CT in the constraint solver Gecode~\cite{Gecode}, 
+and consequently its performance in Gecode is unknown.
 
 \subsection{Goal}
 \label{intro:goal}
@@ -460,6 +461,30 @@ There are three commonly used consistency levels,
 \subsection{Gecode}
 \label{bg:gecode}
 Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
+
+Implementing a propagator in Gecode means implementing the following parts:
+
+\begin{description}
+  \item[Posting.] Posting a propagator requires a \emph{constraint post function},
+    a \emph{propagator post function} and a \emph{constructor}.
+    The task of each of them are as follows:
+    \begin{itemize}
+      \item The constraint post function envokes an appropriate propagator post function
+        -- this function can thus be used by several different propagators implementing
+        the same constraint.
+      \item Typical tasks for the propagator post function include deciding whether the propagator
+        really needs to be posted, deciding whether a more efficient propagator can be posted
+        instead, and last but not least invoking the constructor of the propagator.
+      \item The constructor creates an instance of the propagator and creates \emph{subscriptions}
+        to views. Subscribing to the views means the propagator is scheduled for execution whenever
+        the domains of the views change.
+    \end{itemize}
+  \item[Disposal.] 
+  \item[Copying.] 
+  \item[Cost computation.] 
+  \item[Propagation.] 
+  \item[Rescheduling.] 
+\end{description}
 
 \Todo{Define the parts of the Gecode API that is used later (propagate(), status
   messages...)}
