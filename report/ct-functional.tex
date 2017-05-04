@@ -1,17 +1,17 @@
 \begin{algorithm}[H]
 \caption{Compact Table Propagator.}
 \begin{algorithmic}[1]
-  \PROCEDURE $\CompactTable(s:~\text{store}) : \StatusMessage$
+  \PROCEDURE $\CompactTable(s:~\text{store}) : \Tuple{\StatusMessage,\ \text{store}}$
   \IF[executed in a constructor]{the propagator is being posted}
     \STATE \InitialiseCT($vars(c),T_0$)
     \IF{some variable was wiped out~$\lor~\CurrTable$.isEmpty()}
-      \RETURN \FAIL
+      \RETURN $\Tuple{\FAIL, \emptyset}$
     \ENDIF
   \ELSE[executed in an advisor]
     \FORALL{variables~$x$ whose domains have changed since last time}
       \STATE \UpdateTable($x$)
       \IF{$\CurrTable$.isEmpty()}
-        \RETURN \FAIL
+        \RETURN $\Tuple{\FAIL,\emptyset}$
       \ENDIF
     \ENDFOR
   \ENDIF
@@ -19,9 +19,9 @@
     \STATE \FilterDomains()
   \ENDIF
   \IF{there is at most one unassigned variable left}
-    \RETURN \SUBSUMED
+    \RETURN $\Tuple{\SUBSUMED, [x \mapsto \Dom{x}]_{x \in \Scp}}$
   \ELSE 
-    \RETURN \FIX
+    \RETURN $\Tuple{\FIX,[x \mapsto \Dom{x}]_{x \in \Scp}}$
   \ENDIF
   \label{algo:CT}
 \end{algorithmic}

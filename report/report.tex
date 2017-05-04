@@ -700,7 +700,7 @@ left, otherwise CT is at fixpoint.
 
 The initialisation of the fields is described in
 \Algoref{algo:initialise-CT}. \InitialiseCT() takes two parameters:
-$\localvar{vars}$, that are the variables associated to the constraint~$c$,
+$\localvar{vars}(c)$, that are the variables associated to the constraint~$c$,
 and~$\localvar{T_0}$, a list of tuples that define the initial table for~$c$.
 
 \begin{algorithm}[H]
@@ -1000,9 +1000,8 @@ we will prove by a number of lemmas.
 \end{theorem}
 
 To prove~\Thmref{thm:prop}, we formulate and prove the following lemmas.
-In what follows, we denote~$CT(s)$ the resulting store of running 
-either \T{initCT()} or \texttt{propagate()} on an input store~$s$,
-depending on if it is the first time or not that the propagator is called.
+In what follows, we denote~$CT(s)$ the resulting store of executing
+\CompactTable($s$) on an input store~$s$.
 
 \begin{lemma} \label{lemma:decreasing}
   CT is a decreasing function.
