@@ -1,0 +1,5 @@
+\PROCEDURE \FixDomains($index$: int)
+\STATE $t \leftarrow T[index]$
+\FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$}
+  \STATE $\Dom{x} \leftarrow t[x]$
+\ENDFOREACH

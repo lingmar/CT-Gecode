@@ -1,9 +1,9 @@
-\begin{algorithm}
-\caption{Compct Table Propagator.}
+\begin{algorithm}[H]
+\caption{Compact Table Propagator.}
 \begin{algorithmic}[1]
-  \PROCEDURE $\CompactTable() : \StatusMessage$
+  \PROCEDURE $\CompactTable(s:~\text{store}) : \StatusMessage$
   \IF[executed in a constructor]{the propagator is being posted}
-    \STATE \InitialiseCT()
+    \STATE \InitialiseCT($vars(c),T_0$)
     \IF{some variable was wiped out~$\lor~\CurrTable$.isEmpty()}
       \RETURN \FAIL
     \ENDIF
@@ -18,11 +18,11 @@
   \IF[executed in the propagator function]{some varible was pruned since last time}
     \STATE \FilterDomains()
   \ENDIF
-  \IF{at most one unassigned variable left}
+  \IF{there is at most one unassigned variable left}
     \RETURN \SUBSUMED
   \ELSE 
     \RETURN \FIX
   \ENDIF
-
+  \label{algo:CT}
 \end{algorithmic}
 \end{algorithm}

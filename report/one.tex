@@ -1,0 +1,12 @@
+\PROCEDURE IndexOfFixed(): int
+\IF{$\Limit = 0$}
+  \STATE $offset \leftarrow \Index[0]$
+  \STATE $w \leftarrow \Words[offset]$
+  \IF[Exactly one bit set]{$(w \ \& \ (w - 1)) = 0$}
+    \RETURN $offset \cdot 64 + \textsc{MSB}(\Words[offset])$
+  \ELSE
+    \RETURN $-1$
+  \ENDIF
+\ELSE
+  \RETURN $-1$
+\ENDIF

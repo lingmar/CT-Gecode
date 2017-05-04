@@ -624,64 +624,32 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
 
 \subsection{Compact-Table (CT) Algorithm}
 \label{sec:ct}
-This section describes the CT algorithm, a domain consistent propagation
-algorithm for any \Table constraint~$c$.~\Algoref{algo:CT} shows the interface
-for Class CT-Propagator, which implements the CT algorithm. The rest of this
-section will describe its fields and methods in detail.
+The CT algortithm is a domain consistent propagation
+algorithm for any \Table constraint~$c$. \Secref{ct:pseudo}
+presents pseudo code for the CT algorithm and a few variants
+and \Secref{sec:proof} proves that CT fulfills the propagator
+obligations.
 
-%Ugly that the lines of references "Algorithm x" are numbered in~\Algoref{algo:CT}.}
-%It dynamically maintains a set of valid supports regarding the current domain of each variable.
+\subsubsection{Pseudo code}
+\label{ct:pseudo}
+When posting the propagator,
+it takes as input a list of variables that are~$vars(c)$,
+and an initial table, that is
+a list of tuples $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of
+length~$p_o$. In what follows, we call the \emph{initial valid table}
+for~$c$ the subset~$T \subseteq T_0$ of size~$p \leq p_0$ where all
+tuples are a support on~$c$ for the initial domains of~$vars(c)$.
+For a variable~$x$, we distinguish between the \emph{initial domain}
+~$\Dominit{x}$ and the \emph{current domain} $\Dom{x}$.
 
-\input{ct-functional.tex}
-
- \begin{algorithm}[H]
-  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-    \input{Class-CT.tex}
-    \end{algorithmic}
-  \caption{Interface for CT propagator class.}
-  \label{algo:CT}
-\end{algorithm}
-
-%This description is mainly taken from~\cite{CTpaper}.
-
-% Beskriv övergripande?
-
-% CT is based on bitwise operations -- among the important datastructures we have
-% a~$\SparseBitSet$ object which maintains the valid supports, and also a bitset
-% matrix that
-
-% In this ordered set, each tuple is indexed
-% by the order it appears in the table, and the~$i$th element is~$1$ if and only if
-% the~$i$th tuple is a valid support, else the~$i$th element is~$0$.
-
-\subsubsection{Fields}
-\label{CT:fields}
-
-\Todo{Add examples with figures for describing the fields.}
-
-% From hereon, we let the \emph{initial valid table} for $c$,~$T_v$, be a subset of the
-% initial table~$T$ such that for all tuples~$\tau \in T_v$, $\tau$ is a
-% support on~$c$. \Todo{Define: initial table.}
-\Linesref{line:CTfield:start}{line:CTfield:end} of \Algoref{algo:CT}
-shows the fields of Class \texttt{CT-Propagator} and their types.
-Now follows a more detailed description of them. In what follows, we let
-the~\emph{initial domain} of a variable~$x \in \Scp(c)$, denoted~$\Dominit{x}$,
-be the domain that~$x$ has before CT has performed any propagation,
-in contrast to~$\Dom{x}$ which is the current domain of~$x$.
-The \emph{initial table} for a table constraint~$c$ is the list of tuples
-$T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of length~$p_o$
-that are given as input to initCT(), and the
-\emph{initial valid table} for~$c$ is the subset $T \subseteq T_0$ of size~$p \leq p_0$
-such that~$\forall i \in \Set{1, \ldots, p_0}: \tau_i \in T$ iff $\tau_i$ 
-is a support on~$c$ for the initial domains of the variables. 
+The propagator state has the following fields.
 
 \begin{itemize}
-  \item $\Scp$ represents~$vars(c)$, the variables associated with~$c$.
+  \item $\Scp$, a list of variables representing~$vars(c)$.
   
-  \item $\CurrTable$ represents the current table,
-    that is, the current valid supports for~$c$. If the initial valid table for~$c$
-    is
-    $\Tuple{\tau_0, \tau_1, \ldots, \tau_{p-1}}$,
+  \item $\CurrTable$, a $\SparseBitSet$ object representing the current valid
+    supports for~$c$. If the initial valid table for~$c$
+    is $\Tuple{\tau_0, \tau_1, \ldots, \tau_{p-1}}$,
     then~$\CurrTable$ is a 
     $\SparseBitSet$ object of initial size~$p$, such that value~$i$
     is contained (is set to~$1$) if and only if the~$i$th tuple is valid:
@@ -690,9 +658,11 @@ is a support on~$c$ for the initial domains of the variables.
       i \in \CurrTable \ \Leftrightarrow \ \forall x \in vars(c): \tau_i[x] \in \Dom{x}
     \end{equation}
 
-  \item $\Supports$ represents the supports for each variable-value pair~$(x,a)$,
-    where~$x \in vars(c) \land a \in \Dom{x}$.
-    It is a static array of words~$\Supports[x,a]$, seen as bit-sets.
+  \item $\Supports$, a static array of bit-sets representing
+    the supports for each variable-value pair~$(x,a)$.
+    %It represents the supports for each variable-value pair~$(x,a)$,
+    %where~$x \in vars(c) \land a \in \Dom{x}$.
+    %It is a static array of words~$\Supports[x,a]$, seen as bit-sets.
     The bit-set~$\Supports[x,a]$ is such that
     the bit at position~$i$ is set to~$1$ if and only if the 
     tuple~$\tau_i$ in the initial valid table of~$c$ is initially a support for~$(x,a)$:
@@ -704,59 +674,46 @@ is a support on~$c$ for the initial domains of the variables.
       \forall y \in vars(c): \ &\tau_i[y] \in \Dominit{y})
     \end{alignat}
 
-    % One can optimise this definition slighty since it is unnecessary to keep track of
-    % invalid supports. Instead, only the tuples that are valid supports for~$c$
-    % need to be indexed in~$\Supports[x,a]$, potentially making the bit-set shorter
-    % if only a subset of the tuples in the initial table are valid supports. 
-    % If the initial table 
-    % is~$T = \Tuple{\tau_0, \tau_1, ..., \tau_{p-1}}$ and it turns out that
-    % $\tau_0,...,\tau_{i-1}$ are valid supports and~$\tau_{i}$ is invalid, then~$\tau_{i+1}$
-    % will correspond to index~$i$ instead of~$i+1$ in~$\Supports[x,a]$. So a better
-    % definition reads:
-
-    % \begin{equation}
-    %   \forall x \in vars(c): \forall a \in \Dom{x}:
-    %   \Supports[x,a][j] = 1 \Leftrightarrow \tau_i[x] = a \ \land \
-    %   \forall y \in vars(c): \tau_i[y] \in \Dom{y}
-    % \end{equation}
-    
-    % where~$j = |\Set{\tau_k \ | \ \tau_k \in T \ \land \ \tau_k \text{~is valid} \ \land \ k < i}|$.
-    %Seeing~$\Supports$ as a matrix, we have that the column~$\Supports[*][i]$ encodes
-    %the~$i$th support for~$c$.
     $\Supports$ is computed once during the initialisation of CT and then
     remains unchanged.
     
-  % \item $\LastSizes$ is an array that contains the domain size of each
-  %   variable~$x$ right after the previous invocation of CT on~$c$.
-  %   % Not upon initialisation though
-
-  \item $\Residues$ is an array such that for each variable-value pair~$(x,a)$,
+  \item $\Residues$, an array of ints such that for each variable-value pair~$(x,a)$,
     $\Residues[x,a]$ denotes the index of the word in~$\CurrTable$ where a support
     was found for~$(x,a)$ the last time it was sought for.
 
 \end{itemize}
 
-\subsubsection{Methods}
+\Algoref{algo:ct} shows the CT algorithm. Lines 1-4 initialises the propagator
+if it is being posted. CT reports failure in case a variable domain was
+wiped out in \InitialiseCT or if $\CurrTable$ is empty, meaning no tuples are valid.
+If the propagator is not being posted,
+lines 6-9 calls \UpdateTable() for all variables whose domains have changed
+since last time. \UpdateTable() will remove from $\CurrTable$ the tuples that
+are no longer supported, and CT reports failure if all tuples were removed.
+If at least one variable was pruned, \FilterDomains() is
+called, which will filter out values from the domains of the variables that
+no longer have supports, enforcing domain consistency.
+CT is subsumed if there is at most one unassigned variable
+left, otherwise CT is at fixpoint.
 
-We now describe the methods of Class \texttt{CT-Propagator}.
+\input{ct-functional.tex}
 
-\paragraph{Initialisation.}
-The initialisation of the fields of Class \texttt{CT-Propagator} is described in
-\Algoref{algo:initialise-CT}. The method initialiseCT() takes two parameters:
-$\localvar{variables}$, that are the variables associated to the constraint~$c$,
-and~$\localvar{tuples}$, that is a list of tuples that define the initial table for~$c$.
+The initialisation of the fields is described in
+\Algoref{algo:initialise-CT}. \InitialiseCT() takes two parameters:
+$\localvar{vars}$, that are the variables associated to the constraint~$c$,
+and~$\localvar{T_0}$, a list of tuples that define the initial table for~$c$.
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{initialiseCT.tex}
   \end{algorithmic}
-  \caption{Pseudo code for initialising the CT-propagator.}
+  \caption{Initialising the CT-propagator.}
   \label{algo:initialise-CT}
 \end{algorithm}
 
-\Linesref{line:init:-1}{line:init:0} performs simple bounds
+\Linesref{line:init:-1}{line:init:0} perform simple bounds
   propagation to limit the domain sizes of the variables,
-  which limit the sizes of the incremental data structures.
+  which in turn will limit the sizes of the data structures.
   It removes
   from the domain of each variable~$x$ all values that are either greater 
   than the largest element or smaller than the smallest element in the
@@ -784,38 +741,27 @@ line \ref{line:init:10}. We also take the opportunity to store the word index
 of the found support in~$\Residues[x,t[x]]$
 in line~\ref{line:init:11}.
 
-\Linesref{line:init:12}{line:init:14} removes values that are not supported
-by any tuple in the initial valid table. In case a variable has a wipe-out
-of its domain,~$Failed$ is returned.
+\Linesref{line:init:12}{line:init:14} remove values that are not supported
+by any tuple in the initial valid table. The procedure returns in case a variable
+has a domain wipe out.
 
 \Lineref{line:init:15} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
 $nsupports$ bits, initially with all bits set to~$1$ since~$nsupports$
-number of tuples are initially valid supports for~$c$.~$\localvar{nsupports} > 0$,
-otherwise we would have returned~$Failed$ as no variable-value pair would be
-supported.
+number of tuples are initially valid supports for~$c$.
+At this point~$\localvar{nsupports} > 0$,
+otherwise we would have returned at line~\ref{line:init:wipeout}.
 
-\paragraph{Performing propagation.}
-When the propagator is invoked for propagation, the method propagate()
-in \Algoref{algo:CT} is called. Before defining this function, we need
-to define the help functions updateTable() and filterDomains().
-Performing propagation consists of two steps: updating the current
-table and filtering out inconsistent values from the domains of the variables.
-We now describe these processes in more detail.
-
-\begin{enumerate}
-\item \textit{Updating the current table.} 
-  
   \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{updateTable.tex}
   \end{algorithmic}
-  \caption{Method updateTable() in Class CT-Propagator. The infrastructure
-  is such that this method is called for each variable whose domain is
-  modified since the previous call to propagate().}
+  \caption{Updating the current table. The infrastructure
+  is such that this procedure is called for each variable whose domain is
+  modified since last time.}
   \label{algo:updateTable}
 \end{algorithm}
 
-  The method updateTable() in~\Algoref{algo:updateTable}
+  The procedure \UpdateTable() in~\Algoref{algo:updateTable}
   filters out (indices of)
   tuples that have ceased to be supports for the input variable~$x$.
   \Linesref{line:updateTable:5}{line:updateTable:6} stores the union of the
@@ -823,17 +769,13 @@ We now describe these processes in more detail.
   and \Lineref{line:updateTable:7} intersects~$\CurrTable$ with the mask,
   so that the indices that correspond to tuples that are no longer valid
   are set to~$0$ in the bit-set.
-  \Lineref{line:updateTable:8} checks whether the current table is empty,
-  in which case we return~$Failed$ in line~\ref{line:updateTable:9}
-  because there are no valid tuples left. 
+  % \Lineref{line:updateTable:8} checks whether the current table is empty,
+  % in which case we return~$Failed$ in line~\ref{line:updateTable:9}
+  % because there are no valid tuples left. 
 
   The algorithm is assumed to be run on an infrastructure that runs updateTable()
-  before every call to propagate(),
-  for each variable~$x \in vars(c)$ whose domain has changed since the previous call to
-  propagate().
-
-\item 
-  \textit{Filtering of domains.}
+  for each variable~$x \in vars(c)$ whose domain has changed since last time.
+  
   After the current table has been updated, inconsistent values must be removed
   from the domains of the variables.   
   It follows from the definition of the bit-sets~$\CurrTable$ and~$\Supports[x,a]$
@@ -846,35 +788,33 @@ We now describe these processes in more detail.
 
   Therefore, we must check this condition for every variable-value pair~$(x,a)$ and
   remove~$a$ from the domain of~$x$ if the condition is not satisfied any more.
-  This is implemented in the method filterDomains()
+  This is implemented inx \FilterDomains()
   in~\Algoref{algo:filterDomains}.%lines~\ref{line:filterDom:0}-\ref{line:filterDom:12}.
 
   \begin{algorithm}[H]
     \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
       \input{filterDomains.tex}
     \end{algorithmic}
-    \caption{Method filterDomains() in Class CT-Propagator. The
-    infrastructure is such that this method is called after updateTable()
-  in \Algoref{algo:updateTable} has been called for each variable
-whose domain is modified, and only if at least one variable x}
-    \label{algo:filterDomains}
+    \caption{Filtering variable domains. This procedure is called if 
+    at least one variable was modified since last time.}
+        \label{algo:filterDomains}
   \end{algorithm}
 
-  \Lineref{line:filterDom:1} initialises a counter for the number of unassigned
-  variables.
-
-  \Linesref{line:filterDom:2}{line:filterDom:9} performs the
-  actual filtering of the domains. We note that it is only necessary to
-  consider a variable~$x \in \Scp$ whose domain size is larger than~$1$,
+  % \Lineref{line:filterDom:1} initialises a counter for the number of unassigned
+  % variables.
+  
+  We note that it is only necessary to
+  consider a variable~$x \in \Scp$ such that~$\Dom{x} > 1$,
   because we will never filter out values from the domain of an assigned
   variable. To see this, assume we removed the last value for a variable~$x$,
   causing a wipe-out for~$x$. Then by the definition in equation~\eqref{eq:currtable}
   \CurrTable~must be empty,
-  which it will not be upon invocation of filterDomains(). Hence, we need
-  only consider~$x \in \Scp$ such that~$|\Dom{x} > 1|$.
+  which it will not be upon invocation of \FilterDomains, because then
+  \CompactTable() would have reported failure. 
+  %Hence, we need only consider~$x \in \Scp$ such that~$|\Dom{x} > 1|$.
 
   In \Linesref{line:filterDom:res1}{line:filterDom:res2} we see if the
-  cached word index still has a support for~$(x,a)$. It it has not, we
+  cached word index still has a support for~$(x,a)$. It it has not,
   we search for an index in line~\ref{line:filterDom:4} in~$\CurrTable$
   where a valid support for the variable-value pair~$(x,a)$ is found, 
   thereby checking the condition in~\eqref{eq:validcond}.
@@ -882,47 +822,174 @@ whose domain is modified, and only if at least one variable x}
   if it does not, we remove~$a$ from~$\Dom{x}$ if~$(x,a)$ in 
   line~\ref{line:filterDom:7} since there is no support left for~$(x,a)$.
 
-  \Linesref{line:filterDom:8}{line:filterDom:9}
-  increments the counter of unassigned variables if~$|\Dom{x}| > 1$.
+  % \Linesref{line:filterDom:8}{line:filterDom:9}
+  % increments the counter of unassigned variables if~$|\Dom{x}| > 1$.
 
-  \Linesref{line:filterDom:10}{line:filterDom:11} return the correct
-  propagator status message. If the number of unassigned variables is
-  at most one, the propagator is subsumed. Otherwise, the propagator
-  is at fixpoint.
+  % \Linesref{line:filterDom:10}{line:filterDom:11} return the correct
+  % propagator status message. If the number of unassigned variables is
+  % at most one, the propagator is subsumed. Otherwise, the propagator
+  % is at fixpoint.
+
+
+\clearpage
+
+%This description is mainly taken from~\cite{CTpaper}.
+
+% Beskriv övergripande?
+
+% CT is based on bitwise operations -- among the important datastructures we have
+% a~$\SparseBitSet$ object which maintains the valid supports, and also a bitset
+% matrix that
+
+% In this ordered set, each tuple is indexed
+% by the order it appears in the table, and the~$i$th element is~$1$ if and only if
+% the~$i$th tuple is a valid support, else the~$i$th element is~$0$.
+
+% \subsubsection{Fields}
+% \label{CT:fields}
+
+% \Todo{Add examples with figures for describing the fields.}
+
+% % From hereon, we let the \emph{initial valid table} for $c$,~$T_v$, be a subset of the
+% % initial table~$T$ such that for all tuples~$\tau \in T_v$, $\tau$ is a
+% % support on~$c$. \Todo{Define: initial table.}
+% \Linesref{line:CTfield:start}{line:CTfield:end} of \Algoref{algo:CT}
+% shows the fields of Class \texttt{CT-Propagator} and their types.
+% Now follows a more detailed description of them. In what follows, we let
+% the~\emph{initial domain} of a variable~$x \in \Scp(c)$, denoted~$\Dominit{x}$,
+% be the domain that~$x$ has before CT has performed any propagation,
+% in contrast to~$\Dom{x}$ which is the current domain of~$x$.
+% The \emph{initial table} for a table constraint~$c$ is the list of tuples
+% $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of length~$p_o$
+% that are given as input to initCT(), and the
+% \emph{initial valid table} for~$c$ is the subset $T \subseteq T_0$ of size~$p \leq p_0$
+% such that~$\forall i \in \Set{1, \ldots, p_0}: \tau_i \in T$ iff $\tau_i$ 
+% is a support on~$c$ for the initial domains of the variables. 
+
+% \subsubsection{Methods}
+
+% We now describe the methods of Class \texttt{CT-Propagator}.
+
+% \paragraph{Initialisation.}
+
+% \paragraph{Performing propagation.}
+% When the propagator is invoked for propagation, the method propagate()
+% in \Algoref{algo:CT} is called. Before defining this function, we need
+% to define the help functions updateTable() and filterDomains().
+% Performing propagation consists of two steps: updating the current
+% table and filtering out inconsistent values from the domains of the variables.
+% We now describe these processes in more detail.
+
+% \begin{enumerate}
+% \item \textit{Updating the current table.} 
   
-\end{enumerate}
 
-After defining updateTable() and filterDomains(), we are now ready to
-define the method propagate() in Class CT-Propagator, shown 
-in~\Algoref{algo:propagate}.
+% \item 
+%   \textit{Filtering of domains.}
+  
+% \end{enumerate}
 
-\Todo{It should be unneccessary to check if validTuples is empty
-  as that is done in updateTable already. However, when I try to
-  remove the check in the c++ code it crashes, maybe because of
-  synchronisation issues between advise() and propagate().}
+% After defining updateTable() and filterDomains(), we are now ready to
+% define the method propagate() in Class CT-Propagator, shown 
+% in~\Algoref{algo:propagate}.
+
+% \Todo{It should be unneccessary to check if validTuples is empty
+%   as that is done in updateTable already. However, when I try to
+%   remove the check in the c++ code it crashes, maybe because of
+%   synchronisation issues between advise() and propagate().}
+
+% \begin{algorithm}[H]
+%   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+%     \input{propagate.tex}
+%   \end{algorithmic}
+%   \caption{Method propagate() in Class CT-Propagator. updateTable()
+%     (\Algoref{algo:updateTable}) is
+%   called, and if the current table is empty, we are in a failed node.
+%   Otherwise, filterDomains() (\Algoref{algo:filterDomains})
+%   is called, and the return value of that method is returned.}
+%   \label{algo:propagate}
+% \end{algorithm}
+
+\paragraph{Optimisations.} If~$x$ is the only variable
+that has been modified since the last invocation of~\CompactTable(),
+it is not necessary to attempt to filter out values from~$x$, because
+every value of of~$x$ will have a support in~$\CurrTable$.
+Hence, in \Algoref{algo:filterDomains}, we only execute
+\Linesref{line:filterDom:3}{line:filterDom:7} for~$\Scp \setminus \Set{x}$.
+
+\paragraph{Variants.}
+The following lists some variants of the CT algorithm.
+\newline 
+
+\noindent
+\emph{Using delta information in \UpdateTable().}
+A variable $x$'s delta, $\Delta_x$, is the set of values that were removed from~$x$
+since last time. If the infrastructure provides information about $\Delta_x$,
+that information can be used in \UpdateTable(). \Algoref{algo:updatetabledelta}
+shows a variant of~\UpdateTable() that uses delta information.
+If~$\Delta_x$ is smaller than~$\Dom{x}$, we accumulate to the temporary mask
+the set of invalid tuples, and then reverse the temporary mask before
+intersecting it with~$\CurrTable$.
+\newline
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-    \input{propagate.tex}
+    \input{updateTableDelta.tex}
   \end{algorithmic}
-  \caption{Method propagate() in Class CT-Propagator. updateTable()
-    (\Algoref{algo:updateTable}) is
-  called, and if the current table is empty, we are in a failed node.
-  Otherwise, filterDomains() (\Algoref{algo:filterDomains})
-  is called, and the return value of that method is returned.}
-  \label{algo:propagate}
+  \caption{Updating the current table using delta information.}
+  \label{algo:updateTable}
 \end{algorithm}
 
-\paragraph{Optimisations.} If~$x$ is the only variable
-that has been modified since the last invocation of~$CT$, it is
-not necessary to attempt to filter out values from~$x$, because
-every value of of~$x$ will have a support in~$\CurrTable$.
-Hence, in \Algoref{algo:filterDomains}, we only execute
-\Linesref{line:filterDom:3}{line:filterDom:7} for a variable~$x$
-if~$x$ was not the only modified variable.
+\noindent
+\emph{One valid tuple left.} 
+If only one valid tuple is left after all calls to \UpdateTable() are finished,
+the domains of the variables can be fixed to the values for that tuple.
+\Algoref{algo:fixDomains} shows an alternative to lines 10-11 in~\Algoref{algo:ct}.
 
- 
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \input{propagateFix.tex}
+  \end{algorithmic}
+  \caption{Alternative to lines 10-11 in \Algoref{algo:ct}.}
+  \label{algo:propagateFix}
+\end{algorithm}
+
+For a word~$\texttt{w}$, there is exactly one bit set if and only if
+
+\begin{equation*}
+  \T{w} \neq 0 \quad \land \quad  (\T{w} \ \& \ (\T{w}-1)) \ = \ 0,
+\end{equation*}
+
+a condition that can be checked in constant time.
+This is implemented in~\Algoref{algo:one}, which returns
+the bit index of the set bit if there is exactly one bit set, else $-1$.
+The method IndexOfFixed() is added to Class \SparseBitSet and assumes access to
+builtin~\textsc{MSB}~which returns the most significant bit of a given int.
+
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \input{one.tex}
+  \end{algorithmic}
+  \caption{Checking if exactly one bit is set in \SparseBitSet.}
+  \label{algo:one}
+\end{algorithm}
+
+\Algoref{algo:fixDomains} shows the procedure~\FixDomains() which is called in
+line~\Algoref{algo:proapgateFix} in case there is only one valid tuple left.
+We assume that the propagator status has
+the extra field $T$ -- a list of tuples representing the initial valid
+table for~$c$.
+
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+    \input{fixDomains.tex}
+  \end{algorithmic}
+  \caption{Fixing the domains of the variables to the only valid tuple.}
+  \label{algo:propagateFix}
+\end{algorithm}
+
 \subsubsection{Proof of properties for CT}
+\label{sec:proof}
 This section proves that the CT Propagator is indeed a well-defined propagator
 implementing the~\Table~constraint. We formulate the following theorem, which
 we will prove by a number of lemmas.

@@ -1,11 +1,10 @@
-   \Func{updateTable}{$x$: variable} \label{line:updateTable:1} 
+\PROCEDURE \UpdateTable($x$: variable) \label{line:updateTable:1} 
         \STATE $\CurrTable$.clearMask() \label{line:updateTable:4} 
         \FOREACH{$a \in \Dom{x}$} \label{line:updateTable:5} 
           \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTable:6} 
         \ENDFOREACH      
         \STATE $\CurrTable$.intersectWithMask() \label{line:updateTable:7} 
-        \IF{$\CurrTable$.isEmpty()} \label{line:updateTable:8} 
-          \RETURN $Failed$ \COMMENT{No valid tuples left} \label{line:updateTable:9} 
-        \ENDIF
-      \Endfunc
+%        \IF{$\CurrTable$.isEmpty()} \label{line:updateTable:8} 
+ %         \RETURN $Failed$ \COMMENT{No valid tuples left} \label{line:updateTable:9} 
+        %\ENDIF
 

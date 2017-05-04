@@ -9,19 +9,21 @@
 \begin{tikzpicture}[scale=1.0]
   \begin{axis}[
     xmode=log,
-    ymin=0,ymax=600,
+    ymin=0,ymax=72,
     xmin=0, xmax=1000000,
     every axis plot/.style={very thick},
     xlabel={timeout limit (ms)},
-    ylabel={\# solved}
+    ylabel={\# solved},
+    legend pos=north west
     % table/create on use/cumulative distribution/.style={
     %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
     % }
     ]
-    \addplot [green] table {reg.data};
-    \addplot [blue] table {tup.data};
+    \addplot [mark=o,green] table {reg.data};
+    \addplot [blue] table {tup_mem.data};
+    \addplot [yellow] table {tup_speed.data};
     \addplot [red] table {ct.data};
-    \legend{Reg,Tup,CT}
+    \legend{Reg,Tup\_mem,Tup\_speed,CT}
   \end{axis}
 \end{tikzpicture}
 

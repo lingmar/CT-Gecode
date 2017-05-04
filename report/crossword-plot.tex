@@ -1,0 +1,92 @@
+\begin{tikzpicture}[scale=1.0]
+  \begin{axis}[
+    xmode=log,
+    ymin=0,ymax=62,
+    xmin=0, xmax=1000000,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\# solved},
+    legend pos=south east
+    % table/create on use/cumulative distribution/.style={
+    % create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
+    % }
+    ]
+    \addplot 
+    [mark=triangle*,
+    mark size=1.5,
+    mark options={solid},
+    green] 
+    table {reg.data};
+
+    \addplot 
+    [blue,
+    mark=*,
+    mark size=1.5,
+    mark options={solid}]
+    table {tup_mem.data};
+
+    \addplot [brown!60!black,
+    mark options={fill=brown!40},
+    mark=otimes*,
+    mark size=1.5]
+    table {tup_speed.data};
+
+    \addplot 
+    [red,
+    mark size=1.5,
+    mark=square*]
+    table {ct-nofix.data};
+    
+    \addplot
+    [purple,
+    mark size=1.5,
+    mark=o]
+    table {ct-fix.data};
+
+
+    \legend{Reg,Tup\_mem,Tup\_speed,CT,CT(fix)}
+
+  \end{axis}
+\end{tikzpicture}
+
+% \begin{tikzpicture}[scale=1.0]
+%   \begin{axis}[
+%     xmode=log,
+%     ymin=0,ymax=72,
+%     xmin=0, xmax=10000,
+%     every axis plot/.style={thin},
+%     xlabel={timeout limit (ms)},
+%     ylabel={\# solved},
+%     legend pos=north west
+%     % table/create on use/cumulative distribution/.style={
+%     %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
+%     % }
+%     ]
+%     \addplot 
+%     [mark=triangle*,
+%     mark size=1.5,
+%     mark options={solid},
+%     green] 
+%     table {reg.data};
+
+%     \addplot 
+%     [blue,
+%     mark=*,
+%     mark size=1.5,
+%     mark options={solid}]
+%     table {tup_mem.data};
+
+%     \addplot [brown!60!black,
+%     mark options={fill=brown!40},
+%     mark=otimes*,
+%     mark size=1.5]
+%     table {tup_speed.data};
+
+%     \addplot 
+%     [red,
+%     mark size=1.5,
+%     mark=square*]
+%     table {ct.data};
+%     \legend{Reg,Tup\_mem,Tup\_speed,CT}
+%   \end{axis}
+% \end{tikzpicture}

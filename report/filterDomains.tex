@@ -1,5 +1,6 @@
-      \Func{filterDomains}{} \label{line:filterDom:0}
-      \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
+        \PROCEDURE \FilterDomains()     \label{line:filterDom:0}
+        % \Func{filterDomains}{} 
+    %  \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
       \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$} \label{line:filterDom:2}
             \FOREACH{$a \in \Dom{x}$} \label{line:filterDom:3}
               \STATE $\localvar{index} \leftarrow \Residues[x,a]$ \label{line:filterDom:res1}
@@ -12,14 +13,14 @@
                   \ENDIF
               \ENDIF
              \ENDFOREACH
-             \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
-                 \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}
-             \ENDIF
-
+             % \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
+             %     \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}
+             % \ENDIF
+      
       \ENDFOREACH
-      \IF{$\localvar{count\_unassigned} \leq 1$} \label{line:filterDom:10}
-        \RETURN{$Subsumed$} \label{line:filterDom:11}
-      \ELSE
-        \RETURN{$Fixpoint$} \label{line:filterDom:12}
-      \ENDIF
-      \Endfunc
+      % \IF{$\localvar{count\_unassigned} \leq 1$} \label{line:filterDom:10}
+      %   \RETURN{$Subsumed$} \label{line:filterDom:11}
+      % \ELSE
+      %   \RETURN{$Fixpoint$} \label{line:filterDom:12}
+      % \ENDIF
+
