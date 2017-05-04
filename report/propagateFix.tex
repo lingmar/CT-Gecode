@@ -1,7 +1,7 @@
 \IF[executed in the propagator function]{some varible was pruned since last time}
-  \IF{$index \leftarrow \CurrTable$.fixed()$\neq -1$}
-    \STATE \FixDomains($index$)
-    \RETURN{\SUBSUMED}
+  \IF{($index \leftarrow \CurrTable$.indexOfFixed())$ \ \neq -1$}
+  %\STATE \FixDomains($index$)
+    \RETURN $\Tuple{\SUBSUMED, [x \mapsto T[index][x]]_{x \in \Scp}}$
   \ELSE
     \STATE \FilterDomains()
   \ENDIF

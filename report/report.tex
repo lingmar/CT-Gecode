@@ -683,7 +683,7 @@ The propagator state has the following fields.
 
 \end{itemize}
 
-\Algoref{algo:ct} shows the CT algorithm. Lines 1-4 initialises the propagator
+\Algoref{algo:CT} shows the CT algorithm. Lines 1-4 initialises the propagator
 if it is being posted. CT reports failure in case a variable domain was
 wiped out in \InitialiseCT or if $\CurrTable$ is empty, meaning no tuples are valid.
 If the propagator is not being posted,
@@ -925,10 +925,10 @@ The following lists some variants of the CT algorithm.
 \emph{Using delta information in \UpdateTable().}
 A variable $x$'s delta, $\Delta_x$, is the set of values that were removed from~$x$
 since last time. If the infrastructure provides information about $\Delta_x$,
-that information can be used in \UpdateTable(). \Algoref{algo:updatetabledelta}
+that information can be used in \UpdateTable(). \Algoref{algo:updateTableDelta}
 shows a variant of~\UpdateTable() that uses delta information.
 If~$\Delta_x$ is smaller than~$\Dom{x}$, we accumulate to the temporary mask
-the set of invalid tuples, and then reverse the temporary mask before
+the set of invalidated tuples, and then reverse the temporary mask before
 intersecting it with~$\CurrTable$.
 \newline
 
@@ -937,20 +937,22 @@ intersecting it with~$\CurrTable$.
     \input{updateTableDelta.tex}
   \end{algorithmic}
   \caption{Updating the current table using delta information.}
-  \label{algo:updateTable}
+  \label{algo:updateTableDelta}
 \end{algorithm}
 
 \noindent
 \emph{One valid tuple left.} 
 If only one valid tuple is left after all calls to \UpdateTable() are finished,
 the domains of the variables can be fixed to the values for that tuple.
-\Algoref{algo:fixDomains} shows an alternative to lines 10-11 in~\Algoref{algo:ct}.
+\Algoref{algo:propagateFix} shows an alternative to lines 10-11 in~\Algoref{algo:CT}.
+This assumes that the propagator maintains an extra field~$T$ -- a list
+of tuples representing the initial valid table for~$c$.
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{propagateFix.tex}
   \end{algorithmic}
-  \caption{Alternative to lines 10-11 in \Algoref{algo:ct}.}
+  \caption{Alternative to lines 10-11 in \Algoref{algo:CT}.}
   \label{algo:propagateFix}
 \end{algorithm}
 
@@ -960,6 +962,7 @@ For a word~$\texttt{w}$, there is exactly one bit set if and only if
   \T{w} \neq 0 \quad \land \quad  (\T{w} \ \& \ (\T{w}-1)) \ = \ 0,
 \end{equation*}
 
+\noindent
 a condition that can be checked in constant time.
 This is implemented in~\Algoref{algo:one}, which returns
 the bit index of the set bit if there is exactly one bit set, else $-1$.
@@ -974,19 +977,19 @@ builtin~\textsc{MSB}~which returns the most significant bit of a given int.
   \label{algo:one}
 \end{algorithm}
 
-\Algoref{algo:fixDomains} shows the procedure~\FixDomains() which is called in
-line~\Algoref{algo:proapgateFix} in case there is only one valid tuple left.
-We assume that the propagator status has
-the extra field $T$ -- a list of tuples representing the initial valid
-table for~$c$.
+% \Algoref{algo:fixDomains} shows the procedure~\FixDomains() which is called in
+% line~\Algoref{algo:proapgateFix} in case there is only one valid tuple left.
+% We assume that the propagator status has
+% the extra field $T$ -- a list of tuples representing the initial valid
+% table for~$c$.
 
-\begin{algorithm}[H]
-  \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-    \input{fixDomains.tex}
-  \end{algorithmic}
-  \caption{Fixing the domains of the variables to the only valid tuple.}
-  \label{algo:propagateFix}
-\end{algorithm}
+% \begin{algorithm}[H]
+%   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
+%     \input{fixDomains.tex}
+%   \end{algorithmic}
+%   \caption{Fixing the domains of the variables to the only valid tuple.}
+%   \label{algo:propagateFix}
+% \end{algorithm}
 
 \subsubsection{Proof of properties for CT}
 \label{sec:proof}
@@ -1072,7 +1075,7 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   If it is the first time, then \T{initCT()} is called.
   Since $\tau$ is not a solution to~$c$, there is at least one variable-value
   pair~$(x_i,s(x_i))$ which is not supported, so~$s(x_i)$ will be pruned
-  from~$x$ in \T{initCT()}, which will report failure in line~\Lineref{line:init:wipeoout0}
+  from~$x$ in \T{initCT()}, which will report failure in line~\Lineref{line:init:wipeoout}
   in~\Algoref{algo:initialise-CT}.
   
   If it is not the first time that $CT$ is called, \T{propagate()} is called.

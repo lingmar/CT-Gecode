@@ -15,7 +15,7 @@
       \ENDIF
     \ENDFOR
   \ENDIF
-  \IF[executed in the propagator function]{some varible was pruned since last time}
+  \IF[executed in the propagate function]{\CurrTable~has changed since last time}
     \STATE \FilterDomains()
   \ENDIF
   \IF{there is at most one unassigned variable left}
