@@ -89,7 +89,7 @@
 \newcommand{\Break}{\textbf{break~}}
 \newcommand{\While}[1]{\textbf{while~} {#1} \textbf{~do~}}
 
-\renewcommand{\algorithmicforall}{\textbf{Method}}
+\renewcommand{\algorithmicforall}{\textbf{for all}}
 \renewcommand{\algorithmicdo}{}
 \renewcommand{\algorithmicwhile}{\textbf{foreach}}
 
@@ -102,6 +102,26 @@
 \newcommand{\ForDown}[3]{\FOR{${#1} \leftarrow {#2} \Downto {#3}$ \textbf{do}}}
 \newcommand{\FOREACH}[1]{\WHILE{{#1} \textbf{do}}}
 \newcommand{\ENDFOREACH}{\ENDWHILE}
+
+\renewcommand{\algorithmiccomment}[1]{\hfill // #1}
+\def\PROCEDURE{\item[\textbf{PROCEDURE}]}
+\def\FAILED{\textbf{FAILED}}
+\def\NOFIX{\textbf{NOFIX}}
+\def\FIX{\textbf{FIX}}
+\def\SUBSUMED{\textbf{SUBSUMED}}
+\def\FAIL{\textbf{FAIL}}
+\def\bool{\mathit{bool}}
+\def\StatusMessage{\mathit{StatusMessage}}
+\def\FindSupport{\textsc{FindSupport}}
+\def\RemoveSupport{\textsc{RemoveSupport}}
+\def\Extensional{\textsc{Extensional}}
+\def\CompactTable{\textsc{CompactTable}}
+\def\UpdateTable{\textsc{UpdateTable}}
+\def\FilterDomains{\textsc{FilterDomains}}
+\def\FixDomains{\textsc{FixDomains}}
+\def\InitialiseCT{\textsc{InitialiseCT}}
+
+\newcommand{\ITE}[3]{\text{\bf ~if~} #1 \text{\bf ~then~} #2 \text{\bf ~else~} #3 \text{\bf ~endif}}
 
 \newcommand{\function}[1]{\mathrm{#1}}
 \newcommand{\localvar}[1]{\mathit{#1}}
@@ -611,6 +631,8 @@ section will describe its fields and methods in detail.
 
 %Ugly that the lines of references "Algorithm x" are numbered in~\Algoref{algo:CT}.}
 %It dynamically maintains a set of valid supports regarding the current domain of each variable.
+
+\input{ct-functional.tex}
 
  \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
@@ -1167,7 +1189,7 @@ taken from 37 series. 117 instances were skipped due to parse problems.
 Due to the high number of instances, the runtime for
 each instance was only measured once. A timeout of 1000 seconds was used.
 
-\input{graphs.tex}
+%\input{graphs.tex}
 
 
 

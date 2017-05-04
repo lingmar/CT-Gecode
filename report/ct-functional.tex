@@ -1,0 +1,28 @@
+\begin{algorithm}
+\caption{Compct Table Propagator.}
+\begin{algorithmic}[1]
+  \PROCEDURE $\CompactTable() : \StatusMessage$
+  \IF[executed in a constructor]{the propagator is being posted}
+    \STATE \InitialiseCT()
+    \IF{some variable was wiped out~$\lor~\CurrTable$.isEmpty()}
+      \RETURN \FAIL
+    \ENDIF
+  \ELSE[executed in an advisor]
+    \FORALL{variables~$x$ whose domains have changed since last time}
+      \STATE \UpdateTable($x$)
+      \IF{$\CurrTable$.isEmpty()}
+        \RETURN \FAIL
+      \ENDIF
+    \ENDFOR
+  \ENDIF
+  \IF[executed in the propagator function]{some varible was pruned since last time}
+    \STATE \FilterDomains()
+  \ENDIF
+  \IF{at most one unassigned variable left}
+    \RETURN \SUBSUMED
+  \ELSE 
+    \RETURN \FIX
+  \ENDIF
+
+\end{algorithmic}
+\end{algorithm}
