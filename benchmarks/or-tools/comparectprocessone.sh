@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#echo "Processone"
+echo "Processone"
 
 # Script for processing results
 T=$1
