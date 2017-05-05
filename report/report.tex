@@ -479,7 +479,7 @@ Implementing a propagator in Gecode means implementing the following parts:
         to views. Subscribing to the views means the propagator is scheduled for execution whenever
         the domains of the views change.
     \end{itemize}
-  \item[Disposal.] 
+  \item[Disposal.] When 
   \item[Copying.] 
   \item[Cost computation.] 
   \item[Propagation.] 
@@ -1365,15 +1365,46 @@ each instance was only measured once. A timeout of 1000 seconds was used.
 \section{Conclusions and Future Work}
 \label{conclusions}
 
+For the implementation to reach industry standard there
+are a few things that need to be revised. The following lists some known
+improvements and flaws.
+
+\begin{itemize}
+  \item There is an unfound error that causes a crash due to corrupt data 
+    in very few cases.
+    The most likely cause of this error is that some allocated memory area
+    is too small, and that the data is modified outside of this area.
+    
+  \item Some memory allocations in the initialisation of the propagator
+    depend on the domain widths rather
+    than the domain sizes of the variables. This is unsustainable
+    for pathological domains such as $\Set{1, 10^9}$. In the current
+    implementation, a memory block of size~$10^9$ is allocated for this
+    domain, but ideally it should not be neccassary to allocate more than~$2$
+    elements. Though the problem seems trivial, it requires some
+    work, because of indexing problems.
+
+  \item The threshold value for when to use a hash table versus
+    an array for indexing the supports should be calibrated with
+    experiments.
+
+  \item In the variant using delta information, the current implementation
+    uses the incremental update if~$\Delta_x < \Dom{x}$. It is possible
+    that this condition can be generalised to~$\Delta_x < k \cdot \Dom{x}$,
+    where~$k \in \mathbb{R}$, something that is not experimentet width.
+
+\end{itemize}
+
 \bibliographystyle{abbrv}
 \bibliography{astra,mybib}
 
-\appendix
-\section{Source Code}
-\label{sec:source-code}
+% \appendix
+% \section{Source Code}
+% \label{sec:source-code}
 
 
-This appendix presents the source code for the implementation described in \Chapref{sec:implementation}.
+% This appendix presents the source code for the implementation
+% described in \Chapref{sec:implementation}.
 
 
 
