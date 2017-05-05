@@ -48,3 +48,4 @@ gecode/examples/*
 
 # Local environment variables
 .env
+benchmarks/or-tools/fzn-define-macro.sh
