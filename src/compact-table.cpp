@@ -7,12 +7,11 @@
 //#include "bitset-support.cpp"
 #include "info-base.hpp"
 
-//#define LONG_FILTER
-
 //#define DEBUG
 
+//#define LONG_FILTER
 //#define FIX
-#define DELTA
+//#define DELTA
 
 //#define forceinline __attribute__ ((noinline))
 
@@ -321,7 +320,7 @@ public:
     home.notice(*this,AP_DISPOSE);
     
     // Schedule in case no advisors have been posted
-    if (unassigned == 0)
+    if (unassigned <= 1)
       View::schedule(home,*this,Int::ME_INT_VAL);
   }
 
