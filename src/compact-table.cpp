@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <iostream>
 #include <assert.h>
-//#include "bitset.hpp"
-//#include "bitset-support.cpp"
 #include "info-base.hpp"
 
 //#define DEBUG
@@ -520,10 +518,11 @@ public:
 
     ModEvent me = View::modevent(d);
     bool diff;
-#ifdef DELTA
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
       diff = validTuples.intersect_with_mask(a.supports[x.val()]);
-    } else if (x.any(d)){ // No delta information -- do incremental update
+    }
+#ifdef DELTA
+     else if (x.any(d)){ // No delta information -- do incremental update
       diff = incremental_update(a,home);
     } else { // Delta information available -- let's compare the size of
              // the domain with the size of delta to decide whether or not
@@ -571,7 +570,9 @@ public:
       }
     } 
 #else
-    diff = incremental_update(a,home);
+    else {
+      diff = incremental_update(a,home);
+    }
 #endif // DELTA
     
     // Do not fail a disabled propagator
