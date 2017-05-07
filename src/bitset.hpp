@@ -3,7 +3,7 @@
 class BitSet : public Gecode::Support::BitSetBase {
 private:
   /// Copy constructor (disabled)
-  BitSet(const BitSet&) {}
+  BitSet(const BitSet&);
 public:
   /// Default constructor (yields empty set)
   BitSet(void);
@@ -55,9 +55,12 @@ public:
   unsigned int next(unsigned int i) const;
   /// Test whether exactly one bit is set for word index \i
   bool one(unsigned int i) const;
-  /// Perform or
+  /// Perform or with \a a and \a b with mapping \a map
   static void orbs(BitSet& a, const BitSet& b,
-                   const int* map, unsigned int map_size);
+                   const int* map, int map_size);
+  /// Find index of non-empty intersecting word with \a a and \a b
+  static int intersect_index(const BitSet& a, const BitSet& b,
+                             const int* map, int map_last);
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -79,7 +82,7 @@ private:
   /// Size
   int sz;
   /// Copy constructor (disabled)
-  SparseBitSet(const SparseBitSet& sbs) {}
+  SparseBitSet(const SparseBitSet& sbs);
 public:
   /// Default constructor (yields empty set)
   SparseBitSet(A& a);
@@ -118,7 +121,7 @@ public:
   /// Print bit set
   void print() const;
   /// Get limit
-  unsigned int get_limit() const;
+  int get_limit() const;
   /// Print mask
   void print_mask() const;
 private: 
@@ -289,7 +292,7 @@ BitSet::one(unsigned int i) const {
 
 forceinline void
 BitSet::orbs(BitSet& a, const BitSet& b,
-             const int* map, unsigned int map_last) {
+             const int* map, int map_last) {
   Gecode::Support::BitSetData* a_data = a.data;
   Gecode::Support::BitSetData* b_data = b.data;
   for (int i = map_last; i >= 0; i--) {
@@ -298,6 +301,19 @@ BitSet::orbs(BitSet& a, const BitSet& b,
   }
 }
 
+forceinline int
+BitSet::intersect_index(const BitSet& a, const BitSet& b,
+                        const int* map, int map_last) {
+  using namespace Gecode::Support;
+  Gecode::Support::BitSetData* a_data = a.data;
+  Gecode::Support::BitSetData* b_data = b.data;
+  for (int i = 0; i <= map_last; i++) {
+    int offset = map[i];
+    if (!BitSetData::a(a_data[offset],b_data[offset]).none())
+      return offset;
+  }
+  return -1;
+}
 
 /** Debugging purpose **/
 
@@ -366,6 +382,11 @@ template<class A>
 forceinline void
 SparseBitSet<A>::add_to_mask(const BitSet& b, BitSet& mask) const {
   BitSet::orbs(mask, b, index, limit);
+  // unsigned int* local_index = index;
+  // for (int i = limit; i>=0; i--) {
+  //   int offset = local_index[i];
+  //   mask.o(b,offset);
+  // }
 }
 
 template<class A>
@@ -396,40 +417,30 @@ SparseBitSet<A>::nand(const BitSet& b) {
   using namespace Gecode;
   int* local_index = index;
   int local_limit = limit;
-  bool changed = false;
-  
+  bool diff = false;
   for (int i = local_limit; i >= 0; i--) {
     int offset = local_index[i];
     Support::BitSetData rev = Support::BitSetData::reverse(b.getword(offset));
     Support::BitSetData na = Support::BitSetData::a(words.getword(offset), rev);
     
     if (!words.same(na,offset)) {
-      changed = true;
+      diff = true;
       words.setword(na, offset);
       if (na.none()) {
         local_index[i] = local_index[local_limit];
-        limit--;
+        local_limit--;
       }
     }
   }
   limit = local_limit;
-  return changed;
+  return diff;
 }
 
 
 template<class A>
 forceinline int
 SparseBitSet<A>::intersect_index(const BitSet& b) const {
-  int* local_index = index;
-  int local_limit = limit;
-  
-  for (int i = 0; i <= local_limit; i++) {
-    int offset = local_index[i];
-    //if (!BitSet::a(words,b,offset).none())
-    if (BitSet::a(words,b,offset).value())
-      return offset;
-  }
-  return -1;
+  return BitSet::intersect_index(words,b,index,limit);
 }
 
 template<class A>
@@ -504,7 +515,7 @@ SparseBitSet<A>::print() const {
 }
 
 template<class A>
-forceinline unsigned int
+forceinline int
 SparseBitSet<A>::get_limit() const {
   return limit;
 }

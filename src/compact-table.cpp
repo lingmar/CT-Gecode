@@ -782,7 +782,6 @@ public:
 
   forceinline bool
   supported(CTAdvisor<View>& a, int row) {
-    //const unsigned int row = a.supports.row(val);
     int index = a.residues[row];
     const BitSet& support_row = a.supports(row);
     Support::BitSetData w = validTuples.a(support_row,index);
