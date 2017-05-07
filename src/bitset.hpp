@@ -1,14 +1,15 @@
 //#define forceinline __attribute__ ((noinline))
 
 class BitSet : public Gecode::Support::BitSetBase {
+private:
+  /// Copy constructor (disabled)
+  BitSet(const BitSet&) {}
 public:
   /// Default constructor (yields empty set)
   BitSet(void);
   /// Initialize for \a sz bits and allocator \a a
   template<class A>
   BitSet(A& a, unsigned int sz, bool setbits=false);
-  /// Copy constructor (disabled)
-  BitSet(const BitSet&);
   /// Copy from bitset \a bs with allocator \a a
   template<class A>
   BitSet(A& a, const BitSet& bs);
@@ -56,7 +57,7 @@ public:
   bool one(unsigned int i) const;
   /// Perform or
   static void orbs(BitSet& a, const BitSet& b,
-                   const unsigned int* map, unsigned int map_size);
+                   const int* map, unsigned int map_size);
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -72,11 +73,13 @@ private:
   /// Words (FIXME: why public?)
   BitSet words;
   /// Index
-  unsigned int* index;
+  int* index;
   /// Limit
   int limit;
   /// Size
   int sz;
+  /// Copy constructor (disabled)
+  SparseBitSet(const SparseBitSet& sbs) {}
 public:
   /// Default constructor (yields empty set)
   SparseBitSet(A& a);
@@ -286,7 +289,7 @@ BitSet::one(unsigned int i) const {
 
 forceinline void
 BitSet::orbs(BitSet& a, const BitSet& b,
-             const unsigned int* map, unsigned int map_last) {
+             const int* map, unsigned int map_last) {
   Gecode::Support::BitSetData* a_data = a.data;
   Gecode::Support::BitSetData* b_data = b.data;
   for (int i = map_last; i >= 0; i--) {
@@ -326,7 +329,7 @@ SparseBitSet<A>::init(unsigned int s) {
   sz = s;
   int nwords = s != 0 ? (s - 1) / words.get_bpb() + 1 : 0;
   limit = nwords - 1;
-  index = al.template alloc<unsigned int>(nwords);
+  index = al.template alloc<int>(nwords);
   for (int i = limit+1; i--; )
     index[i] = i;
   // Set the set nr of bits in words
@@ -339,7 +342,7 @@ SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
   : al(a0), words(al,sbs.words),
     limit(sbs.limit), sz(sbs.sz)  {
   // Copy limit+1 nr of elements in index
-  index = al.template alloc<unsigned int>(limit + 1);
+  index = al.template alloc<int>(limit + 1);
   for (int i = limit+1; i--; )
     index[i] = sbs.index[i];
 }
@@ -363,17 +366,12 @@ template<class A>
 forceinline void
 SparseBitSet<A>::add_to_mask(const BitSet& b, BitSet& mask) const {
   BitSet::orbs(mask, b, index, limit);
-  // unsigned int* local_index = index;
-  // for (int i = limit; i>=0; i--) {
-  //   int offset = local_index[i];
-  //   mask.o(b,offset);
-  // }
 }
 
 template<class A>
 forceinline bool
 SparseBitSet<A>::intersect_with_mask(const BitSet& mask) {
-  unsigned int* local_index = index;
+  int* local_index = index;
   int local_limit = limit;
   bool diff = false;
   for (int i = local_limit; i >= 0; i--) {
@@ -396,9 +394,12 @@ template<class A>
 forceinline bool
 SparseBitSet<A>::nand(const BitSet& b) {
   using namespace Gecode;
+  int* local_index = index;
+  int local_limit = limit;
   bool changed = false;
-  for (int i = limit; i >= 0; i--) {
-    int offset = index[i];
+  
+  for (int i = local_limit; i >= 0; i--) {
+    int offset = local_index[i];
     Support::BitSetData rev = Support::BitSetData::reverse(b.getword(offset));
     Support::BitSetData na = Support::BitSetData::a(words.getword(offset), rev);
     
@@ -406,11 +407,12 @@ SparseBitSet<A>::nand(const BitSet& b) {
       changed = true;
       words.setword(na, offset);
       if (na.none()) {
-        index[i] = index[limit];
+        local_index[i] = local_index[local_limit];
         limit--;
       }
     }
   }
+  limit = local_limit;
   return changed;
 }
 
@@ -418,9 +420,13 @@ SparseBitSet<A>::nand(const BitSet& b) {
 template<class A>
 forceinline int
 SparseBitSet<A>::intersect_index(const BitSet& b) const {
-  for (int i = 0; i <= limit; i++) {
-    int offset = index[i];
-    if (!BitSet::a(words,b,offset).none())
+  int* local_index = index;
+  int local_limit = limit;
+  
+  for (int i = 0; i <= local_limit; i++) {
+    int offset = local_index[i];
+    //if (!BitSet::a(words,b,offset).none())
+    if (BitSet::a(words,b,offset).value())
       return offset;
   }
   return -1;
@@ -513,5 +519,5 @@ template<class A>
 forceinline
 SparseBitSet<A>::~SparseBitSet(void) {
   words.BitSet::dispose(al);
-  al.template free<unsigned int>(index,limit+1);
+  al.template free<int>(index,limit+1);
 }

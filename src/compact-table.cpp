@@ -786,16 +786,17 @@ public:
     int index = a.residues[row];
     const BitSet& support_row = a.supports(row);
     Support::BitSetData w = validTuples.a(support_row,index);
-        
+
+    bool flag = true;
     if (w.none()) {
       index = validTuples.intersect_index(support_row);
       if (index != -1) {
         a.residues[row] = index;
-        return true;
+      } else {
+        flag = false;
       }
-      return false;
     }
-    return true;
+    return flag;
   }
 
 #ifdef FIX
