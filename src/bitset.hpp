@@ -357,19 +357,22 @@ SparseBitSet<A>::add_to_mask(const BitSet& b, BitSet& mask) const {
 template<class A>
 forceinline bool
 SparseBitSet<A>::intersect_with_mask(const BitSet& mask) {
+  unsigned int* local_index = index;
+  int local_limit = limit;
   bool diff = false;
-  for (int i = limit; i >= 0; i--) {
-    int offset = index[i];
+  for (int i = local_limit; i >= 0; i--) {
+    int offset = local_index[i];
     Gecode::Support::BitSetData w = a(mask, offset);
-    if (!words.BitSet::same(w, offset)) {
+    if (!words.same(w, offset)) {
       diff = true;
       words.setword(w, offset);
       if (w.none()) {
-        index[i] = index[limit];
-        limit--;
+        local_index[i] = local_index[local_limit];
+        local_limit--;
       }
     }
   }
+  limit = local_limit;
   return diff;
 }
 
