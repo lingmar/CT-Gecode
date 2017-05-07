@@ -657,20 +657,22 @@ obligations.
 
 \subsubsection{Pseudo code}
 \label{ct:pseudo}
-When posting the propagator,
-it takes as input a list of variables that are~$vars(c)$,
-and an initial table, that is
+When posting the propagator, the input is an initial table, that is
 a list of tuples $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of
 length~$p_o$. In what follows, we call the \emph{initial valid table}
 for~$c$ the subset~$T \subseteq T_0$ of size~$p \leq p_0$ where all
 tuples are a support on~$c$ for the initial domains of~$vars(c)$.
 For a variable~$x$, we distinguish between the \emph{initial domain}
 ~$\Dominit{x}$ and the \emph{current domain} $\Dom{x}$.
+In an abuse of notation, we denote~$x \in s$ for a variable
+$x$ that is part of store~$s$. We denote~$s[x \mapsto \Set{A}]$
+the store that is like~$s$ except that the variable~$x$ is mapped
+to the set~$A$.
 
 The propagator state has the following fields.
 
 \begin{itemize}
-  \item $\Scp$, a list of variables representing~$vars(c)$.
+%\item $\Scp$, a list of variables representing~$vars(c)$.
   
   \item $\CurrTable$, a $\SparseBitSet$ object representing the current valid
     supports for~$c$. If the initial valid table for~$c$
@@ -724,9 +726,8 @@ left, otherwise CT is at fixpoint.
 \input{ct-functional.tex}
 
 The initialisation of the fields is described in
-\Algoref{algo:initialise-CT}. \InitialiseCT() takes two parameters:
-$\localvar{vars}(c)$, that are the variables associated to the constraint~$c$,
-and~$\localvar{T_0}$, a list of tuples that define the initial table for~$c$.
+\Algoref{algo:initialise-CT}. \InitialiseCT() takes the 
+initial table~$\localvar{T_0}$ as argument.
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
@@ -747,7 +748,7 @@ and~$\localvar{T_0}$, a list of tuples that define the initial table for~$c$.
 \Linesref{line:init:3}{line:init:4}~initialise local variables that will be 
 used later.
 
-\Linesref{line:init:1}{line:init:5}~initialise the fields~\Scp,
+\Linesref{line:init:residue}{line:init:supports}~initialise the fields
 ~\Residues~and~\Supports.
 The field \Supports~is initialised as an array of bit-sets, with one bit-set for each
 variable-value pair, and the size of each
@@ -828,7 +829,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   % variables.
   
   We note that it is only necessary to
-  consider a variable~$x \in \Scp$ such that~$\Dom{x} > 1$,
+  consider a variable~$x \in s$ such that~$s(x) > 1$,
   because we will never filter out values from the domain of an assigned
   variable. To see this, assume we removed the last value for a variable~$x$,
   causing a wipe-out for~$x$. Then by the definition in equation~\eqref{eq:currtable}
@@ -939,14 +940,14 @@ that has been modified since the last invocation of~\CompactTable(),
 it is not necessary to attempt to filter out values from~$x$, because
 every value of of~$x$ will have a support in~$\CurrTable$.
 Hence, in \Algoref{algo:filterDomains}, we only execute
-\Linesref{line:filterDom:3}{line:filterDom:7} for~$\Scp \setminus \Set{x}$.
+\Linesref{line:filterDom:3}{line:filterDom:7} for~$s \setminus \Set{x}$.
 
 \paragraph{Variants.}
 The following lists some variants of the CT algorithm.
 \newline 
 
-\noindent
-\emph{Using delta information in \UpdateTable().}
+\begin{description}
+  \item[CT($\Delta$)] \emph{-- Using delta information in \UpdateTable().}
 A variable $x$'s delta, $\Delta_x$, is the set of values that were removed from~$x$
 since last time. If the infrastructure provides information about $\Delta_x$,
 that information can be used in \UpdateTable(). \Algoref{algo:updateTableDelta}
@@ -964,8 +965,7 @@ intersecting it with~$\CurrTable$.
   \label{algo:updateTableDelta}
 \end{algorithm}
 
-\noindent
-\emph{One valid tuple left.} 
+\item[CT($T$)]\emph{-- Fixing the domains when only one valid tuple left.} 
 This variant is the only addition made to the algorithm presented in~\cite{CTpaper}.
 If only one valid tuple is left after all calls to \UpdateTable() are finished,
 the domains of the variables can be fixed to the values for that tuple.
@@ -993,7 +993,7 @@ a condition that can be checked in constant time.
 This is implemented in~\Algoref{algo:one}, which returns
 the bit index of the set bit if there is exactly one bit set, else $-1$.
 The method IndexOfFixed() is added to Class \SparseBitSet and assumes access to
-builtin~\textsc{MSB}~which returns the most significant bit of a given int.
+builtin~\textsc{MSB}~which returns the index of the most significant bit of a given int.
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
@@ -1003,6 +1003,7 @@ builtin~\textsc{MSB}~which returns the most significant bit of a given int.
   \label{algo:one}
 \end{algorithm}
 
+\end{description}
 % \Algoref{algo:fixDomains} shows the procedure~\FixDomains() which is called in
 % line~\Algoref{algo:proapgateFix} in case there is only one valid tuple left.
 % We assume that the propagator status has
@@ -1101,7 +1102,7 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   If it is the first time, then \T{initCT()} is called.
   Since $\tau$ is not a solution to~$c$, there is at least one variable-value
   pair~$(x_i,s(x_i))$ which is not supported, so~$s(x_i)$ will be pruned
-  from~$x$ in \T{initCT()}, which will report failure in line~\Lineref{line:init:wipeoout}
+  from~$x$ in \T{initCT()}, which will report failure in line~\Lineref{line:init:wipeout}
   in~\Algoref{algo:initialise-CT}.
   
   If it is not the first time that $CT$ is called, \T{propagate()} is called.
@@ -1110,7 +1111,7 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   
   Now assume that~$s$ is a solution store. 
   $CT$ signals failure in \T{filterDomains()} because all variables are assigned.
-  \Todo{Initialisation? Maybe change so that initCT detects subsumption.}
+
 \end{proof}
 
 \begin{lemma}\label{lemma:honest}
@@ -1217,56 +1218,172 @@ the necessary information is encoded in $\CurrTable$ and $\Supports$.
 \section{Evaluation}
 \label{evaluation}
 This chapter presents the evaluation of the implementation of the CT propagator
-presented in \Chapref{sec:implementation}. In \Secref{evaluation:setup},
-the evaluation setup is described. In \Secref{evaluation:results} presents
-the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
+presented in \Chapref{sec:implementation}. 
+% In \Secref{evaluation:setup},
+% the evaluation setup is described. In \Secref{evaluation:results} presents
+% the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
+
+\begin{table}[t]\small
+  \centering
+  \begin{tabular}{lccc}  % right alignment --> decimal point alignment
+    name & number of instances & arity & variable domains \\
+    \midrule
+    \input{benchmarks.tex} 
+  \end{tabular}
+  \caption{Benchmarks series and their characteristics.}
+  \label{tab:res:mip}
+\end{table}
+
+
+\subsection{Comparing different versions of CT}
+
+
+\subsubsection{Evaluation Setup}
+Four different versions of CT were compared.
+The versions and their denotations are:
+
+\begin{description}
+  \item[CT] Basic version.
+  \item[CT($\Delta$)] CT using $\Delta_x$, the set
+    of values that has been removed from $\Dom{x}$
+    since last time, as described in~\Algoref{algo:updateTableDelta}.
+  \item[CT($T$)] CT that explicitly stores the initial valid table~$T$ as
+    a field and
+    fixes the domains of the variables to the last valid tuple, as described
+    in~\Algoref{algo:propagateFix}.
+  \item[CT($B$)] CT that during propagation reasons about the bounds of the domains before
+    enforcing domain consistency, an implementation detail discussed in~\Secref{sec:implementation}.
+\end{description}
+
+\subsubsection{Results}
+
+\begin{figure}
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{randsJC2500-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Rands JC2500.} }
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{randsJC5000-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Rands JC5000}. }
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{langford4-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Langford 4}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{a5-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{A5}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+
+\end{figure}
+
+\begin{figure}
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{TSP_Quat_20-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{TSP Quat 20}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{geom-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Geom}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][10cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{Crosswords_lexVg-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Crosswords LexVG}.}
+    \vspace{\baselineskip}
+  \end{minipage} \qquad
+\end{figure}
+
+\subsubsection{Discussion}
+
+
+\subsection{Comparing CT against existing propagators for the~\Table constraint}
+
+\subsubsection{Evaluation Setup}
+
+\subsubsection{Results}
+%\input{graphs.tex}
+
+\subsubsection{Discussion}
+
+
+
 
 % Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
 
-\subsection{Evaluation Setup}
 \label{evaluation:setup}
 The correctness of the CT propagator was validated with the existing unit tests
-in Gecode for the table constrataint.
+in Gecode for the \Table~constraint.
 
-A large number of benchmarks were run, comparing the performance of the CT propagator
-with the three other existing propagators in Gecode for the table constraint.
-The instances used in the benchmarks were written in MiniZinc~\cite{MiniZinc},
-a solver-independent constraint modeling language. The experiments were run
-under Gecode 5.0 on a 16-core machine with Linux Ubuntu 14.04.5 (64 bit),
+The benchmarks consist of
+\begin{itemize}
+\item \Todo{how many} series 
+  with a total of~$1507$ CSP instances that where used in the
+  experiments in~\cite{\CTpaper}.
+\item One serie of~$72$ CSP instances representing crosswords problems \Todo{source?}.
+\end{itemize}
+
+All instances were written in MiniZinc~\cite{MiniZinc}, the
+instances used in~\cite{\CTpaper} were originally written in XCSP2.1,
+but compiled into MiniZinc. Of the~$1621$ instances that were used in~\cite{\CTpaper},
+only~$1507$ could be used due to parse errors.
+The experiments were run
+under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
 Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
 were accessed via a shared server.
 
-\Todo{\Tupm, \Tups should have better names}
+The performance of different versions of CT were compared, and the winning
+version was compared against the existing propagators for
+the \Table~constraint in Gecode.
 
 The following section presents the results of the experiments.
 
-\subsection{Results}
-\label{evaluation:results}
+First the results of comparing different versions of CT is presented,
+and then the results of comparing the seemingly best version of CT with 
+the existing propagators in Gecode for the~\Table constraint.
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds.
 
-\subsubsection{Comparing CT and CT(fix)}
-
-The main purpose of this benchmark is to compare the performance of CT and CT(fix).
-Figure~\ref{fig:fix} shows that the performance of CT and CT(fix) are the same.
-CT and CT(fix) outperform all other methods. Among the
-other methods, the performance is essentially the same.
-
-\begin{figure}[H]
-  \label{fig:fix}
-  \centering
-  %\begin{tikzpicture}[scale=1.0]
-    \input{crossword-plot.tex}
-  %\end{tikzpicture}
-\caption{\textbf{Crosswords.} Number of solved instances as a function of time
-  for 5 methods.
-  The benchmark consists of 72 instances, using a timeout
-  of 1000 seconds. Within the timeout,
-  CT and CT(fix) could solve 60 instances, \Tupm, and \Tups could
-  solve 59 instances, and \Reg could solve 58 instances.}
-\end{figure}
-
-
-
-\subsubsection{Benchmarks from \cite{\CTpaper}}
 
 % The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
 % were also used here. The instances were compiled (using~\cite{xcsp2mzn})
@@ -1277,10 +1394,6 @@ other methods, the performance is essentially the same.
 % once on a \todo{quantum computer} for every propagator and a timeout of
 % 1,000 seconds was used.
 
-This set of benchmarks contains 1,621 CSP instances that where used in the
-experiments in~\cite{\CTpaper}, written in XCSP2.1.
-This corresponds to a large variety of instances,
-taken from 37 series. 117 instances were skipped due to parse problems.
 Due to the high number of instances, the runtime for
 each instance was only measured once. A timeout of 1000 seconds was used.
 
@@ -1389,8 +1502,8 @@ improvements and flaws.
     experiments.
 
   \item In the variant using delta information, the current implementation
-    uses the incremental update if~$\Delta_x < \Dom{x}$. It is possible
-    that this condition can be generalised to~$\Delta_x < k \cdot \Dom{x}$,
+    uses the incremental update if~$|\Delta_x| < |s(x)|$. It is possible
+    that this condition can be generalised to~$|\Delta_x| < k \cdot |s(x)|$,
     where~$k \in \mathbb{R}$, something that is not experimentet width.
 
 \end{itemize}

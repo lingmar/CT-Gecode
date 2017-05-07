@@ -1,7 +1,6 @@
-\begin{tikzpicture}[scale=1.0]
   \begin{axis}[
     xmode=log,
-    ymin=0,ymax=12,
+    ymin=0,ymax=13,
     xmin=0.1, xmax=1000000,
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
@@ -80,6 +79,5 @@
 (9858.869, 10)
 (37441.670, 11)
 (151868.885, 12)};
-    \legend{CT,D,F,L}
+    \legend{CT,CT($\Delta$),CT($T$),CT($B$)}
   \end{axis}
-\end{tikzpicture}

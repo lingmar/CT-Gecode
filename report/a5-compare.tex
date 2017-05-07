@@ -1,8 +1,7 @@
-\begin{tikzpicture}[scale=1.0]
   \begin{axis}[
     xmode=log,
-    ymin=0,ymax=50,
-    xmin=0.1, xmax=1000000,
+    ymin=0,ymax=51,
+    xmin=2000, xmax=10000,
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
     ylabel={\# solved},
@@ -232,6 +231,5 @@
 (8435.271, 48)
 (8542.033, 49)
 (8766.617, 50)};
-    \legend{CT,D,F,L}
+    \legend{CT,CT($\Delta$),CT($T$),CT($B$)}
   \end{axis}
-\end{tikzpicture}

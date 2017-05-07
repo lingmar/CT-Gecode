@@ -1,28 +1,29 @@
 \begin{algorithm}[H]
-\caption{Compact Table Propagator.}
 \begin{algorithmic}[1]
   \PROCEDURE $\CompactTable(s:~\text{store}) : \Tuple{\StatusMessage,\ \text{store}}$
   \IF[executed in a constructor]{the propagator is being posted}
-    \STATE \InitialiseCT($vars(c),T_0$)
-    \IF{some variable was wiped out~$\lor~\CurrTable$.isEmpty()}
+    \STATE $s \leftarrow \InitialiseCT(s,T_0)$
+    \IF{$s = \emptyset$
+}
       \RETURN $\Tuple{\FAIL, \emptyset}$
     \ENDIF
   \ELSE[executed in an advisor]
-    \FORALL{variables~$x$ whose domains have changed since last time}
-      \STATE \UpdateTable($x$)
+    \FOREACH{variable~$x \in s$ whose domain has changed since last time}
+      \STATE \UpdateTable($s,x$)
       \IF{$\CurrTable$.isEmpty()}
         \RETURN $\Tuple{\FAIL,\emptyset}$
       \ENDIF
-    \ENDFOR
+    \ENDFOREACH
   \ENDIF
   \IF[executed in the propagate function]{\CurrTable~has changed since last time}
-    \STATE \FilterDomains()
+    \STATE $s \leftarrow \FilterDomains(s)$
   \ENDIF
   \IF{there is at most one unassigned variable left}
-    \RETURN $\Tuple{\SUBSUMED, [x \mapsto \Dom{x}]_{x \in \Scp}}$
+    \RETURN $\Tuple{\SUBSUMED, s}$
   \ELSE 
-    \RETURN $\Tuple{\FIX,[x \mapsto \Dom{x}]_{x \in \Scp}}$
+    \RETURN $\Tuple{\FIX,s}$
   \ENDIF
-  \label{algo:CT}
 \end{algorithmic}
+\caption{Compact Table Propagator.}
+\label{algo:CT}
 \end{algorithm}

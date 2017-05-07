@@ -1,12 +1,12 @@
-\PROCEDURE \UpdateTable($x$: variable) \label{line:updateTableDelta:1} 
+\PROCEDURE \UpdateTable($s$: store, $x$: variable) \label{line:updateTableDelta:1} 
         \STATE $\CurrTable$.clearMask() \label{line:updateTableDelta:4} 
-        \IF{$\Delta_x$ is available $\ \land \ \Delta_x < \Dom{x}$}
+        \IF{$\Delta_x$ is available $\ \land \ |\Delta_x| < |s(x)|$}
           \FOREACH{$a \in \Delta_x$} \label{line:updateTableDelta:5} 
             \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTableDelta:6} 
           \ENDFOREACH      
           \STATE $\CurrTable$.reverseMask() \label{line:updateTableDelta:7} 
         \ELSE
-          \FOREACH{$a \in \Dom{x}$} \label{line:updateTableDelta:8} 
+          \FOREACH{$a \in s(x)$} \label{line:updateTableDelta:8} 
             \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTableDelta:9} 
           \ENDFOREACH      
 

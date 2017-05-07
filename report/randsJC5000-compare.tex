@@ -1,8 +1,7 @@
-\begin{tikzpicture}[scale=1.0]
-  \begin{axis}[
+\begin{axis}[
     xmode=log,
-    ymin=0,ymax=10,
-    xmin=0.1, xmax=1000000,
+    ymin=0,ymax=11,
+    xmin=1000, xmax=200000,
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
     ylabel={\# solved},
@@ -25,7 +24,8 @@
 (62439.762, 7)
 (116797.805, 8)
 (180486.235, 9)
-(300000.216, 10)};
+%(300000.216, 10)
+};
 
     \addplot 
     [blue,
@@ -41,7 +41,8 @@
 (48586.026, 7)
 (93315.398, 8)
 (137662.304, 9)
-(300000.350, 10)};
+%(300000.350, 10)
+};
 
     \addplot [brown!60!black,
     mark options={fill=brown!40},
@@ -56,7 +57,8 @@
 (61868.162, 7)
 (116295.050, 8)
 (181630.843, 9)
-(300000.256, 10)};
+%(300000.256, 10)
+};
 
     \addplot 
     [red,
@@ -71,7 +73,8 @@
 (77295.794, 7)
 (147053.910, 8)
 (229203.930, 9)
-(300000.278, 10)};
-    \legend{CT,D,F,L}
+%(300000.278, 10)
+};
+    \legend{CT,CT($\Delta$),CT($T$),CT($B$)}
   \end{axis}
-\end{tikzpicture}
+

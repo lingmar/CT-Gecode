@@ -1,8 +1,7 @@
-\begin{tikzpicture}[scale=1.0]
   \begin{axis}[
     xmode=log,
-    ymin=0,ymax=10,
-    xmin=0.1, xmax=1000000,
+    ymin=0,ymax=11,
+    xmin=100, xmax=100000,
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
     ylabel={\# solved},
@@ -72,6 +71,5 @@
 (15071.509, 8)
 (18836.865, 9)
 (78418.083, 10)};
-    \legend{CT,D,F,L}
+    \legend{CT,CT($\Delta$),CT($T$),CT($B$)}
   \end{axis}
-\end{tikzpicture}

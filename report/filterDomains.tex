@@ -1,15 +1,15 @@
-        \PROCEDURE \FilterDomains()     \label{line:filterDom:0}
+        \PROCEDURE \FilterDomains($s$) : store     \label{line:filterDom:0}
         % \Func{filterDomains}{} 
     %  \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
-      \FOREACH{$x \in \Scp \text{~such that~} |\Dom{x}| > 1$} \label{line:filterDom:2}
-            \FOREACH{$a \in \Dom{x}$} \label{line:filterDom:3}
+      \FOREACH{$x \in s \text{~such that~} |s(x)| > 1$} \label{line:filterDom:2}
+            \FOREACH{$a \in s(x)$} \label{line:filterDom:3}
               \STATE $\localvar{index} \leftarrow \Residues[x,a]$ \label{line:filterDom:res1}
               \IF{$\CurrTable[index] \ \& \ \Supports[x,a][index] = 0$} \label{line:filterDom:res2} %\COMMENT{bit-wise and}
                   \STATE $\localvar{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
                   \IF{$\localvar{index~} \neq -1$} \label{line:filterDom:5}
                         \STATE $\Residues[x,a] \leftarrow \localvar{index}$ \label{line:filterDom:6}
                   \ELSE
-                        \STATE $\Dom{x} \leftarrow \Dom{x} \setminus \Set{a}$ \label{line:filterDom:7}
+                        \STATE $s \leftarrow s[x \mapsto s(x) \setminus \Set{a}]$ \label{line:filterDom:7}
                   \ENDIF
               \ENDIF
              \ENDFOREACH
@@ -18,6 +18,7 @@
              % \ENDIF
       
       \ENDFOREACH
+      \RETURN{$s$}
       % \IF{$\localvar{count\_unassigned} \leq 1$} \label{line:filterDom:10}
       %   \RETURN{$Subsumed$} \label{line:filterDom:11}
       % \ELSE
