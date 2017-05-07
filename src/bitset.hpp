@@ -54,6 +54,9 @@ public:
   unsigned int next(unsigned int i) const;
   /// Test whether exactly one bit is set for word index \i
   bool one(unsigned int i) const;
+  /// Perform or
+  static void orbs(BitSet& a, const BitSet& b,
+                   const unsigned int* map, unsigned int map_size);
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -281,6 +284,17 @@ BitSet::one(unsigned int i) const {
   return data[i].Gecode::Support::BitSetData::one();
 }
 
+forceinline void
+BitSet::orbs(BitSet& a, const BitSet& b,
+             const unsigned int* map, unsigned int map_last) {
+  Gecode::Support::BitSetData* a_data = a.data;
+  Gecode::Support::BitSetData* b_data = b.data;
+  for (int i = map_last; i >= 0; i--) {
+    int offset = map[i];
+    a_data[offset].o(b_data[offset]);
+  }
+}
+
 
 /** Debugging purpose **/
 
@@ -348,10 +362,12 @@ SparseBitSet<A>::clear_mask(BitSet& mask) {
 template<class A>
 forceinline void
 SparseBitSet<A>::add_to_mask(const BitSet& b, BitSet& mask) const {
-  for (int i = 0; i<=limit; i++) {
-    int offset = index[i];
-    mask.o(b,offset);
-  }
+  BitSet::orbs(mask, b, index, limit);
+  // unsigned int* local_index = index;
+  // for (int i = limit; i>=0; i--) {
+  //   int offset = local_index[i];
+  //   mask.o(b,offset);
+  // }
 }
 
 template<class A>
