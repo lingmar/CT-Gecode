@@ -257,22 +257,22 @@ protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
   /// Council of advisors
   Council<CTAdvisor<View> > c;
-  /// Whether propagator is propagating
-  Status status;
-  /// -2 if more than one touched var, -1 if none, else index of the only touched var
-  int touched_var;
   /// The indices of valid tuples
   SparseBitSet<Space&> validTuples;
-  /// Arity
-  unsigned int arity;
-  /// Number of unassigned variables
-  unsigned int unassigned;
 #ifdef FIX
   /// Tuple-set
   TupleSet tupleSet;
 #endif // FIX
+  /// Number of unassigned variables
+  unsigned int unassigned;
+  /// -2 if more than one touched var, -1 if none, else index of the only touched var
+  int touched_var;
+  /// Whether propagator is propagating
+  Status status;
   /// Largest domain size
   unsigned int max_dom_size;
+  /// Arity
+  unsigned int arity;
   
 public:
   // Post table propagator
@@ -605,15 +605,16 @@ public:
   filterDomains(Space& home) {
     if (unassigned == 0) return home.ES_SUBSUMED(*this);
     // Count the number of scanned unassigned variables
-    unsigned int count_unassigned = 0;
+    unsigned int count_unassigned = unassigned;
     // Array to collect values to remove
     Region r(home);
     int* nq = r.alloc<int>(max_dom_size);
+    int* nq_start = nq; 
     
     // Scan all values of all unassigned variables to see if they
     // are still supported.
     for (Advisors<CTAdvisor<View> > a0(c);
-         a0() && count_unassigned < unassigned; // End if only assigned variables left
+         a0() && count_unassigned; // End if only assigned variables left
          ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
@@ -652,7 +653,7 @@ public:
         }
 
         // Otherwise v is still unassigned
-        count_unassigned++;
+        count_unassigned--;
         break;
       } default:
 #ifdef LONG_FILTER
@@ -735,34 +736,44 @@ public:
             nremoves--;
         }
 #else
-        unsigned int nremoves = 0;
         Int::ViewRanges<View> rngs(v);
         int cur, max, row;
+        int last_support;
+        nq = nq_start;
         while (rngs()) {
           cur = rngs.min();
           max = rngs.max();
           row = a.supports.row(cur);
           while (cur <= max) {
             if (!supported(a,row))
-              nq[nremoves++] = cur;
+              *(nq++) = cur;
+            else
+              last_support = cur;
             ++cur;
             ++row;
           }
           ++rngs;
         }
+        unsigned int nremoves = static_cast<unsigned int>(nq - nq_start);
         
 #endif // LONG_FILTER
         
         // Remove collected values
         if (nremoves > 0) {
-          Iter::Values::Array r(nq,nremoves);
-          if (v.minus_v(home,r,false) == ME_INT_VAL) {
+          if (nremoves == v.size() - 1) {
+            v.eq(home,last_support);
             --unassigned;
             break;
+          } else {
+            Iter::Values::Array r(nq_start,nremoves);
+            if (v.minus_v(home,r,false) == ME_INT_VAL) {
+              --unassigned;
+              break;
+            }
           }
         }
         
-        ++count_unassigned;
+        --count_unassigned;
       }
     }
     // Subsume if there is at most one non-assigned variable
