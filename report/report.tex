@@ -462,6 +462,8 @@ There are three commonly used consistency levels,
 \label{bg:gecode}
 Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
 
+\Todo{Some more ovarall information...}
+
 Implementing a propagator in Gecode means implementing the following parts:
 
 \begin{description}
@@ -486,9 +488,7 @@ Implementing a propagator in Gecode means implementing the following parts:
   \item[Rescheduling.] 
 \end{description}
 
-\Todo{Define the parts of the Gecode API that is used later (propagate(), status
-  messages...)}
-
+\Todo{Advisors}
 % http://ceur-ws.org/Vol-810/paper-s08.pdf
 
 % definiera de delar av Gecodes API som dyker upp senare, såsom propagate(), status messages
@@ -1164,8 +1164,6 @@ proving~\Thmref{thm:prop} is trivial.
 \section{Implementation}
 \label{sec:implementation}
 
-\paragraph{Comparison with implementation in OR-tools}
-
 % Det här är vad jag hittar av värde när jag läser igenom OR-tools kod:
 
 % De har två versioner av CT: en stor (antal tupler > 64) och en liten (antal tupler <= 64). Den lilla versionen drar nytta av att alla aktiva tupler kan representeras med bara ett 64-bitars ord istället för en array av 64-bitars ord. Då kan man till exempel skippa arrayen residues, och arrayen index i SparseBitSet. Osäker på hur stor nytta en sån förändring skulle göra.
@@ -1177,9 +1175,6 @@ proving~\Thmref{thm:prop} is trivial.
 % I fall 2 och 3 ovan undviker de att använda motsvarande minus_v-operatorn (den som tar bort alla värden i en array) så långt som möjligt eftersom den är dyr, utan använder <=, >=-operatorn på de värden som ska tas bort på x’s gränser och minus_v bara på de värden som ska tas bort mitt i domänen. Jag tror det gäller i Gecode också att minus_v är dyr så det borde jag kunna använda.
 % I updateTable har de det här specialfallet som jag kan använda: om variabeln x är fixerad till värdet a behöver jag inte allokera en temporär mask utan kan använda supports[x,a] direkt som mask.
 
-\Todo{Copy-function.}
-
-
 
 % Section 4 blir nog mindre intressant än Section 3 och 5, men där kan du skriva om sånt som är specifikt för C++ och Gecode för att algoritmerna i Section 3 ska fungera, precis som du har börjat göra. Det är också en bra plats för detaljer som sopats under mattan i pseudokoden, t.ex. exakt hur du mappar (x,a) till rätt element i supports och residues, med hashtabell eller så.
 
@@ -1187,15 +1182,27 @@ This section describes an implementation of the CT propagator using the algorith
 presented in \Chapref{algorithms}. The implementation was made in the C++ programming
 language in the Gecode library.
 
-The bit-set matrix $\Supports$ is static and could be shared between all solution spaces.
+\Todo{
+  Describe
+  \begin{itemize}
+    \item Advisors
+    \item Indexing of supports and residues
+    \item Memory management
+    \item Ideas from or-tools
+  \end{itemize}
+}
 
-The bit-set $\CurrTable$ changes dynamically during propagation and must therefore be copied for
-every new space. Can save memory by only copying the non-zero words.
+% The implementation uses advisors. Each advisor is responsible for one variable~$x$,
+% and maintains supports information for that variable. The arrays $\Supports$
+% and~$\Residues$ described in~\Secref{sec:ct} is thus split up in parts,
+% one part per variable:
+% call them~$\Supports_x$ and~$\Residues_x$. 
+% How the indexing in~$\Supports_x$ and~$\Residues_x$ is done depends on how sparse
+% the initial domain of~$x$ is. If the domain is sparse, a hash table is used
 
-No need to save the $\T{tuples}$ as a field in the propagator class as all
-the necessary information is encoded in $\CurrTable$ and $\Supports$.
-
-\Todo{How is the index mapping done in supports and residues?}
+% \paragraph{Memory management}
+% $\Supports$ is allocated in a shared memory space since it contains static data.
+%All other data structures changes dynamically
 
 % Can't modify the value of the variable while iterating over it
 % when using an iterator for a view, the view cannot be modified (or, in C++ lingua: modifying the variable invalidates the iterator).
@@ -1219,11 +1226,20 @@ the necessary information is encoded in $\CurrTable$ and $\Supports$.
 \label{evaluation}
 This chapter presents the evaluation of the implementation of the CT propagator
 presented in \Chapref{sec:implementation}. 
-% In \Secref{evaluation:setup},
-% the evaluation setup is described. In \Secref{evaluation:results} presents
-% the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
 
-\begin{table}[t]\small
+\label{evaluation:setup}
+The correctness of the CT propagator was validated with the existing unit tests
+in Gecode for the \Table~constraint.
+
+The benchmarks consist of
+\begin{itemize}
+\item \Todo{how many} series 
+  with a total of~$1507$ CSP instances that where used in the
+  experiments in~\cite{\CTpaper}.
+\item One serie of~$72$ CSP instances representing crosswords problems \Todo{source?}.
+\end{itemize}
+
+\begin{table}[h]\small
   \centering
   \begin{tabular}{lccc}  % right alignment --> decimal point alignment
     name & number of instances & arity & variable domains \\
@@ -1231,12 +1247,38 @@ presented in \Chapref{sec:implementation}.
     \input{benchmarks.tex} 
   \end{tabular}
   \caption{Benchmarks series and their characteristics.}
-  \label{tab:res:mip}
+  \label{tab:benchmars}
 \end{table}
+
+All instances were written in MiniZinc~\cite{MiniZinc}, the
+instances used in~\cite{\CTpaper} were originally written in XCSP2.1,
+but compiled into MiniZinc. Of the~$1621$ instances that were used in~\cite{\CTpaper},
+only~$1507$ could be used due to parse errors.
+The benchmarks series and their characteristics are presented in Table~\ref{tab:benchmarks}.
+The experiments were run
+under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
+Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
+were accessed via a shared server.
+
+The performance of different versions of CT were compared, and the winning
+version was compared against the existing propagators for
+the \Table~constraint in Gecode.
+
+The following section presents the results of the experiments.
+
+First the results of comparing different versions of CT is presented,
+and then the results of comparing the seemingly best version of CT with 
+the existing propagators in Gecode for the~\Table constraint.
+
+
+% In \Secref{evaluation:setup},
+% the evaluation setup is described. In \Secref{evaluation:results} presents
+% the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
+
 
 
 \subsection{Comparing different versions of CT}
-
+\label{sec:compare}
 
 \subsubsection{Evaluation Setup}
 Four different versions of CT were compared.
@@ -1256,6 +1298,9 @@ The versions and their denotations are:
 \end{description}
 
 \subsubsection{Results}
+
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds.
 
 \begin{figure}
   \begin{minipage}[b][10cm][s]{0.45\textwidth}
@@ -1335,14 +1380,32 @@ The versions and their denotations are:
 \end{figure}
 
 \subsubsection{Discussion}
-
+\Todo{CT($\Delta$) outperforms the other variants.}
 
 \subsection{Comparing CT against existing propagators for the~\Table constraint}
 
 \subsubsection{Evaluation Setup}
+The winning variant from the experiments in~\Secref{sec:compare},
+CT($\Delta$), was compared against three existing propagators
+in Gecode for the~\Table~constraint. The propagators are
+denoted:
+
+\begin{description}
+  \item[CT] The Compact Table Propagator, version CT($\Delta$).
+  \item[DFA] Layered graph (DFA) propagator, based on~\cite{Pesant:seqs}.
+  \item[B] Basic positive tuple set propagator, based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
+  \item[I] Incremental positive tuple set propagator.
+\end{description}
+
+B is more memory-efficient than I, and I is expected to be faster than B.
 
 \subsubsection{Results}
-%\input{graphs.tex}
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds.
+
+\Todo{Change captions to DFA, B, I.}
+
+\input{graphs.tex}
 
 \subsubsection{Discussion}
 
@@ -1351,38 +1414,6 @@ The versions and their denotations are:
 
 % Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
 
-\label{evaluation:setup}
-The correctness of the CT propagator was validated with the existing unit tests
-in Gecode for the \Table~constraint.
-
-The benchmarks consist of
-\begin{itemize}
-\item \Todo{how many} series 
-  with a total of~$1507$ CSP instances that where used in the
-  experiments in~\cite{\CTpaper}.
-\item One serie of~$72$ CSP instances representing crosswords problems \Todo{source?}.
-\end{itemize}
-
-All instances were written in MiniZinc~\cite{MiniZinc}, the
-instances used in~\cite{\CTpaper} were originally written in XCSP2.1,
-but compiled into MiniZinc. Of the~$1621$ instances that were used in~\cite{\CTpaper},
-only~$1507$ could be used due to parse errors.
-The experiments were run
-under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
-Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
-were accessed via a shared server.
-
-The performance of different versions of CT were compared, and the winning
-version was compared against the existing propagators for
-the \Table~constraint in Gecode.
-
-The following section presents the results of the experiments.
-
-First the results of comparing different versions of CT is presented,
-and then the results of comparing the seemingly best version of CT with 
-the existing propagators in Gecode for the~\Table constraint.
-Each plot shows the number of instances solved as a function
-of timeout limit in milliseconds.
 
 
 % The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
