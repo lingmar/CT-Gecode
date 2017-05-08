@@ -490,13 +490,22 @@ The propagator that is concerned in this project is domain consistent.
 
 \subsection{Gecode}
 \label{bg:gecode}
-Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
+Gecode~\cite{Gecode} (Generic Constraint Development Environment)
+is a popular constraint programming solver written in C++,
+distributed under the MIT license.
+It has a state-of-the-art performance while being modular and extensible.
+It supports the programming of new propagators, branching strategies,
+and search engines. Furthermore, Gecode is well documented and comes
+with a complete tutorial.
 
-\Todo{Some more ovarall information...}
 
-A propagator in Gecode is implemented as a C++ object inheriting from
-the base class Propagator.
-It must implement the following parts:
+Programming a propagator in Gecode means implementing a C++ object
+inheriting from the base class Propagator,
+that complies to the correct interface.
+The propagator can store any data structures as instance members,
+for saving information about its state between executions.
+The interfase consists of 
+the following parts~\cite{Gecode:MPG}.
 
 \begin{description}
   \item[Posting.] 
@@ -508,7 +517,8 @@ It must implement the following parts:
     The propagator must also \emph{subscribe} to its associated variables,
     subscribing to a variable ensures the propagator is scheduled
     for execution whenever the relevant modification event occurs
-    for that variable.
+    for that variable. Subscription can also be handled via
+    advisors, see below.
 
     % Posting a propagator requires a \emph{constraint post function},
     % a \emph{propagator post function} and a \emph{constructor}.
@@ -527,8 +537,8 @@ It must implement the following parts:
   \item[Disposal.] The propagator must implement a dispose() function that
     returns the memory used by the propagator at disposal.
 
-  \item[Copying.] The propagator must implement a copy() function for cloning
-    the propagator during search.
+  \item[Copying.] During search the propagator needs to be copied. This is
+    handled by the copy() function.
 
   \item[Cost computation.] Gecode schedules propagators for execution according
     to their estimated cost. Cheaper propagators execute before more expensive
@@ -551,10 +561,35 @@ It must implement the following parts:
 % What is it?
 % Which exist?
 
-\Todo{Advisors}
-% What is it?
-% Why is it good?
-% http://ceur-ws.org/Vol-810/paper-s08.pdf
+Gecode provides \emph{advisors} that can inform propagators about variable
+modifications.
+Using advisors is optional.
+An advisor belongs to a propagator and can store information that is needed by
+its propagator. The purpose of an advisor is to, as its name suggests, advise
+the propagator of whether it needs to be executed or not. This works as follows.
+Whenever the domain
+of the variable(s) that an advisor is subscribed to changes, its advise()
+function is executed. If the advisor detects that its propagator is still
+at fixpoint, it should not schedule the propagator. If it is not at fixpoint,
+or possibly not at fixpoint, the advisor must schedule its propagator for
+execution. Similarly, the advisor can report failure or subsumption
+if it detects a failure or that its propagator is subsumed. An advisor
+is not allowed to modify the domains of the variables. 
+Furthermore, the advise() function can access
+the modification event that triggered its execution. 
+For integer and boolean variables, some information about which values
+have been removed is provided.
+
+Search in Gecode is copy-based. Before making a desicion in the search tree, the
+current node is copied, so that the search can continue from an equivalent 
+state in case the decision fails, or in case more solutions are to be sought for.
+This implies some concerns on memory usage of the stored data structures
+of a propagator, since allocating memory and copying large data structures
+is time consuming, and a too large memory usage is not desirable.
+
+% Characteristicsco
+% Copy based
+
 
 % definiera de delar av Gecodes API som dyker upp senare, såsom propagate(), status messages
 % använda inbyggda klasen BitSets?
@@ -574,18 +609,96 @@ sequence of $n$-tuples.
   tuples that are solutions to~$c$.
 \end{definition}
 
+Theoretically, any constraint could be expressed using the~\Table constraint,
+simply by listing all the allowed assigments for its variables, 
+making the~\Table constraint a powerful constraint. However, typically
+it is too memory consuming to represent a constraint in this way
+(exponential space in the number of variables). Also, common constraints
+typically have a certain structure (such as a linear constraint)
+that is difficult to take advantage of if the constraint is represented
+extensionally.~\cite{SchulteCarlsson:FDsys}.
+
+Nevertheless, the~\Table constraint is an important constraint.
+\Todo{Typical use cases? Propagator algortihms?}
+
+In Gecode, the \Table constraint is called \Extensional. Gecode provides
+three propagators for \Extensional, one where the possible solutions are
+represented as a DFA, based on~\cite{Pesant:seqs}, and two were the solutions
+is provided as a tuple set, which is a data structure in Gecode for representing 
+a set of tuples. Among the last two one of them is based 
+on~\cite{DBLP:journals/ai/BessiereRYZ05}, and consumes less memory than the
+other, which is more incremental. 
+
+
 \subsection{Compact-Table Propagator}
 \label{bg:ct}
 % Beskriv huvudidéerna
 % Komplexitet? Kolla artikeln om negativa table-villkor
 % O(r*d*t) per table constraint along a branch in the search tree (artikeln om bakgrund)
+The compact table (CT) algorithm is a domain consistent propagation algorithm
+that implements the \Table~constraint. It was first implemented in
+OR-tools, a constraint solver, where it outperforms all previously
+known algorithms. It was first described in~\cite{\CTpaper}.
+Before this project, no attempts to implement CT in Gecode were made,
+and consquently its performance in Gecode is unknown.
 
-\subsection{Sparse Bit-Set}
+Compact table relies on bitwise operations using a new datastructure
+called \emph{reverseible sparse bit-set} (see \Secref{bg:sbs}).
+The propagator maintains a reversible sparse bit set object, \texttt{currTable},
+which stores the indices of the current valid tuples in a bit-set.
+Also, for each variable-value pair, a bit-set mask is computed, that stores the
+indices of the tuples that are supports for that variable-value pair.
+These bit-set masks are stored in an array, \texttt{supports}.
+
+Propagation consists of two steps:
+
+\begin{enumerate}
+  \item Updating \texttt{currTable} so that it only contains indices
+    of valid tuples.
+  \item Filtering out inconsistent values from the domains of each
+    variable, that is,
+    values that no longer have a tuple that supports it.
+\end{enumerate}
+
+Both steps rely heavily on bitwise operations on \T{currTable} and
+\T{supports}. CT is discussed more deeply in \Secref{sec:algorithms}.
+
+\subsection{Reversible Sparse Bit-Sets}
 \label{bg:sbs}
 % Beskriv idén
+Reversible sparse bit-sets is a data structure for storing 
+a set of values. It avoids performing operations on non zero
+words, which makes it efficient to perform bit-wise operations
+with other bit-sets (such as intersecting and unioning)
+even though the bit-set is sparse.
+
+A reversible sparse bit-set has an array of ints, \T{words},
+that are the actual stored bits, an array \T{index} that
+keeps track of the indices of the non-zero words, and an
+int \T{limit} that is the index of the last non-zero word
+in \T{index}. Also, it has a temporary mask (array of ints)
+that is used to modify \T{words}.
+
+Some CP-solvers (Gecode is not among them)
+use a mechanism called \emph{trailing} to perform backtracking,
+where the main idea is to store a stack of operations that can
+be undone upon backtrack. These CP-solvers typically expose
+some "reversible" objects to the users using this mechanism,
+among them the reversible version of the primitive type int.
+The first word of the name of the datastructure comes from
+the assumption that \T{words} consists of
+reversible ints. In what follows, a data structure that is 
+like reversible sparse bit-sets except that it consists 
+of ordinary ints and not reversible ints
+will be called a sparse bit-set. Sparse bit-sets are discussed
+in \Secref{sec:algorithms}.
+
+% Reversiblity
+% Trail based
+% Reversible longs
 
 \section{Algorithms}
-\label{algorithms}
+\label{sec:algorithms}
 
 % Section 3 bör beskriva din design i detalj men samtidigt inte på C++-nivå. Jag gillar att se sjok av pseudokod inbäddade i text som förklarar pseudokoden. Man kan skriva text mellan sjoken och/eller i caption till algorithm-omgivningen. Något som jag också gillar är stepwise refinement, dvs. att först visa en enkel men korrekt version, och sedan en eller flera mer sofistikerade, optimerade versioner. Den pseudokod som du har skrivit passar bra i Section 3, men bryt gärna upp åtminstone Class CT-Propagator i flera stycken algorithm-omgivningar.
 
