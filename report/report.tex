@@ -196,7 +196,7 @@ This thesis contributes with the following:
   \item The relevant preliminaries have been covered in \Chapref{bg}.
   \item The algorithms presented in~\cite{DBLP:conf/cp/DemeulenaereHLP16} have been modified to suit the
     target constraint solver Gecode, and are presented and explained in 
-    \Chapref{algorithms}.
+    \Chapref{sec:algorithms}.
   \item The CT algorithm has been implemented in Gecode, see \Chapref{sec:implementation}.
   \item The performance of the CT algorithm has been evaluated, see \Chapref{evaluation}.
   \item ...
@@ -213,7 +213,7 @@ introduces Constraint Programming. \Secref{bg:gecode} gives an overview
 of Gecode, a constraint solver. \Secref{bg:table} introduces the~\Table
 constraint. \Secref{bg:ct} describes the main concepts of the Compact
 Table (CT) algorithm. Finally, \Secref{bg:sbs} describes the main
-idea of \Todo{Reversible?} Sparse Bit-Sets,
+idea of reversible sparse bit-sets,
 a data structure that is used in the CT algorithm.
 
 \subsection{Constraint Programming}
@@ -623,8 +623,8 @@ Nevertheless, the~\Table constraint is an important constraint.
 
 In Gecode, the \Table constraint is called \Extensional. Gecode provides
 three propagators for \Extensional, one where the possible solutions are
-represented as a DFA, based on~\cite{Pesant:seqs}, and two were the solutions
-is provided as a tuple set, which is a data structure in Gecode for representing 
+represented as a DFA, based on~\cite{Pesant:seqs}, and two where the solutions
+are representad in a tuple set, which is a data structure in Gecode for representing 
 a set of tuples. Among the last two one of them is based 
 on~\cite{DBLP:journals/ai/BessiereRYZ05}, and consumes less memory than the
 other, which is more incremental. 
@@ -687,7 +687,9 @@ some "reversible" objects to the users using this mechanism,
 among them the reversible version of the primitive type int.
 The first word of the name of the datastructure comes from
 the assumption that \T{words} consists of
-reversible ints. In what follows, a data structure that is 
+reversible ints.~\cite{\CTpaper}
+
+In what follows, a data structure that is 
 like reversible sparse bit-sets except that it consists 
 of ordinary ints and not reversible ints
 will be called a sparse bit-set. Sparse bit-sets are discussed
@@ -1144,7 +1146,7 @@ intersecting it with~$\CurrTable$.
 \end{algorithm}
 
 \item[CT($T$)]\emph{-- Fixing the domains when only one valid tuple left.} 
-This variant is the only addition made to the algorithm presented in~\cite{CTpaper}.
+This variant is the only addition made to the algorithm presented in~\cite{\CTpaper}.
 If only one valid tuple is left after all calls to \UpdateTable() are finished,
 the domains of the variables can be fixed to the values for that tuple.
 \Algoref{algo:propagateFix} shows an alternative to lines 10-11 in~\Algoref{algo:CT}.
@@ -1357,7 +1359,7 @@ proving~\Thmref{thm:prop} is trivial.
 % Section 4 blir nog mindre intressant än Section 3 och 5, men där kan du skriva om sånt som är specifikt för C++ och Gecode för att algoritmerna i Section 3 ska fungera, precis som du har börjat göra. Det är också en bra plats för detaljer som sopats under mattan i pseudokoden, t.ex. exakt hur du mappar (x,a) till rätt element i supports och residues, med hashtabell eller så.
 
 This section describes an implementation of the CT propagator using the algorithms
-presented in \Chapref{algorithms}. The implementation was made in the C++ programming
+presented in \Chapref{sec:algorithms}. The implementation was made in the C++ programming
 language in the Gecode library.
 
 \Todo{
@@ -1425,7 +1427,7 @@ The benchmarks consist of
     \input{benchmarks.tex} 
   \end{tabular}
   \caption{Benchmarks series and their characteristics.}
-  \label{tab:benchmars}
+  \label{tab:benchmarks}
 \end{table}
 
 All instances were written in MiniZinc~\cite{MiniZinc}, the
@@ -1583,7 +1585,7 @@ of timeout limit in milliseconds.
 
 \Todo{Change captions to DFA, B, I.}
 
-%\input{graphs.tex}
+\input{graphs.tex}
 
 \subsubsection{Discussion}
 
