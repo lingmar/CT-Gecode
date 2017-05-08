@@ -61,9 +61,14 @@ public:
   /// Find index of non-empty intersecting word with \a a and \a b
   static int intersect_index(const BitSet& a, const BitSet& b,
                              const int* map, int map_last);
-  /// Intersect \a with mask \a b with words described by \a map_size
+  /// Intersect \a with mask \a b with words described by \a map
   static bool intersect_with_mask(BitSet& a, const BitSet& b,
                                   int* map, int* map_last);
+  /// Nand \a with mask \b with words described by \a map
+  static bool nand_with_mask(BitSet& a, const BitSet& b,
+                             int* map, int* map_last);
+  /// Clear the words in \a b that occur in \a map
+  static void clear_by_map(BitSet& b, const int* map, int map_last);
   /** Debugging **/
   /// Print bit set
   void print() const;
@@ -106,7 +111,7 @@ public:
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   int intersect_index(const BitSet& b) const;
   /// Perform "nand" with \a b
-  bool nand(const BitSet& b);
+  bool nand_with_mask(const BitSet& b);
   /// Perform "and" with words and \a b at word index \a i
   Gecode::Support::BitSetData a(const BitSet& b, unsigned int i);
   /// Get the number of bits
@@ -342,6 +347,40 @@ BitSet::intersect_with_mask(BitSet& a, const BitSet& b,
   return diff;
 }
 
+forceinline bool
+BitSet::nand_with_mask(BitSet& a, const BitSet& b,
+                       int* map, int* map_last) {
+  using namespace Gecode::Support;
+  BitSetData* a_data = a.data;
+  BitSetData* b_data = b.data;
+  int local_map_last = *map_last;
+  bool diff = false;
+  for (int i = local_map_last; i >= 0; i--) {
+    int offset = map[i];
+    BitSetData rev = BitSetData::reverse(b_data[offset]);
+    BitSetData w = BitSetData::a(a_data[offset],b_data[offset]);
+    if (!w.same(a_data[offset])) {
+      diff = true;
+      a_data[offset] = w;
+      if (w.none()) {
+        map[i] = map[local_map_last];
+        local_map_last--;
+      }
+    }
+  }
+  *map_last = local_map_last;
+  return diff;
+}
+
+forceinline void
+BitSet::clear_by_map(BitSet& b, const int* map, int map_last) {
+  using namespace Gecode::Support;
+  BitSetData* b_data = b.data;
+  for (int i = 0; i <= map_last; i++) {
+    int offset = map[i];
+    b_data[offset].init(false);
+  }
+}
 
 /** Debugging purpose **/
 
@@ -400,10 +439,7 @@ SparseBitSet<A>::is_empty() const {
 template<class A>
 forceinline void
 SparseBitSet<A>::clear_mask(BitSet& mask) {
-  for (int i = 0; i <= limit; i++) {
-    int offset = index[i];
-    mask.clearword(offset, false);
-  }
+  BitSet::clear_by_map(mask,index,limit);
 }
 
 template<class A>
@@ -420,29 +456,9 @@ SparseBitSet<A>::intersect_with_mask(const BitSet& mask) {
 
 template<class A>
 forceinline bool
-SparseBitSet<A>::nand(const BitSet& b) {
-  using namespace Gecode;
-  int* local_index = index;
-  int local_limit = limit;
-  bool diff = false;
-  for (int i = local_limit; i >= 0; i--) {
-    int offset = local_index[i];
-    Support::BitSetData rev = Support::BitSetData::reverse(b.getword(offset));
-    Support::BitSetData na = Support::BitSetData::a(words.getword(offset), rev);
-    
-    if (!words.same(na,offset)) {
-      diff = true;
-      words.setword(na, offset);
-      if (na.none()) {
-        local_index[i] = local_index[local_limit];
-        local_limit--;
-      }
-    }
-  }
-  limit = local_limit;
-  return diff;
+SparseBitSet<A>::nand_with_mask(const BitSet& b) {
+  return BitSet::nand_with_mask(words,b,index,&limit);
 }
-
 
 template<class A>
 forceinline int

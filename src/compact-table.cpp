@@ -542,26 +542,10 @@ public:
       assert(max_row >= min_row);
 
       if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
-                                               // Reset-based update
-        // if (min_row == max_row) { // Only one value -- don't use a mask
-        //   validTuples.nand(a.supports(min_row));
-        // } else {
-        // Region r(home);
-        // BitSet mask;
-        // mask.allocate(r,validTuples.size());
-        // validTuples.clear_mask(mask);
-        // for (int i = min_row; i <= max_row; i++) {
-        //   if (!a.supports(i).empty()) { // empty if val not in initial domain
-        //     validTuples.add_to_mask(a.supports(i),mask);
-        //   }
-        // }
-        // validTuples.reverse_mask(mask);
-        // diff = validTuples.intersect_with_mask(mask);
-
         diff = false;
         for (int i = min_row; i <= max_row; i++) {
           const BitSet& s = a.supports(i);
-          if (!s.empty() && validTuples.nand(s)) {
+          if (!s.empty() && validTuples.nand_with_mask(s)) {
             diff = true;
           }
         }
