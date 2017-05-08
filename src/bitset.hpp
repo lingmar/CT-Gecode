@@ -20,7 +20,7 @@ public:
   BitSet& operator =(const BitSet&);
   /// Initialise for \a sz bits with allocator \a a
   template<class A>
-  void init(A& a, unsigned int s, bool setbits=false);
+  void init(A& a, unsigned int sz, bool setbits=false);
   /// Allocate for \a sz bits and allocator \a a (only after default constructor)
   template<class A>
   void allocate(A& a, unsigned int sz);
@@ -358,7 +358,7 @@ BitSet::nand_with_mask(BitSet& a, const BitSet& b,
   for (int i = local_map_last; i >= 0; i--) {
     int offset = map[i];
     BitSetData rev = BitSetData::reverse(b_data[offset]);
-    BitSetData w = BitSetData::a(a_data[offset],b_data[offset]);
+    BitSetData w = BitSetData::a(a_data[offset],rev);
     if (!w.same(a_data[offset])) {
       diff = true;
       a_data[offset] = w;
@@ -422,12 +422,19 @@ SparseBitSet<A>::init(unsigned int s) {
 template<class A>
 forceinline
 SparseBitSet<A>::SparseBitSet(A& a0, const SparseBitSet<A>& sbs)
-  : al(a0), words(al,sbs.words),
+  : al(a0), //words(al,sbs.words),
     limit(sbs.limit), sz(sbs.sz)  {
   // Copy limit+1 nr of elements in index
   index = al.template alloc<int>(limit + 1);
-  for (int i = limit+1; i--; )
+  int max_index = sbs.index[0];
+  for (int i = limit+1; i--; ) {
     index[i] = sbs.index[i];
+    if (index[i] > max_index)
+      max_index = index[i];
+  }
+  unsigned int nbits = max_index * BitSet::get_bpb();
+  words.init(al, nbits);
+  words.copy(nbits, sbs.words);
 }
 
 template<class A>
