@@ -278,6 +278,7 @@ and such that each digit appears at most once in each entry.
     \end{Kakuro}
   \end{minipage}
   \caption{A Kakuro puzzle~\protect\footnotemark (left) and its solution (right).}
+  \label{fig:kakuro}
 \end{figure}
 
 \footnotetext{From \emph{200 Crazy Clever Kakuro Puzzles - Volume 2}, LeCompte, Dave, 2010.}
@@ -442,21 +443,50 @@ the identity propagator~$i$, with~$i(s) = s$ for all input stores~$s$,
 which would be correct
 for all constraints, as long at is it checking and honest.
 
-To give a measure of how strong the constraint propagation of a propagator
-is, it is common to declare a \emph{consistency level} of a propagator.
+The concept \emph{consistency level} gives a measure of how strong
+the propagation of a propagator is.
 There are three commonly used consistency levels,
 \textbf{value consistency, bounds consistency}, and \textbf{domain consistency}.
 
+% To give a measure of how strong the constraint propagation of a propagator
+% is, it is common to declare a \emph{consistency level} of a propagator.
+
 \begin{definition}
-  \textbf{Domain consistency.} A constraint~$c$ is domain consistent on a store~$s$ 
-  if and only if for all variable-value
-  pair~$(x,a)$ such that~$x \in vars(c)$ and~$a \in dom(x)$, there exists
-  at least one support for~$(x,a)$ on~$c$. 
-  A propagator~$p$ is domain consistent, iff~$c$ is domain 
-  consistent on $p(s)$ for all stores~$s$ such that~$p(s)$ is not a failed store.
+  \textbf{Bounds consistency.} A constraint~$c$ is bounds consistent on a store~$s$ 
+  if and only if there exists at least one suppport for the lower and for the upper bound of
+  each variable associated with~$c$: $\forall x \in vars(c)$,~$(x,\text{min}(\Dom{x}))$
+  and~$(x,\text{max}(\Dom{x}))$ 
+  have a support on~$c$.
+  % A propagator~$p$ is bounds consistent, iff~$c$ is bounds consistent 
+  % consistent on $p(s)$ for all stores~$s$ such that~$p(s)$ is not a failed store.
 \end{definition}
 
-\Todo{Bounds consistency, Value consistency}.
+\begin{definition}
+  \textbf{Domain consistency.} A constraint~$c$ is domain consistent on a store~$s$ 
+  if and only if there exists at least one support for all values of each variable
+  associated with~$c$:
+  $\forall x \in vars(c),$ and $\forall a \in \Dom{x}$,~$(x,a)$ 
+  has a support on~$c$.
+ % for all variable-value
+ %  % pair~$(x,a)$ such that~$x \in vars(c)$ and~$a \in dom(x)$, there exists
+ %  % at least one support for~$(x,a)$ on~$c$. 
+ %  % % A propagator~$p$ is 
+ %  domain consistent, iff~$c$ is domain 
+  % consistent on $p(s)$ for all stores~$s$ such that~$p(s)$ is not a failed store.
+\end{definition}
+
+\Todo{Value consistency}.
+
+Value consistency is weaker than bounds consistency, and bounds consistency
+is weaker than domain consistency.
+
+A propagator~$p$ is said to have a certain consistency level,
+if applying~$p$ to any input store~$s$, the resulting store~$p(s)$
+has that consistency level. Enforcing a stronger consistency level might 
+remove more values from the domains of the variables, but might be
+more costsome.
+
+The propagator that is concerned in this project is domain consistent.
 
 \subsection{Gecode}
 \label{bg:gecode}
@@ -464,7 +494,9 @@ Gecode~\cite{Gecode} is a popular constraint programming solver written in C++.
 
 \Todo{Some more ovarall information...}
 
-Implementing a propagator in Gecode means implementing the following parts:
+A propagator in Gecode is implemented as a C++ object inheriting from
+the base class Propagator.
+It must implement the following parts:
 
 \begin{description}
   \item[Posting.] 
@@ -472,6 +504,11 @@ Implementing a propagator in Gecode means implementing the following parts:
     deciding whether the propagator really needs to be posted,
     performing some initial propagation and creating an
     instance of the propagator.
+    
+    The propagator must also \emph{subscribe} to its associated variables,
+    subscribing to a variable ensures the propagator is scheduled
+    for execution whenever the relevant modification event occurs
+    for that variable.
 
     % Posting a propagator requires a \emph{constraint post function},
     % a \emph{propagator post function} and a \emph{constructor}.
@@ -487,14 +524,36 @@ Implementing a propagator in Gecode means implementing the following parts:
     %     to views. Subscribing to the views means the propagator is scheduled for execution whenever
     %     the domains of the views change.
     % \end{itemize}
-  \item[Disposal.]
-  \item[Copying.] 
-  \item[Cost computation.] 
-  \item[Propagation.] 
-  \item[Rescheduling.] 
+  \item[Disposal.] The propagator must implement a dispose() function that
+    returns the memory used by the propagator at disposal.
+
+  \item[Copying.] The propagator must implement a copy() function for cloning
+    the propagator during search.
+
+  \item[Cost computation.] Gecode schedules propagators for execution according
+    to their estimated cost. Cheaper propagators execute before more expensive
+    ones, based on the inutition that cheaper propagators might prune values
+    or detect a failure early, so that more expensive propagators can take
+    advantage, or not even need to be executed. Every propagator implements
+    a cost() function that estimates the cost of executing that propagator.
+
+  \item[Propagation.] The propagator implements propagate() function
+    that performs the pruning of values. This function must fulfill
+    the obligations in Definition~\ref{def:prop}.
+
+  \item[Rescheduling.] For various reasons, a propagator can be disabled,
+    in which case it needs to be rescheduled at a later point, implemented
+    by a reschedule() function.
+
 \end{description}
 
+% Modification event
+% What is it?
+% Which exist?
+
 \Todo{Advisors}
+% What is it?
+% Why is it good?
 % http://ceur-ws.org/Vol-810/paper-s08.pdf
 
 % definiera de delar av Gecodes API som dyker upp senare, såsom propagate(), status messages
@@ -1411,7 +1470,7 @@ of timeout limit in milliseconds.
 
 \Todo{Change captions to DFA, B, I.}
 
-\input{graphs.tex}
+%\input{graphs.tex}
 
 \subsubsection{Discussion}
 
