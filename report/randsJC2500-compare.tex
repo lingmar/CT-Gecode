@@ -1,7 +1,7 @@
-  \begin{axis}[
+\begin{axis}[
     xmode=log,
-    ymin=0,ymax=11,
-    xmin=100, xmax=100000,
+    ymin=0,ymax=0,
+    xmin=0.1, xmax=1000000,
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
     ylabel={\# solved},
@@ -15,61 +15,33 @@
     mark size=1.5,
     mark options={solid},
     green] 
-    coordinates {(493.707, 1)
-(1534.065, 2)
-(1732.300, 3)
-(1892.718, 4)
-(4819.172, 5)
-(5753.130, 6)
-(9028.954, 7)
-(12217.926, 8)
-(14965.073, 9)
-(63087.240, 10)};
+    coordinates {
+    
+    };
 
     \addplot 
     [blue,
     mark=*,
     mark size=1.5,
     mark options={solid}]
-    coordinates {(390.154, 1)
-(1197.210, 2)
-(1390.971, 3)
-(1519.242, 4)
-(3823.828, 5)
-(4617.781, 6)
-(7228.985, 7)
-(9919.531, 8)
-(11845.924, 9)
-(49761.700, 10)};
+    coordinates {
+    
+    };
 
     \addplot [brown!60!black,
     mark options={fill=brown!40},
     mark=otimes*,
     mark size=1.5]
-    coordinates {(497.095, 1)
-(1524.837, 2)
-(1760.207, 3)
-(1913.266, 4)
-(4875.522, 5)
-(5784.823, 6)
-(9099.779, 7)
-(12223.350, 8)
-(15056.924, 9)
-(63609.035, 10)};
+    coordinates {
+    
+    };
 
     \addplot 
     [red,
     mark size=1.5,
     mark=square*]
-    coordinates {(594.196, 1)
-(1881.198, 2)
-(2139.673, 3)
-(2268.559, 4)
-(5854.235, 5)
-(7115.928, 6)
-(10970.686, 7)
-(15071.509, 8)
-(18836.865, 9)
-(78418.083, 10)};
-    \legend{CT,CT($\Delta$),CT($T$),CT($B$)}
+    coordinates {
+    
+    };
+    \legend{CT,CT($\Delta$),CT(randsJC2500$),CT($)}
   \end{axis}
