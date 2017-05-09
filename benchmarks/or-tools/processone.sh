@@ -1,17 +1,22 @@
 #!/bin/bash
 
+#echo "Processone"
+
 # Script for processing results
 T=$1
 
 ERR=`dirname $T`/err.log
 touch $ERR
-rm $ERR
+#rm $ERR
 
 OUT=`dirname $T`/out.log
 touch $OUT
-rm $OUT
+#rm $OUT
 
 missing=""
+
+#echo "input file: $T"
+#echo "out: $OUT"
 
 grep -q "REGULAR" $T ||
     {
@@ -50,10 +55,13 @@ fi
 prop=(reg tup_mem tup_speed ct)
 
 count=0
-
 for time in `grep "solvetime" $T | grep -o "([0-9]*.[0-9][0-9][0-9]" | cut -d "(" -f2`; do
     echo "${prop[$count]}($time)" >> $OUT
     count=$(($count+1))
+    if (( $count == 4))
+    then
+	exit 2
+    fi
 done
 
 
