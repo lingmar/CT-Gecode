@@ -4,19 +4,15 @@
 
 # Script for processing results
 T=$1
+dir=`dirname $T`
 
-ERR=`dirname $T`/err.log
+ERR=$dir/err.log
 touch $ERR
 #rm $ERR
-
-OUT=`dirname $T`/out.log
-touch $OUT
-#rm $OUT
+prop=(dfa b i ct)
+echo "input file: $T"
 
 missing=""
-
-#echo "input file: $T"
-#echo "out: $OUT"
 
 grep -q "REGULAR" $T ||
     {
@@ -52,16 +48,16 @@ then
     exit 2
 fi
 
-prop=(reg tup_mem tup_speed ct)
-
 count=0
 for time in `grep "solvetime" $T | grep -o "([0-9]*.[0-9][0-9][0-9]" | cut -d "(" -f2`; do
-    echo "${prop[$count]}($time)" >> $OUT
+    echo "$time" >> $dir/${prop[$count]}-solve.data
     count=$(($count+1))
-    if (( $count == 4))
-    then
-	exit 2
-    fi
+done
+
+count=0
+for time in `grep "runtime" $T | grep -o "([0-9]*.[0-9][0-9][0-9]" | cut -d "(" -f2`; do
+    echo "$time" >> $dir/${prop[$count]}-run.data
+    count=$(($count+1))
 done
 
 

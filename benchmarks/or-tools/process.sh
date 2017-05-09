@@ -11,12 +11,41 @@ find $dir -name "*.res" parallel -P 4 --progress nice ./processone.sh {}
 
 echo "Done processone"
 
+prop=(dfa b i ct)
+
+for c in 0 1 2 3; do
+    solve=$dir/${prop[$c]}-solve.data
+    run=$dir/${prop[$c]}-run.data
+    sort -n $solve -o $solve
+    sort -n $run -o $run
+    count=1
+    for line in `cat $solve`; do
+        echo "($line, $count)" >> $solve-temp
+        cp $solve-temp $solve
+	count=$(($count+1))
+    done
+    count=1
+    for line in `cat $run`; do
+        echo "($line, $count)" >> $run-temp
+        cp $run-temp $run
+	count=$(($count+1))
+    done        
+done
+
+
+
+
+
+
+
+
 REG="reg.log"
 TUP_SPEED="tup_speed.log"
 TUP_MEM="tup_mem.log"
 CT="ct.log"
 
 RAW="out.log"
+RUNTIME="out-runtime.log"
 OUT=$(echo $f | cut -d '.' -f1).data
 
 touch $dir/$REG
