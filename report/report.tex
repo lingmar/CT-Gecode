@@ -120,6 +120,8 @@
 \def\FilterDomains{\textsc{FilterDomains}}
 \def\FixDomains{\textsc{FixDomains}}
 \def\InitialiseCT{\textsc{InitialiseCT}}
+\def\IndexOfFixed{\mathit{index\_of\_fixed}}
+
 
 \newcommand{\ITE}[3]{\text{\bf ~if~} #1 \text{\bf ~then~} #2 \text{\bf ~else~} #3 \text{\bf ~endif}}
 
@@ -168,38 +170,109 @@
 \section{Introduction}
 \label{intro}
 
-In Constraint Programming (CP), every constraint is associated with a propagator
-algorithm. The propagator algorithm filters out impossible values for the variables
-related to the constraint. For the \Table constraint, several propagator
-algorithms are known. In 2016, a new propagator algorithm for the \Table
+% What is CP?
+% What is a propagator?
+% Gecode
+% Goal
+
+Constraint Programmint (CP) is a programming paradigm that is used for solving
+combinatorial problems. Within the paradigm, a problem is
+modelled as a set of \emph{constraints} on a
+set of \emph{variables} that each can take on a number of
+possible values. The possible values of 
+a variable is called the \emph{domain} of the variable.
+All the variables are to be assigned a value
+from their domains, so that all the constraints of the problem
+are satisfied. Additionally, in some cases the solution should not only
+satisfy the set of constraints for the
+problem, but also maximise or minimise some given function.
+
+
+%A constraint solver (CP solver) is a software that solves constraint problems.
+A solution to a constraint problem is found by generating a search
+tree, branching on possible values for the variables. At each node
+in the search tree, impossible values are filtered out from the domains
+of the variables in a process called~\emph{propagation}, effectively
+reducing the size of the search tree.
+Each constraint is associated with a \emph{propagation algorithm},
+called a~\emph{propagator},
+that implements the propagation for that constraint by removing
+values from the variables that are in conflict with the constraint.
+
+The \Table constraint expresses the possible combinations of values
+that the associated variables can take as a sequence of tuples.
+Assuming finite domains, the \Table constraint can theoretically
+encode any kind of constraint and is thus very powerful. 
+The design of propagation algorithms for \Table is an active research field,
+and several algorithms are known. In 2016, a new propagation algorithm for the \Table
 constraint was published~\cite{\CTpaper}, called Compact Table (CT).
 Preliminary results indicate that CT outperforms the previously known algorithms.
-There has been no attempt to implement CT in the constraint solver Gecode~\cite{Gecode}, 
-and consequently its performance in Gecode is unknown.
+
+A constraint programming solver (CP solver) is a software that solves constraint problems.
+\emph{Gecode}~\cite{Gecode} is a popular CP solver written in C++, and combines
+state-of-the-art performance with modularity and extensibility.
+Gecode has three existing propagation algorithms for~\Table.
+Before this project there had been no attempt to implement CT in Gecode
+and consequently its performance in Gecode was unknown. 
+The purpose of this thesis is to implement CT in Gecode and to evaluate
+and compare its performance with previously existing propagators for
+the \Table constraint.
+The results of the evaluation indicate that CT outperforms
+the existing propagation algorithms in Gecode for \Table,
+which suggests that CT should be included in the solver.
+
+% In Constraint Programming (CP), every constraint is associated with a propagator
+% algorithm. The propagator algorithm filters out impossible values for the variables
+% related to the constraint. For the \Table constraint, several propagator
+% algorithms are known. In 2016, a new propagator algorithm for the \Table
+% constraint was published~\cite{\CTpaper}, called Compact Table (CT).
+% Preliminary results indicate that CT outperforms the previously known algorithms.
+% There has been no attempt to implement CT in the constraint solver Gecode~\cite{Gecode}, 
+% and consequently its performance in Gecode is unknown.
 
 \subsection{Goal}
 \label{intro:goal}
-The goal of this thesis is to implement a CT propagator
-algorithm for the \Table constraint in Gecode,
-and to evaluate its performance with respect to the existing propagators.
+The goal of this bachelor thesis is the design, documentation and implementation
+of a CT propagator algorithm for the \Table constraint in Gecode,
+and the evaluation of its performance compared to the existing propagators.
 
 \subsection{Contributions}
 \label{intro:contributions}
 
-\Todo{State the contributions, perhaps as a bulleted list, referring to the different
-parts of the paper, as opposed to giving a traditional outline. (As suggested
-by Olle Gallmo.)}
+% \Todo{State the contributions, perhaps as a bulleted list, referring to the different
+% parts of the paper, as opposed to giving a traditional outline. (As suggested
+% by Olle Gallmo.)}
 
-This thesis contributes with the following:
+Now follows the contributions made by this bachelor thesis, which also works as a
+description of the outline of the written dissertation.
+
+%The contributions that this bachelor thesis with the following:
 
 \begin{itemize}
-  \item The relevant preliminaries have been covered in \Chapref{bg}.
-  \item The algorithms presented in~\cite{DBLP:conf/cp/DemeulenaereHLP16} have been modified to suit the
-    target constraint solver Gecode, and are presented and explained in 
-    \Chapref{sec:algorithms}.
-  \item The CT algorithm has been implemented in Gecode, see \Chapref{sec:implementation}.
-  \item The performance of the CT algorithm has been evaluated, see \Chapref{evaluation}.
-  \item ...
+  \item The preliminaries that are relevant for the rest of the dissertation
+    are covered in \Secref{bg}.
+
+  \item The algorithms presented in the paper that is the starting point of this 
+    project~\cite{DBLP:conf/cp/DemeulenaereHLP16} 
+    have been modified to suit the target constraint solver Gecode, and are presented and explained in 
+    \Secref{sec:algorithms}.
+
+  \item Several versions of the CT algorithm has been implemented in Gecode, and
+    the implementation is discussed in \Secref{sec:implementation}.
+
+  \item The performance of the CT algorithm has been evaluated,
+    and the results
+    are presented and discussed in \Secref{evaluation}.
+
+  \item The conclusion of the project is that the results indicate
+    that CT outperforms the existing propagation algorithms, which
+    suggests that CT should be included in Gecode, this is discussed
+    in \Secref{conclusions}.
+
+  \item Several possible improvements and flaws have been detected in the current
+    implementation that prevent the code to meet commercial standards, these
+    are listed in \Secref{conclusions}.
+        
 \end{itemize}
 
 \section{Background}
@@ -220,15 +293,18 @@ a data structure that is used in the CT algorithm.
 \label{bg:cp}
 This section introduces the concept of Constraint Programming (CP).
 
-CP is a programming paradigm that is used for solving
-combinatorial problems. A problem is
-modelled as a set of \emph{constraints} and a
-set of \emph{variables} with possible values. The possible values of 
+Constraint Programming (CP) is a programming paradigm that is used for solving
+combinatorial problems.
+Within the paradigm, a problem is
+modelled as a set of \emph{constrains} on a
+set of \emph{variables} that each can take on a number of
+possible values. The possible values of 
 a variable is called the \emph{domain} of the variable.
 All the variables are to be assigned a value
 from their domains, so that all the constraints of the problem
-are satisfied. Sometimes the solution should not only satisfy the set of constraints for the
-problem, but should also maximise or minimise some given function.
+are satisfied. Additionally, in some cases the solution should not only
+satisfy the set of constraints for the
+problem, but also maximise or minimise some given function.
 
 A constraint solver (CP solver) is a software that solves constraint problems.
 The solving of a problem consists of generating a search tree by branching
@@ -236,12 +312,15 @@ on possible values for the variables. At each node in the search tree,
 the solver removes impossible values from the domains of the variables.
 This filtering process is called \emph{propagation}. Each constraint is
 associated with at least one propagator algorithm, whose task is to detect
-values that would violate the constraint if the variables were to be assigned
-any of those values, and remove those values from the domain of the variables.
+and remove values from the domains of the variables
+that can never participate in a solution, because assigning them to
+the variables would violate the constraint,
+effectively pruning the size of the search tree.
 
 To build intuition and understand the ideas of CP,
-the concepts can successfully be demonstrated with logical puzzles. One such
-puzzle is Kakuro, a kind of mathematical crossword where the "words" consist
+the concepts can be demonstrated with logical puzzles. One such
+puzzle is Kakuro, somewhat similar to the popular puzzle Soduko,
+a kind of mathematical crossword where the "words" consist
 of numbers instead of letters, see Figure~\ref{fig:kakuro}.
 The game board consists of 
 blank cells forming rows and columns, called \emph{entries}.
@@ -289,7 +368,7 @@ The constraints of the problem is that the sum of the variables that
 belong to a given entry must be equal to the clue for that entry, and the
 values of the variables for each entry must be distinct.
 
-An alternative way of phrasing the constraints of Kakuro, is to for each entry
+An alternative way of phrasing the constraints of Kakuro, is for each entry
 explicitly list all the possible combinations
 of values that the variables in that entry can take.
 For example, consider an entry of size 2 with clue 4. The only
@@ -309,9 +388,11 @@ The definitions are based on
 \cite{SchulteCarlsson:FDsys}, \cite{Apt:constraintsBook}, and \cite{Gecode:MPG}.
 
 \begin{definition}
+  \label{def:constraint}
   \textbf{Constraint.} Consider a finite sequence of~$n$ 
   variables~$X = x_1,\ldots,x_n$, and a corresponding sequence of
-  \emph{domains}~$D = D_1,\ldots,D_n$, that are possible values for the
+  finite \emph{domains}~$D = D_1,\ldots,D_n$ ranging over integers,
+  that are possible values for the
   respective variable. 
   For a variable~$x_i \in X$, its domain~$D_i$ is denoted 
   by~$dom(x_i)$.
@@ -336,6 +417,11 @@ The definitions are based on
       and~$\tau[x] = a$.
     \end{itemize}
 \end{definition}
+
+Note that Definition~\ref{def:constraint} restricts the domains to range
+over finite sets of integers. Constraints can be defined on
+other sets of values, but in this thesis only finite integer domains
+are considered.
 
 \begin{definition}
   \textbf{CSP.} A Constraint Satisfaction Problem (CSP) is a 
@@ -484,7 +570,7 @@ A propagator~$p$ is said to have a certain consistency level,
 if applying~$p$ to any input store~$s$, the resulting store~$p(s)$
 has that consistency level. Enforcing a stronger consistency level might 
 remove more values from the domains of the variables, but might be
-more costsome.
+more costly.
 
 The propagator that is concerned in this project is domain consistent.
 
@@ -504,7 +590,7 @@ inheriting from the base class Propagator,
 that complies to the correct interface.
 The propagator can store any data structures as instance members,
 for saving information about its state between executions.
-The interfase consists of 
+The interface consists of 
 the following parts~\cite{Gecode:MPG}.
 
 \begin{description}
@@ -534,26 +620,26 @@ the following parts~\cite{Gecode:MPG}.
     %     to views. Subscribing to the views means the propagator is scheduled for execution whenever
     %     the domains of the views change.
     % \end{itemize}
-  \item[Disposal.] The propagator must implement a dispose() function that
+  \item[Disposal.] The propagator must implement a dispose() method that
     returns the memory used by the propagator at disposal.
 
   \item[Copying.] During search the propagator needs to be copied. This is
-    handled by the copy() function.
+    handled by the copy() method.
 
   \item[Cost computation.] Gecode schedules propagators for execution according
     to their estimated cost. Cheaper propagators execute before more expensive
     ones, based on the inutition that cheaper propagators might prune values
     or detect a failure early, so that more expensive propagators can take
     advantage, or not even need to be executed. Every propagator implements
-    a cost() function that estimates the cost of executing that propagator.
+    a cost() method that estimates the cost of executing that propagator.
 
-  \item[Propagation.] The propagator implements propagate() function
-    that performs the pruning of values. This function must fulfill
+  \item[Propagation.] The propagator implements a propagate() method
+    that performs the pruning of values. This method must fulfill
     the obligations in Definition~\ref{def:prop}.
 
   \item[Rescheduling.] For various reasons, a propagator can be disabled,
     in which case it needs to be rescheduled at a later point, implemented
-    by a reschedule() function.
+    by a reschedule() method.
 
 \end{description}
 
@@ -569,13 +655,13 @@ its propagator. The purpose of an advisor is to, as its name suggests, advise
 the propagator of whether it needs to be executed or not. This works as follows.
 Whenever the domain
 of the variable(s) that an advisor is subscribed to changes, its advise()
-function is executed. If the advisor detects that its propagator is still
+method is executed. If the advisor detects that its propagator is still
 at fixpoint, it should not schedule the propagator. If it is not at fixpoint,
 or possibly not at fixpoint, the advisor must schedule its propagator for
 execution. Similarly, the advisor can report failure or subsumption
 if it detects a failure or that its propagator is subsumed. An advisor
 is not allowed to modify the domains of the variables. 
-Furthermore, the advise() function can access
+Furthermore, the advise() method can access
 the modification event that triggered its execution. 
 For integer and boolean variables, some information about which values
 have been removed is provided.
@@ -616,7 +702,7 @@ it is too memory consuming to represent a constraint in this way
 (exponential space in the number of variables). Also, common constraints
 typically have a certain structure (such as a linear constraint)
 that is difficult to take advantage of if the constraint is represented
-extensionally.~\cite{SchulteCarlsson:FDsys}.
+extensionally~\cite{SchulteCarlsson:FDsys}.
 
 Nevertheless, the~\Table constraint is an important constraint.
 \Todo{Typical use cases? Propagator algortihms?}
@@ -643,7 +729,7 @@ Before this project, no attempts to implement CT in Gecode were made,
 and consquently its performance in Gecode is unknown.
 
 Compact table relies on bitwise operations using a new datastructure
-called \emph{reverseible sparse bit-set} (see \Secref{bg:sbs}).
+called \emph{reversible sparse bit-set} (see \Secref{bg:sbs}).
 The propagator maintains a reversible sparse bit set object, \texttt{currTable},
 which stores the indices of the current valid tuples in a bit-set.
 Also, for each variable-value pair, a bit-set mask is computed, that stores the
@@ -666,8 +752,9 @@ Both steps rely heavily on bitwise operations on \T{currTable} and
 \subsection{Reversible Sparse Bit-Sets}
 \label{bg:sbs}
 % Beskriv idén
-Reversible sparse bit-sets is a data structure for storing 
-a set of values. It avoids performing operations on non zero
+Reversible sparse bit-sets~\cite{\CTpaper} 
+is a data structure for storing 
+a set of values. It avoids performing operations on zero
 words, which makes it efficient to perform bit-wise operations
 with other bit-sets (such as intersecting and unioning)
 even though the bit-set is sparse.
@@ -687,7 +774,7 @@ some "reversible" objects to the users using this mechanism,
 among them the reversible version of the primitive type int.
 The first word of the name of the datastructure comes from
 the assumption that \T{words} consists of
-reversible ints.~\cite{\CTpaper}
+reversible ints.
 
 In what follows, a data structure that is 
 like reversible sparse bit-sets except that it consists 
@@ -794,9 +881,13 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
     set to~$-1$, that means that all words are zero-words and the bit-set
     is empty.
 
-  \item clearMask() in lines~\ref{line:clearMask:1}-\ref{line:clearMask:4}
+  \item clearMask() in lines~\ref{line:clearMask:1}-\ref{line:reverse:4}
+    reverses the bits in the temporary mask.
+
+  \item reverseMask() in lines~\ref{line:reverse:1}-\ref{line:clearMask:4}
     clears the temporary mask. This means setting to~$0$ all words of~$\Mask$
     corresponding to non-zero words of~\Words.
+    
 
   \item addToMask() in~\linesref{line:addToMask:1}{line:addToMask:4} collects
     elements to the temporary mask by applying a word-by-word logical bit-wise
@@ -837,15 +928,16 @@ obligations.
 
 \subsubsection{Pseudo code}
 \label{ct:pseudo}
+
 When posting the propagator, the input is an initial table, that is
 a list of tuples $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of
 length~$p_o$. In what follows, we call the \emph{initial valid table}
 for~$c$ the subset~$T \subseteq T_0$ of size~$p \leq p_0$ where all
 tuples are a support on~$c$ for the initial domains of~$vars(c)$.
 For a variable~$x$, we distinguish between the \emph{initial domain}
-~$\Dominit{x}$ and the \emph{current domain} $\Dom{x}$.
+~$\Dominit{x}$ and the \emph{current domain} $\Dom{x}$ or~$s(x)$.
 In an abuse of notation, we denote~$x \in s$ for a variable
-$x$ that is part of store~$s$. We denote~$s[x \mapsto \Set{A}]$
+$x$ that is part of store~$s$. We denote~$s[x \mapsto A]$
 the store that is like~$s$ except that the variable~$x$ is mapped
 to the set~$A$.
 
@@ -894,7 +986,7 @@ The propagator state has the following fields.
 if it is being posted. CT reports failure in case a variable domain was
 wiped out in \InitialiseCT or if $\CurrTable$ is empty, meaning no tuples are valid.
 If the propagator is not being posted,
-lines 6-9 calls \UpdateTable() for all variables whose domains have changed
+lines 6-9 call \UpdateTable() for all variables whose domains have changed
 since last time. \UpdateTable() will remove from $\CurrTable$ the tuples that
 are no longer supported, and CT reports failure if all tuples were removed.
 If at least one variable was pruned, \FilterDomains() is
@@ -902,6 +994,10 @@ called, which will filter out values from the domains of the variables that
 no longer have supports, enforcing domain consistency.
 CT is subsumed if there is at most one unassigned variable
 left, otherwise CT is at fixpoint.
+The condition for fixpoint is correct because CT is idempotent,
+which is shown in the proof of Lemma~\ref{lemma:idempotent}.
+Why the condition for subsumption is correct is shown in the proof of 
+Lemma~\ref{lemma:honest}.
 
 \input{ct-functional.tex}
 
@@ -994,7 +1090,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
 
   Therefore, we must check this condition for every variable-value pair~$(x,a)$ and
   remove~$a$ from the domain of~$x$ if the condition is not satisfied any more.
-  This is implemented inx \FilterDomains()
+  This is implemented in \FilterDomains()
   in~\Algoref{algo:filterDomains}.%lines~\ref{line:filterDom:0}-\ref{line:filterDom:12}.
 
   \begin{algorithm}[H]
@@ -1018,7 +1114,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   \CompactTable() would have reported failure. 
   %Hence, we need only consider~$x \in \Scp$ such that~$|\Dom{x} > 1|$.
 
-  In \Linesref{line:filterDom:res1}{line:filterDom:res2} we see if the
+  In \Linesref{line:filterDom:res1}{line:filterDom:res2} we check if the
   cached word index still has a support for~$(x,a)$. It it has not,
   we search for an index in line~\ref{line:filterDom:4} in~$\CurrTable$
   where a valid support for the variable-value pair~$(x,a)$ is found, 
@@ -1036,7 +1132,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   % is at fixpoint.
 
 
-\clearpage
+%\clearpage
 
 %This description is mainly taken from~\cite{CTpaper}.
 
@@ -1200,6 +1296,9 @@ builtin~\textsc{MSB}~which returns the index of the most significant bit of a gi
 
 \subsubsection{Proof of properties for CT}
 \label{sec:proof}
+% TODO: konsekvent typsnitt på funktionsnamn
+% TODO: initCT->initialiseCT
+
 This section proves that the CT Propagator is indeed a well-defined propagator
 implementing the~\Table~constraint. We formulate the following theorem, which
 we will prove by a number of lemmas.
@@ -1290,7 +1389,7 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   the call to \T{updateTable()} and $CT$ reports failure.
   
   Now assume that~$s$ is a solution store. 
-  $CT$ signals failure in \T{filterDomains()} because all variables are assigned.
+  $CT$ signals subsumption in \T{filterDomains()} because all variables are assigned.
 
 \end{proof}
 
@@ -1337,8 +1436,7 @@ After proving Lemmas~\ref{lemma:decreasing}-\ref{lemma:monotonic},
 proving~\Thmref{thm:prop} is trivial.
 
 \begin{proof}[Proof of \Thmref{thm:prop}]
-  The result follows by Lemmas~\ref{lemma:decreasing}-
-  \ref{lemma:monotonic}.
+  The result follows by Lemmas~\ref{lemma:decreasing}-\ref{lemma:monotonic}.
 \end{proof}
 
 \section{Implementation}
@@ -1369,6 +1467,7 @@ language in the Gecode library.
     \item Indexing of supports and residues
     \item Memory management
     \item Ideas from or-tools
+    \item Profilation
   \end{itemize}
 }
 
@@ -1404,6 +1503,9 @@ language in the Gecode library.
 
 \section{Evaluation}
 \label{evaluation}
+% TODO: skip crosswords
+% TODO: appendix with plots
+
 This chapter presents the evaluation of the implementation of the CT propagator
 presented in \Chapref{sec:implementation}. 
 
@@ -1411,23 +1513,19 @@ presented in \Chapref{sec:implementation}.
 The correctness of the CT propagator was validated with the existing unit tests
 in Gecode for the \Table~constraint.
 
-The benchmarks consist of
-\begin{itemize}
-\item \Todo{how many} series 
-  with a total of~$1507$ CSP instances that where used in the
-  experiments in~\cite{\CTpaper}.
-\item One serie of~$72$ CSP instances representing crosswords problems \Todo{source?}.
-\end{itemize}
+The benchmarks consist of \Todo{how many} series 
+with a total of~$1507$ CSP instances that where used in the
+experiments in~\cite{\CTpaper}.
 
 \begin{table}[h]\small
+  \caption{Benchmarks series and their characteristics.}
+  \label{tab:benchmarks}
   \centering
   \begin{tabular}{lccc}  % right alignment --> decimal point alignment
     name & number of instances & arity & variable domains \\
     \midrule
     \input{benchmarks.tex} 
   \end{tabular}
-  \caption{Benchmarks series and their characteristics.}
-  \label{tab:benchmarks}
 \end{table}
 
 All instances were written in MiniZinc~\cite{MiniZinc}, the
@@ -1587,14 +1685,9 @@ of timeout limit in milliseconds.
 
 \input{graphs.tex}
 
-\subsubsection{Discussion}
-
-
-
+%\subsubsection{Discussion}
 
 % Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
-
-
 
 % The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
 % were also used here. The instances were compiled (using~\cite{xcsp2mzn})
@@ -1715,7 +1808,7 @@ improvements and flaws.
   \item In the variant using delta information, the current implementation
     uses the incremental update if~$|\Delta_x| < |s(x)|$. It is possible
     that this condition can be generalised to~$|\Delta_x| < k \cdot |s(x)|$,
-    where~$k \in \mathbb{R}$, something that is not experimentet width.
+    where~$k \in \mathbb{R}$, something that remains to be investigated.
 
 \end{itemize}
 
