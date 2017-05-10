@@ -1,11 +1,10 @@
 \PROCEDURE IndexOfFixed(): int
-\STATE $index\_of\_fixed = -1$
+\STATE $\IndexOfFixed = -1$
 \IF{$\Limit = 0$}
-  \STATE $offset \leftarrow \Index[0]$
-  \STATE $w \leftarrow \Words[offset]$
+  \STATE $\Offset \leftarrow \Index[0]$
+  \STATE $w \leftarrow \Words[\Offset]$
   \IF[Exactly one bit set]{$(w \ \& \ (w - 1)) = 0$}  
-    \STATE $index\_of\_fixed = offset \cdot 64 + \textsc{MSB}(\Words[offset])$
+    \STATE $\IndexOfFixed = \Offset \cdot 64 + \textsc{MSB}(\Words[\Offset])$
   \ENDIF
-\ELSE
-  \RETURN $index\_of\_fixed$
 \ENDIF
+\RETURN $\IndexOfFixed$

@@ -181,8 +181,8 @@ modelled as a set of \emph{constraints} on a
 set of \emph{variables} that each can take on a number of
 possible values. The possible values of 
 a variable is called the \emph{domain} of the variable.
-All the variables are to be assigned a value
-from their domains, so that all the constraints of the problem
+Each variable is to be assigned a value
+from its domain, so that all the constraints of the problem
 are satisfied. Additionally, in some cases the solution should not only
 satisfy the set of constraints for the
 problem, but also maximise or minimise some given function.
@@ -300,8 +300,8 @@ modelled as a set of \emph{constrains} on a
 set of \emph{variables} that each can take on a number of
 possible values. The possible values of 
 a variable is called the \emph{domain} of the variable.
-All the variables are to be assigned a value
-from their domains, so that all the constraints of the problem
+Each variable is to be assigned a value
+from its domain, so that all the constraints of the problem
 are satisfied. Additionally, in some cases the solution should not only
 satisfy the set of constraints for the
 problem, but also maximise or minimise some given function.
@@ -1075,7 +1075,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   % in which case we return~$Failed$ in line~\ref{line:updateTable:9}
   % because there are no valid tuples left. 
 
-  The algorithm is assumed to be run on an infrastructure that runs updateTable()
+  The algorithm is assumed to be run on an infrastructure that runs \UpdateTable()
   for each variable~$x \in vars(c)$ whose domain has changed since last time.
   
   After the current table has been updated, inconsistent values must be removed
@@ -1122,94 +1122,6 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   If such an index exists, we cache it in~$\Residues[x,a]$, and
   if it does not, we remove~$a$ from~$\Dom{x}$ if~$(x,a)$ in 
   line~\ref{line:filterDom:7} since there is no support left for~$(x,a)$.
-
-  % \Linesref{line:filterDom:8}{line:filterDom:9}
-  % increments the counter of unassigned variables if~$|\Dom{x}| > 1$.
-
-  % \Linesref{line:filterDom:10}{line:filterDom:11} return the correct
-  % propagator status message. If the number of unassigned variables is
-  % at most one, the propagator is subsumed. Otherwise, the propagator
-  % is at fixpoint.
-
-
-%\clearpage
-
-%This description is mainly taken from~\cite{CTpaper}.
-
-% Beskriv övergripande?
-
-% CT is based on bitwise operations -- among the important datastructures we have
-% a~$\SparseBitSet$ object which maintains the valid supports, and also a bitset
-% matrix that
-
-% In this ordered set, each tuple is indexed
-% by the order it appears in the table, and the~$i$th element is~$1$ if and only if
-% the~$i$th tuple is a valid support, else the~$i$th element is~$0$.
-
-% \subsubsection{Fields}
-% \label{CT:fields}
-
-% \Todo{Add examples with figures for describing the fields.}
-
-% % From hereon, we let the \emph{initial valid table} for $c$,~$T_v$, be a subset of the
-% % initial table~$T$ such that for all tuples~$\tau \in T_v$, $\tau$ is a
-% % support on~$c$. \Todo{Define: initial table.}
-% \Linesref{line:CTfield:start}{line:CTfield:end} of \Algoref{algo:CT}
-% shows the fields of Class \texttt{CT-Propagator} and their types.
-% Now follows a more detailed description of them. In what follows, we let
-% the~\emph{initial domain} of a variable~$x \in \Scp(c)$, denoted~$\Dominit{x}$,
-% be the domain that~$x$ has before CT has performed any propagation,
-% in contrast to~$\Dom{x}$ which is the current domain of~$x$.
-% The \emph{initial table} for a table constraint~$c$ is the list of tuples
-% $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of length~$p_o$
-% that are given as input to initCT(), and the
-% \emph{initial valid table} for~$c$ is the subset $T \subseteq T_0$ of size~$p \leq p_0$
-% such that~$\forall i \in \Set{1, \ldots, p_0}: \tau_i \in T$ iff $\tau_i$ 
-% is a support on~$c$ for the initial domains of the variables. 
-
-% \subsubsection{Methods}
-
-% We now describe the methods of Class \texttt{CT-Propagator}.
-
-% \paragraph{Initialisation.}
-
-% \paragraph{Performing propagation.}
-% When the propagator is invoked for propagation, the method propagate()
-% in \Algoref{algo:CT} is called. Before defining this function, we need
-% to define the help functions updateTable() and filterDomains().
-% Performing propagation consists of two steps: updating the current
-% table and filtering out inconsistent values from the domains of the variables.
-% We now describe these processes in more detail.
-
-% \begin{enumerate}
-% \item \textit{Updating the current table.} 
-  
-
-% \item 
-%   \textit{Filtering of domains.}
-  
-% \end{enumerate}
-
-% After defining updateTable() and filterDomains(), we are now ready to
-% define the method propagate() in Class CT-Propagator, shown 
-% in~\Algoref{algo:propagate}.
-
-% \Todo{It should be unneccessary to check if validTuples is empty
-%   as that is done in updateTable already. However, when I try to
-%   remove the check in the c++ code it crashes, maybe because of
-%   synchronisation issues between advise() and propagate().}
-
-% \begin{algorithm}[H]
-%   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
-%     \input{propagate.tex}
-%   \end{algorithmic}
-%   \caption{Method propagate() in Class CT-Propagator. updateTable()
-%     (\Algoref{algo:updateTable}) is
-%   called, and if the current table is empty, we are in a failed node.
-%   Otherwise, filterDomains() (\Algoref{algo:filterDomains})
-%   is called, and the return value of that method is returned.}
-%   \label{algo:propagate}
-% \end{algorithm}
 
 \paragraph{Optimisations.} If~$x$ is the only variable
 that has been modified since the last invocation of~\CompactTable(),
@@ -1312,6 +1224,25 @@ To prove~\Thmref{thm:prop}, we formulate and prove the following lemmas.
 In what follows, we denote~$CT(s)$ the resulting store of executing
 \CompactTable($s$) on an input store~$s$.
 
+\begin{lemma}\label{lemma:domain-consistent}
+  CT is domain consistent.
+\end{lemma}
+
+\begin{proof}[Proof of \Lemmaref{lemma:domain-consistent}]
+  There are two cases; either it is the first time~$CT$ is called, or it
+  is not.
+  In the first case, \InitialiseCT() is called, which removes all values
+  from the domains of the variables that have no support.
+  In the second case, \UpdateTable() is called for each variable whose
+  domain has changed, and in case \CurrTable~is modified, \FilterDomains()
+  removes all values from the domains that are no longer supported.
+  If \CurrTable~is not modified, all values still have a support because
+  all tuples that were valid the previous time still are valid.
+  
+  So in both cases, every variable-value pair~$(x,a)$ has a support on~$c$,
+  which shows that CT is domain consistent.
+\end{proof}
+
 \begin{lemma} \label{lemma:decreasing}
   CT is a decreasing function.
 \end{lemma}
@@ -1321,6 +1252,18 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   the domains of the variables, we have $CT(s) \preceq s$ for any store $s$.
   Thus, $CT$ is a decreasing function.
 \end{proof}
+
+\begin{lemma}\label{lemma:monotonic}
+  CT is a monotonic function.
+\end{lemma}
+
+\begin{proof}[Proof of \Lemmaref{lemma:monotonic}]
+  Consider two stores~$s_1$ and~$s_2$ such that~$s_1 \preceq s_2$.
+  Since~$CT$ is domain consistent, each variable-value pair $(x,a)$
+  that is part of~$CT(s_1)$, must also be part of~$CT(s_2)$,
+  so~$CT(s_1) \preceq CT(s_2)$.
+\end{proof}
+
 
 \begin{lemma}\label{lemma:idempotent}
   CT is idempotent.
@@ -1341,9 +1284,9 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   tuple~$\tau_i$
   that is a support for~$(x,a)$ under the store $CT(s)$: 
   $\exists i: i \in \CurrTable \ \land \ \tau_i[x] = a$.
-  After \T{updateTable()} is perfomed on~$CT(s)$, we still have
+  After \UpdateTable() is perfomed on~$CT(s)$, we still have
   ~$i \in \CurrTable$, because~$\tau_i$ is still valid in~$CT(s)$.
-  Since~\T{filterDomains()} only removes values that have no supports,
+  Since~\FilterDomains() only removes values that have no supports,
   it is impossible that~$a$ is pruned from~$x$, since~$\tau_i$ is a
   support for~$(x,a)$. Hence, we must have~$CT(CT(s)) = CT(s)$.
 \end{proof}
@@ -1360,7 +1303,7 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
 \begin{proof}[Proof of \Lemmaref{lemma:correct}]
   $CT$ does not remove values that participate in tuples that are supports
   on a \Table constratint~$c$,
-  since \T{filterDomains()} and \T{initCT()} only removes values that 
+  since \FilterDomains() and \InitialiseCT() only removes values that 
   have no supports on~$c$. Thus,~$CT$ is correct for \Table.
 \end{proof}
 
@@ -1378,18 +1321,19 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
  
   There are two cases, either
   it is the first time $CT$ is applied or it has been applied before.
-  If it is the first time, then \T{initCT()} is called.
+  If it is the first time, then \InitialiseCT() is called.
   Since $\tau$ is not a solution to~$c$, there is at least one variable-value
   pair~$(x_i,s(x_i))$ which is not supported, so~$s(x_i)$ will be pruned
-  from~$x$ in \T{initCT()}, which will report failure in line~\Lineref{line:init:wipeout}
-  in~\Algoref{algo:initialise-CT}.
-  
-  If it is not the first time that $CT$ is called, \T{propagate()} is called.
-  Since there are no valid tuples left, \CurrTable~will be empty after
-  the call to \T{updateTable()} and $CT$ reports failure.
+  from~$x$ in \InitialiseCT(), which will return a failed store, which results
+  in failure in line~$4$ in \Algoref{algo:CT}.
+
+  If it is not the first time that $CT$ is called,~\CurrTable will be empty
+  after all calls to~\UpdateTable() have finished, because there are no
+  valid tuples left, which results in failure in line~$9$ in \Algoref{algo:CT}.
   
   Now assume that~$s$ is a solution store. 
-  $CT$ signals subsumption in \T{filterDomains()} because all variables are assigned.
+  $CT$ signals subsumption in line~$13$ in \Algoref{algo:CT} because all
+  variables are assigned and \CurrTable~is not empty.
 
 \end{proof}
 
@@ -1401,42 +1345,19 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
   Since $CT$ is idempotent, $CT$ is fixpoint honest. It remains to show that
   $CT$ is subsumption honest.~$CT$ signals subsumption on input store~$s$
   if there is at most one
-  unassigned variable~$x$ in~\T{filterDomains()}. After this point, no values will
+  unassigned variable~$x$ in~\FilterDomains(). After this point, no values will
   ever be pruned from~$x$ by~$CT$, because there will always be a support for
   $(x,a)$ for each value~$a \in dom(x)$. Hence,~$CT$ is indeed subsumed by~$s$
   when it signals subsumption.
     
 \end{proof}
 
-\begin{lemma}\label{lemma:domain-consistent}
-  CT is domain consistent.
-\end{lemma}
 
-\begin{proof}[Proof of \Lemmaref{lemma:domain-consistent}]
-  There are two cases; either it is the first time~$CT$ is called, or it
-  is not. Both after a call to \T{initCT()} and \T{filterDomains()}, 
-  for each variable-value
-  pair~$(x,a)$ there exists at least one support, because we filter out those
-  values that have no support.
-\end{proof}
-
-\begin{lemma}\label{lemma:monotonic}
-  CT is a monotonic function.
-\end{lemma}
-
-\begin{proof}[Proof of \Lemmaref{lemma:monotonic}]
-  Consider two stores~$s_1$ and~$s_2$ such that~$s_1 \preceq s_2$.
-  Since~$CT$ is domain consistent, each variable-value pair $(x,a)$
-  that is part of~$CT(s_1)$, must also be part of~$CT(s_2)$,
-  so~$CT(s_1) \preceq CT(s_2)$.
-\end{proof}
-
-
-After proving Lemmas~\ref{lemma:decreasing}-\ref{lemma:monotonic},
+After proving Lemmas~\ref{lemma:domain-consistent}-\ref{lemma:honest},
 proving~\Thmref{thm:prop} is trivial.
 
 \begin{proof}[Proof of \Thmref{thm:prop}]
-  The result follows by Lemmas~\ref{lemma:decreasing}-\ref{lemma:monotonic}.
+  The result follows by Lemmas~\ref{lemma:domain-consistent}-\ref{lemma:honest}.
 \end{proof}
 
 \section{Implementation}
@@ -1515,7 +1436,8 @@ in Gecode for the \Table~constraint.
 
 The benchmarks consist of \Todo{how many} series 
 with a total of~$1507$ CSP instances that where used in the
-experiments in~\cite{\CTpaper}.
+experiments in~\cite{\CTpaper}. The instances contain \Table~constraints
+only.
 
 \begin{table}[h]\small
   \caption{Benchmarks series and their characteristics.}
@@ -1536,7 +1458,7 @@ The benchmarks series and their characteristics are presented in Table~\ref{tab:
 The experiments were run
 under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
 Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
-were accessed via a shared server.
+were accessed via shared servers.
 
 The performance of different versions of CT were compared, and the winning
 version was compared against the existing propagators for
@@ -1577,85 +1499,6 @@ The versions and their denotations are:
 
 \subsubsection{Results}
 
-Each plot shows the number of instances solved as a function
-of timeout limit in milliseconds.
-
-\begin{figure}
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{randsJC2500-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{Rands JC2500.} }
-    \vspace{\baselineskip}
-  \end{minipage}\qquad
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{randsJC5000-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{Rands JC5000}. }
-    \vspace{\baselineskip}
-  \end{minipage}\qquad
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{langford4-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{Langford 4}.}
-    \vspace{\baselineskip}
-  \end{minipage}\qquad
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{a5-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{A5}.}
-    \vspace{\baselineskip}
-  \end{minipage}\qquad
-
-\end{figure}
-
-\begin{figure}
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{TSP_Quat_20-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{TSP Quat 20}.}
-    \vspace{\baselineskip}
-  \end{minipage}\qquad
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{geom-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{Geom}.}
-    \vspace{\baselineskip}
-  \end{minipage}\qquad
-  \begin{minipage}[b][10cm][s]{0.45\textwidth}
-    \centering
-    \vfill
-    \begin{tikzpicture}[scale=0.8]
-      \input{Crosswords_lexVg-compare.tex}
-    \end{tikzpicture}
-    \vfill
-    \caption{\textbf{Crosswords LexVG}.}
-    \vspace{\baselineskip}
-  \end{minipage} \qquad
-\end{figure}
 
 \subsubsection{Discussion}
 \Todo{CT($\Delta$) outperforms the other variants.}
@@ -1683,7 +1526,7 @@ of timeout limit in milliseconds.
 
 \Todo{Change captions to DFA, B, I.}
 
-\input{graphs.tex}
+%\input{graphs.tex}
 
 %\subsubsection{Discussion}
 
@@ -1774,10 +1617,6 @@ each instance was only measured once. A timeout of 1000 seconds was used.
 % \end{table}
 
 
-\subsection{Discussion}
-\label{evaluation:discussion}
-
-
 
 \section{Conclusions and Future Work}
 \label{conclusions}
@@ -1809,6 +1648,9 @@ improvements and flaws.
     uses the incremental update if~$|\Delta_x| < |s(x)|$. It is possible
     that this condition can be generalised to~$|\Delta_x| < k \cdot |s(x)|$,
     where~$k \in \mathbb{R}$, something that remains to be investigated.
+    
+  \item Implement the generalisations of the CT algorithm described
+    in~\cite{DBLP:conf/aaai/VerhaegheLS17}.
 
 \end{itemize}
 
@@ -1822,9 +1664,119 @@ improvements and flaws.
 
 % This appendix presents the source code for the implementation
 % described in \Chapref{sec:implementation}.
+\newpage
+\appendix
+\section{\\Plots from comparison of different versions of CT}
+\label{app:compare-ct}
+% the \\ insures the section title is centered below the phrase: AppendixA
 
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds.
 
+%\clearpage
 
+\begin{figure}[H]
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{randsJC2500-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Rands JC2500.} }
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{randsJC5000-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Rands JC5000}. }
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+\end{figure}
+
+\begin{figure}
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{langford4-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Langford 4}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{a5-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{A5}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+
+\end{figure}
+
+\begin{figure}
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{TSP_Quat_20-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{TSP Quat 20}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{geom-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Geom}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{Crosswords_lexVg-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Crosswords LexVG}.}
+    \vspace{\baselineskip}
+  \end{minipage} \qquad
+    \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{aim-50-pos-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{AIM 50}.}
+    \vspace{\baselineskip}
+  \end{minipage} \qquad
+  
+\end{figure}
+
+\clearpage
+
+\section{\\Plots from comparison of CT against existing propagators}
+\label{app:compare-gecode}
+% the \\ insures the section title is centered below the phrase: Appendix B
+
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds. The leftmost column shows runtime,
+the rightmost column shows solvetime.
+
+\input{graphs.tex}
 
 
 \end{document}
