@@ -176,39 +176,50 @@
 % Goal
 
 Constraint Programmint (CP) is a programming paradigm that is used for solving
-combinatorial problems. A problem is modelled as a set of \emph{constraints}
-and a set of variables with possible values.
-All variables are to be assigned a value so that all the constraints are 
-satisfied.
+combinatorial problems. Within the paradigm, a problem is
+modelled as a set of \emph{constraints} on a
+set of \emph{variables} that each can take on a number of
+possible values. The possible values of 
+a variable is called the \emph{domain} of the variable.
+All the variables are to be assigned a value
+from their domains, so that all the constraints of the problem
+are satisfied. Additionally, in some cases the solution should not only
+satisfy the set of constraints for the
+problem, but also maximise or minimise some given function.
+
 
 %A constraint solver (CP solver) is a software that solves constraint problems.
-The process of solving a constratint problem consists of search combined with logical
-reasoning, called \emph{propagation}.
+A solution to a constraint problem is found by generating a search
+tree, branching on possible values for the variables. At each node
+in the search tree, impossible values are filtered out from the domains
+of the variables in a process called~\emph{propagation}, effectively
+reducing the size of the search tree.
 Each constraint is associated with a \emph{propagation algorithm},
 called a~\emph{propagator},
-that implements the logical reasoning for that constraint by removing
-values from the variables that are in conflict with that constraint.
+that implements the propagation for that constraint by removing
+values from the variables that are in conflict with the constraint.
 
 The \Table constraint expresses the possible combinations of values
-that the associated values can take as a sequence of tuples, called a table.
-The \Table constraint can theoretically encode any kind of constraint
-and is thus a powerful constraint. 
+that the associated variables can take as a sequence of tuples.
+Assuming finite domains, the \Table constraint can theoretically
+encode any kind of constraint and is thus very powerful. 
 The design of propagation algorithms for \Table is an active research field,
 and several algorithms are known. In 2016, a new propagation algorithm for the \Table
 constraint was published~\cite{\CTpaper}, called Compact Table (CT).
 Preliminary results indicate that CT outperforms the previously known algorithms.
 
 A constraint programming solver (CP solver) is a software that solves constraint problems.
-\emph{Gecode}~\cite{Gecode} is a popular CP solver written in C++, with
-a state-of-the-art performance while being modular and extensible.
+\emph{Gecode}~\cite{Gecode} is a popular CP solver written in C++, and combines
+state-of-the-art performance with modularity and extensibility.
 Gecode has three existing propagation algorithms for~\Table.
 Before this project there had been no attempt to implement CT in Gecode
 and consequently its performance in Gecode was unknown. 
-Within this bachelor thesis, CT is implemented in Gecode
-and its performance with respect to the existing propagators
-is evaluated. The results of the evaluation indicate that CT outperforms
+The purpose of this thesis is to implement CT in Gecode and to evaluate
+and compare its performance with previously existing propagators for
+the \Table constraint.
+The results of the evaluation indicate that CT outperforms
 the existing propagation algorithms in Gecode for \Table,
-which suggests that CT should be included in Gecode.
+which suggests that CT should be included in the solver.
 
 % In Constraint Programming (CP), every constraint is associated with a propagator
 % algorithm. The propagator algorithm filters out impossible values for the variables
@@ -223,7 +234,7 @@ which suggests that CT should be included in Gecode.
 \label{intro:goal}
 The goal of this bachelor thesis is the design, documentation and implementation
 of a CT propagator algorithm for the \Table constraint in Gecode,
-and the evaluation of its performance with respect to the existing propagators.
+and the evaluation of its performance compared to the existing propagators.
 
 \subsection{Contributions}
 \label{intro:contributions}
@@ -259,12 +270,9 @@ description of the outline of the written dissertation.
     in \Secref{conclusions}.
 
   \item Several possible improvements and flaws have been detected in the current
-    implementation that prevent the code to reach comercial standard, these
+    implementation that prevent the code to meet commercial standards, these
     are listed in \Secref{conclusions}.
-    
-  \item Finally, the bibliography lists the references that were used to
-    produce the theoretical parts of the thesis.
-    
+        
 \end{itemize}
 
 \section{Background}
@@ -285,15 +293,18 @@ a data structure that is used in the CT algorithm.
 \label{bg:cp}
 This section introduces the concept of Constraint Programming (CP).
 
-CP is a programming paradigm that is used for solving
-combinatorial problems. A problem is
-modelled as a set of \emph{constraints} and a
-set of \emph{variables} with possible values. The possible values of 
+Constraint Programming (CP) is a programming paradigm that is used for solving
+combinatorial problems.
+Within the paradigm, a problem is
+modelled as a set of \emph{constrains} on a
+set of \emph{variables} that each can take on a number of
+possible values. The possible values of 
 a variable is called the \emph{domain} of the variable.
 All the variables are to be assigned a value
 from their domains, so that all the constraints of the problem
-are satisfied. Sometimes the solution should not only satisfy the set of constraints for the
-problem, but should also maximise or minimise some given function.
+are satisfied. Additionally, in some cases the solution should not only
+satisfy the set of constraints for the
+problem, but also maximise or minimise some given function.
 
 A constraint solver (CP solver) is a software that solves constraint problems.
 The solving of a problem consists of generating a search tree by branching
@@ -301,12 +312,15 @@ on possible values for the variables. At each node in the search tree,
 the solver removes impossible values from the domains of the variables.
 This filtering process is called \emph{propagation}. Each constraint is
 associated with at least one propagator algorithm, whose task is to detect
-values that would violate the constraint if the variables were to be assigned
-any of those values, and remove those values from the domain of the variables.
+and remove values from the domains of the variables
+that can never participate in a solution, because assigning them to
+the variables would violate the constraint,
+effectively pruning the size of the search tree.
 
 To build intuition and understand the ideas of CP,
-the concepts can successfully be demonstrated with logical puzzles. One such
-puzzle is Kakuro, a kind of mathematical crossword where the "words" consist
+the concepts can be demonstrated with logical puzzles. One such
+puzzle is Kakuro, somewhat similar to the popular puzzle Soduko,
+a kind of mathematical crossword where the "words" consist
 of numbers instead of letters, see Figure~\ref{fig:kakuro}.
 The game board consists of 
 blank cells forming rows and columns, called \emph{entries}.
@@ -354,7 +368,7 @@ The constraints of the problem is that the sum of the variables that
 belong to a given entry must be equal to the clue for that entry, and the
 values of the variables for each entry must be distinct.
 
-An alternative way of phrasing the constraints of Kakuro, is to for each entry
+An alternative way of phrasing the constraints of Kakuro, is for each entry
 explicitly list all the possible combinations
 of values that the variables in that entry can take.
 For example, consider an entry of size 2 with clue 4. The only
@@ -405,7 +419,7 @@ The definitions are based on
 \end{definition}
 
 Note that Definition~\ref{def:constraint} restricts the domains to range
-over finite sets of integers. Constraints can of course be defined on
+over finite sets of integers. Constraints can be defined on
 other sets of values, but in this thesis only finite integer domains
 are considered.
 
