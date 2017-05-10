@@ -1,0 +1,101 @@
+\begin{axis}[
+    xmode=log,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\# solved},
+    legend pos=south east
+    % table/create on use/cumulative distribution/.style={
+    %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
+    % }
+    ]
+    \addplot 
+    [mark=triangle*,
+    mark size=1.5,
+    mark options={solid},
+    green] 
+    coordinates {
+    (0.088, 1)
+(0.092, 2)
+(0.101, 3)
+(0.103, 4)
+(0.104, 5)
+(0.107, 6)
+(0.107, 7)
+(0.111, 8)
+(0.112, 9)
+(0.132, 10)
+(0.138, 11)
+(0.141, 12)
+(0.147, 13)
+(0.150, 14)
+(0.152, 15)
+    };
+
+    \addplot 
+    [blue,
+    mark=*,
+    mark size=1.5,
+    mark options={solid}]
+    coordinates {
+    (6.405, 1)
+(15.383, 2)
+(65.971, 3)
+(71.695, 4)
+(168.762, 5)
+(929.336, 6)
+(961.601, 7)
+(1769.360, 8)
+(3548.206, 9)
+(3616.877, 10)
+(3750.464, 11)
+(4780.676, 12)
+(7503.597, 13)
+(10893.553, 14)
+(29064.788, 15)
+    };
+
+    \addplot [brown!60!black,
+    mark options={fill=brown!40},
+    mark=otimes*,
+    mark size=1.5]
+    coordinates {
+    (6.569, 1)
+(17.333, 2)
+(94.123, 3)
+(95.485, 4)
+(235.363, 5)
+(1312.020, 6)
+(1467.467, 7)
+(2544.921, 8)
+(5146.563, 9)
+(5181.577, 10)
+(5329.474, 11)
+(7675.051, 12)
+(10823.788, 13)
+(16608.351, 14)
+(43866.747, 15)
+    };
+
+    \addplot 
+    [red,
+    mark size=1.5,
+    mark=square*]
+    coordinates {
+    (3.820, 1)
+(8.978, 2)
+(34.102, 3)
+(36.277, 4)
+(80.864, 5)
+(420.839, 6)
+(422.031, 7)
+(819.907, 8)
+(1600.464, 9)
+(1617.275, 10)
+(1749.910, 11)
+(2098.539, 12)
+(3490.648, 13)
+(4818.366, 14)
+(12878.597, 15)
+    };
+    \legend{DFA,B,I,CT}
+  \end{axis}
