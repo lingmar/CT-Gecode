@@ -1,3 +1,5 @@
+% TODO: explain branching
+
 \documentclass[a4paper,11pt]{article}
 \usepackage{float}
 \usepackage{subfig}
@@ -201,7 +203,7 @@ called a~\emph{propagator},
 that implements the propagation for that constraint by removing
 values from the variables that are in conflict with the constraint.
 
-The \Table~constraint expresses the possible combinations of values
+The \Table~constraint expresses the possiCble combinations of values
 that the associated variables can take as a sequence of tuples.
 Assuming finite domains, the \Table~constraint can theoretically
 encode any kind of constraint and is thus very powerful. 
@@ -319,7 +321,17 @@ that can never participate in a solution because assigning them to
 the variables would violate the constraint,
 effectively shrinking the domain sizes and thus 
 pruning the size of the search tree.
-Search continues until it reaches a leaf node, that can be either a
+When enough\footnote{Here "enough" might mean that no more propagation can be made,
+  but in some cases more propagation \emph{can} be made, but the
+  solver decides that it is more efficint to branch to a new node instead of 
+  performing more propagation in the current node.}
+propagation has been performed and a solution is still not found,
+the solver must \emph{branch} the search tree, following som heuristic,
+which typically means selecting a variable and "guessing" on its value,
+moving the search to a new node where propagation starts over again.
+
+Propagation interleaved with branching continues along a path in the search tree,
+until the search reaches a leaf node, that can be either a
 \emph{solution node} or a \emph{failed node}.
 In a solution node a solution to the problem is found:
 all variables are assigned a value
@@ -362,7 +374,7 @@ and such that each digit appears at most once in each entry.
     \begin{Kakuro}{6}{6}
       |  -   |<:9>  |<:26> |  -   |<:19> |<:5>  |  -   |.
       |<16:> |  7   |  9   |<4:9> |  3   |  1   |  -   |.
-      |<23:> |  1   |  1   |  1   |  1   |  4   |  -   |.
+      |<23:> |  2   |  1   |  1   |  1   |  4   |  -   |.
       |  -   |<10:6>|  1   |  1   |  1   |<:14> |  -   |.
       |<24:> |  1   |  1   |  1   |  1   |  1   |  -   |.
       |<4:>  |  1   |  1   |<15:> |  1   |  1   |  -   |.
@@ -1397,6 +1409,105 @@ proving~\Thmref{thm:prop} is trivial.
 \section{Implementation}
 \label{sec:implementation}
 
+\Todo{Structure up this section.}
+
+This section describes the implementation of the CT algorithm presented in 
+\Secref{sec:algorithms}. It reveals some important implementation details
+that the pseudo code conceals, and documents the decisions.
+
+The implementation was done in C++ in the context of the latest version of Gecode,
+which at the time of writing is Gecode~$5.0$, following the coding conventions of
+the solver.
+No C++ standard library data-structures
+were used, because there is little control of how they allocate and use memory.
+The implementation follows the pseudo code in in \Secref{ct:pseudo} very closely.
+The correctness of the CT propagator was validated with the existing unit tests
+in Gecode for the \Table~constraint.
+
+%The propagator has all the fields that are described there:~$\Supports$
+
+% Indexering
+\paragraph{Indexing \Residues~and \Supports.}
+For a given variable-value pair~$(x,a)$, its corresponding entry~\Supports[$x,a$]
+and \Residues[$x,a$]~must be found, which requieres a mapping
+$\Tuple{variable,value} \mapsto \texttt{int}$ for indexing \Supports and \Residues.
+Two indexing strategies are used, \emph{sparse arrays} and \emph{hash tables}:
+for variables with compact domains (range or close to range),
+the indexing is made by allocating space that depend on domain width for
+\Supports~and \Residues~, and storing the initial minimum value for the variable,
+so that \Supports[$x,a$]~and \Residues[$x,a$]~is stored at index~$a - min$ in
+the respective array. If the domain is sparse,
+the sizes of \Supports~and \Residues~is the size of the domain, and the index mapping
+is done with a hash table.
+The indexing strategy is decided per variable.
+Let~$R = \frac{\text{domain width}}{\text{domain size}}$.
+The current implementation uses a sparse array if~$R \leq 3$, and a hash table
+otherwise.
+The threshold value was chosen by reasoning on the memory usage and speed
+of the different strategies.
+Let a memory unit be the size of an int, and assume that a pointer is twice
+the size of an int. The sparse array 
+strategy consumes $S = (\text{width} + 2 \cdot \text{width})$ memory units,
+because \Residues~is an array of ints and \Supports~is an array of pointers
+(we neglect the ``$+1$'' from the int that saves the initial minimum value).
+The hash table strategy consumes 
+$H = (2 \cdot \text{size} + \text{size} + 2 \cdot \text{size})$
+memory units as best, because at best, the size of the hash table 
+is~$2 \cdot \text{size}$.
+The quantities~$S$ and~$H$ are equal when~$R = \frac{4}{3} \approx 1.33$.
+Because the hash table might have collisions, this strategy is not always
+constant time. Therefore the value~$3$ was chosen, as a trade-off between
+speed and memory. The optimal threshold value should be found by
+experiments.
+
+% OR-tools kod
+% Incremental
+% Noll-ord
+\paragraph{Copying only the non-zero words in \CurrTable.}
+Some effort was spent on redesigning the sparse bit-set to only keep the
+non-zero words to save memory usage and minimise copying, by placing
+all the zero-words in the end of the array. However, the swapping of
+the words introduces problems with \Residues~,because if the current
+index of a word is not the same as the original index of the word, the
+information saved in~\Residues is not correct. No simple solution to
+this problem could be found, so the idea was abandoned.
+
+\paragraph{Advisors.} The implementation uses advisors, that decide whether
+the propagator needs to be executed or not. The advisors execute \UpdateTable($x$)
+whenever the domain of~$x$ changes, and schedule the propagator for execution
+in case \CurrTable~is modified, and reports failure in case \CurrTable~is empty.
+There are several benefits from using advisors, firstly, without the advisors,
+the propagator would need
+to scan all the variables to see which of them have been modified since the last
+time, and execute~\UpdateTable() on those, which would be time consuming.
+Secondly, the advisors can store the data structures that belong to its variable,
+which means that when a variable is assigned, the memory that is used for storing
+information about that variable can be freed.
+
+\paragraph{Or-tools.} The implementation of CT in OR-tools was studied.
+They use two versions of CT, one for small tables ($< 64$ tuples) that
+only use one word for~$\CurrTable$ instead of an array. Though this is a
+promising idea, this version was not implemented because of time constraints.
+Also, during propagation they reason on the bounds of the domains of the variables
+before enforcing domain consistency, because iterating over the domains is
+expensive. This idea was tried, and the version is denoted CT($B$) in the
+evaluation of different versions of CT (\Secref{sec:evaluation}).
+
+\paragraph{Memory usage.} Since \Supports~consists of static data (only
+computed once), this array is allocated in a memory area that is shared
+among nodes in the search tree, which means that it does not need to be
+copied in each branching. The rest of the data structures are allocated
+in a memory space that is specific to the current node, and are copied.
+
+\paragraph{Profilation.} Profilation tools were used to locate the parts of
+the program where most of the time is spent. Some optimisations could
+be performed from this information. Specifically, a speed-up could be
+achieved by decreasing the number of memory accesses in some of the
+methods in \SparseBitSet. The profilation shows that the bottleneck 
+of the implementation are the bit-wise operations in \SparseBitSet,
+and also a lot of time is spent in \FixDomains().
+\Todo{Include figures}.
+
 % Det här är vad jag hittar av värde när jag läser igenom OR-tools kod:
 
 % De har två versioner av CT: en stor (antal tupler > 64) och en liten (antal tupler <= 64). Den lilla versionen drar nytta av att alla aktiva tupler kan representeras med bara ett 64-bitars ord istället för en array av 64-bitars ord. Då kan man till exempel skippa arrayen residues, och arrayen index i SparseBitSet. Osäker på hur stor nytta en sån förändring skulle göra.
@@ -1411,20 +1522,20 @@ proving~\Thmref{thm:prop} is trivial.
 
 % Section 4 blir nog mindre intressant än Section 3 och 5, men där kan du skriva om sånt som är specifikt för C++ och Gecode för att algoritmerna i Section 3 ska fungera, precis som du har börjat göra. Det är också en bra plats för detaljer som sopats under mattan i pseudokoden, t.ex. exakt hur du mappar (x,a) till rätt element i supports och residues, med hashtabell eller så.
 
-This section describes an implementation of the CT propagator using the algorithms
-presented in \Chapref{sec:algorithms}. The implementation was made in the C++ programming
-language in the Gecode library.
+% This section describes an implementation of the CT propagator using the algorithms
+% presented in \Chapref{sec:algorithms}. The implementation was made in the C++ programming
+% language in the Gecode library.
 
-\Todo{
-  Describe
-  \begin{itemize}
-    \item Advisors
-    \item Indexing of supports and residues
-    \item Memory management
-    \item Ideas from or-tools
-    \item Profilation
-  \end{itemize}
-}
+% \Todo{
+%   Describe
+%   \begin{itemize}
+%     \item Advisors
+%     \item Indexing of supports and residues
+%     \item Memory management
+%     \item Ideas from or-tools
+%     \item Profilation
+%   \end{itemize}
+% }
 
 % The implementation uses advisors. Each advisor is responsible for one variable~$x$,
 % and maintains supports information for that variable. The arrays $\Supports$
@@ -1463,8 +1574,6 @@ This chapter presents the evaluation of the implementation of the CT propagator
 presented in \Chapref{sec:implementation}. 
 
 \label{evaluation:setup}
-The correctness of the CT propagator was validated with the existing unit tests
-in Gecode for the \Table~constraint.
 
 The benchmarks consist of \Todo{how many} series 
 with a total of~$1507$ CSP instances that where used in the
@@ -1486,6 +1595,7 @@ only.
     \end{sideways}
     \end{table}
 
+\clearpage
 
 All instances were written in MiniZinc~\cite{MiniZinc}, the
 instances used in~\cite{\CTpaper} were originally written in XCSP2.1,
@@ -1518,7 +1628,10 @@ the existing propagators in Gecode for the~\Table~constraint.
 \label{sec:compare}
 
 \subsubsection{Evaluation Setup}
-Four different versions of CT were compared.
+Four different versions of CT were compared on a subset of the benchmarks
+series listed in Table~\ref{tab:benchmarks}. A timeout of 1000 seconds was
+used and each instance was run once for each version.
+\Todo{Run them more times and compute the average.}
 The versions and their denotations are:
 
 \begin{description}
@@ -1539,9 +1652,13 @@ The versions and their denotations are:
 The plots from the experiments are presented in Appendix~\ref{app:compare-ct}.
 
 \subsubsection{Discussion}
-\Todo{CT($\Delta$) outperforms the other variants.}
-From the results, we see that CT($\Delta$) outperforms the other variants.
-
+%\Todo{CT($\Delta$) outperforms the other variants.}
+From the results we see that CT($\Delta$) outperforms the other variants.
+The performance of CT and CT($T$) is the same, and CT($B$) is overall
+slower than the other variants. On \emph{AIM-50}, which only contain instances
+with $0/1$ variables, the performance of CT, CT($\Delta$), and CT($B$) is
+the same, which is expected because they collapse to the same variant
+for domains of size~$2$.
 
 \subsection{Comparing CT against existing propagators}
 
@@ -1691,7 +1808,8 @@ has the following fields, where a \emph{literal} is a $\langle x,n
 The winning variant from the experiments in~\Secref{sec:compare},
 CT($\Delta$), was compared against the two existing propagators
 in Gecode for the~\Table~constraint, as well with the propagator
-for the \Regular~constraint. The propagators are
+for the \Regular~constraint on the benchmarks series
+listed in~\ref{tab:benchmarks}. The propagators are
 denoted:
 
 \begin{description}
@@ -1762,10 +1880,17 @@ of performance for CT compared to B and I is larger on the series that contain
 instances with large table sizes only (see \emph{A5}, \emph{A10},
 \emph{K5}, \emph{MDD 05}, and \emph{Rands JC*}), than on the series
 that contain only small tables (see \emph{AIM-*}, \emph{Dubois}, and \emph{Geom}).
-However, the series that contain small tables also contain low-arity constraints
-(arities~$2-3$),
-while the series with larger table sizes have larger arities, which makes
-it hard to tell which property if any that cause the difference in performance gain.
+
+The property shows particularly well on the four \emph{Rands JC*} series, where
+arity and domain size are constant while the table size increase from
+$2500$ to~$10000$ in steps of~$2500$. On these series, the performance gain
+seems to increase with an increasing table size.
+
+% However, the series that contain small tables also contain low-arity constraints
+% (arities~$2-3$),
+% while the series with larger table sizes have larger arities, which makes
+% it hard to tell which property if any that cause the difference in performance gain.
+
 
 \paragraph{The impact of arity on performance.}
 Again, many of the series have varying arities, so to analyze the impact of arity
@@ -1774,9 +1899,10 @@ Many series where CT shows little or none performance gain have
 constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
 \emph{Langford *}), though there are exceptions to this (see \emph{Pigeons Plus},
 \emph{TSP 25/Quat}). 
-Again, the series with low arities also have small tables, while the series
-with larger arities tend to have larger tables.
-But it is possible that there is a correlation between arities and performance.
+However, the series with low arities also have small tables, while the series
+with larger arities tend to have larger tables, which makes it hard to
+tell whether the it is the arity or the table size that impact the performance gain.
+%But it is possible that there is a correlation between arities and performance.
 
 % This suggests that there is a weak positive correlation between arity of the constraints
 % and the performance.
@@ -1909,7 +2035,9 @@ improvements and flaws.
 % the \\ insures the section title is centered below the phrase: AppendixA
 
 Each plot shows the number of instances solved as a function
-of timeout limit in milliseconds.
+of timeout limit in milliseconds. The measured time is the total
+runtime, including parsing of the FlatZinc file and the posting of
+the propagators.
 
 %\clearpage
 
@@ -2008,10 +2136,10 @@ of timeout limit in milliseconds.
 
 \section{\\Plots from comparison of CT against existing propagators}
 \label{app:compare-gecode}
-% the \\ insures the section title is centered below the phrase: Appendix B
 
 Each plot shows the number of instances solved as a function
-of timeout limit in milliseconds. The leftmost column shows runtime,
+of timeout limit in milliseconds. The leftmost column shows 
+runtime,
 the rightmost column shows solvetime.
 
 \input{graphs.tex}
