@@ -1157,6 +1157,8 @@ namespace Gecode { namespace FlatZinc {
       IntArgs tuples = s.arg2intargs(ce[1]);
       int noOfVars   = x.size();
       int noOfTuples = tuples.size() == 0 ? 0 : (tuples.size()/noOfVars);
+
+      printf("ntuples=%d\n", noOfTuples);
       
       char* prop = getenv("TABLE_PROPAGATOR");
                

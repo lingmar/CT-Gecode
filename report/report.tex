@@ -177,14 +177,14 @@
 % Gecode
 % Goal
 
-Constraint Programmint (CP) is a programming paradigm that is used for solving
+Constraint Programming (CP) is a programming paradigm that is used for solving
 combinatorial problems. Within the paradigm, a problem is
 modelled as a set of \emph{constraints} on a
 set of \emph{variables} that each can take on a number of
 possible values. The possible values of 
 a variable is called the \emph{domain} of the variable.
-Each variable is to be assigned a value
-from its domain, so that all the constraints of the problem
+A solution to a constraint problem must assign all variables
+a value from their domains, so that all the constraints of the problem
 are satisfied. Additionally, in some cases the solution should not only
 satisfy the set of constraints for the
 problem, but also maximise or minimise some given function.
@@ -234,7 +234,7 @@ which suggests that CT should be included in the solver.
 
 \subsection{Goal}
 \label{intro:goal}
-The goal of this bachelor thesis is the design, documentation and implementation
+The goal of this bachelor's thesis is the design, documentation and implementation
 of a CT propagator algorithm for the \Table~constraint in Gecode,
 and the evaluation of its performance compared to the existing propagators.
 
@@ -245,7 +245,8 @@ and the evaluation of its performance compared to the existing propagators.
 % parts of the paper, as opposed to giving a traditional outline. (As suggested
 % by Olle Gallmo.)}
 
-Now follows the contributions made by this bachelor thesis, which also works as a
+The following section lists the contributions made by this bachelor thesis,
+simultaneoulsy serving as a
 description of the outline of the written dissertation.
 
 %The contributions that this bachelor thesis with the following:
@@ -296,38 +297,47 @@ a data structure that is used in the CT algorithm.
 This section introduces the concept of Constraint Programming (CP).
 
 Constraint Programming (CP) is a programming paradigm that is used for solving
-combinatorial problems.
-Within the paradigm, a problem is
-modelled as a set of \emph{constrains} on a
+combinatorial problems. Within the paradigm, a problem is
+modelled as a set of \emph{constraints} on a
 set of \emph{variables} that each can take on a number of
 possible values. The possible values of 
 a variable is called the \emph{domain} of the variable.
-Each variable is to be assigned a value
-from its domain, so that all the constraints of the problem
+A solution to a constraint problem must assign all variables
+a value from their domains, so that all the constraints of the problem
 are satisfied. Additionally, in some cases the solution should not only
 satisfy the set of constraints for the
 problem, but also maximise or minimise some given function.
 
 A constraint solver (CP solver) is a software that solves constraint problems.
-The solving of a problem consists of generating a search tree by branching
+The process of solving a problem consists of generating a search tree by branching
 on possible values for the variables. At each node in the search tree,
 the solver removes impossible values from the domains of the variables.
 This filtering process is called \emph{propagation}. Each constraint is
 associated with at least one propagator algorithm, whose task is to detect
 and remove values from the domains of the variables
-that can never participate in a solution, because assigning them to
+that can never participate in a solution because assigning them to
 the variables would violate the constraint,
-effectively pruning the size of the search tree.
+effectively shrinking the domain sizes and thus 
+pruning the size of the search tree.
+Search continues until it reaches a leaf node, that can be either a
+\emph{solution node} or a \emph{failed node}.
+In a solution node a solution to the problem is found:
+all variables are assigned a value
+from their domains, and all the constraints are satisfied.
+In a \emph{failed node}, the domain of a variable has become empty, which
+means that a solution could not be found along that path.
+From a failed node, seach must backtrack and continue from a node where all branches
+have not been tried yet. If all leaves of the tree consist of failed nodes,
+the problem is unsatisfiable.
 
-To build intuition and understand the ideas of CP,
+To build intuition and understanding of the ideas of CP,
 the concepts can be demonstrated with logical puzzles. One such
-puzzle is Kakuro, somewhat similar to the popular puzzle Soduko,
+puzzle is Kakuro, somewhat similar to the popular puzzle Sudoku,
 a kind of mathematical crossword where the "words" consist
 of numbers instead of letters, see Figure~\ref{fig:kakuro}.
 The game board consists of 
 blank cells forming rows and columns, called \emph{entries}.
 Each entry has a \emph{clue}, a prefilled number indicating the sum of that entry.
-The size of the board can vary.
 The objective is to fill
 in digits from 1 to 9 inclusive into each cell such that for each entry,
 the sum of all the digits in the entry is equal to the clue of that entry,
@@ -381,12 +391,9 @@ values for the variables is in essence the
 \Table~constraint -- the constraint that is
 addressed in this thesis.
 
-\Todo{Really solve the Kakuro in Figure \ref{fig:kakuro}. Kvällspyssel!}
-
 \smallskip 
 
-After gaining some intuition of CP, now follows some formal definitions.
-The definitions are based on
+After gaining some intuition of CP, here follows some formal definitions, based on
 \cite{SchulteCarlsson:FDsys}, \cite{Apt:constraintsBook}, and \cite{Gecode:MPG}.
 
 We start by defining \emph{constraints}, that essentially are relations
@@ -406,7 +413,7 @@ among variables.
       denoted by~$rel(c)$. The associated variables~$X$ are denoted~$vars(c)$,
       and we call~$|vars(c)|$ the \emph{arity} of~$c$. The relation
       $rel(c)$ contains the set of~$n$-tuples that are allowed
-      for~$X$, we call those~$n$-tuples \emph{solutions} to the constraint~$c$.
+      for~$X$, and we call those~$n$-tuples \emph{solutions} to the constraint~$c$.
     \item   For an~$n$-tuple~$\tau = \Tuple{a_1,\ldots,a_n}$ associated with~$X$, we
       denote the~$i$th value of~$\tau$ by~$\tau[i]$ or~$\tau[x_i]$. The 
       tuple~$\tau$ is \emph{valid} for~$X$
@@ -428,8 +435,7 @@ over finite sets of integers. Constraints can be defined on
 other sets of values, but in this thesis only finite integer domains
 are considered.
 
-After defining constraints, we define a \emph{constraint satisfaction problems},
-which is a central concept.
+After defining constraints, we define \emph{constraint satisfaction problems}:
 
 \begin{definition}
   \textbf{CSP.} A Constraint Satisfaction Problem (CSP) is a 
@@ -441,12 +447,12 @@ which is a central concept.
 
 During the search of a solution to a CSP, the domains of the variables will vary: 
 along a path in the search tree, the domains shrink
-until they are assigned a value (a solution was found) or until the domain
-of a variable becomes empty (a failure).
+until they are assigned a value (a solution node) or until the domain
+of a variable becomes empty (a failed node).
 Upon a failure, search backtracks to a node in the search tree
 where all branches are not tried yet,
 and the domains of the variables are restored to the domains that the variables
-had in that node.
+had in that node, so that the search continues from an equivalent state.
 A current mapping of domains to variables is called a~\emph{store}:
 
 \begin{definition}
@@ -454,7 +460,7 @@ A current mapping of domains to variables is called a~\emph{store}:
   variables~$V = v_1, \ldots, v_n$ to a finite set of domains. We denote the domain of
   a variable~$v_i$ under~$s$ by~$s(v_i)$ or~$\Dom{v_i}$.
   \begin{itemize}
-    \item A store~$s$ is \emph{failed} if and only if~$s(v_i) = \varnothing$ for some~$v_i \in V$.
+    \item A store~$s$ is \emph{failed} if and only if~$s(v_i) = \emptyset$ for some~$v_i \in V$.
     \item   A variable~$v_i \in V$ is \emph{fixed}, or \emph{assigned},
       by a store~$s$ if and only if~$|s(v_i)| = 1$. 
     \item A store~$s$ is an \emph{assignment} store if all variables are 
@@ -468,8 +474,8 @@ A current mapping of domains to variables is called a~\emph{store}:
       and~$\left<a_1,\ldots,a_n\right>$ is a solution to~$c$.
 
     \item A store~$s_1$ is \emph{stronger} than a store~$s_2$, 
-      written~$s_1 \preceq s_2$ if and only if~$s_1(v) \subseteq s_2(v)$ 
-      for all~$v \in V$.
+      written~$s_1 \preceq s_2$ if and only if~$s_1(v_i) \subseteq s_2(v_i)$ 
+      for all~$v_i \in V$.
   \end{itemize}
 
 \end{definition}
@@ -478,12 +484,13 @@ A current mapping of domains to variables is called a~\emph{store}:
 
 Constraint propagation is the process of removing values from the domains
 of the variables in a CSP that can never appear in a solution store to the 
-CSP. In a CP solver, each constraint that the solver implements is associated with 
-one or more propagation algorithms, called propagators, whose task is to remove
+problem. In a CP solver, each constraint that the solver implements is 
+associated with 
+one or more propagation algorithms (propagators) whose task is to remove
 values that are in conflict with its respective constraint.
 
 To have a well-defined behaviour of propagators, there are some properties that
-they must fulfill. Now follows a definition of a propagator and the obligations
+they must fulfill. The following is a definition of propagators and the obligations
 that they must meet, taken from \cite{SchulteCarlsson:FDsys} and \cite{Gecode:MPG}.
 
 \begin{definition} \label{def:prop}
@@ -493,7 +500,18 @@ that they must meet, taken from \cite{SchulteCarlsson:FDsys} and \cite{Gecode:MP
   \end{equation*}
 
   In a CP-solver, a propagator is implemented as a procedure that also returns 
-  a \emph{status message}. A propagator must fulfill the following properties:
+  a \emph{status message}.
+  
+  The possible status messages are \emph{Fail}, \emph{Subsumed},
+  \emph{Fixpoint}, and \emph{Not fixpoint}. 
+  A propagator~$p$ is at \emph{fixpoint} on a store~$s$ if and only if applying 
+  $p$ to to~$s$ gives no further propagation:~$p(s) = s$ for
+  a store~$s$. If a propagator~$p$ always returns a fixpoint to itself, that is, 
+  if~$p(s) = p(p(s))$ for all stores~$s$, $p$ is \emph{idempotent}.
+  A propagator is \emph{subsumed} by a store~$s$ if and only if
+  all stronger stores are fixpoints:~$\forall s'\preceq s, \ p(s')=s$.
+
+  A propagator must fulfill the following properties:
 
   \begin{itemize}
   \item A propagator~$p$ is a decreasing function:~$p(s) \preceq s$ for any store~$s$.
@@ -508,44 +526,49 @@ that they must meet, taken from \cite{SchulteCarlsson:FDsys} and \cite{Gecode:MP
     A propagator~$p$
     is correct for a constraint~$c$ if and only if it does not
     remove values that are part of supports for~$c$.
-    This property guarantees that a propagator does not miss any potential 
+    This property guarantees that a propagator does not exclude any potential 
     solution store.
 
   \item A propagator is \emph{checking}: for a given assignment store~$s$, the propagator
     must decide whether~$s$ is a solution store or not for the constraint it
-    implements. If~$s$ is a solution store, it must signal subsumption, otherwise
-    it must signal failure.
+    implements. If~$s$ is a solution store, it must signal Subsumed, otherwise
+    it must signal Fail.
 
   \item A propagator must be \emph{honest}: it must be 
     \emph{fixpoint honest} and \emph{subsumption honest}. 
     A propagator~$p$ is fixpoint honest if and only if it does not signal 
-    fixpoint if it does not return a fixpoint, and it is subsumption honest
+    Fixpoint if it does not return a fixpoint, and it is subsumption honest
     if and only if it does
-    not signal subsumption if it is not subsumed by an input store~$s$.
+    not signal Subsumed if it is not subsumed by an input store~$s$.
     
-    A propagator~$p$ is at \emph{fixpoint} on a store~$s$ if and only if applying 
-    $p$ to to~$s$ gives no further propagation:~$p(s) = s$ for
-    a store~$s$. If a propagator~$p$ always returns a fixpoint, that is, 
-    if~$p(s) = p(p(s))$, $p$ is \emph{idempotent}.
-
-    A propagator is \emph{subsumed} by a store~$s$ if and only if
-    all stronger stores are fixpoints:~$\forall s'\preceq s,p(s')=s$.
-
 \end{itemize}
 
 \end{definition}
-Note that the honest property of a propagator does not mean that a
-propagator is obliged to signal fixpoint or subsumption
+This is in fact a rather weak definition; a propagator is not even
+obliged to prune values, as long as it can decide whether a given
+assignment store is a solution store or not.
+An extreme case is the identity propagator~$i$, with~$i(s) = s$ for all input stores~$s$.
+As long as~$i$ is checking and honest, it could implement any constraint~$c$,
+because it fulfills all the other obligations: it is a decreasing and monotonic function
+(because~$i(s) = s \preceq s$) and it is correct for~$c$ (because it never removes values).
+
+Also, note that the honest property does \emph{not} mean that a
+propagator is \emph{obliged} to signal Fixpoint or Subsumed
 if it has computed a fixpoint or is subsumed, only that it must not 
-claim that it is at fixpoint or is subsumed if it is not. 
+claim fixpoint or subsumption if that is not the case.
 Thus, it is always safe 
-(though in many cases not so efficient for the CP-solver)
-for a propagator to signal 'not fixpoint', except for a solution store
-when it must signal either fail or subsumption.
-In fact, a propagator must not even prune values. An extreme case is
-the identity propagator~$i$, with~$i(s) = s$ for all input stores~$s$,
-which would be correct
-for all constraints, as long at is it checking and honest.
+for a propagator to signal Not fixpoint, except for an 
+assignment store when it must signal either Fail or Subsumed, by the
+honest property. 
+
+So why not be safe and always signal Not fixpoint?
+The reason is that the CP solver can benefit from the information
+in the status message: if a propagator~$p$ is at fixpoint, there is no point to
+execute~$p$ again until the domains of the variables change. If~$p$ is
+subsumed by a store~$s$, there is no point to execute~$p$ ever again
+along the current path in the search tree, because all the following
+stores will be stronger than~$s$. Thus, detecting fixpoints and subsumption
+can save many unnecessary operations.
 
 The concept \emph{consistency level} gives a measure of how strong
 the propagation of a propagator is.
@@ -597,99 +620,91 @@ The propagator that is concerned in this project is domain consistent.
 Gecode~\cite{Gecode} (Generic Constraint Development Environment)
 is a popular constraint programming solver written in C++,
 distributed under the MIT license.
-It has a state-of-the-art performance while being modular and extensible.
-It supports the programming of new propagators, branching strategies,
-and search engines. Furthermore, Gecode is well documented and comes
+It has state-of-the-art performance while being modular and extensible.
+It supports the programming of pieces that build the CP solver,
+specifically the programming of new propagators.
+Furthermore, Gecode is well documented and comes
 with a complete tutorial.
-
 
 Programming a propagator in Gecode means implementing a C++ object
 inheriting from the base class Propagator,
 that complies to the correct interface.
 The propagator can store any data structures as instance members,
 for saving information about its state between executions.
-The interface consists of 
-the following parts~\cite{Gecode:MPG}.
+A propagator that saves data structures between executions
+and use that information for propagation is
+said to be an \emph{incremental} propagator.
+% The interface consists of 
+% the following parts~\cite{Gecode:MPG}:
 
-\begin{description}
-  \item[Posting.] 
-    Typical tasks of the posting of the propagator include
-    deciding whether the propagator really needs to be posted,
-    performing some initial propagation and creating an
-    instance of the propagator.
+% \begin{description}
+%   \item[Posting.] 
+%     Typical tasks of the posting of the propagator include
+%     deciding whether the propagator really needs to be posted,
+%     performing some initial propagation and creating an
+%     instance of the propagator.
     
-    The propagator must also \emph{subscribe} to its associated variables,
-    subscribing to a variable ensures the propagator is scheduled
-    for execution whenever the relevant modification event occurs
-    for that variable. Subscription can also be handled via
-    advisors, see below.
+%     The propagator must also \emph{subscribe} to its associated variables,
+%     that is register with the framework to be scheduled
+%     for execution whenever the relevant modification event occurs
+%     for that variable. Subscription can also be handled via
+%     advisors, see below.
 
-    % Posting a propagator requires a \emph{constraint post function},
-    % a \emph{propagator post function} and a \emph{constructor}.
-    % The task of each of them are as follows:
-    % \begin{itemize}
-    %   \item The constraint post function envokes an appropriate propagator post function
-    %     -- this function can thus be used by several different propagators implementing
-    %     the same constraint.
-    %   \item Typical tasks for the propagator post function include deciding whether the propagator
-    %     really needs to be posted, deciding whether a more efficient propagator can be posted
-    %     instead, and last but not least invoking the constructor of the propagator.
-    %   \item The constructor creates an instance of the propagator and creates \emph{subscriptions}
-    %     to views. Subscribing to the views means the propagator is scheduled for execution whenever
-    %     the domains of the views change.
-    % \end{itemize}
-  \item[Disposal.] The propagator must implement a dispose() method that
-    returns the memory used by the propagator at disposal.
+%     % Posting a propagator requires a \emph{constraint post function},
+%     % a \emph{propagator post function} and a \emph{constructor}.
+%     % The task of each of them are as follows:
+%     % \begin{itemize}
+%     %   \item The constraint post function envokes an appropriate propagator post function
+%     %     -- this function can thus be used by several different propagators implementing
+%     %     the same constraint.
+%     %   \item Typical tasks for the propagator post function include deciding whether the propagator
+%     %     really needs to be posted, deciding whether a more efficient propagator can be posted
+%     %     instead, and last but not least invoking the constructor of the propagator.
+%     %   \item The constructor creates an instance of the propagator and creates \emph{subscriptions}
+%     %     to views. Subscribing to the views means the propagator is scheduled for execution whenever
+%     %     the domains of the views change.
+%     % \end{itemize}
+%   \item[Disposal.] The propagator must implement a dispose() method that
+%     returns the memory used by the propagator at disposal.
 
-  \item[Copying.] During search the propagator needs to be copied. This is
-    handled by the copy() method.
+%   \item[Copying.] During search the propagator needs to be copied. This is
+%     handled by the copy() method.
 
-  \item[Cost computation.] Gecode schedules propagators for execution according
-    to their estimated cost. Cheaper propagators execute before more expensive
-    ones, based on the inutition that cheaper propagators might prune values
-    or detect a failure early, so that more expensive propagators can take
-    advantage, or not even need to be executed. Every propagator implements
-    a cost() method that estimates the cost of executing that propagator.
+%   \item[Cost computation.] Gecode schedules propagators for execution according
+%     to their estimated cost. Cheaper propagators execute before more expensive
+%     ones, based on the inutition that cheaper propagators might prune values
+%     or detect a failure early, so that more expensive propagators can take
+%     advantage, or not even need to be executed. Every propagator implements
+%     a cost() method that estimates the cost of executing that propagator.
 
-  \item[Propagation.] The propagator implements a propagate() method
-    that performs the pruning of values. This method must fulfill
-    the obligations in Definition~\ref{def:prop}.
+%   \item[Propagation.] The propagator implements a propagate() method
+%     that performs the pruning of values. This method must fulfill
+%     the obligations in Definition~\ref{def:prop}.
 
-  \item[Rescheduling.] For various reasons, a propagator can be disabled,
-    in which case it needs to be rescheduled at a later point, implemented
-    by a reschedule() method.
+%   \item[Rescheduling.] For various reasons, a propagator can be disabled,
+%     in which case it needs to be rescheduled at a later point, implemented
+%     by a reschedule() method.
 
-\end{description}
+% \end{description}
 
 % Modification event
 % What is it?
 % Which exist?
 
-Gecode provides \emph{advisors} that can inform propagators about variable
+One such data structure is \emph{advisors}, that can inform propagators about variable
 modifications.
-Using advisors is optional.
-An advisor belongs to a propagator and can store information that is needed by
-its propagator. The purpose of an advisor is to, as its name suggests, advise
-the propagator of whether it needs to be executed or not. This works as follows.
-Whenever the domain
-of the variable(s) that an advisor is subscribed to changes, its advise()
-method is executed. If the advisor detects that its propagator is still
-at fixpoint, it should not schedule the propagator. If it is not at fixpoint,
-or possibly not at fixpoint, the advisor must schedule its propagator for
-execution. Similarly, the advisor can report failure or subsumption
-if it detects a failure or that its propagator is subsumed. An advisor
-is not allowed to modify the domains of the variables. 
-Furthermore, the advise() method can access
-the modification event that triggered its execution. 
-For integer and boolean variables, some information about which values
-have been removed is provided.
+The purpose of an advisor is to, as its name suggests, advise
+the propagator of whether it needs to be executed or not. 
+Whenever the domains of a variable changes, the advisor is executed,
+and it can signal fixpoint, subsumption or failure if it detects
+such a state.
 
-Search in Gecode is copy-based. Before making a desicion in the search tree, the
+Search in Gecode is copy-based. Before making a decision in the search tree, the
 current node is copied, so that the search can continue from an equivalent 
 state in case the decision fails, or in case more solutions are to be sought for.
-This implies some concerns on memory usage of the stored data structures
+This implies some concerns regarding memory usage for the stored data structures
 of a propagator, since allocating memory and copying large data structures
-is time consuming, and a too large memory usage is not desirable.
+is time consuming, and large memory usage is undesirable.
 
 % Characteristicsco
 % Copy based
@@ -714,7 +729,7 @@ sequence of $n$-tuples.
 \end{definition}
 
 Theoretically, any constraint could be expressed using the~\Table~constraint,
-simply by listing all the allowed assigments for its variables, 
+simply by listing all the allowed assignments for its variables, 
 making the~\Table~constraint a powerful constraint. However, typically
 it is too memory consuming to represent a constraint in this way
 (exponential space in the number of variables). Also, common constraints
@@ -728,11 +743,9 @@ Nevertheless, the~\Table~constraint is an important constraint.
 In Gecode, the \Table~constraint is called \Extensional. Gecode provides
 three propagators for \Extensional, one where the possible solutions are
 represented as a DFA, based on~\cite{Pesant:seqs}, and two where the solutions
-are representad in a tuple set, which is a data structure in Gecode for representing 
-a set of tuples. Among the last two one of them is based 
-on~\cite{DBLP:journals/ai/BessiereRYZ05}, and consumes less memory than the
-other, which is more incremental. 
-
+are represented as a tuple set. Among the last two, one of them is
+based on~\cite{DBLP:journals/ai/BessiereRYZ05} and is memory efficient.
+The other is speed efficient and more incremental.
 
 \subsection{Compact-Table Propagator}
 \label{bg:ct}
@@ -742,11 +755,11 @@ other, which is more incremental.
 The compact table (CT) algorithm is a domain consistent propagation algorithm
 that implements the \Table~constraint. It was first implemented in
 OR-tools, a constraint solver, where it outperforms all previously
-known algorithms. It was first described in~\cite{\CTpaper}.
+known algorithms and was first described in~\cite{\CTpaper}.
 Before this project, no attempts to implement CT in Gecode were made,
-and consquently its performance in Gecode is unknown.
+and consequently its performance in Gecode is unknown.
 
-Compact table relies on bitwise operations using a new datastructure
+Compact table relies on bitwise operations using a new data-structure
 called \emph{reversible sparse bit-set} (see \Secref{bg:sbs}).
 The propagator maintains a reversible sparse bit set object, \texttt{currTable},
 which stores the indices of the current valid tuples in a bit-set.
@@ -772,10 +785,10 @@ Both steps rely heavily on bitwise operations on \T{currTable} and
 % Beskriv idén
 Reversible sparse bit-sets~\cite{\CTpaper} 
 is a data structure for storing 
-a set of values. It avoids performing operations on zero
-words, which makes it efficient to perform bit-wise operations
-with other bit-sets (such as intersecting and unioning)
-even though the bit-set is sparse.
+a set of values. It avoids performing operations on words of only zeros,
+which makes it efficient to perform bit wise operations
+with other bit-sets (such as intersecting and unioning).
+%even though the bit-set contain many words of only zeros.
 
 A reversible sparse bit-set has an array of ints, \T{words},
 that are the actual stored bits, an array \T{index} that
@@ -784,17 +797,19 @@ int \T{limit} that is the index of the last non-zero word
 in \T{index}. Also, it has a temporary mask (array of ints)
 that is used to modify \T{words}.
 
-Some CP-solvers (Gecode is not among them)
-use a mechanism called \emph{trailing} to perform backtracking,
+Some CP-solvers
+use a mechanism called \emph{trailing} to perform backtracking
+(Gecode uses copying instead),
 where the main idea is to store a stack of operations that can
-be undone upon backtrack. These CP-solvers typically expose
+be undone upon backtrack.
+These CP-solvers typically expose
 some "reversible" objects to the users using this mechanism,
 among them the reversible version of the primitive type int.
 The first word of the name of the datastructure comes from
 the assumption that \T{words} consists of
 reversible ints.
 
-In what follows, a data structure that is 
+In the following, a data structure that is 
 like reversible sparse bit-sets except that it consists 
 of ordinary ints and not reversible ints
 will be called a sparse bit-set. Sparse bit-sets are discussed
@@ -810,9 +825,10 @@ in \Secref{sec:algorithms}.
 % Section 3 bör beskriva din design i detalj men samtidigt inte på C++-nivå. Jag gillar att se sjok av pseudokod inbäddade i text som förklarar pseudokoden. Man kan skriva text mellan sjoken och/eller i caption till algorithm-omgivningen. Något som jag också gillar är stepwise refinement, dvs. att först visa en enkel men korrekt version, och sedan en eller flera mer sofistikerade, optimerade versioner. Den pseudokod som du har skrivit passar bra i Section 3, men bryt gärna upp åtminstone Class CT-Propagator i flera stycken algorithm-omgivningar.
 
 This chapter presents the algorithms that are used in the implementation of the
-CT propagator in \Chapref{sec:implementation}. In what follows, when we refer to
-an array~$a$,~$a[0]$ denotes the first element (indexing starts from~$0$),
-$a$.length() the number of its cells and~$a[i:j]$ all its cells in the closed
+CT propagator in \Chapref{sec:implementation}.
+In the following section we use the notation that for an array~$a$,
+~$a[0]$ denotes its first element (indexing starts from~$0$),
+$a$.length() its number of cells and~$a[i:j]$ all its cells in the closed
 interval~$[i,j]$, where~$0 \leq i \leq j \leq a.\function{length}() - 1$.
 % When we refer to a two-dimensional array~$m$,~$m[i][*]$ denotes
 % row~$i$ and~$m[*][j]$ column~$j$, seeing~$m$ as a matrix.
@@ -840,7 +856,7 @@ fields and methods in detail.
 \Todo{Todo: Add examples.}
 
 \Linesref{line:sbsfield:start}{line:sbsfield:end} of~\Algoref{algo:sparse} shows the fields
-of Class~\SparseBitSet~and their types. Now follows a more detailed description of them.
+of Class~\SparseBitSet~and their types. Here follows a more detailed description of them:
 
 \begin{itemize}
   \item \Words~is an array of~$p$ 64-bit words which defines the current value of the bit-set:
@@ -1524,6 +1540,8 @@ The plots from the experiments are presented in Appendix~\ref{app:compare-ct}.
 
 \subsubsection{Discussion}
 \Todo{CT($\Delta$) outperforms the other variants.}
+From the results, we see that CT($\Delta$) outperforms the other variants.
+
 
 \subsection{Comparing CT against existing propagators}
 
@@ -1689,7 +1707,6 @@ denoted:
 
 The plots from the experiments are presented in Appendix~\ref{app:compare-gecode}.
 
-%\input{graphs.tex}
 
 \subsubsection{Discussion}
 
@@ -1705,25 +1722,71 @@ The plots from the experiments are presented in Appendix~\ref{app:compare-gecode
 \paragraph{Overall performance.}
 Comparing CT against B and I over all series, CT performs either as good as,
 or better than both B and I. 
-B or I does not outperform CT on any of the series.
-On some of the series CT is about a factor 10 faster.
+B or I does not outperform CT on any of the series, except possibly
+on \emph{AIM-100} and \emph{AIM-200}, where B is marginally faster than CT.
+On some of the series CT is up to a factor 10 faster.
 
-Comparing DFA against the other algorithms, on some series DFA outperforms
-all the other algorithms, and on some series the other algorithms outperform
-DFA.
+Comparing CT against DFA, DFA outperforms CT on \emph{MDD 07/09},
+\emph{AIM-*}, \emph{Pigeons plus} and \emph{TSP 25}.
+Also, DFA performs well on \emph{Mod Renault}, where a constant
+time seems to be spent in the initialisation of DFA, while
+the solvetime is very close to~$0$ for all instances.
+The reason might be that DFA is a more suitable algorithm for the
+problem types in these series, for example if DFA can
+compress the input table into a space and/or time-efficient DFA
+in these cases. On the other series however, DFA is outperformed
+by the other algorithms.
 
-Looking at the shape of the curves for the different algorithms,
-we see that DFA behaves differently than the other algorithms; the shape of the curves
-of CT, B, and I are very similar to each other for all series, while the shape of the
-curves of DFA is different from the other algorithms in most cases.
+% Also, for the \emph{AIM-*}
+% series 
+% On \emph{MDD 07/09}
+% the other algorithms timed out on all instances, which suggests that
+% DFA is a more suitable algorithm for the problem type.
+% The \emph{AIM-*}-series all small table sizes,
+% only~$3-7$ tuples, which might be the reason why DFA outperforms the other
+% algorithms on these instances. Why DFA outperforms the other algorithms
+% on \emph{TSP 25} is harder to explain, looking 
+
+% Looking at the shape of the curves for the different algorithms,
+% we see that DFA behaves differently than the other algorithms; the shape of the curves
+% of CT, B, and I are very similar to each other for all series, while the shape of the
+% curves of DFA is different from the other algorithms in most cases.
+
+\paragraph{The impact of table size on performance.}
+Most of the series have varying table sizes, and on those series it is hard to
+analyze the impact of table size on performance.
+However, looking at the series that do not vary so much in table size,
+there seems to be a correlation between table size and performance.
+The increase
+of performance for CT compared to B and I is larger on the series that contain 
+instances with large table sizes only (see \emph{A5}, \emph{A10},
+\emph{K5}, \emph{MDD 05}, and \emph{Rands JC*}), than on the series
+that contain only small tables (see \emph{AIM-*}, \emph{Dubois}, and \emph{Geom}).
+However, the series that contain small tables also contain low-arity constraints
+(arities~$2-3$),
+while the series with larger table sizes have larger arities, which makes
+it hard to tell which property if any that cause the difference in performance gain.
 
 \paragraph{The impact of arity on performance.}
-There seems to be a weak correlation between arity of the constraints and the performance.
-CT seems to perform better on the benchmark series that contain
-constraints with higher arities, than on the series that 
-contain constraints with low aritities.
-However, there seems to be other factors
-beside the arity that affect the performance.
+Again, many of the series have varying arities, so to analyze the impact of arity
+we are limited to the series that do not vary so much in arity.
+Many series where CT shows little or none performance gain have
+constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
+\emph{Langford *}), though there are exceptions to this (see \emph{Pigeons Plus},
+\emph{TSP 25/Quat}). 
+Again, the series with low arities also have small tables, while the series
+with larger arities tend to have larger tables.
+But it is possible that there is a correlation between arities and performance.
+
+% This suggests that there is a weak positive correlation between arity of the constraints
+% and the performance.
+
+% There seems to be a weak 
+% CT seems to perform better on the benchmark series that contain
+% constraints with higher arities, than on the series that 
+% contain constraints with low aritities.
+% However, there seems to be other factors
+% beside the arity that affect the performance.
 
 % The series that consist of instances with only \emph{binary or ternary}
 % constraints are \textbf{Geom}, \textbf{Langford 2/3/4}, \textbf{Nonograms}. 
@@ -1737,16 +1800,24 @@ beside the arity that affect the performance.
 
 % The series where CT performs best compared to B and I are \textbf{RandsJC*}
 % ($7$-ary constraints), \textbf{}
-\paragraph{The impact of table size on performance.}
+
 
 
 \paragraph{The impact of domain size on performance.}
-There seems to be a weak correlation between domain size and performance.
-CT seems to perform best on series where the domain sizes are
-medium sized or large. On the series that contain instances with
-small domain sizes ($2-3$), CT generally does not perform
-better than B and I. One exception to this is \textbf{BDD Large},
-with domain size~$2$, where CT outperforms the other algorithms.
+It is hard to draw any conclusions of whether the domain size affect
+the performance gain of CT. Among the series with small domain sizes, some
+have little or none performance gain (see \emph{AIM-*}, \emph{Dubois}) and
+some have a large performance gain (see \emph{MDD 05}, \emph{BDD Large}).
+The same is true for the series with larger domain sizes, some have
+small performance gain (see \emph{Nonograms}, \emph{Kakuro *}),
+while some have larger performance gain (see \emph{Rands JC*}, \emph{Crosswords *}).
+%There seems to be a weak correlation between domain size and performance.
+
+% CT seems to perform best on series where the domain sizes are
+% medium sized or large. On the series that contain instances with
+% small domain sizes ($2-3$), CT generally does not perform
+% better than B and I. One exception to this is \emph{BDD Large},
+% with domain size~$2$, where CT outperforms the other algorithms.
 
 \paragraph{Runtime vs. Solvetime.}
 The discrepancy between the runtime and solvetime is different for the various
@@ -1754,7 +1825,8 @@ algorithms. It is largest for DFA, which shows that the initialisation of DFA
 takes longer time compared to the other algorithms.
 CT has a larger discrepancy than B and I, so initilising CT takes longer time
 than initialising B and I. The reason could be that CT performs more initial propagation
-than B and I. \Todo{Check if CT performs more initial propagation}.
+than B and I, or that the initialisation of the data structures is more time-consuming
+for CT.\Todo{Check if CT performs more initial propagation}.
 
 
 % From the results there seem to be no notable correspondance between
