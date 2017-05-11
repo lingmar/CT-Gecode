@@ -34,7 +34,8 @@
 \newcommand{\Secref}[1]{Section~\ref{#1}}
 \newcommand{\Chapref}[1]{Section~\ref{#1}}
 \newcommand{\Algoref}[1]{Algorithm~\ref{#1}}
-\newcommand{\Table}{\Constraint{Table}~}
+\newcommand{\Table}{\Constraint{Table}}
+\newcommand{\Regular}{\Constraint{Regular}}
 \newcommand{\Extensional}{\Constraint{Extensional}~}
 \newcommand{\Lineref}[1]{Line~\ref{#1}}
 \newcommand{\Linesref}[2]{Lines~\ref{#1}-\ref{#2}}
@@ -89,19 +90,20 @@
 \newcommand{\Break}{\textbf{break~}}
 \newcommand{\While}[1]{\textbf{while~} {#1} \textbf{~do~}}
 
-\renewcommand{\algorithmicforall}{\textbf{Method}}
+\renewcommand{\algorithmicfor}{\textbf{Method}}
 \renewcommand{\algorithmicdo}{}
-\renewcommand{\algorithmicwhile}{\textbf{foreach}}
+\renewcommand{\algorithmicforall}{\textbf{foreach}}
+%\renewcommand{\algorithmicwhile}{\textbf{foreach}}
 
-\newcommand{\Func}[2]{\FORALL{#1(#2)}}
-\newcommand{\FuncRet}[3]{\FORALL{#1(#2) \ : \ \textbf{#3}}}
+\newcommand{\Func}[2]{\FOR{#1(#2)}}
+\newcommand{\FuncRet}[3]{\FOR{#1(#2) \ : \ \textbf{#3}}}
 \newcommand{\Endfunc}{\ENDFOR}
 \newcommand{\To}{~\bf{to}~}
 \newcommand{\Downto}{~{\bf{downto}}~}
 \newcommand{\For}[3]{\FOR{${#1} \leftarrow {#2} \To {#3}$ \textbf{do}}}
 \newcommand{\ForDown}[3]{\FOR{${#1} \leftarrow {#2} \Downto {#3}$ \textbf{do}}}
-\newcommand{\FOREACH}[1]{\WHILE{{#1} \textbf{do}}}
-\newcommand{\ENDFOREACH}{\ENDWHILE}
+\newcommand{\FOREACH}[1]{\FORALL{{#1} \textbf{do}}}
+\newcommand{\ENDFOREACH}{\ENDFOR}
 
 \renewcommand{\algorithmiccomment}[1]{\hfill // #1}
 \def\PROCEDURE{\item[\textbf{PROCEDURE}]}
@@ -199,11 +201,11 @@ called a~\emph{propagator},
 that implements the propagation for that constraint by removing
 values from the variables that are in conflict with the constraint.
 
-The \Table constraint expresses the possible combinations of values
+The \Table~constraint expresses the possible combinations of values
 that the associated variables can take as a sequence of tuples.
-Assuming finite domains, the \Table constraint can theoretically
+Assuming finite domains, the \Table~constraint can theoretically
 encode any kind of constraint and is thus very powerful. 
-The design of propagation algorithms for \Table is an active research field,
+The design of propagation algorithms for \Table~is an active research field,
 and several algorithms are known. In 2016, a new propagation algorithm for the \Table
 constraint was published~\cite{\CTpaper}, called Compact Table (CT).
 Preliminary results indicate that CT outperforms the previously known algorithms.
@@ -216,14 +218,14 @@ Before this project there had been no attempt to implement CT in Gecode
 and consequently its performance in Gecode was unknown. 
 The purpose of this thesis is to implement CT in Gecode and to evaluate
 and compare its performance with previously existing propagators for
-the \Table constraint.
+the \Table~constraint.
 The results of the evaluation indicate that CT outperforms
 the existing propagation algorithms in Gecode for \Table,
 which suggests that CT should be included in the solver.
 
 % In Constraint Programming (CP), every constraint is associated with a propagator
 % algorithm. The propagator algorithm filters out impossible values for the variables
-% related to the constraint. For the \Table constraint, several propagator
+% related to the constraint. For the \Table~constraint, several propagator
 % algorithms are known. In 2016, a new propagator algorithm for the \Table
 % constraint was published~\cite{\CTpaper}, called Compact Table (CT).
 % Preliminary results indicate that CT outperforms the previously known algorithms.
@@ -233,7 +235,7 @@ which suggests that CT should be included in the solver.
 \subsection{Goal}
 \label{intro:goal}
 The goal of this bachelor thesis is the design, documentation and implementation
-of a CT propagator algorithm for the \Table constraint in Gecode,
+of a CT propagator algorithm for the \Table~constraint in Gecode,
 and the evaluation of its performance compared to the existing propagators.
 
 \subsection{Contributions}
@@ -387,6 +389,9 @@ After gaining some intuition of CP, now follows some formal definitions.
 The definitions are based on
 \cite{SchulteCarlsson:FDsys}, \cite{Apt:constraintsBook}, and \cite{Gecode:MPG}.
 
+We start by defining \emph{constraints}, that essentially are relations
+among variables.
+
 \begin{definition}
   \label{def:constraint}
   \textbf{Constraint.} Consider a finite sequence of~$n$ 
@@ -423,6 +428,9 @@ over finite sets of integers. Constraints can be defined on
 other sets of values, but in this thesis only finite integer domains
 are considered.
 
+After defining constraints, we define a \emph{constraint satisfaction problems},
+which is a central concept.
+
 \begin{definition}
   \textbf{CSP.} A Constraint Satisfaction Problem (CSP) is a 
   triple~$\left<V,D,C\right>$, where:
@@ -430,6 +438,16 @@ are considered.
   ~$D = D_1, \ldots, D_n$ is a finite sequence of domains for the respective variable,
   and~$C = \Set{c_1, \ldots, c_m}$ is a set of constraints, each on a subsequence of~$V$.
 \end{definition}
+
+During the search of a solution to a CSP, the domains of the variables will vary: 
+along a path in the search tree, the domains shrink
+until they are assigned a value (a solution was found) or until the domain
+of a variable becomes empty (a failure).
+Upon a failure, search backtracks to a node in the search tree
+where all branches are not tried yet,
+and the domains of the variables are restored to the domains that the variables
+had in that node.
+A current mapping of domains to variables is called a~\emph{store}:
 
 \begin{definition}
   \textbf{Stores.} A \emph{store}~$s$ is a function, mapping a finite set of
@@ -681,9 +699,9 @@ is time consuming, and a too large memory usage is not desirable.
 % använda inbyggda klasen BitSets?
 %Här bör du bl.a. skriva allt som är relevant för resten av rapporten om Gecodes API. T.ex. de tre returvärdena som propagerare ska returnera, ungefär som du har skrivit i 3.2.3, fast utan det CT-specifika.
 
-\subsection{The \Table Constraint}
+\subsection{The \Table~Constraint}
 \label{bg:table}
-The \Table constraint, also called \Extensional,
+The \Table~constraint, also called \Extensional,
 explicitly expresses the possible combinations of values for the variables as a
 sequence of $n$-tuples.
 
@@ -695,19 +713,19 @@ sequence of $n$-tuples.
   tuples that are solutions to~$c$.
 \end{definition}
 
-Theoretically, any constraint could be expressed using the~\Table constraint,
+Theoretically, any constraint could be expressed using the~\Table~constraint,
 simply by listing all the allowed assigments for its variables, 
-making the~\Table constraint a powerful constraint. However, typically
+making the~\Table~constraint a powerful constraint. However, typically
 it is too memory consuming to represent a constraint in this way
 (exponential space in the number of variables). Also, common constraints
 typically have a certain structure (such as a linear constraint)
 that is difficult to take advantage of if the constraint is represented
 extensionally~\cite{SchulteCarlsson:FDsys}.
 
-Nevertheless, the~\Table constraint is an important constraint.
+Nevertheless, the~\Table~constraint is an important constraint.
 \Todo{Typical use cases? Propagator algortihms?}
 
-In Gecode, the \Table constraint is called \Extensional. Gecode provides
+In Gecode, the \Table~constraint is called \Extensional. Gecode provides
 three propagators for \Extensional, one where the possible solutions are
 represented as a DFA, based on~\cite{Pesant:seqs}, and two where the solutions
 are representad in a tuple set, which is a data structure in Gecode for representing 
@@ -921,7 +939,7 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
 \subsection{Compact-Table (CT) Algorithm}
 \label{sec:ct}
 The CT algortithm is a domain consistent propagation
-algorithm for any \Table constraint~$c$. \Secref{ct:pseudo}
+algorithm for any \Table~constraint~$c$. \Secref{ct:pseudo}
 presents pseudo code for the CT algorithm and a few variants
 and \Secref{sec:proof} proves that CT fulfills the propagator
 obligations.
@@ -1297,12 +1315,12 @@ In what follows, we denote~$CT(s)$ the resulting store of executing
 % \end{proof}
 
 \begin{lemma}\label{lemma:correct}
-  CT is correct for the \Table constraint.
+  CT is correct for the \Table~constraint.
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:correct}]
   $CT$ does not remove values that participate in tuples that are supports
-  on a \Table constratint~$c$,
+  on a \Table~constratint~$c$,
   since \FilterDomains() and \InitialiseCT() only removes values that 
   have no supports on~$c$. Thus,~$CT$ is correct for \Table.
 \end{proof}
@@ -1424,8 +1442,6 @@ language in the Gecode library.
 
 \section{Evaluation}
 \label{evaluation}
-% TODO: skip crosswords
-% TODO: appendix with plots
 
 This chapter presents the evaluation of the implementation of the CT propagator
 presented in \Chapref{sec:implementation}. 
@@ -1439,16 +1455,21 @@ with a total of~$1507$ CSP instances that where used in the
 experiments in~\cite{\CTpaper}. The instances contain \Table~constraints
 only.
 
-\begin{table}[h]\small
-  \caption{Benchmarks series and their characteristics.}
-  \label{tab:benchmarks}
-  \centering
-  \begin{tabular}{lccc}  % right alignment --> decimal point alignment
-    name & number of instances & arity & variable domains \\
-    \midrule
-    \input{benchmarks.tex} 
-  \end{tabular}
-\end{table}
+
+  \begin{table}[h]%\small
+    \caption{Benchmarks series and their characteristics.}
+    \label{tab:benchmarks}
+    
+    \begin{sideways}
+      \centering
+      \begin{tabular}{lcccc}  % right alignment --> decimal point alignment
+        name & number of instances & arity & table size & variable domains \\
+        \midrule
+        \input{benchmarks.tex} 
+      \end{tabular}
+    \end{sideways}
+    \end{table}
+
 
 All instances were written in MiniZinc~\cite{MiniZinc}, the
 instances used in~\cite{\CTpaper} were originally written in XCSP2.1,
@@ -1468,7 +1489,7 @@ The following section presents the results of the experiments.
 
 First the results of comparing different versions of CT is presented,
 and then the results of comparing the seemingly best version of CT with 
-the existing propagators in Gecode for the~\Table constraint.
+the existing propagators in Gecode for the~\Table~constraint.
 
 
 % In \Secref{evaluation:setup},
@@ -1499,16 +1520,160 @@ The versions and their denotations are:
 
 \subsubsection{Results}
 
+The plots from the experiments are presented in Appendix~\ref{app:compare-ct}.
 
 \subsubsection{Discussion}
 \Todo{CT($\Delta$) outperforms the other variants.}
 
-\subsection{Comparing CT against existing propagators for the~\Table constraint}
+\subsection{Comparing CT against existing propagators}
 
+Gecode provides an \Constraint{Extensional} constraint, which
+comes with three different propagators: one where the extension
+is given as a DFA, one nonincremental memory-efficient one where
+the extension is given as a tuple set, and one incremental
+time-efficient one where the extension is also given as a tuple set.
+
+\begin{description}
+  \item[DFA] This is based on~\cite{Pesant:seqs}.
+  \item[B -- Basic positive tuple set propagator]
+    This is based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
+     The propagator state has the following fields:
+
+     \begin{itemize}
+     \item array of variables: $X$
+     \item tuple set: $T$
+     \item $L[\langle x,n \rangle]$ is the latest seen tuple where position
+       $x$ has value $n$.  Initialized to the first such tuple, and set to
+       $\bot$ after the last such tuple has been processed.
+     \end{itemize}
+
+     \begin{algorithm}
+       \caption{Basic positive tuple set propagator.}
+       \begin{algorithmic}[1]
+         \PROCEDURE $\Extensional() : \bool$
+         \FOREACH{$x \in X$}
+         \STATE $S[x] \gets \bot$
+         \ENDFOREACH
+         \FOREACH{$x \in X$}
+         \STATE $N \gets\emptyset$  
+         \FOREACH{$n \in D(x)$}
+         \IF{$S[x] = \bot$}
+         \STATE $\ell \gets L[\langle x,n \rangle]$
+         \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in D(y)$}
+         \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
+         \ENDWHILE
+         \IF{$\ell\neq\bot$}
+         \STATE $N \gets N \cup \{ n \}$
+         \FOREACH{$y \in X$ where $y > x$}
+         \STATE $S[y] \gets \ell[y]$
+         \ENDFOREACH
+         \ENDIF
+         \ENDIF        
+         \ENDFOREACH
+         \IF{$N = \emptyset$}
+         \RETURN \FALSE
+         \ELSE
+         \STATE $D(x) \gets N$
+         \ENDIF
+         \ENDFOREACH
+         \RETURN \TRUE
+       \end{algorithmic}
+     \end{algorithm}
+\clearpage
+
+   \item[I -- Incremental positive tuple set propagator]
+     This is based on explicit support maintenance.  The propagator state
+has the following fields, where a \emph{literal} is a $\langle x,n
+\rangle$ pair.
+
+\begin{itemize}
+\item array of variables: $X$
+\item tuple set: $T$
+\item $L[\langle x,n \rangle]$ is the latest seen tuple where position
+  $x$ has value $n$.  Initialized to the first such tuple, and set to
+  $\bot$ after the last such tuple has been processed.
+\item $S[\langle x,n \rangle]$ is a set of encountered supports
+  (tuples) for $\langle x,n \rangle$.  Initialized to $\emptyset$.
+\item $W_S$ is a stack of literals, whose support data needs restoring.
+  Initially empty.
+\item $W_R$ is a stack of literals no longer supported, and therefore
+  whose domain needs updating and whose support data need clearing.  Initially empty.
+\end{itemize}
+
+
+\begin{algorithm}
+\caption{Incremental positive tuple set propagator.}
+\begin{algorithmic}[1]
+  \PROCEDURE $\Extensional() : \bool$
+  \IF[executed in a constructor]{the propagator is being posted}
+    \FOREACH{$x \in X$}
+      \FOREACH{$n \in D(x)$}
+        \STATE $\FindSupport(\langle x,n \rangle)$
+      \ENDFOREACH
+    \ENDFOREACH
+  \ELSE[executed in an advisor]
+    \FOREACH{$\langle x,n \rangle$ that has been removed since last time}
+      \FOREACH{$t \in S[\langle x,n \rangle]$}
+        \STATE $\RemoveSupport(t,\langle x,n \rangle)$
+      \ENDFOREACH
+    \ENDFOREACH
+  \ENDIF
+  \WHILE[executed in the propagator proper]{$W_R\neq\emptyset \lor W_S\neq\emptyset$}
+    \FOREACH{$\langle x,n \rangle \in W_R$}
+      \STATE $D(x) \gets D(x) \setminus \{ n \}$
+      \IF{$D(x)$ was wiped out}
+        \RETURN \FALSE
+      \ENDIF
+    \ENDFOREACH
+    \STATE $W_R \gets \emptyset$
+    \FOREACH{$\langle x,n \rangle \in W_S$ where $n \in D(x)$}
+      \STATE $\FindSupport(\langle x,n \rangle)$
+    \ENDFOREACH
+    \STATE $W_S \gets \emptyset$
+  \ENDWHILE
+  \RETURN \TRUE
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Recheck support for literal $\langle x,n \rangle$.}
+\begin{algorithmic}[1]
+  \PROCEDURE $\FindSupport(\langle x,n \rangle)$
+  \STATE $\ell \gets L[\langle x,n \rangle]$
+  \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in D(y)$}
+    \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
+  \ENDWHILE
+  \IF{$\ell=\bot$}
+    \STATE $W_R \gets W_R \cup \{ \langle x,n \rangle\}$
+  \ELSE
+    \FOREACH{$y \in X$}
+      \STATE $S[\langle y,\ell[y] \rangle] \gets S[\langle y,\ell[y] \rangle] \cup \{ \ell \}$
+    \ENDFOREACH
+  \ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Clear support data unsupported literal $\langle x,n
+  \rangle$.  Note: $n$ is actually not used here.}
+\begin{algorithmic}[1]
+  \PROCEDURE $\RemoveSupport(\ell, \langle x,n \rangle)$
+  \FOREACH{$y \in X$}
+    \STATE $S[\langle y,\ell[y] \rangle] \gets S[\langle y,\ell[y] \rangle] \setminus \{ \ell \}$
+    \IF{$y \neq x \land S[\langle y,\ell[y] \rangle] = \emptyset$}
+      \STATE $W_S \gets W_S \cup \{ \langle y,\ell[y] \rangle \}$
+    \ENDIF
+  \ENDFOREACH
+\end{algorithmic}
+\end{algorithm}
+
+   \end{description}
+\clearpage
 \subsubsection{Evaluation Setup}
 The winning variant from the experiments in~\Secref{sec:compare},
-CT($\Delta$), was compared against three existing propagators
-in Gecode for the~\Table~constraint. The propagators are
+CT($\Delta$), was compared against the two existing propagators
+in Gecode for the~\Table~constraint, as well with the propagator
+for the \Regular~constraint. The propagators are
 denoted:
 
 \begin{description}
@@ -1518,17 +1683,90 @@ denoted:
   \item[I] Incremental positive tuple set propagator.
 \end{description}
 
-B is more memory-efficient than I, and I is expected to be faster than B.
+%B is more memory-efficient than I, and I is expected to be faster than B.
 
 \subsubsection{Results}
-Each plot shows the number of instances solved as a function
-of timeout limit in milliseconds.
 
-\Todo{Change captions to DFA, B, I.}
+The plots from the experiments are presented in Appendix~\ref{app:compare-gecode}.
 
 %\input{graphs.tex}
 
-%\subsubsection{Discussion}
+\subsubsection{Discussion}
+
+% Compare CT/B/I
+% Discuss DFA
+% Discuss runtime/solvetime
+% Formen på kurvorna är lika för CT, B, I
+% If CT were to replace or be an alternative to another algorithm,
+% it would be so for either B or I...
+% More relevant to compare CT against B and I
+% Memory-bound/CPU-bound
+
+\paragraph{Overall performance.}
+Comparing CT against B and I over all series, CT performs either as good as,
+or better than both B and I. 
+B or I does not outperform CT on any of the series.
+On some of the series CT is about a factor 10 faster.
+
+Comparing DFA against the other algorithms, on some series DFA outperforms
+all the other algorithms, and on some series the other algorithms outperform
+DFA.
+
+Looking at the shape of the curves for the different algorithms,
+we see that DFA behaves differently than the other algorithms; the shape of the curves
+of CT, B, and I are very similar to each other for all series, while the shape of the
+curves of DFA is different from the other algorithms in most cases.
+
+\paragraph{The impact of arity on performance.}
+There seems to be a weak correlation between arity of the constraints and the performance.
+CT seems to perform better on the benchmark series that contain
+constraints with higher arities, than on the series that 
+contain constraints with low aritities.
+However, there seems to be other factors
+beside the arity that affect the performance.
+
+% The series that consist of instances with only \emph{binary or ternary}
+% constraints are \textbf{Geom}, \textbf{Langford 2/3/4}, \textbf{Nonograms}. 
+% On all of these series, CT is either
+% neither faster or slower than B or I, or only slightly faster than these algorithms.
+
+% The series that consist of \emph{binary or ternary}, but not only binary, constraints
+% are \textbf{AIM-50/100/200}, \textbf{Dubois}, and the \textbf{TSP} series.
+% On AIM-50/100/200 and Dubois, CT is neither slower or faster than B or I.
+% On the TSP series CT outperforms B and I.
+
+% The series where CT performs best compared to B and I are \textbf{RandsJC*}
+% ($7$-ary constraints), \textbf{}
+\paragraph{The impact of table size on performance.}
+
+
+\paragraph{The impact of domain size on performance.}
+There seems to be a weak correlation between domain size and performance.
+CT seems to perform best on series where the domain sizes are
+medium sized or large. On the series that contain instances with
+small domain sizes ($2-3$), CT generally does not perform
+better than B and I. One exception to this is \textbf{BDD Large},
+with domain size~$2$, where CT outperforms the other algorithms.
+
+\paragraph{Runtime vs. Solvetime.}
+The discrepancy between the runtime and solvetime is different for the various
+algorithms. It is largest for DFA, which shows that the initialisation of DFA
+takes longer time compared to the other algorithms.
+CT has a larger discrepancy than B and I, so initilising CT takes longer time
+than initialising B and I. The reason could be that CT performs more initial propagation
+than B and I. \Todo{Check if CT performs more initial propagation}.
+
+
+% From the results there seem to be no notable correspondance between
+% domain size and performance. Among the series that have small
+% domain sizes there are instances that do not perform better than B and I
+% (\textbf{AIM-*}, \textbf{Dubois}) and instances that do perform
+% better than B and I (\textbf{BDD Large}). The same is true for series
+% with larger domain sizes, in some of them CT is not faster than
+% B and I (\textbf{Langford 2/3/4})
+
+% that have large domain sizes
+
 
 % Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
 
@@ -1541,80 +1779,8 @@ of timeout limit in milliseconds.
 % once on a \todo{quantum computer} for every propagator and a timeout of
 % 1,000 seconds was used.
 
-Due to the high number of instances, the runtime for
-each instance was only measured once. A timeout of 1000 seconds was used.
-
-%\input{graphs.tex}
-
-
-
-
-
-% \paragraph{Crosswords}
-% Crosswords_lexVg
-% Crosswords_wordsPuzzle
-% Crosswords_wordsVg
-
-% \paragraph{Travelling Salesman Problem}
-% TSP_20
-% TSP_25
-% TSP_Quat_20
-
-
-% a10
-% a5
-% aim-100-pos
-% aim-200-pos
-% aim-50-pos
-% bddLarge
-% bddSmall
-% dubois
-% geom
-% k5_n10_d10_m15_p08
-
-% \paragraph{Kakuro}
-% kakuroext_easy
-% kakuroext_hard
-% kakuroext_medium
-
-% \paragraph{Langford}
-% langford2
-% langford3
-% langford4
-
-% \paragraph{MDD}
-% mdd05
-% mdd07
-% mdd09
-
-
-% modRenault
-
-% \paragraph{Nonograms}
-% nonograms
-
-% pigeonsplus
-
-% \paragraph{Randomised instances}
-% randsJC10000
-% randsJC2500
-% randsJC5000
-% randsJC7500
-
-% ssa
-
-% \begin{table}[t] \tiny
-%   \centering
-%   \begin{tabular}{rrrrrrr}  % right alignment --> decimal point alignment
-%     $n$ & $runtime_g$ & $fail_g$ & $nprops_g$ & $runtime_c$ & $fail_c$ & $nprops_c$ \\
-%     \midrule
-%     \input{results-crosswords.tex} % let your experiment script write directly
-%                             % into this file, making sure every number
-%                             % in a column has the _same_ number of decimals
-%   \end{tabular}
-%   \caption{}
-%   \label{tab:res:sat}
-% \end{table}
+% Due to the high number of instances, the runtime for
+% each instance was only measured once. A timeout of 1000 seconds was used.
 
 
 
