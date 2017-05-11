@@ -1985,7 +1985,16 @@ for CT.\Todo{Check if CT performs more initial propagation}.
 \section{Conclusions and Future Work}
 \label{conclusions}
 
-For the implementation to reach industry standard there
+In this bachelor thesis project, a new propagator algorithm for the~\Table constraint,
+called Compact Table (CT), was implemented in the constraint solver Gecode, and its performance
+was evaluated compared to the existing propagators for~\Table in Gecode, as well
+as the propagator for the \Constraint{Regular} constraint.
+The results of the evaluation is that CT outperforms the existing propagators
+in Gecode for \Table, which suggests that CT should be included in the solver.
+The performance gain from CT seems to be largest for constraints with large tables,
+and not so large for constraints with low arities.
+
+For the implementation to reach comercial standards there
 are a few things that need to be revised. The following lists some known
 improvements and flaws.
 
