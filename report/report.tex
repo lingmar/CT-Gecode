@@ -72,7 +72,7 @@
 \newcommand{\Mask}{\texttt{mask}}
 \newcommand{\Limit}{\texttt{limit}}
 \newcommand{\SparseBitSet}{\texttt{SparseBitSet}}
-\newcommand{\Offset}{\texttt{offset}}
+\newcommand{\Offset}{\localvar{offset}}
 
 % CT Propagator
 \newcommand{\Scp}{\texttt{vars}}
@@ -275,8 +275,8 @@ description of the outline of the written dissertation.
     in \Secref{conclusions}.
 
   \item Several possible improvements and flaws have been detected in the current
-    implementation that prevent the code to meet commercial standards, these
-    are listed in \Secref{conclusions}.
+    implementation that need to be fixed for the code to reach production 
+    quality, these are listed in \Secref{conclusions}.
         
 \end{itemize}
 
@@ -321,13 +321,13 @@ that can never participate in a solution because assigning them to
 the variables would violate the constraint,
 effectively shrinking the domain sizes and thus 
 pruning the size of the search tree.
-When enough\footnote{Here "enough" might mean that no more propagation can be made,
+When enough\footnote{Here ``enough'' might mean that no more propagation can be made,
   but in some cases more propagation \emph{can} be made, but the
   solver decides that it is more efficint to branch to a new node instead of 
   performing more propagation in the current node.}
 propagation has been performed and a solution is still not found,
 the solver must \emph{branch} the search tree, following som heuristic,
-which typically means selecting a variable and "guessing" on its value,
+which typically means selecting a variable and ``guessing'' on its value,
 moving the search to a new node where propagation starts over again.
 
 Propagation interleaved with branching continues along a path in the search tree,
@@ -345,7 +345,7 @@ the problem is unsatisfiable.
 To build intuition and understanding of the ideas of CP,
 the concepts can be demonstrated with logical puzzles. One such
 puzzle is Kakuro, somewhat similar to the popular puzzle Sudoku,
-a kind of mathematical crossword where the "words" consist
+a kind of mathematical crossword where the ``words'' consist
 of numbers instead of letters, see Figure~\ref{fig:kakuro}.
 The game board consists of 
 blank cells forming rows and columns, called \emph{entries}.
@@ -419,7 +419,8 @@ among variables.
   that are possible values for the
   respective variable. 
   For a variable~$x_i \in X$, its domain~$D_i$ is denoted 
-  by~$dom(x_i)$.
+  by~$\Dom{x_i}$. Its \emph{domain size} is~$|\Dom{x_i}|$ and its \emph{domain width}
+  is $\text{max}(\Dom{x_i}) - \text{min}(\Dom{x_i}) + 1$.
   \begin{itemize}
     \item   A \emph{constraint}~$c$ on~$X$ is a relation, 
       denoted by~$rel(c)$. The associated variables~$X$ are denoted~$vars(c)$,
@@ -531,8 +532,8 @@ that they must meet, taken from \cite{SchulteCarlsson:FDsys} and \cite{Gecode:MP
 
   \item A propagator~$p$ is a monotonic function:
     ~$s_1 \preceq s_2 \Rightarrow p(s_1) \preceq p(s_2)$
-    for any stores~$s_1$ and~$s_2$. This property guarantees that constraint propagation
-    preserves the strength-ordering of stores.
+    for any stores~$s_1$ and~$s_2$. This property is not a strict obligation,
+    though it is desirable as it preserves the strength-ordering of stores.
 
   \item A propagator is correct for the constraint it implements.
     A propagator~$p$
@@ -643,9 +644,10 @@ inheriting from the base class Propagator,
 that complies to the correct interface.
 The propagator can store any data structures as instance members,
 for saving information about its state between executions.
-A propagator that saves data structures between executions
-and use that information for propagation is
-said to be an \emph{incremental} propagator.
+
+% A propagator that saves data structures between executions
+% and use that information for propagation is
+% said to be an \emph{incremental} propagator.
 % The interface consists of 
 % the following parts~\cite{Gecode:MPG}:
 
@@ -709,7 +711,13 @@ The purpose of an advisor is to, as its name suggests, advise
 the propagator of whether it needs to be executed or not. 
 Whenever the domains of a variable changes, the advisor is executed,
 and it can signal fixpoint, subsumption or failure if it detects
-such a state.
+such a state. 
+
+Advisors enable \emph{incrementality}: they can ensure
+that the propagator do not need to scan all the variables to see
+which have been modified since last time. Propagators that use
+data structures to avoid scanning all variables and/or all domains
+of the variables in each execution is said to be \emph{incremental}.
 
 Search in Gecode is copy-based. Before making a decision in the search tree, the
 current node is copied, so that the search can continue from an equivalent 
@@ -815,7 +823,7 @@ use a mechanism called \emph{trailing} to perform backtracking
 where the main idea is to store a stack of operations that can
 be undone upon backtrack.
 These CP-solvers typically expose
-some "reversible" objects to the users using this mechanism,
+some ``reversible'' objects to the users using this mechanism,
 among them the reversible version of the primitive type int.
 The first word of the name of the datastructure comes from
 the assumption that \T{words} consists of
@@ -927,14 +935,13 @@ We now describe the methods in Class~\SparseBitSet~in~\Algoref{algo:sparse}.
     set to~$-1$, that means that all words are zero-words and the bit-set
     is empty.
 
-  \item clearMask() in lines~\ref{line:clearMask:1}-\ref{line:reverse:4}
-    reverses the bits in the temporary mask.
-
-  \item reverseMask() in lines~\ref{line:reverse:1}-\ref{line:clearMask:4}
+  \item clearMask() in lines~\ref{line:reverse:1}-\ref{line:clearMask:4}
     clears the temporary mask. This means setting to~$0$ all words of~$\Mask$
     corresponding to non-zero words of~\Words.
     
-
+  \item reverseMask() in lines~\ref{line:clearMask:1}-\ref{line:reverse:4}
+    reverses the bits in the temporary mask.
+  
   \item addToMask() in~\linesref{line:addToMask:1}{line:addToMask:4} collects
     elements to the temporary mask by applying a word-by-word logical bit-wise
     \emph{or} operation with a given bit-set (array of long).
@@ -1424,6 +1431,16 @@ The implementation follows the pseudo code in in \Secref{ct:pseudo} very closely
 The correctness of the CT propagator was validated with the existing unit tests
 in Gecode for the \Table~constraint.
 
+CT reuses the existing tuple set data structure for representing the initial table,
+that is used in the existing propagators for~\Table~in Gecode, and thus the function
+signature for posting CT the propagator is equal to the signature for the existing
+propagators. The tuple set
+is only used upon initialisation of the fields, except for the variant CT($T$) where
+the tuple set is maintained as a field.
+
+CT supports both integer domains and boolean domains, controlled with C++ templates
+in the implementation.
+
 %The propagator has all the fields that are described there:~$\Supports$
 
 % Indexering
@@ -1485,7 +1502,7 @@ which means that when a variable is assigned, the memory that is used for storin
 information about that variable can be freed.
 
 \paragraph{Or-tools.} The implementation of CT in OR-tools was studied.
-They use two versions of CT, one for small tables ($< 64$ tuples) that
+They use two versions of CT, one for small tables ($\leq 64$ tuples) that
 only use one word for~$\CurrTable$ instead of an array. Though this is a
 promising idea, this version was not implemented because of time constraints.
 Also, during propagation they reason on the bounds of the domains of the variables
@@ -1499,13 +1516,13 @@ among nodes in the search tree, which means that it does not need to be
 copied in each branching. The rest of the data structures are allocated
 in a memory space that is specific to the current node, and are copied.
 
-\paragraph{Profilation.} Profilation tools were used to locate the parts of
+\paragraph{Profiling.} Profiling tools were used to locate the parts of
 the program where most of the time is spent. Some optimisations could
 be performed from this information. Specifically, a speed-up could be
 achieved by decreasing the number of memory accesses in some of the
 methods in \SparseBitSet. The profilation shows that the bottleneck 
 of the implementation are the bit-wise operations in \SparseBitSet,
-and also a lot of time is spent in \FixDomains().
+and also a lot of time is spent in \FilterDomains().
 \Todo{Include figures}.
 
 % Det här är vad jag hittar av värde när jag läser igenom OR-tools kod:
@@ -1672,49 +1689,61 @@ time-efficient one where the extension is also given as a tuple set.
   \item[DFA] This is based on~\cite{Pesant:seqs}.
   \item[B -- Basic positive tuple set propagator]
     This is based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
-     The propagator state has the following fields:
 
-     \begin{itemize}
-     \item array of variables: $X$
-     \item tuple set: $T$
-     \item $L[\langle x,n \rangle]$ is the latest seen tuple where position
-       $x$ has value $n$.  Initialized to the first such tuple, and set to
-       $\bot$ after the last such tuple has been processed.
-     \end{itemize}
+    \Todo{Add pseudocode for B}.
 
-     \begin{algorithm}
-       \caption{Basic positive tuple set propagator.}
-       \begin{algorithmic}[1]
-         \PROCEDURE $\Extensional() : \bool$
-         \FOREACH{$x \in X$}
-         \STATE $S[x] \gets \bot$
-         \ENDFOREACH
-         \FOREACH{$x \in X$}
-         \STATE $N \gets\emptyset$  
-         \FOREACH{$n \in D(x)$}
-         \IF{$S[x] = \bot$}
-         \STATE $\ell \gets L[\langle x,n \rangle]$
-         \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in D(y)$}
-         \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
-         \ENDWHILE
-         \IF{$\ell\neq\bot$}
-         \STATE $N \gets N \cup \{ n \}$
-         \FOREACH{$y \in X$ where $y > x$}
-         \STATE $S[y] \gets \ell[y]$
-         \ENDFOREACH
-         \ENDIF
-         \ENDIF        
-         \ENDFOREACH
-         \IF{$N = \emptyset$}
-         \RETURN \FALSE
-         \ELSE
-         \STATE $D(x) \gets N$
-         \ENDIF
-         \ENDFOREACH
-         \RETURN \TRUE
-       \end{algorithmic}
-     \end{algorithm}
-\clearpage
+%      The propagator state has the following fields:
+
+%      \begin{itemize}
+%      \item array of variables: $X$
+%      \item tuple set: $T$
+%      \item $L[\langle x,n \rangle]$ is the latest seen tuple where position
+%        $x$ has value $n$.  Initialized to the first such tuple, and set to
+%        $\bot$ after the last such tuple has been processed.
+%      \end{itemize}
+
+%      \Algoref{algo:basic} shows the basic tuple set propagator algorithm.
+%      Each time the propagator is envoked, for each variable we initialise
+%      $S[x]$ to~$\bot$, where~$S$ is a temporary array. The loop in lines
+%      $3$ to~$17$ will then find a support for each value in the domain of
+%      each variable. If there are no supports left for a variable, the
+%      propagator will return \textbf{false} in line~$15$, which means failure.
+%      Otherwise, the domain of the variable is set to the set of values that
+%      still are supported.
+
+%      \begin{algorithm}
+%        \label{algo:basic}
+%        \caption{Basic positive tuple set propagator.}
+%        \begin{algorithmic}[1]
+%          \PROCEDURE $\Extensional() : \bool$
+%          \FOREACH{$x \in X$}
+%          \STATE $S[x] \gets \bot$
+%          \ENDFOREACH
+%          \FOREACH{$x \in X$}
+%          \STATE $N \gets \emptyset$  
+%          \FOREACH{$n \in D(x)$}
+%          \IF{$S[x] = \bot$}
+%          \STATE $\ell \gets L[\langle x,n \rangle]$
+%          \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in D(y)$}
+%          \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
+%          \ENDWHILE
+%          \IF{$\ell\neq\bot$}
+%          \STATE $N \gets N \cup \{ n \}$
+%          \FOREACH{$y \in X$ where $y > x$}
+%          \STATE $S[y] \gets \ell[y]$
+%          \ENDFOREACH
+%          \ENDIF
+%          \ENDIF        
+%          \ENDFOREACH
+%          \STATE $D(x) \gets D(x) \setminus N$
+%          \IF{$D(x) = \emptyset$}
+%          \RETURN \FALSE
+%          \ENDIF
+%          \ENDFOREACH
+%          \RETURN \TRUE
+%        \end{algorithmic}
+%      \end{algorithm}
+% \clearpage
 
    \item[I -- Incremental positive tuple set propagator]
      This is based on explicit support maintenance.  The propagator state
@@ -1735,9 +1764,19 @@ has the following fields, where a \emph{literal} is a $\langle x,n
   whose domain needs updating and whose support data need clearing.  Initially empty.
 \end{itemize}
 
+\Algoref{algo:incremental} shows propagation algorithm for the incremental
+tuple set propagator. When the propagator is beint posted,
+\FindSupport($\Tuple{x,n}$) 
+is called for every literal~$\Tuple{x,n}$.
+Lines $6-8$ are executed in an advisor, and they call~\RemoveSupport($\Tuple{x,n}$)
+for every literal $\Tuple{x,n}$ that has been removed since last time.
+The rest of the algorithm removes all the literals in~$W_R$ and calls
+\FindSupport($\Tuple{x,n}$) for all literals~$\Tuple{x,n}$ whose
+support data needs restoring.
 
 \begin{algorithm}
 \caption{Incremental positive tuple set propagator.}
+\label{algo:incremental}
 \begin{algorithmic}[1]
   \PROCEDURE $\Extensional() : \bool$
   \IF[executed in a constructor]{the propagator is being posted}
@@ -1770,7 +1809,12 @@ has the following fields, where a \emph{literal} is a $\langle x,n
 \end{algorithmic}
 \end{algorithm}
 
+\Algoref{algo:findsupport} finds a tuple that supports a given literal~$\Tuple{x,n}$.
+If no such exists, then the literal is added to~$W_R$, else the tuple is added
+to the set of encountered valid tuples for the literals associated with the tuple.
+
 \begin{algorithm}
+  \label{algo:findsupport}
 \caption{Recheck support for literal $\langle x,n \rangle$.}
 \begin{algorithmic}[1]
   \PROCEDURE $\FindSupport(\langle x,n \rangle)$
@@ -1788,7 +1832,13 @@ has the following fields, where a \emph{literal} is a $\langle x,n
 \end{algorithmic}
 \end{algorithm}
 
+\Algoref{algo:removesupport} clears the support data for a tuple~$l$ that has
+become invalid, by removing~$l$ from the set of valid tuples for each variable.
+The associated literals are also added to~$W_S$, because support data for them
+need to be restored.
+ 
 \begin{algorithm}
+  \label{algo:removesupport}
 \caption{Clear support data unsupported literal $\langle x,n
   \rangle$.  Note: $n$ is actually not used here.}
 \begin{algorithmic}[1]
