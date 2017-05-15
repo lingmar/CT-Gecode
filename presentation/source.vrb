@@ -1,0 +1,25 @@
+\frametitle{Options}
+
+  \begin{itemize}
+    \item{\textbf{Navigation:} [withnav] use the (horizontal) navigation bar right over the footline}
+    \item{\textbf{Logo:} [mylogo] Will use the supplied {\verb!\logo{...}!} instead of the Uppsala Logo.{\tiny{Note that it should be the file path}}}
+    \item{\textbf{Page numbers:} [nonumbers|totalnumber]. \\By default
+        includes the number of the current slide in the footline. Use
+        \emph{nonumbers} to suppress it (along with the total number)}
+    \item{\textbf{Section overview:} [hideallsubsections|hideothersubsections]}
+      \pagebreak
+    \item{\textbf{Progress Bar:} [noprogressbar] suppresses the vertical red line on the right side}
+    \item{For the sidebar layout:
+        \begin{itemize}
+        \item{ [subsectionsattop] Displays the subsections above the title, in grey. Underlines the current one.}
+        \item{ [sectionpathattop] Displays \\{<short title> \insertgotosymbol <section> \insertgotosymbol <subsection>}\\in grey above the title}
+        \end{itemize}
+      }
+  \end{itemize}
+
+    \begin{example}[My favorite]
+      {\footnotesize{
+	  $\backslash$usetheme[hideothersubsections]\{Uppsala\}
+      }}
+  \end{example}
+

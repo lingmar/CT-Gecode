@@ -1,0 +1,30 @@
+* Title page
+
+* Introduction
+  - What have I done?
+
+* Background
+  - Constraint programming (Kakuro example)
+  - Propagators
+  - Gecode
+
+* Algorithms
+  - Sparse bit-set
+  - Compact Table
+
+* Evaluation
+  - Setup
+  - Overall results
+  - Results per parameter
+    * Table size
+    * Arity
+    * Domain size
+
+* Conclusions and future work
+
+Jag har gjort en propagator till en constraintslösare 
+Gecode och utvärderat den
+Nu måste jag förklara constraints, lösare, propagator
+Vi börjar med...
+
+https://www.sics.se/~matsc/docent20090209.pdf
