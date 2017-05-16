@@ -259,7 +259,7 @@
 
 \section{Background}
 
-\subsection{Constraint Programming}
+\subsection{Constraint Problems}
 % Kakuro
 
 \begin{frame}
@@ -273,7 +273,7 @@
 
   \bigskip
 
-  Assign blank fields digits from~$1$ to~$9$ such that for each row and column:
+  Assign the cells digits from~$1$ to~$9$ such that for each row and column:
   \begin{itemize}
     \item digits are distinct, and
     \item the sum of the digits is equal to the \emph{clue}
@@ -287,7 +287,7 @@
     \begin{description}
       \item[Variables] One per empty cell.
       \item[Domains] $\Set{1...9}$ for all variables.
-      \item[Constraints (1)] For each entry: \stressed{distinct} digits,
+      \item[Constraints] For each row and column: \stressed{distinct} digits,
         and the \stressed{sum} of the digits is equal to the clue.
     \end{description} 
   \end{minipage}
@@ -302,7 +302,7 @@
     \begin{description}
       \item[Variables] One per empty cell.
       \item[Domains] $\Set{1...9}$ for all variables.
-      \item[Constraints (2)] For each entry: state the \stressed{possible
+      \item[Constraints] For each row and column: state the \stressed{possible
         combinations of values} that the variables can take.
     \end{description} 
   \end{minipage}
@@ -318,7 +318,7 @@
 
 % - CSP
 \begin{frame}
-  \frametitle{Constraint Problems (definition)}
+  \frametitle{Constraint problems (definition)}
   \begin{definition}[Constraint problem]
     A \textbf{constraint satisfaction problem (CSP)} is a 
     triple\\
@@ -328,16 +328,145 @@
     where: \\
     \begin{itemize}
       \item $V = v_1, \ldots, v_n$ is a finite sequence of variables,
-      \item $D = D_1, \ldots, D_n$ is a finite sequence of domains for the respective variable,
+      \item $D = D_1, \ldots, D_n$ is a finite sequence of domains, that are
+        possible values for the respective variable,
       \item $C = \Set{c_1, \ldots, c_m}$ is a finite set of constraints, 
-        each on a subsequence of~$V$.
+        each on a subset of~$V$. 
+        Express relations among the variables that have to be true.
     \end{itemize}
   \end{definition}
 \end{frame}
 
+% Define:
+% - Constraints?
+% \begin{frame}
+%   \frametitle{Constraints and \Table~constraints (definitions)}
+%   \begin{definition}[Constraint]
+%     \label{def:constraint}
+%     A \textbf{constraint} on a finite sequene of~$n$ variables~$X$
+%     is a relation, denoted~$rel(c)$, that
+%     contains the set of allowed~$n$-tuples for~$X$.
+%     Each variable~$x_i \in X$ has a corresponding \emph{domain}~$D_i$
+%     that is the set of possible values that~$x_i$ can take.
+%   \end{definition}
+  
+%   \begin{definition}[\Table~constraints]
+%     A \Table~constraint explicitly lists~$rel(c)$ as a sequence
+%     of~$n$-tuples.
+%   \end{definition}
+
+%   \begin{example}
+%     \begin{tabular}{cc}
+%       \Table($\Set{x_0,x_1}, \Set{\Tuple{7,9}, \Tuple/Users/linneaingmar/Documents/Kurser/exjobb/presentation/source.tex{9,7}}$) & \includegraphics[scale=0.2]{kakuro-hint.png}
+%     \end{tabular}
+%   \end{example}  
+
+% \end{frame}
+
+
+% - Store
+
+\subsection{Constraint Propagation}
 
 \begin{frame}
-  \frametitle{Solving Kakuro}
+  \frametitle{Constraint Propagation}
+  \begin{itemize}
+    \item Constraint store
+    \item Propagator
+    \item Constraint propagation
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Constraint Stores}
+  \begin{definition}[Constraint store]
+    A \textbf{constraint store}~$s$ is a function mapping variables
+    to domains:
+    \begin{center}
+      $s: variables \mapsto domains$
+    \end{center}
+  \end{definition}
+
+    \begin{minipage}{0.5\textwidth}
+      $s(x_0) = \Set{1,2,3,4,5,6,7,8,9}$\\
+      $s(x_1) = \Set{1,2,3,4,5,6,7,8,9}$\\
+      $\ldots$
+    \end{minipage}
+    \begin{minipage}{0.45\textwidth}
+      \includegraphics[scale=0.15]{kakuro.png}
+    \end{minipage}
+      % We denote the domain of
+    % a variable~$v_i$ under~$s$ by~$s(v_i)$ or~$\Dom{v_i}$.
+  %Furthermore, a store~$s$...
+
+  % \begin{itemize}
+  %   \item ...is a \emph{failed store} iff $s(v_i) = \emptyset$ for some~$v_i \in V$.
+  %   \item ...is an \emph{assignment store} iff~$\Cardinality{s(v_i)} = 1$ for all~$v_i \in V$.
+  %   \item ...is a \emph{solution store} for a constraint~$c$ iff~$s$ is an assignment store
+  %     that constructs a solution to~$c$.
+  % \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Propagators}
+  \begin{definition}[Propagator]
+    A \textbf{propagator}~$p$ is a function mapping stores to stores:
+    \begin{center}
+      $p: store \mapsto store$ 
+    \end{center}
+  \end{definition}
+
+  \begin{itemize}
+  \item   Implement constraints
+  % \item   Prune values from the domains that are in conflict 
+  %   with the constraint
+  \end{itemize}
+
+  \begin{tikzpicture}[->,>=stealth',auto,node distance=3cm,
+  thick,main node/.style={circle,draw,font=\sffamily\Large\bfseries}]
+    \node[draw,circle](1){
+      \small
+      \begin{tabular}{c}
+        $\{x \mapsto \Set{1,2,3},$\\ 
+        $y\mapsto\Set{1,2,3}\}$
+      \end{tabular}
+    };
+    \node[draw,circle,right of=1,node distance=13em](2){
+      \small
+      \begin{tabular}{c}
+        $\{x \mapsto \Set{1,2},$\\ 
+        $y\mapsto\Set{1,2,3}\}$
+      \end{tabular}
+    };
+    \path[every node/.style={font=\sffamily\small}] 
+    (1) edge node [bend right] {$p_{x<y}$} (2);
+    
+  \end{tikzpicture}
+
+  % \begin{minipage}{0.5\textwidth}
+  %   $x_0 \in \Set{1,2,3,4,5,6,7,8,9}$\\
+  %   $x_1 \in \Set{1,2,3,4,5,6,7,8,9}$\\
+  %   $\ldots$
+  %   \Table($\Set{x_0,x_1}, \Set{\Tuple{7,9}, \Tuple{9,7}}$)\\
+  %   $\ldots$
+  % \end{minipage}
+  % \begin{minipage}{0.45\textwidth}
+  %   \includegraphics[scale=0.15]{kakuro.png}
+  % \end{minipage}
+
+  % Furthermore, a propagator~$p$...
+  % \begin{itemize}
+  %   \item ...is a decreasing function (i.e. can only remove values and 
+  %     not add new values).
+  %   \item ...is a monotonic function (not a strict obligation).
+  %   \item ...must faithfully implement its constraint.
+  %   \item ...signals a \emph{status message}.
+  % \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Constraint Propagation}
+  %Prune values from the variables that  
   \begin{minipage}{0.5\textwidth}
     \only<1>{$x_0 \in \Set{1,2,3,4,5,6,7,8,9}$}
     \only<2>{$x_0 \in \Set{\cancel{1},\cancel{2},\cancel{3},\cancel{4},\cancel{5},\cancel{6},7,\cancel{8},9}$}
@@ -395,96 +524,28 @@
   \end{minipage}
 \end{frame}
 
-
-% Define:
-% - Constraints?
 \begin{frame}
-  \frametitle{Constraints and \Table~constraints (definitions)}
-  \begin{definition}[Constraint]
-    \label{def:constraint}
-    A \textbf{constraint} on a finite sequene of~$n$ variables~$X$
-    is a relation, denoted~$rel(c)$, that
-    contains the set of allowed~$n$-tuples for~$X$.
-    Each variable~$x_i \in X$ has a corresponding \emph{domain}~$D_i$
-    that is the set of possible values that~$x_i$ can take.
-  \end{definition}
-  
-  \begin{definition}[\Table~constraints]
-    A \Table~constraint explicitly lists~$rel(c)$ as a sequence
-    of~$n$-tuples.
+  \frametitle{\Table~constraints}
+  \begin{definition}[\Table~constraint]
+    A \Table~constraint lists the possible combinations of values
+    that the variables can take as a sequence of~$n$-tuples.
   \end{definition}
 
-  \begin{example}
+  \bigskip
+  \bigskip
+
+  \begin{tabular}{cr}
+      \Table($\Set{x_0,x_1}$, $[\Tuple{7,9},\Tuple{9,7}]$)\\
+    \bigskip
     \begin{tabular}{cc}
-      \Table($\Set{x_0,x_1}, \Set{\Tuple{7,9}, \Tuple/Users/linneaingmar/Documents/Kurser/exjobb/presentation/source.tex{9,7}}$) & \includegraphics[scale=0.2]{kakuro-hint.png}
-    \end{tabular}
-  \end{example}  
-
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Constraint Stores (definition)}
-  \begin{definition}[Constraint store]
-    A \textbf{constraint store}~$s$ is a function mapping a finite set of
-    variables~$V = v_1, \ldots, v_n$ to a finite set of domains~$D = D_1, \ldots, D_n$:\\
-    \begin{center}
-      $s: variables \mapsto domains$
-    \end{center}
-  \end{definition}
-    % We denote the domain of
-    % a variable~$v_i$ under~$s$ by~$s(v_i)$ or~$\Dom{v_i}$.
-  Furthermore, a store~$s$...
-
-  \begin{itemize}
-    \item ...is a \emph{failed store} iff $s(v_i) = \emptyset$ for some~$v_i \in V$.
-    \item ...is an \emph{assignment store} iff~$\Cardinality{s(v_i)} = 1$ for all~$v_i \in V$.
-    \item ...is a \emph{solution store} for a constraint~$c$ iff~$s$ is an assignment store
-      that constructs a solution to~$c$.
-  \end{itemize}
-\end{frame}
-
-% - Store
-
-\subsection{Propagators}
-
-\begin{frame}
-  \frametitle{Propagators (definition)}
-  \begin{definition}[Propagators.]
-    A \textbf{propagator}~$p$ is a function mapping stores to stores:
-    \begin{center}
-      $p: store \mapsto store$ 
-    \end{center}
-  \end{definition}
-  Furthermore, a propagator~$p$...
-  \begin{itemize}
-    \item ...is a decreasing function (i.e. can only remove values and 
-      not add new values).
-    \item ...is a monotonic function (not a strict obligation).
-    \item ...must faithfully implement its constraint.
-    \item ...signals a \emph{status message}.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Status messages}
-  \begin{description}
-    \item[FAIL.] $p(s)$ is a failed store.
-    \item[SUBSUMED.] $p$ can never propagate any more values
-      (all the following stores will be fixpoints).
-    \item[FIX.] $p(s)$ is a fixpoint to~$p$:~$p(s) = p(p(s))$
-    \item[NOFIX.] $p(s)$ is (possibly) not a fixpoint.
-  \end{description}
-
-  Obligations regarding status messages:
-  \begin{itemize}
-    \item Must signal SUBSUMED on a solution store~$s$.
-    \item Must signal FAIL on an assignment store~$s$ that is not a solution store.
-    \item Must not claim FIX or SUBSUMED if it could propagate more.
-  \end{itemize}
-
-  Always safe to signal NOFIX on stores that are not assignment stores.
-  
+      $x_0$ & $x_1$ \\
+      \hline
+      $7$   & $9$ \\
+      $9$   & $7$ \\
+    \end{tabular} &
+                    \includegraphics[scale=0.3]{kakuro-hint.png}
+    
+  \end{tabular}
 \end{frame}
 
 \subsection{Gecode}
@@ -498,21 +559,30 @@
     \item ...a constraint solver (a software that solves constraint problems).
     \item ...written in C++, modular, extensible, and has state-of-the-art performance.
     \item ...supports the programming of new propagators.
-    \item ...developed at KTH, Sweden.
   \end{itemize}
 
-  Two existing propagators for the~\Table~constraint, and one for the 
-  related constraint~\Constraint{Regular}, that expresses~$rel(c)$ as a DFA.
+  Two existing propagators for the~\Table~constraint
+  % , and one for the 
+  % related constraint~\Constraint{Regular}.
 
 \end{frame}
 
 \subsection{The Compact Table algorithm}
 
 \begin{frame}
+  \frametitle{Compact Table}
+  \includegraphics[scale=0.45]{compact-table.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Compact Table}
   % Efficient
-  A new propagation algorithm for the~\Table constraint.
-  Published in a 2016 paper%~\cite{\CTpaper}.
-  No attempt to implement it in Gecode (until now).
+  \begin{itemize}
+  \item   A new propagation algorithm for the~\Table~constraint.
+  \item   Published in a 2016 paper%~\cite{\CTpaper}.
+  \item   No attempt to implement it in Gecode (until now).
+  \end{itemize}
+
 \end{frame}
 
 \section{Algorithms}
@@ -520,6 +590,68 @@
 \subsection{Sparse bit-set}
 
 \subsection{Compact Table}
+
+\begin{frame}
+  \only<1-2>{
+    $s(x_0) = s(x_1) = s(x_2) = \Set{1,2,3,4}$
+  }
+  \only<3->{
+    $s(x_0) = \Set{1,3,4}$\\
+    $s(x_1) = s(x_2) = \Set{1,2,3,4}$
+  }
+
+  \vspace{2cm}
+
+  \frametitle{The Compact Table Algorithm}
+  \begin{tabular}{l}
+
+    \only<4->{
+    \CurrTable:\\
+    \small
+    \texttt{words}
+    \begin{tabular}{|cccccccc|}
+      \hline
+      % \phantom{$x_0$} & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} \\
+      \textbf{1} & \textbf{1} & \textbf{1} & \textbf{1} & \textbf{1}& \textbf{1}& \textbf{1} & \textbf{1} \\
+      \hline
+    \end{tabular}
+    \bigskip
+    } 
+    \\
+    \small
+    \only<1>{
+    \begin{tabular}{|c|cccccccccccccccc|}
+      \hline
+      $x_0$ & 7 & 2 & 1 & 2 & 6 & 7 & 4 & 1 & 7 & 8 & 2 & 0 & 3 & 5 & 4 \\
+      $x_1$ & 5 & 1& 3 & 4 & 5 & 7 & 2 & 1 & 8 & 9 & 2 & 0 & 3 & 8 & 3 \\
+      $x_2$ & 8 & 4& 2 & 2 & 9 & 8 & 1 & 1 & 9 & 6 & 3 & 0 & 1 & 5 & 1 \\
+      \hline
+    \end{tabular}
+    }
+    \only<2>{
+    \begin{tabular}{|c|ccccccccccccccc|}
+      \hline
+      $x_0$ & 7 & \textbf{2} & \textbf{1} & \textbf{2} & 6 & 7 & \textbf{4} & \textbf{1} & 7 & 8 & \textbf{2} & 0 & \textbf{3} & 5 & \textbf{4} \\
+      $x_1$ & 5 & \textbf{1}& \textbf{3} & \textbf{4} & 5 & 7 & \textbf{2} & \textbf{1} & 8 & 9 & \textbf{2} & 0 & \textbf{3} & 8 & \textbf{3} \\
+      $x_2$ & 8 & \textbf{4}& \textbf{2} & \textbf{2} & 9 & 8 & \textbf{1} & \textbf{1} & 9 & 6 & \textbf{3} & 0 & \textbf{1} & 5 & \textbf{1} \\
+      \hline
+    \end{tabular}
+    }
+    \only<3->{
+    \begin{tabular}{|c|cccccccc|}
+      \hline
+      $x_0$ & \textbf{2}& \textbf{1} & \textbf{2} & \textbf{4} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} \\
+      $x_1$ & \textbf{1}& \textbf{3} & \textbf{4} & \textbf{2} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{3} \\
+      $x_2$ & \textbf{4}& \textbf{2} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{3} & \textbf{1} & \textbf{1} \\
+      \hline
+    \end{tabular}
+    }
+
+  \end{tabular}
+
+  
+
+\end{frame}
 
 \begin{frame}
   \begin{algorithm}[H]
