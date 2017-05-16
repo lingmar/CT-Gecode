@@ -90,8 +90,9 @@
 \usepackage[T1]{fontenc}
 % Or whatever. Note that the encoding and the font should match. If T1
 % does not look nice, try deleting the line with the fontenc.
-
+\usepackage[makeroom]{cancel}
 \usepackage{cwpuzzle}
+\usepackage[normalem]{ulem}
 \usepackage{astra}
 
 \newcommand{\Dom}[1]{\text{dom}({#1})}
@@ -272,11 +273,10 @@
 
   \bigskip
 
+  Assign blank fields digits from~$1$ to~$9$ such that for each row and column:
   \begin{itemize}
-    \item   Rows and columns of cells (\emph{entries}) with prefilled numbers (\emph{clues}).
-    \item   Fill in digits from~$1$ to~$9$ inclusive into the empty cells so that
-      for each entry, the sum of the digits is equal to the clue of that entry,
-      and so that each digit appears at most once in each entry.
+    \item digits are distinct, and
+    \item the sum of the digits is equal to the \emph{clue}
     \end{itemize}
 
 \end{frame}
@@ -287,8 +287,8 @@
     \begin{description}
       \item[Variables] One per empty cell.
       \item[Domains] $\Set{1...9}$ for all variables.
-      \item[Constraints (1)] For each entry: variables are \stressed{distinct},
-        and the \stressed{sum} of them is equal to the clue.
+      \item[Constraints (1)] For each entry: \stressed{distinct} digits,
+        and the \stressed{sum} of the digits is equal to the clue.
     \end{description} 
   \end{minipage}
   \begin{minipage}{0.45\textwidth}
@@ -315,27 +315,6 @@
   are the only combinations.
 \end{frame}
 
-% Define:
-% - Constraints?
-\begin{frame}
-  \frametitle{Constraints and \Table~constraints (definitions)}
-  \begin{definition}[Constraint]
-    \label{def:constraint}
-    A \textbf{constraint} on a finite sequene of~$n$ variables~$X$
-    is a relation, denoted~$rel(c)$, that
-    contains the set of allowed~$n$-tuples for~$X$.
-    Each variable~$x_i \in X$ has a corresponding \emph{domain}~$D_i$
-    that is the set of possible values that~$x_i$ can take.
-  \end{definition}
-  
-  \begin{definition}[\Table~constraints]
-    A \Table~constraint explicitly lists~$rel(c)$ as a sequence
-    of~$n$-tuples.
-  \end{definition}
-  
-  Example of a \Table~constraint.
-
-\end{frame}
 
 % - CSP
 \begin{frame}
@@ -355,6 +334,94 @@
     \end{itemize}
   \end{definition}
 \end{frame}
+
+
+\begin{frame}
+  \frametitle{Solving Kakuro}
+  \begin{minipage}{0.5\textwidth}
+    \only<1>{$x_0 \in \Set{1,2,3,4,5,6,7,8,9}$}
+    \only<2>{$x_0 \in \Set{\cancel{1},\cancel{2},\cancel{3},\cancel{4},\cancel{5},\cancel{6},7,\cancel{8},9}$}
+    \only<3->{$x_0 \in \Set{\cancel{1},\cancel{2},\cancel{3},\cancel{4},\cancel{5},\cancel{6},\textbf{7},\cancel{8},\cancel{9}}$} \\
+    \only<1>{$x_1 \in \Set{1,2,3,4,5,6,7,8,9}$}
+    \only<2-3>{$x_1 \in \Set{\cancel{1},\cancel{2},\cancel{3},\cancel{4},\cancel{5},\cancel{6},7,\cancel{8},9}$}
+    \only<4->{$x_1 \in \Set{\cancel{1},\cancel{2},\cancel{3},\cancel{4},\cancel{5},\cancel{6},\cancel{7},\cancel{8},\textbf{9}}$}\\
+    $\ldots$ \\
+    \only<1-2>{$x_4 \in \Set{1,2,3,4,5,6,7,8,9}$}
+    \only<3->{$x_4 \in \Set{\cancel{1},\textbf{2},\cancel{3},\cancel{4},\cancel{5},\cancel{6},\cancel{7},\cancel{8},\cancel{9}}$}\\
+    $\ldots$
+    %$\Table(\Set{x_0,x_1},\Set{\Tuple{7,9},\Tuple{9,7}})$
+    
+    \begin{tabular}{ccc}
+      
+      \begin{tabular}{cc}
+        $x_0$ & $x_1$ \\
+        \hline
+        $7$   & $9$ \\
+        \only<1-3>{$9$   & $7$ \\} 
+        \only<4->{\sout{$9$}   & \sout{$7$} \\} 
+      \end{tabular} & 
+                         \only<1>{
+                          \begin{tabular}{cc}
+                            $x_0$ & $x_4$ \\
+                            \hline
+                            $1$   & $8$ \\
+                            $2$   & $7$ \\
+                            $3$   & $6$ \\
+                            $4$   & $5$ \\
+                            $5$   & $4$ \\
+                            $6$   & $3$ \\
+                            $7$   & $2$ \\
+                            $8$   & $1$ \\
+                          \end{tabular} & $\ldots$}
+                          \only<2->{
+                          \begin{tabular}{cc}
+                            $x_0$ & $x_4$ \\
+                            \hline
+                            \sout{$1$}   & \sout{$8$} \\
+                            \sout{$2$}   & \sout{$7$} \\
+                            \sout{$3$}   & \sout{$6$} \\
+                            \sout{$4$}   & \sout{$5$} \\
+                            \sout{$5$}   & \sout{$4$} \\
+                            \sout{$6$}   & \sout{$3$} \\
+                            $7$   & $2$ \\
+                            \sout{$8$}  &  \sout{$1$}\\
+                          \end{tabular} & $\ldots$}
+
+    \end{tabular}
+
+  \end{minipage}
+  \begin{minipage}{0.45\textwidth}
+    \includegraphics[scale=0.2]{kakuro.png}
+  \end{minipage}
+\end{frame}
+
+
+% Define:
+% - Constraints?
+\begin{frame}
+  \frametitle{Constraints and \Table~constraints (definitions)}
+  \begin{definition}[Constraint]
+    \label{def:constraint}
+    A \textbf{constraint} on a finite sequene of~$n$ variables~$X$
+    is a relation, denoted~$rel(c)$, that
+    contains the set of allowed~$n$-tuples for~$X$.
+    Each variable~$x_i \in X$ has a corresponding \emph{domain}~$D_i$
+    that is the set of possible values that~$x_i$ can take.
+  \end{definition}
+  
+  \begin{definition}[\Table~constraints]
+    A \Table~constraint explicitly lists~$rel(c)$ as a sequence
+    of~$n$-tuples.
+  \end{definition}
+
+  \begin{example}
+    \begin{tabular}{cc}
+      \Table($\Set{x_0,x_1}, \Set{\Tuple{7,9}, \Tuple/Users/linneaingmar/Documents/Kurser/exjobb/presentation/source.tex{9,7}}$) & \includegraphics[scale=0.2]{kakuro-hint.png}
+    \end{tabular}
+  \end{example}  
+
+\end{frame}
+
 
 \begin{frame}
   \frametitle{Constraint Stores (definition)}
