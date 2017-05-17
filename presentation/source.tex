@@ -338,41 +338,42 @@
   \end{definition}
 \end{frame}
 
-% Define:
-% - Constraints?
-% \begin{frame}
-%   \frametitle{Constraints and \Table~constraints (definitions)}
-%   \begin{definition}[Constraint]
-%     \label{def:constraint}
-%     A \textbf{constraint} on a finite sequene of~$n$ variables~$X$
-%     is a relation, denoted~$rel(c)$, that
-%     contains the set of allowed~$n$-tuples for~$X$.
-%     Each variable~$x_i \in X$ has a corresponding \emph{domain}~$D_i$
-%     that is the set of possible values that~$x_i$ can take.
-%   \end{definition}
+\begin{frame}
+  \frametitle{Solving Constraint Problems}
+  \begin{minipage}{0.50\textwidth}
+    \begin{description}
+    \item[Solution]
+      A complete
+      variable-value assignment that satisfy all the constraints.
+    \end{description}
+  \end{minipage}
+  \begin{minipage}{0.45\textwidth}
+    \includegraphics[scale=0.15]{kakuro-sol.png} \\
+  \end{minipage}
   
-%   \begin{definition}[\Table~constraints]
-%     A \Table~constraint explicitly lists~$rel(c)$ as a sequence
-%     of~$n$-tuples.
-%   \end{definition}
-
-%   \begin{example}
-%     \begin{tabular}{cc}
-%       \Table($\Set{x_0,x_1}, \Set{\Tuple{7,9}, \Tuple/Users/linneaingmar/Documents/Kurser/exjobb/presentation/source.tex{9,7}}$) & \includegraphics[scale=0.2]{kakuro-hint.png}
-%     \end{tabular}
-%   \end{example}  
-
-% \end{frame}
-
+  \begin{minipage}{0.5\textwidth}
+    \begin{itemize}
+    \item Solutions are found by \textbf{search}
+      \begin{itemize}
+      \item \alt<2>{\textbf{Propagation}}{Propagation}
+      \item \alt<2>{\color{gray}Branching}{Branching}
+      \end{itemize}
+    \end{itemize}
+  \end{minipage}
+  \begin{minipage}{0.45\textwidth}
+    \includegraphics[scale=0.3]{searchtree.png}
+  \end{minipage}
+\end{frame}
 
 % - Store
 
 \begin{frame}
   \frametitle{Constraint Propagation}
+  Important concepts:
   \begin{itemize}
     \item Constraint store
     \item Propagator
-    \item Constraint propagation
+    %\item Constraint propagation
   \end{itemize}
 \end{frame}
 
@@ -724,6 +725,15 @@
           $x_1$ & \textbf{1}& \textbf{3} & \textbf{4} & \textbf{2} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{3} \\
           $x_2$ & \textbf{4}& \textbf{2} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{3} & \textbf{1} & \textbf{1} \\
           \hline
+          \multicolumn{1}{c}{} &
+          \multicolumn{1}{c}{\tiny 0} &
+          \multicolumn{1}{c}{\tiny 1}&
+          \multicolumn{1}{c}{\tiny 2}&
+          \multicolumn{1}{c}{\tiny 3}&
+          \multicolumn{1}{c}{\tiny 4}&
+          \multicolumn{1}{c}{\tiny 5}&
+          \multicolumn{1}{c}{\tiny 6}&
+          \multicolumn{1}{c}{\tiny 7}
         \end{tabular}
       }
 
@@ -809,7 +819,7 @@
         \\
         $x_2$
         &
-          \small
+        \small
           \begin{tabular}{|cccccccc|}
             \textbf{\color{red}4}& \textbf{2} & \textbf{2} & \textbf{\color{red}1} & \textbf{\color{red}1} & \textbf{\color{red}3} & \textbf{1} & \textbf{1} \\
             \hline
