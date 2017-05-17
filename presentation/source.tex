@@ -93,6 +93,7 @@
 \usepackage[makeroom]{cancel}
 \usepackage{cwpuzzle}
 \usepackage[normalem]{ulem}
+\usepackage{multirow,bigdelim}
 \usepackage{astra}
 
 \newcommand{\Dom}[1]{\text{dom}({#1})}
@@ -189,7 +190,7 @@
 %% MISC. INFORMATION
 %% -----------------------------------------------------------
 
-\title{Implementation and Evaluation of a Compact Table Propagator in Gecode}
+\title{Implementation and Evaluation of a Compact-Table Propagator in Gecode}
 %\subtitle{Bachelor's thesis}
 
 \author[Linnea Ingmar | \emph{linnea.ingmar.3244@student.uu.se}] % appears in the footline
@@ -259,7 +260,7 @@
 
 \section{Background}
 
-\subsection{Constraint Problems}
+\subsection{Constraint Programming}
 % Kakuro
 
 \begin{frame}
@@ -285,7 +286,7 @@
   \frametitle{Kakuro puzzle as a constraint problem (1)}
   \begin{minipage}{0.5\textwidth}
     \begin{description}
-      \item[Variables] One per empty cell.
+      \item[Variables] One per cell.
       \item[Domains] $\Set{1...9}$ for all variables.
       \item[Constraints] For each row and column: \stressed{distinct} digits,
         and the \stressed{sum} of the digits is equal to the clue.
@@ -300,7 +301,7 @@
   \frametitle{Kakuro puzzle as a constraint problem (2)}
   \begin{minipage}{0.5\textwidth}
     \begin{description}
-      \item[Variables] One per empty cell.
+      \item[Variables] One per cell.
       \item[Domains] $\Set{1...9}$ for all variables.
       \item[Constraints] For each row and column: state the \stressed{possible
         combinations of values} that the variables can take.
@@ -366,8 +367,6 @@
 
 % - Store
 
-\subsection{Constraint Propagation}
-
 \begin{frame}
   \frametitle{Constraint Propagation}
   \begin{itemize}
@@ -387,14 +386,36 @@
     \end{center}
   \end{definition}
 
-    \begin{minipage}{0.5\textwidth}
-      $s(x_0) = \Set{1,2,3,4,5,6,7,8,9}$\\
-      $s(x_1) = \Set{1,2,3,4,5,6,7,8,9}$\\
-      $\ldots$
-    \end{minipage}
-    \begin{minipage}{0.45\textwidth}
-      \includegraphics[scale=0.15]{kakuro.png}
-    \end{minipage}
+  \begin{tikzpicture}[->,>=stealth',auto,node distance=3cm,
+    thick,main node/.style={circle,draw,font=\sffamily\Large\bfseries}]
+    \node[label={$s_0$},draw,circle](1){
+      \small
+      \begin{tabular}{c}
+        $\{x \mapsto \Set{1,2,3},$\\ 
+        $y\mapsto\Set{1,2,3}\}$
+      \end{tabular}
+    };
+    % \node[draw,circle,right of=1,node distance=13em](2){
+    %   \small
+    %   \begin{tabular}{c}
+    %     $\{x \mapsto \Set{1,2},$\\ 
+    %     $y\mapsto\Set{1,2,3}\}$
+    %   \end{tabular}
+    % };
+    % \path[every node/.style={font=\sffamily\small}] 
+    % (1) edge node [bend right] {$p_{x<y}$} (2);
+    
+  \end{tikzpicture}
+  
+
+    % \begin{minipage}{0.5\textwidth}
+    %   $s(x_0) = \Set{1,2,3,4,5,6,7,8,9}$\\
+    %   $s(x_1) = \Set{1,2,3,4,5,6,7,8,9}$\\
+    %   $\ldots$
+    % \end{minipage}
+    % \begin{minipage}{0.45\textwidth}
+    %   \includegraphics[scale=0.15]{kakuro.png}
+    % \end{minipage}
       % We denote the domain of
     % a variable~$v_i$ under~$s$ by~$s(v_i)$ or~$\Dom{v_i}$.
   %Furthermore, a store~$s$...
@@ -424,17 +445,17 @@
 
   \begin{tikzpicture}[->,>=stealth',auto,node distance=3cm,
   thick,main node/.style={circle,draw,font=\sffamily\Large\bfseries}]
-    \node[draw,circle](1){
+    \node[label=$s_0$,draw,circle](1){
       \small
       \begin{tabular}{c}
         $\{x \mapsto \Set{1,2,3},$\\ 
         $y\mapsto\Set{1,2,3}\}$
       \end{tabular}
     };
-    \node[draw,circle,right of=1,node distance=13em](2){
+    \node[label=$s_1$,draw,circle,right of=1,node distance=13em](2){
       \small
       \begin{tabular}{c}
-        $\{x \mapsto \Set{1,2},$\\ 
+        $\{x \mapsto \Set{1,2,{\color{red}\cancel{3}}},$\\ 
         $y\mapsto\Set{1,2,3}\}$
       \end{tabular}
     };
@@ -567,7 +588,7 @@
 
 \end{frame}
 
-\subsection{The Compact Table algorithm}
+\subsection{The Compact-Table algorithm}
 
 \begin{frame}
   \frametitle{Compact Table}
@@ -575,7 +596,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Compact Table}
+  \frametitle{Compact-Table}
   % Efficient
   \begin{itemize}
   \item   A new propagation algorithm for the~\Table~constraint.
@@ -585,21 +606,29 @@
 
 \end{frame}
 
-\section{Algorithms}
-
-\subsection{Sparse bit-set}
-
-\subsection{Compact Table}
+\section{The Compact-Table Algorithm}
 
 \begin{frame}
-  \frametitle{The Compact Table Algorithm}
+  \frametitle{The Compact-Table Algorithm}
+  \begin{itemize}
+  \item \textbf{Initialisation}
+  \item \color{gray}Variable modifications
+  \item Filtering
+   \item {\color{gray}Putting it all together}
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Compact-Table Algorithm}
+  \framesubtitle{Initialisation}
   \small
   \only<1-5>{
-    $s(x_0) = s(x_1) = s(x_2) = \Set{1,2,3,4}$
+    $\Dom{x_0} = \Dom{x_1} = \Dom{x_2} = \Set{1,2,3,4}$
   }
   \only<6->{
-    $s(x_0) = \Set{1,2,4}$\\
-    $s(x_1) = s(x_2) = \Set{1,2,3,4}$
+    $\Dom{x_0} = \Set{1,2,{\color{red}\cancel{3}},4}$\\
+    $\Dom{x_1} = \Dom{x_2} = \Set{1,2,3,4}$
   }
 
   \bigskip
@@ -607,137 +636,148 @@
   \begin{tabular}{l}
 
     \only<4->{
-    \CurrTable:\\
+    %\CurrTable: bit-set with valid tuples\\
+    %\phantom{foo}\\
     \small
-    \texttt{words}
-    \begin{tabular}{|cccccccc|}
-      \hline
-      % \phantom{$x_0$} & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} \\
-      {1} & {1} & {1} & {1} & {1}& {1}& {1} & {1} \\
-      \hline
-    \end{tabular}
-    \bigskip
-    }
-    \\
-    \only<4->{
-    \Supports:\\
-    \small
-    $\Tuple{x_0,1}$
-    \begin{tabular}{|cccccccc|}
-      \hline
-      % \phantom{$x_0$} & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} \\
-      0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
-    \end{tabular}
-    \\
-    \small
-    $\Tuple{x_0,2}$
-    \begin{tabular}{|cccccccc|}
-      % \phantom{$x_0$} & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} \\
-      1 & 0 & 1 & 0 & 0 & 1 & 1 & 0 \\
-    \end{tabular}
-    \\
-    \small
-    \alt<5->{\color{red}$\Tuple{x_0,3}$}{$\Tuple{x_0,3}$}    
-    \begin{tabular}{|cccccccc|}
-      % \phantom{$x_0$} & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} \\
-      \alt<5->{{\color{red}0} & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & {\color{red}0}} 
-              {0 & 0 & 0 & 0 & 0 & 0 & 0 & 0} \\
-    \end{tabular}
-    \\
-    \small
-    $\Tuple{x_0,4}$
-    \begin{tabular}{|cccccccc|}
-      0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 \\
-    \end{tabular}
-    \\
-    \small
-    $\Tuple{x_1,1}$
-    \begin{tabular}{|cccccccc|}
-      1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
-    \end{tabular}
-    \\
-    \small
-    $\quad \ldots \qquad \qquad \qquad \quad \ \ldots$
-    \\
-    \small
-    $\Tuple{x_2,4}$
-    \begin{tabular}{|cccccccc|}
-      % \phantom{$x_0$} & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 & 0 & \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} \\
-      1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-      \hline
+    \begin{tabular}{cc}
+      %\phantom{\texttt{words}}
+      \phantom{$\Tuple{x_0,2}$}
+      &
+        \begin{tabular}{|cccccccc|c}
+          \cline{1-8}
+          {\textbf{1}} & {\textbf{1}} & {\textbf{1}} & {\textbf{1}} & {\textbf{1}}& {\textbf{1}}& {\textbf{1}} & {\textbf{1}} & \rdelim\}{1}{3mm}[\CurrTable] \\
+          \cline{1-8}
+        \end{tabular}
     \end{tabular}
 
     \bigskip
+    }
+    \\
+    \only<5->{
+    %\Supports: \\
+    %\phantom{foo}\\
+    \begin{tabular}{ccc}
+      $\Tuple{x_0,1}$
+      & 
+        \begin{tabular}{|cccccccc|}
+          \hline
+          0 & \textbf{1} & 0 & 0 & \textbf{1} & 0 & 0 & 0 \\
+        \end{tabular}
+      &
+        \rdelim\}{5}{3mm}[\texttt{supports}]
+      \\
+      $\Tuple{x_0,2}$
+      & 
+        \begin{tabular}{|cccccccc|}
+          \textbf{1} & 0 & \textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & 0 \\
+        \end{tabular}
+      \\
+      $\Tuple{x_0,3}$
+      & 
+        \begin{tabular}{|cccccccc|}
+          \alt<6->{{\color{red}0} & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & {\color{red}0}} 
+              {0 & 0 & 0 & 0 & 0 & 0 & 0 & 0} \\
+          
+        \end{tabular}
+      \\
+      $\ldots$
+      \\
+      $\Tuple{x_2,4}$
+      & 
+        \begin{tabular}{|cccccccc|}
+          \textbf{1} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+          \hline
+        \end{tabular}
+      \\
+    \end{tabular}
+        
+    \bigskip
     } 
     \\
-    \small
     \only<1>{
-    \begin{tabular}{|c|cccccccccccccccc|}
-      \hline
-      $x_0$ & 7 & 2 & 1 & 2 & 6 & 7 & 4 & 1 & 7 & 8 & 2 & 0 & 2 & 5 & 4 \\
-      $x_1$ & 5 & 1& 3 & 4 & 5 & 7 & 2 & 1 & 8 & 9 & 2 & 0 & 3 & 8 & 3 \\
-      $x_2$ & 8 & 4& 2 & 2 & 9 & 8 & 1 & 1 & 9 & 6 & 3 & 0 & 1 & 5 & 1 \\
-      \hline
-    \end{tabular}
-    }
+    \small
+        \begin{tabular}{|c|cccccccccccccccc|}
+          \hline
+          $x_0$ & 1 & 2 & 1 & 2 & 6 & 7 & 4 & 1 & 7 & 8 & 2 & 0 & 2 & 5 & 4 \\
+          $x_1$ & 5 & 1& 3 & 4 & 5 & 7 & 2 & 1 & 8 & 9 & 2 & 0 & 3 & 8 & 3 \\
+          $x_2$ & 8 & 4& 2 & 2 & 9 & 8 & 1 & 1 & 9 & 6 & 3 & 0 & 1 & 5 & 1 \\
+          \hline
+        \end{tabular}}
     \only<2>{
+    \small
     \begin{tabular}{|c|ccccccccccccccc|}
       \hline
-      $x_0$ & 7 & \textbf{2} & \textbf{1} & \textbf{2} & 6 & 7 & \textbf{4} & \textbf{1} & 7 & 8 & \textbf{2} & 0 & \textbf{2} & 5 & \textbf{4} \\
+      $x_0$ & 1 & \textbf{2} & \textbf{1} & \textbf{2} & 6 & 7 & \textbf{4} & \textbf{1} & 7 & 8 & \textbf{2} & 0 & \textbf{2} & 5 & \textbf{4} \\
       $x_1$ & 5 & \textbf{1}& \textbf{3} & \textbf{4} & 5 & 7 & \textbf{2} & \textbf{1} & 8 & 9 & \textbf{2} & 0 & \textbf{3} & 8 & \textbf{3} \\
       $x_2$ & 8 & \textbf{4}& \textbf{2} & \textbf{2} & 9 & 8 & \textbf{1} & \textbf{1} & 9 & 6 & \textbf{3} & 0 & \textbf{1} & 5 & \textbf{1} \\
       \hline
     \end{tabular}
     }
-    \only<3->{
-    \begin{tabular}{|c|cccccccc|}
-      \hline
-      $x_0$ & \textbf{2}& \textbf{1} & \textbf{2} & \textbf{4} & \textbf{1} & \textbf{2} & \textbf{2} & \textbf{4} \\
-      $x_1$ & \textbf{1}& \textbf{3} & \textbf{4} & \textbf{2} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{3} \\
-      $x_2$ & \textbf{4}& \textbf{2} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{3} & \textbf{1} & \textbf{1} \\
-      \hline
-    \end{tabular}
-    }
+    
+    \small
+    \begin{tabular}{cc}
+      &
+        \only<3->{
+        \begin{tabular}{|c|cccccccc|}
+          \hline
+          $x_0$ & \textbf{2}& \textbf{1} & \textbf{2} & \textbf{4} & \textbf{1} & \textbf{2} & \textbf{2} & \textbf{4} \\
+          $x_1$ & \textbf{1}& \textbf{3} & \textbf{4} & \textbf{2} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{3} \\
+          $x_2$ & \textbf{4}& \textbf{2} & \textbf{2} & \textbf{1} & \textbf{1} & \textbf{3} & \textbf{1} & \textbf{1} \\
+          \hline
+        \end{tabular}
+      }
 
-  \end{tabular}
+    \end{tabular}
+
+    \end{tabular}
 
 \end{frame}
 
+
 \begin{frame}
-  \frametitle{The Compact Table Algorithm}
+  \frametitle{The Compact-Table Algorithm}
+  \begin{itemize}
+  \item {\color{gray}Initialisation}
+  \item \textbf{Variable modifications}
+  \item {\color{gray}Filtering}
+  \item {\color{gray}Putting it all together}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Compact-Table Algorithm}
+  \framesubtitle{When a variable is modified}
   \only<2->{
     \begin{tabular}{c}
-      \CurrTable:\\
       \small
-      \begin{tabular}{cc}
+      \begin{tabular}{ccc}
         \texttt{words} 
         & 
           \begin{tabular}{|cccccccc|}
             \hline
-            \alt<5->{{0} & {1} & {1} & {0} & {0}& {0}& {1} & {1}}
-            {{1} & {1} & {1} & {1} & {1}& {1}& {1} & {1}} \\
+            \alt<7->{{\color{red}0} & {\textbf{1}} & {\textbf{1}} & {\color{red}0} & {\color{red}0}& {\color{red}0}& {\textbf{1}} & {\textbf{1}}}
+            {{\textbf{1}} & {\textbf{1}} & {\textbf{1}} & {\textbf{1}} & {\textbf{1}}& {\textbf{1}}& {\textbf{1}} & {\textbf{1}}} \\
             \hline
           \end{tabular}
+        &
+          \rdelim\}{2}{1mm}[\tiny \CurrTable]
         \\
         \texttt{mask} 
         &
           \begin{tabular}{|cccccccc|}
             \hline
-            \alt<3->{{0} & {1} & {1} & {0} & {0}& {0}& {1} & {1}}
+            \alt<5->{{0} & {\textbf{1}} & {\textbf{1}} & {0} & {0}& {0}& {\textbf{1}} & {\textbf{1}}}
             {{0} & {0} & {0} & {0} & {0}& {0}& {0} & {0}} \\
             \hline
-          \end{tabular}
-      \end{tabular}
-      \\
-      \only<3>{
-      \phantom{gurgel}\\
-      \small
-      \begin{tabular}{cc}
-        $\Supports[x_1,3]$
+          \end{tabular} 
+        \\
+        \only<3->{
+        \phantom{foo} \\
+        $\Supports[x_1,3]$ 
         & 
           \begin{tabular}{|cccccccc|}
             \hline
-            0 & 1 & 0 & 0 & 0 & 0 & 1 & 1 \\
+            0 & \textbf{1} & 0 & 0 & 0 & 0 & \textbf{1} & \textbf{1} \\
             \hline
           \end{tabular}
         \\
@@ -745,20 +785,47 @@
         & 
           \begin{tabular}{|cccccccc|}
             \hline
-            0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+            0 & 0 & \textbf{1} & 0 & 0 & 0 & 0 & 0 \\
             \hline
           \end{tabular}
-        
+        \\
+        }
+        \only<8->{
+        \phantom{foo} \\
+        $x_0$
+        &
+          \small
+          \begin{tabular}{|cccccccc|}
+            \hline
+            \textbf{\color{red}2}& \textbf{1} & \textbf{2} & \textbf{\color{red}4} & \textbf{\color{red}1} & \textbf{\color{red}2} & \textbf{2} & \textbf{4} \\
+          \end{tabular}
+        \\
+        $x_1$
+        &
+          \small
+          \begin{tabular}{|cccccccc|}
+            \textbf{\color{red}1}& \textbf{3} & \textbf{4} & \textbf{\color{red}2} & \textbf{\color{red}1} & \textbf{\color{red}2} & \textbf{3} & \textbf{3} \\
+          \end{tabular}
+        \\
+        $x_2$
+        &
+          \small
+          \begin{tabular}{|cccccccc|}
+            \textbf{\color{red}4}& \textbf{2} & \textbf{2} & \textbf{\color{red}1} & \textbf{\color{red}1} & \textbf{\color{red}3} & \textbf{1} & \textbf{1} \\
+            \hline
+          \end{tabular}
+        \\
+        }
       \end{tabular}
       \\
-      \small
-      \phantom{foo}\\
-      \texttt{mask} = \Supports[$x_1,3$] || \Supports[$x_1,4$]\\
-      }
       \only<4>{
+      \phantom{foo}\\
+      \texttt{mask} = \Supports[$x_1,3$] | \Supports[$x_1,4$]\\
+      }
+      \only<6>{
         \phantom{foo}\\
       \small
-      \texttt{words} = \texttt{words} \&\& \texttt{mask} \\
+      \texttt{words} = \texttt{words} \& \texttt{mask} \\
       }
     \end{tabular}
     \\
@@ -766,14 +833,15 @@
   
   \bigskip
 
-  $s(x_0) = \Set{1,2,4}$\\
-  $s(x_1) = \Set{\cancel{1},\cancel{2},3,4}$\\
-  $s(x_2) = \Set{1,2,3,4}$
+  $\Dom{x_0} = \Set{1,2,4}$\\
+  $\Dom{x_1} = \Set{\cancel{1},\cancel{2},3,4}$\\
+  $\Dom{x_2} = \Set{1,2,3,4}$
 
 \end{frame}
 
 \begin{frame}
-  \frametitle{Procedure for updating \CurrTable}
+  \frametitle{The Compact-Table Algorithm}
+  \framesubtitle{When a variable is modified}
   \begin{algorithm}[H]
     \small
     \begin{algorithmic}[1]
@@ -788,8 +856,19 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Filtering out values}
-  
+  \frametitle{The Compact-Table Algorithm}
+  \begin{itemize}
+  \item {\color{gray}Initialisation}
+  \item {\color{gray}Variable modifications}
+  \item \textbf{Filtering}
+  \item {\color{gray}Putting it all together}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Compact-Table Algorithm}
+  \framesubtitle{Filtering}
+    
   \begin{itemize}
     \item Intersect every support entry with~$\CurrTable$
     \item Remove value if intersection is empty
@@ -805,12 +884,12 @@
         & 
           \begin{tabular}{|cccccccc|}
             \hline
-            {0} & {1} & {1} & {0} & {0} & {0} & {1} & {1} \\
+            {0} & {\textbf{1}} & {\textbf{1}} & {0} & {0} & {0} & {\textbf{1}} & {\textbf{1}} \\
             \hline
           \end{tabular}
       \end{tabular} \\
     \\
-    \&\& \\
+    \& \\
     \phantom{foo}
     \\
     \small
@@ -819,54 +898,55 @@
         & 
           \begin{tabular}{|cccccccc|}
             \hline
-            \alt<2->{\color{green}0 & \color{green}0 & \color{green}0 & \color{green}1 & \color{green}1 & \color{green}0 & \color{green}1 & \color{green}1}
-            {0 & 0 & 0 & 1 & 1 & 0 & 1 & 1} \\
+            \alt<2->{\color{green}0 & \color{green}0 & \color{green}0 & \color{green}\textbf{1} & \color{green}\textbf{1} & \color{green}0 & \color{green}\textbf{1} & \color{green}\textbf{1}}
+            {0 & 0 & 0 & \textbf{1} & \textbf{1} & 0 & \textbf{1} & \textbf{1}} \\
           \end{tabular}
         \\
         $\Tuple{x_2,2}$
         & 
           \begin{tabular}{|cccccccc|}
-            \alt<2->
-            {\color{green}0 & \color{green}1 & \color{green}1 & \color{green}0 & \color{green}0 & \color{green}0 & \color{green}0 & \color{green}0}
-            {0 & 1 & 1 & 0 & 0 & 0 & 0 & 0} \\
+            \alt<3->
+            {\color{green}0 & \color{green}\textbf{1} & \color{green}\textbf{1} & \color{green}0 & \color{green}0 & \color{green}0 & \color{green}0 & \color{green}0}
+            {0 & \textbf{1} & \textbf{1} & 0 & 0 & 0 & 0 & 0} \\
           \end{tabular}
         \\
         $\Tuple{x_2,3}$
         & 
           \begin{tabular}{|cccccccc|}
-            \alt<2->
-            {\color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}1 & \color{red}0 & \color{red}0}
-            {0 & 0 & 0 & 0 & 0 & 1 & 0 & 0} \\
+            \alt<4->
+            {\color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}\textbf{1} & \color{red}0 & \color{red}0}
+            {0 & 0 & 0 & 0 & 0 & \textbf{1} & 0 & 0} \\
           \end{tabular}
         \\
         $\Tuple{x_2,4}$
         & 
           \begin{tabular}{|cccccccc|}
-            \alt<2->
-            {\color{red}1 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0} 
-            {1 & 0 & 0 & 0 & 0 & 0 & 0 & 0} \\
+            \alt<5->
+            {\color{red}\textbf{1} & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0 & \color{red}0} 
+            {\textbf{1} & 0 & 0 & 0 & 0 & 0 & 0 & 0} \\
             \hline
           \end{tabular}
       \\
       \end{tabular}
     \\
     \phantom{foo} \\
-    \alt<2>    
-    {$s(x_2) = \Set{1,2,\cancel{3},\cancel{4}}$}
-    {$s(x_2) = \Set{1,2,3,4}$}
+    \alt<6>    
+    {$\Dom{x_2} = \Set{1,2,{\color{red}\cancel{3}},{\color{red}\cancel{4}}}$}
+    {$\Dom{x_2} = \Set{1,2,3,4}$}
     \end{tabular}
     
 \end{frame}
 
 \begin{frame}
-  \frametitle{Filtering out values}
+  \frametitle{Compact-Table Algorithm}
+  \framesubtitle{Filtering out values}
   \begin{algorithm}[H]
     \small
     \begin{algorithmic}[1]
       \PROCEDURE \FilterDomains($s$) : store
       \FOREACH{$x \in s \text{~such that~} |s(x)| > 1$}
             \FOREACH{$a \in s(x)$}
-              \STATE $\localvar{inde x} \leftarrow \Residues[x,a]$
+              \STATE $\localvar{inde x} \leftarrow \Residues[x,a]$ \COMMENT{remembered last index}
               \IF{$\CurrTable[index] \ \& \ \Supports[x,a][index] = 0$}
                   \STATE $\localvar{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
                   \IF{$\localvar{index~} \neq -1$}
@@ -883,16 +963,27 @@
 \end{frame}
 
 \begin{frame}
+  \frametitle{The Compact-Table Algorithm}
+  \begin{itemize}
+  \item {\color{gray}Initialisation}
+  \item {\color{gray}Variable modifications}
+   \item  {\color{gray}Filtering}
+  \item \textbf{Putting it all together}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Compact-Table Algorithm}
+  \framesubtitle{Putting it all together}
   \begin{algorithm}[H]
     \small
     \begin{algorithmic}[1]
       \PROCEDURE $\CompactTable(s:\text{store}):\Tuple{StatusMsg,\text{store}}$
       \IF{the propagator is being posted}
-      \STATE $s \gets \InitialiseCT(s,T_0)$
-      \IF{$s = \emptyset$
-      }
-      \RETURN $\Tuple{\FAIL, \emptyset}$
-      \ENDIF
+        \STATE $s \gets \InitialiseCT(s,T_0)$
+        \IF{$s = \emptyset$}
+          \RETURN $\Tuple{\FAIL, \emptyset}$
+        \ENDIF
       \ELSE
       \FOREACH{variable~$x \in s$ whose domain has changed since last time}
       \STATE \UpdateTable($s,x$)
@@ -910,8 +1001,6 @@
       \RETURN $\Tuple{\FIX,s}$
       \ENDIF
     \end{algorithmic}
-    \caption{Compact Table Propagator.}
-    \label{algo:CT}
   \end{algorithm}
 \end{frame}
 
