@@ -100,6 +100,13 @@
 \defbeamertemplate{description item}{align left}{\insertdescriptionitem\hfill}
 \usepackage{colortbl}
 \usepackage{wrapfig}
+
+\usepackage[style=ieee,backend=bibtex]{biblatex}
+\addbibresource{astra.bib}
+\addbibresource{mybib.bib}
+%\bibliography{astra}
+
+%\bibliographystyle{abbrv}
 \usepackage{astra}
 
 \newcommand{\Dom}[1]{\text{dom}({#1})}
@@ -266,7 +273,7 @@
 
 \section{Background}
 
-\subsection{Constraint Programming}
+%\subsection{Constraint Programming}
 
 \begin{frame}
   \frametitle{Kakuro puzzle}
@@ -317,9 +324,39 @@
   \end{minipage}
 
   \bigskip
-  For an entry of size~$2$ and clue~$4$:~$\Tuple{1,3}$ and~$\Tuple{3,1}$
+  \bigskip
+  Row/column of size~$2$ and clue~$16$:~$\Tuple{7,9}$ and~$\Tuple{9,7}$
   are the only combinations.
 \end{frame}
+
+\begin{frame}
+  \frametitle{\Table~constraints}
+  \begin{definition}[\Table~constraint]
+    A \Table~constraint lists the possible combinations of values
+    that the variables can take as a sequence of~$n$-tuples.
+  \end{definition}
+
+  \bigskip
+  \bigskip
+
+  \begin{tabular}{lccr}
+    %\Table($\Set{x_0,x_1}$, $[\Tuple{7,9},\Tuple{9,7}]$)\\
+    \bigskip
+    \begin{tabular}{cc}
+      $x_0$ & $x_1$ \\
+      \hline
+      $7$   & $9$ \\
+      $9$   & $7$ \\
+    \end{tabular}
+            &
+            &
+            &
+              \phantom{foo}
+              \includegraphics[scale=0.2]{kakuro-hint.png}
+    
+  \end{tabular}
+\end{frame}
+
 
 
 % - CSP
@@ -414,37 +451,9 @@
         $y\mapsto\Set{1,2,3}\}$
       \end{tabular}
     };
-    % \node[draw,circle,right of=1,node distance=13em](2){
-    %   \small
-    %   \begin{tabular}{c}
-    %     $\{x \mapsto \Set{1,2},$\\ 
-    %     $y\mapsto\Set{1,2,3}\}$
-    %   \end{tabular}
-    % };
-    % \path[every node/.style={font=\sffamily\small}] 
-    % (1) edge node [bend right] {$p_{x<y}$} (2);
     
   \end{tikzpicture}
-  
 
-    % \begin{minipage}{0.5\textwidth}
-    %   $s(x_0) = \Set{1,2,3,4,5,6,7,8,9}$\\
-    %   $s(x_1) = \Set{1,2,3,4,5,6,7,8,9}$\\
-    %   $\ldots$
-    % \end{minipage}
-    % \begin{minipage}{0.45\textwidth}
-    %   \includegraphics[scale=0.15]{kakuro.png}
-    % \end{minipage}
-      % We denote the domain of
-    % a variable~$v_i$ under~$s$ by~$s(v_i)$ or~$\Dom{v_i}$.
-  %Furthermore, a store~$s$...
-
-  % \begin{itemize}
-  %   \item ...is a \emph{failed store} iff $s(v_i) = \emptyset$ for some~$v_i \in V$.
-  %   \item ...is an \emph{assignment store} iff~$\Cardinality{s(v_i)} = 1$ for all~$v_i \in V$.
-  %   \item ...is a \emph{solution store} for a constraint~$c$ iff~$s$ is an assignment store
-  %     that constructs a solution to~$c$.
-  % \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -475,7 +484,7 @@
       \small
       \begin{tabular}{c}
         $\{x \mapsto \Set{1,2,{\color{red}\cancel{3}}},$\\ 
-        $y\mapsto\Set{1,2,3}\}$
+        $y\mapsto\Set{{\color{red}\cancel{1}},2,3}\}$
       \end{tabular}
     };
     \path[every node/.style={font=\sffamily\small}] 
@@ -483,25 +492,6 @@
     
   \end{tikzpicture}
 
-  % \begin{minipage}{0.5\textwidth}
-  %   $x_0 \in \Set{1,2,3,4,5,6,7,8,9}$\\
-  %   $x_1 \in \Set{1,2,3,4,5,6,7,8,9}$\\
-  %   $\ldots$
-  %   \Table($\Set{x_0,x_1}, \Set{\Tuple{7,9}, \Tuple{9,7}}$)\\
-  %   $\ldots$
-  % \end{minipage}
-  % \begin{minipage}{0.45\textwidth}
-  %   \includegraphics[scale=0.15]{kakuro.png}
-  % \end{minipage}
-
-  % Furthermore, a propagator~$p$...
-  % \begin{itemize}
-  %   \item ...is a decreasing function (i.e. can only remove values and 
-  %     not add new values).
-  %   \item ...is a monotonic function (not a strict obligation).
-  %   \item ...must faithfully implement its constraint.
-  %   \item ...signals a \emph{status message}.
-  % \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -509,14 +499,14 @@
   %Prune values from the variables that  
   \begin{minipage}{0.5\textwidth}
     \only<1>{$x_0 \in \Set{1,2,3,4,5,6,7,8,9}$}
-    \only<2>{$x_0 \in \Set{\cancel{\color{red}1},\cancel{\color{red}2},\cancel{\color{red}3},\cancel{\color{red}4},\cancel{\color{red}5},\cancel{\color{red}6},7,\cancel{\color{red}8},9}$}
-    \only<3->{$x_0 \in \Set{\cancel{\color{red}1},\cancel{\color{red}2},\cancel{\color{red}3},\cancel{\color{red}4},\cancel{\color{red}5},\cancel{\color{red}6},\textbf{7},\cancel{\color{red}8},\cancel{\color{red}9}}$} \\
+    \only<2>{$x_0 \in \Set{\cancel{\color{blue}1},\cancel{\color{blue}2},\cancel{\color{blue}3},\cancel{\color{blue}4},\cancel{\color{blue}5},\cancel{\color{blue}6},7,\cancel{\color{blue}8},9}$}
+    \only<3->{$x_0 \in \Set{\cancel{\color{blue}1},\cancel{\color{blue}2},\cancel{\color{blue}3},\cancel{\color{blue}4},\cancel{\color{blue}5},\cancel{\color{blue}6},\textbf{7},\cancel{\color{blue}8},\cancel{\color{purple}9}}$} \\
     \only<1>{$x_1 \in \Set{1,2,3,4,5,6,7,8,9}$}
-    \only<2-3>{$x_1 \in \Set{\cancel{\color{red}1},\cancel{\color{red}2},\cancel{\color{red}3},\cancel{\color{red}4},\cancel{\color{red}5},\cancel{\color{red}6},7,\cancel{\color{red}8},9}$}
-    \only<4->{$x_1 \in \Set{\cancel{\color{red}1},\cancel{\color{red}2},\cancel{\color{red}3},\cancel{\color{red}4},\cancel{\color{red}5},\cancel{\color{red}6},\cancel{\color{red}7},\cancel{\color{red}8},\textbf{9}}$}\\
+    \only<2-3>{$x_1 \in \Set{\cancel{\color{blue}1},\cancel{\color{blue}2},\cancel{\color{blue}3},\cancel{\color{blue}4},\cancel{\color{blue}5},\cancel{\color{blue}6},7,\cancel{\color{blue}8},9}$}
+    \only<4->{$x_1 \in \Set{\cancel{\color{blue}1},\cancel{\color{blue}2},\cancel{\color{blue}3},\cancel{\color{blue}4},\cancel{\color{blue}5},\cancel{\color{blue}6},\cancel{\color{blue}7},\cancel{\color{blue}8},\textbf{9}}$}\\
     $\ldots$ \\
     \only<1-2>{$x_4 \in \Set{1,2,3,4,5,6,7,8,9}$}
-    \only<3->{$x_4 \in \Set{\cancel{\color{red}1},\textbf{2},\cancel{\color{red}3},\cancel{\color{red}4},\cancel{\color{red}5},\cancel{\color{red}6},\cancel{\color{red}7},\cancel{\color{red}8},\cancel{\color{red}9}}$}\\
+    \only<3->{$x_4 \in \Set{\cancel{\color{purple}1},\textbf{2},\cancel{\color{purple}3},\cancel{\color{purple}4},\cancel{\color{purple}5},\cancel{\color{purple}6},\cancel{\color{purple}7},\cancel{\color{purple}8},\cancel{\color{purple}9}}$}\\
     $\ldots$
     %$\Table(\Set{x_0,x_1},\Set{\Tuple{7,9},\Tuple{9,7}})$
     
@@ -574,46 +564,22 @@
   \end{minipage}
 \end{frame}
 
-\begin{frame}
-  \frametitle{\Table~constraints}
-  \begin{definition}[\Table~constraint]
-    A \Table~constraint lists the possible combinations of values
-    that the variables can take as a sequence of~$n$-tuples.
-  \end{definition}
-
-  \bigskip
-  \bigskip
-
-  \begin{tabular}{cr}
-      \Table($\Set{x_0,x_1}$, $[\Tuple{7,9},\Tuple{9,7}]$)\\
-    \bigskip
-    \begin{tabular}{cc}
-      $x_0$ & $x_1$ \\
-      \hline
-      $7$   & $9$ \\
-      $9$   & $7$ \\
-    \end{tabular} &
-                    \includegraphics[scale=0.3]{kakuro-hint.png}
-    
-  \end{tabular}
-\end{frame}
-
-\subsection{Gecode}
+%\subsection{Gecode}
 
 \begin{frame}
 
  
   \frametitle{Gecode}
   \textbf{Gecode} (Generic Constraint Development Environment)
-  is...
 
   \begin{itemize}
-    \item ...a constraint solver (a software that solves constraint problems).
-    \item ...written in C++, modular, extensible, and has state-of-the-art performance.
-    \item ...supports the programming of new propagators.
+    \item A constraint solver (a software that solves constraint problems).
+    \item Written in C++, modular, extensible, and has state-of-the-art performance.
+    \item Supports the programming of new propagators.
+    \item Uses copying during branching, not trailing
+    \item   Two existing propagators for the~\Table~constraint
   \end{itemize}
 
-  Two existing propagators for the~\Table~constraint
   % , and one for the 
   % related constraint~\Constraint{Regular}.
   
@@ -626,7 +592,7 @@
 
 \end{frame}
 
-\subsection{The Compact-Table algorithm}
+%\subsection{The Compact-Table algorithm}
 
 \begin{frame}
   \frametitle{Compact Table}
@@ -637,31 +603,48 @@
   \frametitle{Compact-Table}
   % Efficient
   \begin{itemize}
-  \item   A new propagation algorithm for the~\Table~constraint.
-  \item   First implemented in OR-tools
-  \item   Published in a 2016 paper%~\cite{\CTpaper}.
-  \item   Promising results
-  \item   No attempt to implement it in Gecode (until now).
+  \item   A new propagation algorithm for the~\Table~constraint
+  \item   First implemented in OR-tools (uses trailing during branching)
+  \item   Published in a 2016 paper~\cite{\CTpaper} -- the starting
+    point of this project
+  \item   Promising results - outperforms previously known algorithms in the
+    benchmarks in \cite{\CTpaper}
+  \item   No attempt to implement it in Gecode (until now)
   \end{itemize}
 
 \end{frame}
 
 \section{The Compact-Table Algorithm}
 
-\begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \begin{itemize}
-  \item \textbf{Initialisation}
-  \item \color{gray}Variable modifications
-  \item Filtering
-   \item {\color{gray}Putting it all together}
-  \end{itemize}
+% \begin{frame}
+%   \frametitle{Fields}
+%   \begin{description}
+%     \item[\CurrTable] \emph{Sparse bit-set:} Stores indices of valid tuples
+%     \item[\Supports]  \emph{Array of bit-sets:} \Supports[$x,a$] stores which tuples
+%       are supports for the variable-value pair~$\Tuple{x,a}$
+%     \item[\Residues]  \emph{Array of ints:} $\Residues[x,a]$ is the index in \CurrTable~where
+%       a support for~$\Tuple{x,a}$ was found the last time it was sought for
+%   \end{description}
+%   \bigskip
+%   % Where:
+%   % \emph{Valid tuple~:} All values in~$\tau$ are in the domains of the variables
+%   % \emph{Support:} $\tau$ is a support for  
 
-\end{frame}
+% \end{frame}
+
+% \begin{frame}
+%   \frametitle{The Compact-Table Algorithm}
+%   \begin{itemize}
+%   \item \textbf{Initialisation}
+%   \item \color{gray}Variable modifications
+%   \item Filtering
+%    \item {\color{gray}Putting it all together}
+%   \end{itemize}
+% \end{frame}
 
 \begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \framesubtitle{Initialisation}
+%  \frametitle{The Compact-Table Algorithm}
+  \frametitle{Initialisation}
   \small
   \only<1-5>{
     $\Dom{x_0} = \Dom{x_1} = \Dom{x_2} = \Set{1,2,3,4}$
@@ -778,24 +761,45 @@
 
     \end{tabular}
 
-    \end{tabular}
+  \end{tabular}
 
 \end{frame}
 
 
+% \begin{frame}
+%   \frametitle{The Compact-Table Algorithm}
+%   \begin{itemize}
+%   \item {\color{gray}Initialisation}
+%   \item \textbf{Variable modifications}
+%   \item {\color{gray}Filtering}
+%   \item {\color{gray}Putting it all together}
+%   \end{itemize}
+% \end{frame}
 \begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \begin{itemize}
-  \item {\color{gray}Initialisation}
-  \item \textbf{Variable modifications}
-  \item {\color{gray}Filtering}
-  \item {\color{gray}Putting it all together}
-  \end{itemize}
+  \frametitle{Variable Modifications}
+  When a variable~$x$ is modified, there are two ways to update~\CurrTable:
+  \smallskip
+  \begin{description}
+    \item[$\Cardinality{\Delta_x} < \Cardinality{\Dom{x}}$] Reset-based update
+    \item[$\Cardinality{\Delta_x} \geq \Cardinality{\Dom{x}}$] Incremental update
+  \end{description}
+
+  \bigskip
+  \bigskip
+
+  \begin{tabular}{|c|}
+    \hline
+    $\Delta_x$: set of removed values \\
+    \hline
+  \end{tabular}
+
 \end{frame}
 
 \begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \framesubtitle{When a variable is modified}
+  %\frametitle{The Compact-Table Algorithm}
+  \frametitle{Variable Modifications}
+  \framesubtitle{Reset-based update}
+
   \only<2->{
     \begin{tabular}{c}
       \small
@@ -889,34 +893,106 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \framesubtitle{When a variable is modified}
-  \begin{algorithm}[H]
-    \small
-    \begin{algorithmic}[1]
-        \PROCEDURE \UpdateTable($s$: store, $x$: variable) \label{line:updateTableDelta:1} 
-        \STATE $\CurrTable$.clearMask() \label{line:updateTableDelta:4} 
-          \FOREACH{value $a \in s(x)$} \label{line:updateTableDelta:8} 
-            \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTableDelta:9} 
-          \ENDFOREACH      
-        \STATE $\CurrTable$.intersectWithMask() \label{line:updateTable:10} 
-    \end{algorithmic}
-  \end{algorithm}
+  %\frametitle{The Compact-Table Algorithm}
+  \frametitle{Variable Modifications}
+  \framesubtitle{Incremental update}
+
+  \only<2->{
+    \begin{tabular}{c}
+      \small
+      \begin{tabular}{ccc}
+        \texttt{words} 
+        & 
+          \begin{tabular}{|cccccccc|}
+            \hline
+            \alt<7->{{\color{red}0} & {\textbf{1}} & {\textbf{1}} & {\color{red}0} & {\color{red}0}& {\color{red}0}& {\textbf{1}} & {\textbf{1}}}
+            {{\textbf{1}} & {\textbf{1}} & {\textbf{1}} & {\textbf{1}} & {\textbf{1}}& {\textbf{1}}& {\textbf{1}} & {\textbf{1}}} \\
+            \hline
+          \end{tabular}
+        &
+          \rdelim\}{2}{1mm}[\tiny \CurrTable]
+        \\
+        \texttt{mask} 
+        &
+          \begin{tabular}{|cccccccc|}
+            \hline
+            \alt<5->{\textbf{1} & 0 & 0 & \textbf{1} & \textbf{1} & \textbf{1} & 0 & 0}
+            {{0} & {0} & {0} & {0} & {0}& {0}& {0} & {0}} \\
+            \hline
+          \end{tabular} 
+        \\
+        \only<3->{
+        \phantom{foo} \\
+        $\Supports[x_1,1]$ 
+        & 
+          \begin{tabular}{|cccccccc|}
+            \hline
+            \textbf{1} & 0 & 0 & 0 & \textbf{1} & 0 & {0} & {0} \\
+            \hline
+          \end{tabular}
+        \\
+        $\Supports[x_1,2]$
+        & 
+          \begin{tabular}{|cccccccc|}
+            \hline
+            0 & 0 & {0} & \textbf{1} & 0 & \textbf{1} & 0 & 0 \\
+            \hline
+          \end{tabular}
+        \\
+        }
+        \only<8->{
+        \phantom{foo} \\
+        $x_0$
+        &
+          \small
+          \begin{tabular}{|cccccccc|}
+            \hline
+            {\color{red}2}& \textbf{1} & \textbf{2} & {\color{red}4} & {\color{red}1} & {\color{red}2} & \textbf{2} & \textbf{4} \\
+          \end{tabular}
+        \\
+        $x_1$
+        &
+          \small
+          \begin{tabular}{|cccccccc|}
+            {\color{red}1}& \textbf{3} & \textbf{4} & {\color{red}2} & {\color{red}1} & {\color{red}2} & \textbf{3} & \textbf{3} \\
+          \end{tabular}
+        \\
+        $x_2$
+        &
+        \small
+          \begin{tabular}{|cccccccc|}
+            {\color{red}4}& \textbf{2} & \textbf{2} & {\color{red}1} & {\color{red}1} & {\color{red}3} & \textbf{1} & \textbf{1} \\
+            \hline
+          \end{tabular}
+        \\
+        }
+      \end{tabular}
+      \\
+      \only<4>{
+      \phantom{foo}\\
+      \texttt{mask} = \Supports[$x_1,1$] | \Supports[$x_1,2$]\\
+      }
+      \only<6>{
+        \phantom{foo}\\
+      \small
+      \texttt{words} = \texttt{words} \& !\texttt{mask} \\
+      }
+    \end{tabular}
+    \\
+  }
+  
+  \bigskip
+
+  $\Dom{x_0} = \Set{1,2,4}$\\
+  $\Dom{x_1} = \Set{\cancel{1},\cancel{2},3,4}$\\
+  $\Dom{x_2} = \Set{1,2,3,4}$
+
 \end{frame}
 
-\begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \begin{itemize}
-  \item {\color{gray}Initialisation}
-  \item {\color{gray}Variable modifications}
-  \item \textbf{Filtering}
-  \item {\color{gray}Putting it all together}
-  \end{itemize}
-\end{frame}
 
 \begin{frame}
-  \frametitle{Compact-Table Algorithm}
-  \framesubtitle{Filtering}
+  %\frametitle{Compact-Table Algorithm}
+  \frametitle{Filtering}
     
   \begin{itemize}
     \item Intersect every support entry with~$\CurrTable$
@@ -987,79 +1063,30 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Compact-Table Algorithm}
-  \framesubtitle{Filtering out values}
-  \begin{algorithm}[H]
-    \small
-    \begin{algorithmic}[1]
-      \PROCEDURE \FilterDomains($s$) : store
-      \FOREACH{variable $x \in s \text{~such that~} |s(x)| > 1$}
-            \FOREACH{value $a \in s(x)$}
-              \STATE $\localvar{inde x} \leftarrow \Residues[x,a]$ \COMMENT{remembered last index}
-              \IF{$\CurrTable[index] \ \& \ \Supports[x,a][index] = 0$}
-                  \STATE $\localvar{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$)
-                  \IF{$\localvar{index~} \neq -1$}
-                        \STATE $\Residues[x,a] \leftarrow \localvar{index}$
-                  \ELSE
-                        \STATE $s \leftarrow s[x \mapsto s(x) \setminus \Set{a}]$
-                  \ENDIF
-              \ENDIF
-             \ENDFOREACH
-      \ENDFOREACH
-      \RETURN{$s$}
-    \end{algorithmic}
-  \end{algorithm}
-\end{frame}
-
-\begin{frame}
-  \frametitle{The Compact-Table Algorithm}
+  \frametitle{Sparse bit-set}
   \begin{itemize}
-  \item {\color{gray}Initialisation}
-  \item {\color{gray}Variable modifications}
-   \item  {\color{gray}Filtering}
-  \item \textbf{Putting it all together}
+    \item Bit-wise operations are performed on nonzero-words only
   \end{itemize}
+  \bigskip
+  \small
+  \CurrTable:
+  \begin{tabular}{|ccccc|}
+    \hline
+                   & \tiny 0 & \tiny 1 & \tiny 2& \tiny 3 \\
+    \texttt{words} = & \textbf{0} \textbf{1} \textbf{0} \textbf{0} & \textbf{0} \textbf{0} \textbf{1} \textbf{0} & \alt<2>{\color{red}0 0 0 0}{\textbf{1} \textbf{0} \textbf{0} \textbf{0}} & \textbf{1} \textbf{0} \textbf{0} \textbf{1}\\
+    \texttt{mask} = & 0 0 0 0 & 0 0 0 0 & 0 0 0 0 & 0 0 0 0 \\
+    \texttt{index} = & \alt<2>{[\textbf{0}, \textbf{1}, {\color{red}\textbf{3}}, {\color{red}2}]}{[\textbf{0}, \textbf{1}, {\textbf{2}}, \textbf{3}]} &&& \\
+    \texttt{limit} = & \alt<2>{\color{red}3}{4} & & & \\
+    \hline
+  \end{tabular}
 \end{frame}
-
-\begin{frame}
-  \frametitle{The Compact-Table Algorithm}
-  \framesubtitle{Putting it all together}
-  \begin{algorithm}[H]
-    \small
-    \begin{algorithmic}[1]
-      \PROCEDURE $\CompactTable(s:\text{store}):\Tuple{StatusMsg,\text{store}}$
-      \IF{the propagator is being posted}
-        \STATE $s \gets \InitialiseCT(s,T_0)$
-        \IF{$s = \emptyset$}
-          \RETURN $\Tuple{\FAIL, \emptyset}$
-        \ENDIF
-      \ELSE
-      \FOREACH{variable~$x \in s$ whose domain has changed since last time}
-      \STATE \UpdateTable($s,x$)
-      \IF{$\CurrTable$.isEmpty()}
-      \RETURN $\Tuple{\FAIL,\emptyset}$
-      \ENDIF
-      \ENDFOREACH
-            \IF{\CurrTable~has changed since last time}
-            \STATE $s \gets \FilterDomains(s)$
-            \ENDIF
-      \ENDIF
-      \IF{there is at most one unassigned variable left}
-      \RETURN $\Tuple{\SUBSUMED, s}$
-      \ELSE 
-      \RETURN $\Tuple{\FIX,s}$
-      \ENDIF
-    \end{algorithmic}
-  \end{algorithm}
-\end{frame}
-
 
 
 \section{Evaluation}
 % \subsection{Setup}
 % \subsection{Results}
 % \subsection{Discussion}
-\subsection{Setup}
+%\subsection{Setup}
 
 \begin{frame}
   \frametitle{Experiments}
@@ -1069,8 +1096,18 @@
       \begin{itemize}
       \item $2$~previously existing propagators for \Table
       \item $1$~propagator for \Constraint{Regular}
+      \end{itemize} 
+    \item Same benchmark set that was used in~\cite{\CTpaper}
+      (compiled to MiniZinc)
+      \begin{itemize}
+        \item $1507$~instances over~$30$ series 
+        \item Table sizes:~$1-1.6 \cdot 10^6$ tuples
+        \item Arities:~$2-20$ variables
+        \item Domain sizes:~$1-1000$
+        \item Available at \url{https://bitbucket.org/pschaus/xp-table}
+          ($15$ GB of uncompressed files)
       \end{itemize}
-    \item     $1507$~instances over~$30$ series.
+      
   \end{itemize}
 \end{frame}
 
@@ -1084,11 +1121,11 @@
   \end{description}
 \end{frame}
 
-\subsection{Results}
-
+%\subsection{Results}
 
 \begin{frame}
   \frametitle{Small tables}
+  \framesubtitle{$3-7$~tuples}
   \begin{tabular}{cc}
       \begin{tikzpicture}[scale=0.5]
         \input{../report/aim-50-pos-run.tex}
@@ -1100,26 +1137,38 @@
     
     \begin{tikzpicture}[scale=0.5]
       \input{../report/aim-200-pos-run.tex}
-    \end{tikzpicture} & \\
+    \end{tikzpicture} & 
+        \begin{tikzpicture}[scale=0.5]
+      \input{../report/dubois-run.tex}
+    \end{tikzpicture} \\
+
   \end{tabular}
 \end{frame}
 
-
 \begin{frame}
-  \frametitle{Small tables}
+  \frametitle{Large tables}
+  \framesubtitle{$2500-10000$~tuples}
   \begin{tabular}{cc}
     \begin{tikzpicture}[scale=0.5]
-      \input{../report/dubois-run.tex}
+      \input{../report/randsJC2500-run.tex}
     \end{tikzpicture}
     &
       \begin{tikzpicture}[scale=0.5]
-        \input{../report/geom-run.tex}
+        \input{../report/randsJC5000-run.tex}
+      \end{tikzpicture} \\
+    \begin{tikzpicture}[scale=0.5]
+      \input{../report/randsJC7500-run.tex}
+    \end{tikzpicture}
+    &
+      \begin{tikzpicture}[scale=0.5]
+        \input{../report/randsJC10000-run.tex}
       \end{tikzpicture} \\
   \end{tabular}
 \end{frame}
 
 \begin{frame}
   \frametitle{Large tables}
+  \framesubtitle{$> 12000$~tuples}
   \begin{tabular}{cc}
     \begin{tikzpicture}[scale=0.5]
       \input{../report/k5_n10_d10_m15_p08-run.tex}
@@ -1139,28 +1188,8 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Large tables}
-  \begin{tabular}{cc}
-    \begin{tikzpicture}[scale=0.5]
-      \input{../report/randsJC2500-run.tex}
-    \end{tikzpicture}
-    &
-      \begin{tikzpicture}[scale=0.5]
-        \input{../report/randsJC5000-run.tex}
-      \end{tikzpicture} \\
-    \begin{tikzpicture}[scale=0.5]
-      \input{../report/randsJC7500-run.tex}
-    \end{tikzpicture}
-    &
-      \begin{tikzpicture}[scale=0.5]
-        \input{../report/randsJC10000-run.tex}
-      \end{tikzpicture} \\
-  \end{tabular}
-\end{frame}
-
-
-\begin{frame}
   \frametitle{Low arities}
+  \framesubtitle{$2-3$~variables}
   \begin{tabular}{cc}
     \begin{tikzpicture}[scale=0.5]
       \input{../report/langford4-run.tex}
@@ -1181,6 +1210,7 @@
 
 \begin{frame}
   \frametitle{High arities}
+  \framesubtitle{$>5$~variables}
   \begin{tabular}{cc}
     \begin{tikzpicture}[scale=0.5]
       \input{../report/bddLarge-run.tex}
@@ -1202,6 +1232,7 @@
 
 \begin{frame}
   \frametitle{Small domains}
+  \framesubtitle{Domain size $2$}
   \begin{tabular}{cc}
     \begin{tikzpicture}[scale=0.5]
       \input{../report/aim-50-pos-run.tex}
@@ -1215,13 +1246,14 @@
 
 \begin{frame}
   \frametitle{Large domains}
+  \framesubtitle{Domain size $\geq 10$}
   \begin{tabular}{cc}
     \begin{tikzpicture}[scale=0.5]
       \input{../report/nonograms-run.tex}
     \end{tikzpicture}
     &
       \begin{tikzpicture}[scale=0.5]
-        \input{../report/randsJC5000-run.tex}
+        \input{../report/k5_n10_d10_m15_p08-run.tex}
       \end{tikzpicture} \\
   \end{tabular}
 \end{frame}
@@ -1232,7 +1264,7 @@
     \item On all series, CT either outperforms or performs as well as the existing
       propagators for~\Table
     \item DFA overall slowest, but fastest on some series
-    \item Largest performance gain on series with large tables
+    \item CT has largest performance gains on series with large tables
   \end{itemize}
 \end{frame}
 
@@ -1250,17 +1282,41 @@
   \item   The results:
     \begin{itemize}
       \item CT seems to outperform existing propagators for \Table
-      \end{itemize}
-    \item 
-      Future work:
+    \end{itemize}
+    % \item Remains to be done:
+    %   \begin{itemize}
+    %     \item Find a bug
+    %   \end{itemize}
+    \item Future work:
       \begin{itemize}
+      \item This project is to be seen as a proof of concept - not a final version
       \item Inclusion into Gecode?
       \item Implement and evaluate generalisations of CT described
-        in another article
+        in~\cite{DBLP:conf/aaai/VerhaegheLS17}
       \end{itemize}
   
   \end{itemize}
-  
+\end{frame}
+
+\begin{frame}
+  \frametitle{References}
+  \printbibliography
+  %\begin{thebibliography}{9}
+    
+  %\bibitem[Demeulenaere, Hartert, Lecoutre, Perez, Perron, R{\'{e}}gin, and Schaus @ CP 2016]{CTpaper} Demeulenaere, J. and Hartert, R. and Lecoutre, C. and Perez, G. and Perron, L. and R{\'{e}}gin, J.C. and Schaus, P.
+%   \bibitem[1]{CTpaper} Demeulenaere, J. and Hartert, R. and Lecoutre, C. and Perez, G. and Perron, L. and R{\'{e}}gin, J.C. and Schaus, P.
+%     \newblock Compact-Table: Efficiently Filtering Table Constraints with Reversible
+%     Sparse Bit-Sets
+%     \newblock \emph{Proceedings of CP 2016}, Lecture Notes in Computer Science 9892, pages 207--223. Springer, 2016.
+    
+
+% %  \bibitem[Verhaeghe, Lecoutre, and Schaus @ AAAI 2017]{CTpaper2} Verhaeghe, H{\'{e}}l{\`{e}}ne and Lecoutre, Christophe and Schaus, Pierre
+%   \bibitem[2]{CTpaper2} Verhaeghe, H{\'{e}}l{\`{e}}ne and Lecoutre, Christophe and Schaus, Pierre
+%     \newblock Extending Compact-Table to Negative and Short Tables,
+%     \emph{Proceedings of AAAI 2017}, AAAI 2017, pages 3951--3957. AAAI Press, 2017.
+               
+  %\end{thebibliography}
+
 \end{frame}
 
 \end{document}
