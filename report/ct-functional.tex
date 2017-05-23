@@ -14,9 +14,9 @@
         \RETURN $\Tuple{\FAIL,\emptyset}$
       \ENDIF
     \ENDFOREACH
-  \ENDIF
-  \IF[executed in the propagate function]{\CurrTable~has changed since last time}
-    \STATE $s \leftarrow \FilterDomains(s)$
+      \IF[executed in the propagate function]{\CurrTable~has changed since last time}
+         \STATE $s \leftarrow \FilterDomains(s)$
+      \ENDIF
   \ENDIF
   \IF{there is at most one unassigned variable left}
     \RETURN $\Tuple{\SUBSUMED, s}$

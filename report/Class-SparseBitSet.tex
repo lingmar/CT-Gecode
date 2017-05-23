@@ -31,7 +31,7 @@
       \Func{reverseMask}{} \label{line:reverse:1}
       \For{i}{0}{\Limit} \label{line:reverse:2}
       \STATE $\Offset \leftarrow \Index[i]$ \label{line:reverse:3}
-      \STATE $\texttt{mask}[\Offset] \leftarrow ~\texttt{mask}[\Offset]$ \COMMENT{birwise NOT} \label{line:reverse:4}
+      \STATE $\texttt{mask}[\Offset] \leftarrow \ \sim\texttt{mask}[\Offset]$ \COMMENT{bitwise NOT} \label{line:reverse:4}
       \ENDFOR
       \Endfunc
 
