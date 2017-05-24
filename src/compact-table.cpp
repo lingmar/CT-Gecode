@@ -9,7 +9,7 @@
 
 //#define LONG_FILTER
 //#define FIX
-//#define DELTA
+#define DELTA
 
 //#define forceinline __attribute__ ((noinline))
 
@@ -456,9 +456,13 @@ public:
     
   // Return cost
   forceinline virtual PropCost
-  cost(const Space&, const ModEventDelta&) const {
-    // Expensive linear ?
-    return PropCost::linear(PropCost::HI,arity);
+  cost(const Space&, const ModEventDelta& med) const {
+    // // Expensive linear ?
+    // return PropCost::linear(PropCost::HI,arity);
+    if (View::me(med) == ME_INT_VAL)
+      return PropCost::quadratic(PropCost::HI,arity);
+    else
+      return PropCost::cubic(PropCost::HI,arity); 
   }
 
   forceinline virtual void
