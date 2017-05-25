@@ -5,10 +5,14 @@
 #include <assert.h>
 #include "info-base.hpp"
 
+int propid = 0;
+
+#define NOISY 0
+
 //#define DEBUG
 
 //#define LONG_FILTER
-//#define FIX
+#define FIX
 #define DELTA
 
 //#define forceinline __attribute__ ((noinline))
@@ -255,10 +259,10 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
-  /// Council of advisors
-  Council<CTAdvisor<View> > c;
   /// The indices of valid tuples
   SparseBitSet<Space&> validTuples;
+  /// Council of advisors
+  Council<CTAdvisor<View> > c;
 #ifdef FIX
   /// Tuple-set
   TupleSet tupleSet;
@@ -273,6 +277,8 @@ protected:
   unsigned int max_dom_size;
   /// Arity
   unsigned int arity;
+  /// id
+  int id;
   
 public:
   // Post table propagator
@@ -299,6 +305,7 @@ public:
       touched_var(-1),
       validTuples(static_cast<Space&>(home)),
       arity(x0.size()),
+      id(propid++),
       unassigned(x0.size())
   {
     DEBUG_PRINT(("******* Constructor *******\n"));
@@ -317,7 +324,7 @@ public:
     // Because we use heap allocated data
     home.notice(*this,AP_DISPOSE);
     
-    // Schedule in case no advisors have been posted
+    // Schedule in case no advisors have been posted or in case we can subsume
     if (unassigned <= 1)
       View::schedule(home,*this,Int::ME_INT_VAL);
   }
@@ -400,7 +407,6 @@ public:
         }
         ++it;
       }
-
       Iter::Values::Array r(nq,nremoves);
       GECODE_ME_CHECK(x[i].minus_v(home,r,false));
     }
@@ -434,14 +440,15 @@ public:
   forceinline
   CompactTable(Space& home, bool share, CompactTable& p)
     : Propagator(home,share,p),
-      status(p.status),
+      status(NOT_PROPAGATING),
       touched_var(-1),
       validTuples(home, p.validTuples),
       arity(p.arity),
       unassigned(p.unassigned),
+      id(p.id),
       max_dom_size(p.max_dom_size)
   {
-    // Update views and advisors
+    // Update advisors
     c.update(home,share,p.c);
 #ifdef FIX
     tupleSet.update(home,share,p.tupleSet);
@@ -493,25 +500,44 @@ public:
   }
 
   forceinline bool
-  incremental_update(CTAdvisor<View> a, Space& home) {
+  reset_based_update(CTAdvisor<View> a, Space& home) {
     // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
     mask.allocate(r,validTuples.size());
     validTuples.clear_mask(mask);
+
+    // Int::ViewRanges<View> rngs(a.view());
+    // int cur, max, row;
+    // while (rngs()) {
+    //   cur = rngs.min();
+    //   max = rngs.max();
+    //   row = a.supports.row(cur);
+    //   while (cur <= max) {
+    //     assert(a.view().in(cur));
+    //     validTuples.add_to_mask(a.supports(row),mask);
+    //     ++cur;
+    //     ++row;
+    //   }
+    //   ++rngs;
+    // }
     
     Int::ViewValues<View> it(a.view());
     while (it()) {
+      assert(a.view().in(it.val()));
       validTuples.add_to_mask(a.supports[it.val()],mask);
       ++it;
     }
-    return validTuples.intersect_with_mask(mask);
+    validTuples.intersect_with_mask(mask);
+
+    return true;
   }
   
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
+        
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
@@ -527,7 +553,7 @@ public:
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
-      diff = incremental_update(a,home);
+      diff = reset_based_update(a,home);
     } else { // Delta information available -- let's compare the size of
              // the domain with the size of delta to decide whether or not
              // to do reset-based or incremental update
@@ -553,16 +579,17 @@ public:
             diff = true;
           }
         }
+      
       } else { // Domain size smaller than delta, incremental update
-        diff = incremental_update(a,home);
+        diff = reset_based_update(a,home);
       }
     } 
 #else
     else {
-      diff = incremental_update(a,home);
+      diff = reset_based_update(a,home);
     }
 #endif // DELTA
-    
+
     // Do not fail a disabled propagator
     if (validTuples.is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
@@ -591,7 +618,9 @@ public:
   
   forceinline ExecStatus
   filterDomains(Space& home) {
-    if (unassigned == 0) return home.ES_SUBSUMED(*this);
+    if (unassigned == 0)
+      return home.ES_SUBSUMED(*this);
+
     // Count the number of scanned unassigned variables
     unsigned int count_unassigned = unassigned;
     // Array to collect values to remove
@@ -625,18 +654,16 @@ public:
         // Fix to max_val if min_val not supported
         const int row_min = a.supports.row(min_val);
         if (!supported(a,row_min)) {
-          v.eq(home,max_val);
+          GECODE_ME_CHECK(v.eq(home,max_val));
           --unassigned;
-          //a.dispose(home,c);
           break;
         }
 
         // Fix to min_val if max_val not supported
         const int row_max = a.supports.row(max_val);
         if (!supported(a,row_max)) {
-          v.eq(home,min_val);
+          GECODE_ME_CHECK(v.eq(home,min_val));
           --unassigned;
-          //a.dispose(home,c);
           break;
         }
 
@@ -660,7 +687,11 @@ public:
               break;
             ++row;
           }
-          if (v.gq(home,new_min) == ME_INT_VAL) {
+          ModEvent me_gq = v.gq(home,new_min);
+          if (me_failed(me_gq))
+            return ES_FAILED;
+
+          if (me_gq == ME_INT_VAL) {
             --unassigned;
             break;
           }
@@ -671,7 +702,11 @@ public:
               break;
             --row;
           }
-          if (v.lq(home,new_max) == ME_INT_VAL) {
+          ModEvent me_lq = v.lq(home,new_max);
+          if (me_failed(me_lq)) 
+            return ES_FAILED;
+
+          if (me_lq == ME_INT_VAL) {
             --unassigned;
             break;
           }
@@ -695,6 +730,7 @@ public:
             max = rngs.max();
             row = a.supports.row(cur);
             while (cur <= max) {
+              assert(a.view().in(cur));
               if (!supported(a,row)) {
                 nq[nremoves++] = cur;
               } else {
@@ -711,11 +747,19 @@ public:
           }
 
           // Perform bounds propagation first
-          if (v.gq(home,new_min) == ME_INT_VAL) {
+          ModEvent me_gq = v.gq(home,new_min);
+          if (me_failed(me_gq))
+            return ES_FAILED;
+          
+          if (me_gq == ME_INT_VAL) {
             --unassigned;
             break;
           }
-          if (v.lq(home,new_max) == ME_INT_VAL) {
+          ModEvent me_lq = v.lq(home,new_max);
+          if (me_failed(me))
+            return ES_FAILED;
+
+          if (me_lq == ME_INT_VAL) {
             --unassigned;
             break;
           }
@@ -733,6 +777,7 @@ public:
           max = rngs.max();
           row = a.supports.row(cur);
           while (cur <= max) {
+            assert(v.in(cur));
             if (!supported(a,row))
               *(nq++) = cur;
             else
@@ -748,21 +793,31 @@ public:
         
         // Remove collected values
         if (nremoves > 0) {
+          assert(nremoves < v.size());
           if (nremoves == v.size() - 1) {
-            v.eq(home,last_support);
+            GECODE_ME_CHECK(v.eq(home,last_support));
             --unassigned;
             break;
           } else {
             Iter::Values::Array r(nq_start,nremoves);
-            if (v.minus_v(home,r,false) == ME_INT_VAL) {
+            ModEvent me = v.minus_v(home,r,false);
+            if (me_failed(me))
+              return ES_FAILED;
+            
+            if (me == ME_INT_VAL) {
               --unassigned;
               break;
             }
           }
         }
-        
         --count_unassigned;
       }
+    }
+
+    if (NOISY) {
+      //if (id==29) {
+      printf("Exit filterDomains for %d\n", id);
+      printState();
     }
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
@@ -770,6 +825,7 @@ public:
 
   forceinline bool
   supported(CTAdvisor<View>& a, int row) {
+    // TODO: index > maxindex in validTuples?
     int index = a.residues[row];
     const BitSet& support_row = a.supports(row);
     Support::BitSetData w = validTuples.a(support_row,index);
@@ -795,9 +851,8 @@ public:
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
-      v.eq(home,t[a.index]);
+      GECODE_ME_CHECK(v.eq(home,t[a.index]));
     }
-
     return home.ES_SUBSUMED(*this);
   }
 #endif // FIX
@@ -814,7 +869,60 @@ public:
     return sizeof(*this);
   }
 
+  void assertValid() {
+    int* flags = heap.alloc<int>(validTuples.size());
+    int* inconsistentVar = heap.alloc<int>(validTuples.size());
+    for (int i = 0; i < validTuples.size(); i++) {
+      flags[i] = 1;
+      for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+        CTAdvisor<View> a = a0.advisor();
+        if (!a.view().in(tupleSet[i][a.index])) {
+          flags[i] = 0;
+          inconsistentVar[i] = a.index;
+        }
+      }
+      if (flags[i] != validTuples.get(i)) {
+        printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
+               inconsistentVar[i], id);
+        for (int j = 0; j < arity; j++) {
+          printf("%d ", tupleSet[i][j]);
+        }
+        printf("\n");
+        printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
+        printf("flag=%d\n", flags[i]);
+        validTuples.print();
+        printState();
+      }
+    }
+    for (int i = 0; i < validTuples.size(); i++) {
+      assert(flags[i] == validTuples.get(i));
+    }
+  }
+
+  void printState() {
+    printf("State for prop %d\n", id);
+    printf("nvalid=%d\n", validTuples.nset());
+    printf("is_empty=%d\n", validTuples.is_empty());
+    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+      CTAdvisor<View> a = a0.advisor();
+      printf("x[%d]= ", a.index);
+      cout << a.view() << endl;
+    }
+
+    for (int m = 0; m < validTuples.size(); m++) {
+      if (validTuples.get(m)) {
+        for (int j = 0; j < arity; j++) {
+          printf("%d ", tupleSet[m][j]);
+        }
+        printf(" : %d\n", validTuples.get(m));
+
+      }
+    }
+    printf("unassigned=%d\n", unassigned);
+  }
+  
 };
+
 
 
 // Post the table constraint
