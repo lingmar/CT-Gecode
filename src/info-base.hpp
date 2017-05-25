@@ -50,10 +50,13 @@ public:
   /// Abstract functions
   forceinline virtual const BitSet&
   get_supports(int val) {
+    assert(row(val) >= 0);
     return supports[row(val)];
   }
+  
   forceinline virtual const BitSet&
   get_supports_raw(int row) {
+    assert(row >= 0);
     return supports[row];
   }
   
