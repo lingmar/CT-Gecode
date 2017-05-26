@@ -12,7 +12,7 @@ int propid = 0;
 //#define DEBUG
 
 //#define LONG_FILTER
-#define FIX
+//#define FIX
 #define DELTA
 
 //#define forceinline __attribute__ ((noinline))
@@ -279,6 +279,88 @@ protected:
   unsigned int arity;
   /// id
   int id;
+  // *** Sparse bit-set *** //
+  /// Words
+  BitSet words;
+  /// Index
+  int* index;
+  /// Limit
+  int limit;
+  /// Size
+  int sz;
+private:
+  /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
+  forceinline void
+  init_sparse_bit_set(Space& home, unsigned int s) {
+    words.init(home,s);
+    sz = s;
+    int nwords = s != 0 ? (s - 1) / words.get_bpb() + 1 : 0;
+    limit = nwords - 1;
+    index = home.alloc<int>(nwords);
+    for (int i = limit+1; i--; )
+      index[i] = i;
+    // Set the set nr of bits in words
+    clearall(s, true);
+  }
+  /// Check if sparse bit set is empty
+  forceinline bool
+  is_empty() const {
+    return limit == -1;
+  }
+  /// Clear the mask
+  forceinline void
+  clear_mask(BitSet& mask) {
+    BitSet::clear_by_map(mask,index,limit);
+  }
+  /// Add bits in \a b to \a mask
+  forceinline void
+  add_to_mask(const BitSet& b, BitSet& mask) const {
+    BitSet::orbs(mask, b, index, limit);
+  }
+  /// Intersect words with \a mask
+  forceinline bool
+  intersect_with_mask(const BitSet& mask) {
+    return BitSet::intersect_by_map(words,mask,index,&limit);
+  }
+  /// Get the index of a non-zero intersect with \a b, or -1 if none exists
+  forceinline int
+  intersect_index(const BitSet& b) const {
+    return BitSet::intersect_index_by_map(words,b,index,limit);
+  }
+  /// Perform "nand" with \a b
+  forceinline bool
+  nand_with_mask(const BitSet& b) {
+    return BitSet::nand_by_map(words,b,index,&limit);
+  }
+  /// Test whether exactly one bit is set
+  forceinline bool
+  one() const {
+    return limit == 0 && words.one(index[limit]);
+  }
+  /// Get the index of the set bit (only after one() returns true)
+  forceinline unsigned int
+  index_of_fixed() const {
+    // The word index is index[limit]
+    // Bit index is word_index*bpb + bit_index
+    unsigned int bit_index = words.getword(index[limit]).next();
+    return index[limit] * words.get_bpb() + bit_index;
+  }
+  /// Reverse mask
+  void reverse_mask(BitSet& b) const {
+    BitSet::flip_by_map(b,index,limit);
+  }
+  /// Clear \a set bits in words
+  void clearall(unsigned int sz, bool setbits) {
+      int start_bit = 0;
+      int complete_words = sz / BitSet::get_bpb();
+      if (complete_words > 0) {
+        start_bit = complete_words * BitSet::get_bpb() + 1;
+        words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,setbits);
+      }
+      for (unsigned int i = start_bit; i < sz; i++) {
+        setbits ? words.set(i) : words.clear(i);
+      }
+  }
   
 public:
   // Post table propagator
@@ -321,6 +403,8 @@ public:
     // Initialise validTupels with nsupports bit set
     validTuples.init(nsupports);
 
+    init_sparse_bit_set(home, nsupports);
+    
     // Because we use heap allocated data
     home.notice(*this,AP_DISPOSE);
     
@@ -446,13 +530,24 @@ public:
       arity(p.arity),
       unassigned(p.unassigned),
       id(p.id),
-      max_dom_size(p.max_dom_size)
+      max_dom_size(p.max_dom_size),
+      limit(p.limit), sz(p.sz)
   {
     // Update advisors
     c.update(home,share,p.c);
 #ifdef FIX
     tupleSet.update(home,share,p.tupleSet);
 #endif // FIX
+    index = home.alloc<int>(limit + 1);
+    int max_index = p.index[0];
+    for (int i = limit+1; i--; ) {
+      index[i] = p.index[i];
+      if (index[i] > max_index)
+        max_index = index[i];
+    }
+    unsigned int nbits = (max_index + 1) * BitSet::get_bpb();
+    words.allocate(home, nbits);
+    words.copy(nbits, p.words);
   }
 
   // Create copy during cloning
@@ -482,12 +577,12 @@ public:
   propagate(Space& home, const ModEventDelta&) {
     status = PROPAGATING;
     
-    if (validTuples.is_empty())
+    if (is_empty())
       return ES_FAILED;
 
 #ifdef FIX
     ExecStatus msg;
-    if (validTuples.one()) 
+    if (one()) 
       msg = fixDomains(home);
     else
       msg = filterDomains(home);
@@ -504,8 +599,8 @@ public:
     // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
-    mask.allocate(r,validTuples.size());
-    validTuples.clear_mask(mask);
+    mask.allocate(r,sz);
+    clear_mask(mask);
 
     // Int::ViewRanges<View> rngs(a.view());
     // int cur, max, row;
@@ -525,10 +620,10 @@ public:
     Int::ViewValues<View> it(a.view());
     while (it()) {
       assert(a.view().in(it.val()));
-      validTuples.add_to_mask(a.supports[it.val()],mask);
+      add_to_mask(a.supports[it.val()],mask);
       ++it;
     }
-    validTuples.intersect_with_mask(mask);
+    intersect_with_mask(mask);
 
     return true;
   }
@@ -549,7 +644,7 @@ public:
     ModEvent me = View::modevent(d);
     bool diff;
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      diff = validTuples.intersect_with_mask(a.supports[x.val()]);
+      diff = intersect_with_mask(a.supports[x.val()]);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
@@ -575,7 +670,7 @@ public:
         diff = false;
         for (int i = min_row; i <= max_row; i++) {
           const BitSet& s = a.supports(i);
-          if (!s.empty() && validTuples.nand_with_mask(s)) {
+          if (!s.empty() && nand_with_mask(s)) {
             diff = true;
           }
         }
@@ -591,7 +686,7 @@ public:
 #endif // DELTA
 
     // Do not fail a disabled propagator
-    if (validTuples.is_empty())
+    if (is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
 
     // Schedule propagator and dispose if assigned
@@ -814,11 +909,6 @@ public:
       }
     }
 
-    if (NOISY) {
-      //if (id==29) {
-      printf("Exit filterDomains for %d\n", id);
-      printState();
-    }
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
@@ -828,11 +918,11 @@ public:
     // TODO: index > maxindex in validTuples?
     int index = a.residues[row];
     const BitSet& support_row = a.supports(row);
-    Support::BitSetData w = validTuples.a(support_row,index);
+    Support::BitSetData w = BitSet::a(words,support_row,index);
 
     bool flag = true;
     if (w.none()) {
-      index = validTuples.intersect_index(support_row);
+      index = intersect_index(support_row);
       if (index != -1) {
         a.residues[row] = index;
       } else {
@@ -846,7 +936,7 @@ public:
   forceinline ExecStatus
   fixDomains(Space& home) {
     // Only one valid tuple left, so we can fix all vars to that tuple
-    unsigned int tuple_index = validTuples.index_of_fixed();
+    unsigned int tuple_index = index_of_fixed();
     TupleSet::Tuple t = tupleSet[tuple_index];
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
@@ -869,57 +959,57 @@ public:
     return sizeof(*this);
   }
 
-  void assertValid() {
-    int* flags = heap.alloc<int>(validTuples.size());
-    int* inconsistentVar = heap.alloc<int>(validTuples.size());
-    for (int i = 0; i < validTuples.size(); i++) {
-      flags[i] = 1;
-      for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-        CTAdvisor<View> a = a0.advisor();
-        if (!a.view().in(tupleSet[i][a.index])) {
-          flags[i] = 0;
-          inconsistentVar[i] = a.index;
-        }
-      }
-      if (flags[i] != validTuples.get(i)) {
-        printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
-               inconsistentVar[i], id);
-        for (int j = 0; j < arity; j++) {
-          printf("%d ", tupleSet[i][j]);
-        }
-        printf("\n");
-        printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
-        printf("flag=%d\n", flags[i]);
-        validTuples.print();
-        printState();
-      }
-    }
-    for (int i = 0; i < validTuples.size(); i++) {
-      assert(flags[i] == validTuples.get(i));
-    }
-  }
+  // void assertValid() {
+  //   int* flags = heap.alloc<int>(validTuples.size());
+  //   int* inconsistentVar = heap.alloc<int>(validTuples.size());
+  //   for (int i = 0; i < validTuples.size(); i++) {
+  //     flags[i] = 1;
+  //     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+  //       CTAdvisor<View> a = a0.advisor();
+  //       if (!a.view().in(tupleSet[i][a.index])) {
+  //         flags[i] = 0;
+  //         inconsistentVar[i] = a.index;
+  //       }
+  //     }
+  //     if (flags[i] != validTuples.get(i)) {
+  //       printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
+  //              inconsistentVar[i], id);
+  //       for (int j = 0; j < arity; j++) {
+  //         printf("%d ", tupleSet[i][j]);
+  //       }
+  //       printf("\n");
+  //       printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
+  //       printf("flag=%d\n", flags[i]);
+  //       validTuples.print();
+  //       printState();
+  //     }
+  //   }
+  //   for (int i = 0; i < validTuples.size(); i++) {
+  //     assert(flags[i] == validTuples.get(i));
+  //   }
+  // }
 
-  void printState() {
-    printf("State for prop %d\n", id);
-    printf("nvalid=%d\n", validTuples.nset());
-    printf("is_empty=%d\n", validTuples.is_empty());
-    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-      CTAdvisor<View> a = a0.advisor();
-      printf("x[%d]= ", a.index);
-      cout << a.view() << endl;
-    }
+  // void printState() {
+  //   printf("State for prop %d\n", id);
+  //   printf("nvalid=%d\n", validTuples.nset());
+  //   printf("is_empty=%d\n", validTuples.is_empty());
+  //   for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+  //     CTAdvisor<View> a = a0.advisor();
+  //     printf("x[%d]= ", a.index);
+  //     cout << a.view() << endl;
+  //   }
 
-    for (int m = 0; m < validTuples.size(); m++) {
-      if (validTuples.get(m)) {
-        for (int j = 0; j < arity; j++) {
-          printf("%d ", tupleSet[m][j]);
-        }
-        printf(" : %d\n", validTuples.get(m));
+  //   for (int m = 0; m < validTuples.size(); m++) {
+  //     if (validTuples.get(m)) {
+  //       for (int j = 0; j < arity; j++) {
+  //         printf("%d ", tupleSet[m][j]);
+  //       }
+  //       printf(" : %d\n", validTuples.get(m));
 
-      }
-    }
-    printf("unassigned=%d\n", unassigned);
-  }
+  //     }
+  //   }
+  //   printf("unassigned=%d\n", unassigned);
+  // }
   
 };
 
