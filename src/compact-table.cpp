@@ -5,11 +5,8 @@
 #include <assert.h>
 #include "info-base.hpp"
 
-int propid = 0;
-
 //#define NOISY 0
 //#define BUG 0
-
 
 //#define DEBUG
 
@@ -257,8 +254,6 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
-  /// The indices of valid tuples
-  SparseBitSet<Space&> validTuples;
   /// Council of advisors
   Council<CTAdvisor<View> > c;
 #ifdef FIX
@@ -275,8 +270,85 @@ protected:
   unsigned int max_dom_size;
   /// Arity
   unsigned int arity;
-  /// id
-  int id;
+  // *** Sparse bit-set *** //
+  /// Valid bits
+  BitSet words;
+  /// Maps words to supports
+  int* index;
+  /// Equal to number of non-zero words minus 1
+  int limit;
+private:
+  /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
+  forceinline void
+  init_sparse_bit_set(Space& home, unsigned int s) {
+    words.init(home,s);
+    int nwords = s != 0 ? (s - 1) / words.get_bpb() + 1 : 0;
+    limit = nwords - 1;
+    index = home.alloc<int>(nwords);
+    for (int i = limit+1; i--; )
+      index[i] = i;
+    // Set the set nr of bits in words
+    clearall(s, true);
+  }
+  /// Check if sparse bit set is empty
+  forceinline bool
+  is_empty() const {
+    return limit == -1;
+  }
+  /// Clear the mask
+  forceinline void
+  clear_mask(BitSet& mask) {
+    BitSet::clear_by_map(mask,index,limit);
+  }
+  /// Add bits in \a b to \a mask
+  forceinline void
+  add_to_mask(const BitSet& b, BitSet& mask) const {
+    BitSet::orbs(mask, b, index, limit);
+  }
+  /// Intersect words with \a mask
+  forceinline void
+  intersect_with_mask(const BitSet& mask) {
+    BitSet::intersect_by_map(words,mask,index,&limit);
+  }
+  /// Get the index of a non-zero intersect with \a b, or -1 if none exists
+  forceinline int
+  intersect_index(const BitSet& b) const {
+    return BitSet::intersect_index_by_map(words,b,index,limit);
+  }
+  /// Perform "nand" with \a b
+  forceinline bool
+  nand_with_mask(const BitSet& b) {
+    return BitSet::nand_by_map(words,b,index,&limit);
+  }
+  /// Test whether exactly one bit is set
+  forceinline bool
+  one() const {
+    return limit == 0 && words.one(index[limit]);
+  }
+  /// Get the index of the set bit (only after one() returns true)
+  forceinline unsigned int
+  index_of_fixed() const {
+    // The word index is index[limit]
+    // Bit index is word_index*bpb + bit_index
+    unsigned int bit_index = words.getword(index[limit]).next();
+    return index[limit] * words.get_bpb() + bit_index;
+  }
+  /// Flip the bits in mask
+  void flip_mask(BitSet& b) const {
+    BitSet::flip_by_map(b,index,limit);
+  }
+  /// Clear \a set bits in words
+  void clearall(unsigned int sz, bool setbits) {
+      int start_bit = 0;
+      int complete_words = sz / BitSet::get_bpb();
+      if (complete_words > 0) {
+        start_bit = complete_words * BitSet::get_bpb() + 1;
+        words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,setbits);
+      }
+      for (unsigned int i = start_bit; i < sz; i++) {
+        setbits ? words.set(i) : words.clear(i);
+      }
+  }
   
 public:
   // Post table propagator
@@ -301,9 +373,7 @@ public:
     : Propagator(home), c(home),
       status(NOT_PROPAGATING),
       touched_var(-1),
-      validTuples(static_cast<Space&>(home)),
       arity(x0.size()),
-      id(propid++),
       unassigned(x0.size())
   {
     // Initialise supports and post advisors
@@ -314,9 +384,8 @@ public:
       return;
     } 
     
-    // Initialise validTupels with nsupports bit set
-    validTuples.init(nsupports);
-
+    init_sparse_bit_set(home, nsupports);
+    
     // Because we use heap allocated data
     home.notice(*this,AP_DISPOSE);
     
@@ -437,17 +506,26 @@ public:
     : Propagator(home,share,p),
       status(NOT_PROPAGATING),
       touched_var(-1),
-      validTuples(home, p.validTuples),
       arity(p.arity),
       unassigned(p.unassigned),
-      id(p.id),
-      max_dom_size(p.max_dom_size)
+      max_dom_size(p.max_dom_size),
+      limit(p.limit)
   {
     // Update advisors
     c.update(home,share,p.c);
 #ifdef FIX
     tupleSet.update(home,share,p.tupleSet);
 #endif // FIX
+    index = home.alloc<int>(limit + 1);
+    int max_index = p.index[0];
+    for (int i = limit+1; i--; ) {
+      index[i] = p.index[i];
+      if (index[i] > max_index)
+        max_index = index[i];
+    }
+    unsigned int nbits = (max_index + 1) * BitSet::get_bpb();
+    words.allocate(home, nbits);
+    words.copy(nbits, p.words);
   }
 
   // Create copy during cloning
@@ -477,12 +555,12 @@ public:
   propagate(Space& home, const ModEventDelta&) {
     status = PROPAGATING;
     
-    if (validTuples.is_empty())
+    if (is_empty())
       return ES_FAILED;
 
 #ifdef FIX
     ExecStatus msg;
-    if (validTuples.one()) 
+    if (one()) 
       msg = fixDomains(home);
     else
       msg = filterDomains(home);
@@ -494,13 +572,13 @@ public:
     return msg;
   }
 
-  forceinline bool
+  forceinline void
   reset_based_update(CTAdvisor<View> a, Space& home) {
     // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
-    mask.allocate(r,validTuples.size());
-    validTuples.clear_mask(mask);
+    mask.allocate(r,words.size());
+    clear_mask(mask);
 
     Int::ViewRanges<View> rngs(a.view());
     int cur, max, row;
@@ -510,14 +588,13 @@ public:
       row = a.supports.row(cur);
       while (cur <= max) {
         assert(a.view().in(cur));
-        validTuples.add_to_mask(a.supports(row),mask);
+        add_to_mask(a.supports(row),mask);
         ++cur;
         ++row;
       }
       ++rngs;
     }
-    validTuples.intersect_with_mask(mask);
-    return true;//validTuples.intersect_with_mask(mask);//true;
+    intersect_with_mask(mask);
   }
   
   forceinline virtual ExecStatus
@@ -534,13 +611,12 @@ public:
     }
 
     ModEvent me = View::modevent(d);
-    bool diff;
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      diff = validTuples.intersect_with_mask(a.supports[x.val()]);
+      intersect_with_mask(a.supports[x.val()]);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
-      diff = reset_based_update(a,home);
+      reset_based_update(a,home);
     } else { // Delta information available -- let's compare the size of
              // the domain with the size of delta to decide whether or not
              // to do reset-based or incremental update
@@ -559,53 +635,37 @@ public:
       assert(max_row >= min_row);
 
       if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
-        diff = false;
         for (int i = min_row; i <= max_row; i++) {
           const BitSet& s = a.supports(i);
-          if (!s.empty() && validTuples.nand_with_mask(s)) {
-            diff = true;
-          }
+          if (!s.empty()) 
+            nand_with_mask(s);
         }
       
       } else { // Domain size smaller than delta, incremental update
-        diff = reset_based_update(a,home);
+        reset_based_update(a,home);
       }
     } 
 #else
     else {
-      diff = reset_based_update(a,home);
+      reset_based_update(a,home);
     }
 #endif // DELTA
 
     // Do not fail a disabled propagator
-    if (validTuples.is_empty())
+    if (is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
-
-    if (!diff) {
-      //printf("NODIFF\n");
-      assert(touched_var != -1);
-    }
     
     // Schedule propagator and dispose if assigned
-    if (diff) {
-      if (touched_var == -1) // no touched variable yet!
-        touched_var = a.index;
-      else if (touched_var != a.index) // some other variable is touched
-        touched_var = -2;
+    if (touched_var == -1) // no touched variable yet!
+      touched_var = a.index;
+    else if (touched_var != a.index) // some other variable is touched
+      touched_var = -2;
       
-      if (a.view().assigned()) {
-        unassigned--;
-        return home.ES_NOFIX_DISPOSE(c,a);
-      }
-      return ES_NOFIX;
-    }
-
     if (a.view().assigned()) {
       unassigned--;
-      return home.ES_FIX_DISPOSE(c,a);
+      return home.ES_NOFIX_DISPOSE(c,a);
     }
-      
-    return ES_FIX;
+    return ES_NOFIX;
   }
   
   forceinline ExecStatus
@@ -838,11 +898,11 @@ public:
     // TODO: index > maxindex in validTuples?
     int index = a.residues[row];
     const BitSet& support_row = a.supports(row);
-    Support::BitSetData w = validTuples.a(support_row,index);
+    Support::BitSetData w = BitSet::a(words,support_row,index);
 
     bool flag = true;
     if (w.none()) {
-      index = validTuples.intersect_index(support_row);
+      index = intersect_index(support_row);
       if (index != -1) {
         a.residues[row] = index;
       } else {
@@ -856,7 +916,7 @@ public:
   forceinline ExecStatus
   fixDomains(Space& home) {
     // Only one valid tuple left, so we can fix all vars to that tuple
-    unsigned int tuple_index = validTuples.index_of_fixed();
+    unsigned int tuple_index = index_of_fixed();
     TupleSet::Tuple t = tupleSet[tuple_index];
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
@@ -884,58 +944,6 @@ public:
     return sizeof(*this);
   }
 
-  // void assertValid() {
-  //   int* flags = heap.alloc<int>(validTuples.size());
-  //   int* inconsistentVar = heap.alloc<int>(validTuples.size());
-  //   for (int i = 0; i < validTuples.size(); i++) {
-  //     flags[i] = 1;
-  //     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-  //       CTAdvisor<View> a = a0.advisor();
-  //       if (!a.view().in(tupleSet[i][a.index])) {
-  //         flags[i] = 0;
-  //         inconsistentVar[i] = a.index;
-  //       }
-  //     }
-  //     if (flags[i] != validTuples.get(i)) {
-  //       printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
-  //              inconsistentVar[i], id);
-  //       for (int j = 0; j < arity; j++) {
-  //         printf("%d ", tupleSet[i][j]);
-  //       }
-  //       printf("\n");
-  //       printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
-  //       printf("flag=%d\n", flags[i]);
-  //       validTuples.print();
-  //       printState();
-  //     }
-  //   }
-  //   for (int i = 0; i < validTuples.size(); i++) {
-  //     assert(flags[i] == validTuples.get(i));
-  //   }
-  // }
-
-  // void printState() {
-  //   printf("State for prop %d\n", id);
-  //   printf("nvalid=%d\n", validTuples.nset());
-  //   printf("is_empty=%d\n", validTuples.is_empty());
-  //   for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-  //     CTAdvisor<View> a = a0.advisor();
-  //     printf("x[%d]= ", a.index);
-  //     cout << a.view() << endl;
-  //   }
-
-  //   for (int m = 0; m < validTuples.size(); m++) {
-  //     if (validTuples.get(m)) {
-  //       for (int j = 0; j < arity; j++) {
-  //         printf("%d ", tupleSet[m][j]);
-  //       }
-  //       printf(" : %d\n", validTuples.get(m));
-
-  //     }
-  //   }
-  //   printf("unassigned=%d\n", unassigned);
-  // }
-
   bool unassignedCorrect() {
     int count_unassigned = 0;
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
@@ -947,8 +955,6 @@ public:
   }
   
 };
-
-
 
 // Post the table constraint
 namespace Gecode {
