@@ -7,12 +7,14 @@
 
 int propid = 0;
 
-#define NOISY 0
+//#define NOISY 0
+//#define BUG 0
+
 
 //#define DEBUG
 
 //#define LONG_FILTER
-#define FIX
+//#define FIX
 #define DELTA
 
 //#define forceinline __attribute__ ((noinline))
@@ -195,10 +197,6 @@ public:
     index(i),
     supports(s0,nsupports,offset,type,x0)
   {
-#ifdef DEBUG
-    cout << i << ": " << x0 << endl;    
-#endif // DEBUG
-
     // Initialise residues
     switch (type) {
     case ARRAYY: {
@@ -308,10 +306,8 @@ public:
       id(propid++),
       unassigned(x0.size())
   {
-    DEBUG_PRINT(("******* Constructor *******\n"));
     // Initialise supports and post advisors
     int nsupports = init_supports(home, t0, x0);
-    DEBUG_PRINT(("nsupports=%d\n",nsupports));
     
     if (nsupports <= 0) {
       home.fail();
@@ -403,7 +399,6 @@ public:
         unsigned int row = offset[i] + it.val() - min_vals[i];
         if (supports[row].size() == 0) {
           nq[nremoves++] = it.val();
-          DEBUG_PRINT(("Pruned %d from variable %d\n",it.val(),i));
         }
         ++it;
       }
@@ -507,30 +502,22 @@ public:
     mask.allocate(r,validTuples.size());
     validTuples.clear_mask(mask);
 
-    // Int::ViewRanges<View> rngs(a.view());
-    // int cur, max, row;
-    // while (rngs()) {
-    //   cur = rngs.min();
-    //   max = rngs.max();
-    //   row = a.supports.row(cur);
-    //   while (cur <= max) {
-    //     assert(a.view().in(cur));
-    //     validTuples.add_to_mask(a.supports(row),mask);
-    //     ++cur;
-    //     ++row;
-    //   }
-    //   ++rngs;
-    // }
-    
-    Int::ViewValues<View> it(a.view());
-    while (it()) {
-      assert(a.view().in(it.val()));
-      validTuples.add_to_mask(a.supports[it.val()],mask);
-      ++it;
+    Int::ViewRanges<View> rngs(a.view());
+    int cur, max, row;
+    while (rngs()) {
+      cur = rngs.min();
+      max = rngs.max();
+      row = a.supports.row(cur);
+      while (cur <= max) {
+        assert(a.view().in(cur));
+        validTuples.add_to_mask(a.supports(row),mask);
+        ++cur;
+        ++row;
+      }
+      ++rngs;
     }
     validTuples.intersect_with_mask(mask);
-
-    return true;
+    return true;//validTuples.intersect_with_mask(mask);//true;
   }
   
   forceinline virtual ExecStatus
@@ -594,6 +581,11 @@ public:
     if (validTuples.is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
 
+    if (!diff) {
+      //printf("NODIFF\n");
+      assert(touched_var != -1);
+    }
+    
     // Schedule propagator and dispose if assigned
     if (diff) {
       if (touched_var == -1) // no touched variable yet!
@@ -654,7 +646,11 @@ public:
         // Fix to max_val if min_val not supported
         const int row_min = a.supports.row(min_val);
         if (!supported(a,row_min)) {
-          GECODE_ME_CHECK(v.eq(home,max_val));
+#ifdef BUG
+          v.eq(home,max_val);
+#else
+          GECODE_ME_CHECK(v.eq(home,max_val));          
+#endif // BUG
           --unassigned;
           break;
         }
@@ -662,7 +658,11 @@ public:
         // Fix to min_val if max_val not supported
         const int row_max = a.supports.row(max_val);
         if (!supported(a,row_max)) {
-          GECODE_ME_CHECK(v.eq(home,min_val));
+#ifdef BUG
+          v.eq(home,min_val);
+#else          
+          GECODE_ME_CHECK(v.eq(home,min_val));    
+#endif // BUG
           --unassigned;
           break;
         }
@@ -688,9 +688,11 @@ public:
             ++row;
           }
           ModEvent me_gq = v.gq(home,new_min);
+#ifndef BUG
           if (me_failed(me_gq))
             return ES_FAILED;
-
+#endif // BUG
+    
           if (me_gq == ME_INT_VAL) {
             --unassigned;
             break;
@@ -703,9 +705,11 @@ public:
             --row;
           }
           ModEvent me_lq = v.lq(home,new_max);
+#ifndef BUG
           if (me_failed(me_lq)) 
             return ES_FAILED;
-
+#endif // BUG
+     
           if (me_lq == ME_INT_VAL) {
             --unassigned;
             break;
@@ -748,17 +752,20 @@ public:
 
           // Perform bounds propagation first
           ModEvent me_gq = v.gq(home,new_min);
+#ifndef BUG
           if (me_failed(me_gq))
             return ES_FAILED;
+#endif // BUG
           
           if (me_gq == ME_INT_VAL) {
             --unassigned;
             break;
           }
           ModEvent me_lq = v.lq(home,new_max);
-          if (me_failed(me))
+#ifndef BUG
+          if (me_failed(me_lq))
             return ES_FAILED;
-
+#endif // BUG
           if (me_lq == ME_INT_VAL) {
             --unassigned;
             break;
@@ -795,15 +802,21 @@ public:
         if (nremoves > 0) {
           assert(nremoves < v.size());
           if (nremoves == v.size() - 1) {
+#ifdef BUG
+            v.eq(home,last_support);
+#else 
             GECODE_ME_CHECK(v.eq(home,last_support));
+#endif // BUG
+       
             --unassigned;
             break;
           } else {
             Iter::Values::Array r(nq_start,nremoves);
             ModEvent me = v.minus_v(home,r,false);
+#ifndef BUG
             if (me_failed(me))
               return ES_FAILED;
-            
+#endif // BUG
             if (me == ME_INT_VAL) {
               --unassigned;
               break;
@@ -814,11 +827,8 @@ public:
       }
     }
 
-    if (NOISY) {
-      //if (id==29) {
-      printf("Exit filterDomains for %d\n", id);
-      printState();
-    }
+    assert(unassignedCorrect());
+
     // Subsume if there is at most one non-assigned variable
     return unassigned <= 1 ? home.ES_SUBSUMED(*this) : ES_FIX;
   }
@@ -851,7 +861,12 @@ public:
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
+#ifdef BUG
+      v.eq(home,t[a.index])
+#else      
       GECODE_ME_CHECK(v.eq(home,t[a.index]));
+#endif // BUG
+      
     }
     return home.ES_SUBSUMED(*this);
   }
@@ -869,56 +884,66 @@ public:
     return sizeof(*this);
   }
 
-  void assertValid() {
-    int* flags = heap.alloc<int>(validTuples.size());
-    int* inconsistentVar = heap.alloc<int>(validTuples.size());
-    for (int i = 0; i < validTuples.size(); i++) {
-      flags[i] = 1;
-      for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-        CTAdvisor<View> a = a0.advisor();
-        if (!a.view().in(tupleSet[i][a.index])) {
-          flags[i] = 0;
-          inconsistentVar[i] = a.index;
-        }
-      }
-      if (flags[i] != validTuples.get(i)) {
-        printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
-               inconsistentVar[i], id);
-        for (int j = 0; j < arity; j++) {
-          printf("%d ", tupleSet[i][j]);
-        }
-        printf("\n");
-        printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
-        printf("flag=%d\n", flags[i]);
-        validTuples.print();
-        printState();
-      }
-    }
-    for (int i = 0; i < validTuples.size(); i++) {
-      assert(flags[i] == validTuples.get(i));
-    }
-  }
+  // void assertValid() {
+  //   int* flags = heap.alloc<int>(validTuples.size());
+  //   int* inconsistentVar = heap.alloc<int>(validTuples.size());
+  //   for (int i = 0; i < validTuples.size(); i++) {
+  //     flags[i] = 1;
+  //     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+  //       CTAdvisor<View> a = a0.advisor();
+  //       if (!a.view().in(tupleSet[i][a.index])) {
+  //         flags[i] = 0;
+  //         inconsistentVar[i] = a.index;
+  //       }
+  //     }
+  //     if (flags[i] != validTuples.get(i)) {
+  //       printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
+  //              inconsistentVar[i], id);
+  //       for (int j = 0; j < arity; j++) {
+  //         printf("%d ", tupleSet[i][j]);
+  //       }
+  //       printf("\n");
+  //       printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
+  //       printf("flag=%d\n", flags[i]);
+  //       validTuples.print();
+  //       printState();
+  //     }
+  //   }
+  //   for (int i = 0; i < validTuples.size(); i++) {
+  //     assert(flags[i] == validTuples.get(i));
+  //   }
+  // }
 
-  void printState() {
-    printf("State for prop %d\n", id);
-    printf("nvalid=%d\n", validTuples.nset());
-    printf("is_empty=%d\n", validTuples.is_empty());
+  // void printState() {
+  //   printf("State for prop %d\n", id);
+  //   printf("nvalid=%d\n", validTuples.nset());
+  //   printf("is_empty=%d\n", validTuples.is_empty());
+  //   for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+  //     CTAdvisor<View> a = a0.advisor();
+  //     printf("x[%d]= ", a.index);
+  //     cout << a.view() << endl;
+  //   }
+
+  //   for (int m = 0; m < validTuples.size(); m++) {
+  //     if (validTuples.get(m)) {
+  //       for (int j = 0; j < arity; j++) {
+  //         printf("%d ", tupleSet[m][j]);
+  //       }
+  //       printf(" : %d\n", validTuples.get(m));
+
+  //     }
+  //   }
+  //   printf("unassigned=%d\n", unassigned);
+  // }
+
+  bool unassignedCorrect() {
+    int count_unassigned = 0;
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
-      printf("x[%d]= ", a.index);
-      cout << a.view() << endl;
+      count_unassigned += !a.view().assigned();
     }
 
-    for (int m = 0; m < validTuples.size(); m++) {
-      if (validTuples.get(m)) {
-        for (int j = 0; j < arity; j++) {
-          printf("%d ", tupleSet[m][j]);
-        }
-        printf(" : %d\n", validTuples.get(m));
-
-      }
-    }
-    printf("unassigned=%d\n", unassigned);
+    return count_unassigned == unassigned;
   }
   
 };
