@@ -259,8 +259,6 @@ template<class View>
 class CompactTable : public Propagator {
 protected:
   enum Status {NOT_PROPAGATING,PROPAGATING};
-  /// The indices of valid tuples
-  SparseBitSet<Space&> validTuples;
   /// Council of advisors
   Council<CTAdvisor<View> > c;
 #ifdef FIX
@@ -345,8 +343,8 @@ private:
     unsigned int bit_index = words.getword(index[limit]).next();
     return index[limit] * words.get_bpb() + bit_index;
   }
-  /// Reverse mask
-  void reverse_mask(BitSet& b) const {
+  /// Flip the bits in mask
+  void flip_mask(BitSet& b) const {
     BitSet::flip_by_map(b,index,limit);
   }
   /// Clear \a set bits in words
@@ -385,7 +383,6 @@ public:
     : Propagator(home), c(home),
       status(NOT_PROPAGATING),
       touched_var(-1),
-      validTuples(static_cast<Space&>(home)),
       arity(x0.size()),
       id(propid++),
       unassigned(x0.size())
@@ -400,9 +397,6 @@ public:
       return;
     } 
     
-    // Initialise validTupels with nsupports bit set
-    validTuples.init(nsupports);
-
     init_sparse_bit_set(home, nsupports);
     
     // Because we use heap allocated data
@@ -526,7 +520,6 @@ public:
     : Propagator(home,share,p),
       status(NOT_PROPAGATING),
       touched_var(-1),
-      validTuples(home, p.validTuples),
       arity(p.arity),
       unassigned(p.unassigned),
       id(p.id),
@@ -602,27 +595,27 @@ public:
     mask.allocate(r,sz);
     clear_mask(mask);
 
-    // Int::ViewRanges<View> rngs(a.view());
-    // int cur, max, row;
-    // while (rngs()) {
-    //   cur = rngs.min();
-    //   max = rngs.max();
-    //   row = a.supports.row(cur);
-    //   while (cur <= max) {
-    //     assert(a.view().in(cur));
-    //     validTuples.add_to_mask(a.supports(row),mask);
-    //     ++cur;
-    //     ++row;
-    //   }
-    //   ++rngs;
-    // }
-    
-    Int::ViewValues<View> it(a.view());
-    while (it()) {
-      assert(a.view().in(it.val()));
-      add_to_mask(a.supports[it.val()],mask);
-      ++it;
+    Int::ViewRanges<View> rngs(a.view());
+    int cur, max, row;
+    while (rngs()) {
+      cur = rngs.min();
+      max = rngs.max();
+      row = a.supports.row(cur);
+      while (cur <= max) {
+        assert(a.view().in(cur));
+        add_to_mask(a.supports(row),mask);
+        ++cur;
+        ++row;
+      }
+      ++rngs;
     }
+    
+    // Int::ViewValues<View> it(a.view());
+    // while (it()) {
+    //   assert(a.view().in(it.val()));
+    //   add_to_mask(a.supports[it.val()],mask);
+    //   ++it;
+    // }
     intersect_with_mask(mask);
 
     return true;
@@ -958,62 +951,8 @@ public:
     (void) Propagator::dispose(home);
     return sizeof(*this);
   }
-
-  // void assertValid() {
-  //   int* flags = heap.alloc<int>(validTuples.size());
-  //   int* inconsistentVar = heap.alloc<int>(validTuples.size());
-  //   for (int i = 0; i < validTuples.size(); i++) {
-  //     flags[i] = 1;
-  //     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-  //       CTAdvisor<View> a = a0.advisor();
-  //       if (!a.view().in(tupleSet[i][a.index])) {
-  //         flags[i] = 0;
-  //         inconsistentVar[i] = a.index;
-  //       }
-  //     }
-  //     if (flags[i] != validTuples.get(i)) {
-  //       printf("Inconsistent tuple for (at least) var %d, detected by %d:\n",
-  //              inconsistentVar[i], id);
-  //       for (int j = 0; j < arity; j++) {
-  //         printf("%d ", tupleSet[i][j]);
-  //       }
-  //       printf("\n");
-  //       printf("validTuples.get(%d)=%d\n", i, validTuples.get(i));
-  //       printf("flag=%d\n", flags[i]);
-  //       validTuples.print();
-  //       printState();
-  //     }
-  //   }
-  //   for (int i = 0; i < validTuples.size(); i++) {
-  //     assert(flags[i] == validTuples.get(i));
-  //   }
-  // }
-
-  // void printState() {
-  //   printf("State for prop %d\n", id);
-  //   printf("nvalid=%d\n", validTuples.nset());
-  //   printf("is_empty=%d\n", validTuples.is_empty());
-  //   for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-  //     CTAdvisor<View> a = a0.advisor();
-  //     printf("x[%d]= ", a.index);
-  //     cout << a.view() << endl;
-  //   }
-
-  //   for (int m = 0; m < validTuples.size(); m++) {
-  //     if (validTuples.get(m)) {
-  //       for (int j = 0; j < arity; j++) {
-  //         printf("%d ", tupleSet[m][j]);
-  //       }
-  //       printf(" : %d\n", validTuples.get(m));
-
-  //     }
-  //   }
-  //   printf("unassigned=%d\n", unassigned);
-  // }
   
 };
-
-
 
 // Post the table constraint
 namespace Gecode {
