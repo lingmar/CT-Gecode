@@ -7,8 +7,7 @@
 
 int propid = 0;
 
-//#define NOISY 0
-//#define BUG 0
+#define NOISY 0
 
 //#define DEBUG
 
@@ -421,7 +420,10 @@ public:
 
     init_sparse_bit_set(home, nsupports);
 
-    printf("Constructor %d\n", id);
+    if (NOISY) {
+      printf("Constructor %d\n", id);      
+    }
+
     printState();
     
     // Because we use heap allocated data
@@ -551,7 +553,10 @@ public:
       limit(p.limit)
       //words(home,BitSet::get_bpb()*(p.limit+1),p.words)
   {
-    printf("COPY\n");
+    if (NOISY) {
+      printf("COPY %d\n", id);      
+    }
+
     // Update advisors
     c.update(home,share,p.c);
 #ifdef FIX
@@ -591,7 +596,10 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
-    printf("Entry propagate for prop %d\n", id);
+    if (NOISY) {
+      printf("Entry propagate for prop %d\n", id);      
+    }
+
     printState();
 
     status = PROPAGATING;
@@ -609,7 +617,10 @@ public:
 #else
     ExecStatus msg = filterDomains(home);
 #endif // FIX
-    printf("Exit propagate for prop %d\n", id);
+    if (NOISY) {
+      printf("Exit propagate for prop %d\n", id);      
+    }
+
     printState();
     
     status = NOT_PROPAGATING;
@@ -647,13 +658,33 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-    
-    printf("Entry advise for prop %d, var %d\n", id, a.index);
+    if (NOISY) {
+      printf("Entry advise for prop %d, var %d\n", id, a.index);      
+    }
+
+    if (disabled()) {
+      printf("Prop %d disabled\n", id);
+    }
+
+    // Do not fail a disabled propagator
+    if (is_empty()) {
+      if (NOISY) {
+        printf("FAIL %d\n", id);        
+      }
+      if (disabled()) {
+        printf("ES_NOFIX, %d\n", id);
+        return home.ES_NOFIX_DISPOSE(c,a);
+      }
+      printf("ES_FAILED, %d\n", id);
+      return ES_FAILED;
+    }
+        
     printState();
-    
-    assert(nset() > 0);
-    assert(limit >= 0);
-    assert(nzerowords());
+
+    assert(!home.failed());
+    // assert(nset() > 0);
+    // assert(limit >= 0);
+    // assert(nzerowords());
     
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
@@ -711,13 +742,23 @@ public:
     }
 #endif // DELTA
 
-    printf("Exit advise for prop %d, var %d\n", id, a.index);
+    if (NOISY) {
+      printf("Exit advise for prop %d, var %d\n", id, a.index);      
+    }
+
     printState();
     
     // Do not fail a disabled propagator
     if (is_empty()) {
-      printf("FAIL %d\n", id);
-      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+      if (NOISY) {
+        printf("FAIL %d\n", id);        
+      }
+      if (disabled()) {
+        printf("ES_NOFIX, %d\n", id);
+        return home.ES_NOFIX_DISPOSE(c,a);
+      }
+      printf("ES_FAILED, %d\n", id);
+      return ES_FAILED;
     }
 
     assert(nset() > 0);
@@ -775,11 +816,7 @@ public:
         // Fix to max_val if min_val not supported
         const int row_min = a.supports.row(min_val);
         if (!supported(a,row_min)) {
-#ifdef BUG
-          v.eq(home,max_val);
-#else
           GECODE_ME_CHECK(v.eq(home,max_val));          
-#endif // BUG
           --unassigned;
           break;
         }
@@ -787,11 +824,7 @@ public:
         // Fix to min_val if max_val not supported
         const int row_max = a.supports.row(max_val);
         if (!supported(a,row_max)) {
-#ifdef BUG
-          v.eq(home,min_val);
-#else          
           GECODE_ME_CHECK(v.eq(home,min_val));    
-#endif // BUG
           --unassigned;
           break;
         }
@@ -817,10 +850,8 @@ public:
             ++row;
           }
           ModEvent me_gq = v.gq(home,new_min);
-#ifndef BUG
           if (me_failed(me_gq))
             return ES_FAILED;
-#endif // BUG
     
           if (me_gq == ME_INT_VAL) {
             --unassigned;
@@ -834,10 +865,8 @@ public:
             --row;
           }
           ModEvent me_lq = v.lq(home,new_max);
-#ifndef BUG
           if (me_failed(me_lq)) 
             return ES_FAILED;
-#endif // BUG
      
           if (me_lq == ME_INT_VAL) {
             --unassigned;
@@ -881,20 +910,16 @@ public:
 
           // Perform bounds propagation first
           ModEvent me_gq = v.gq(home,new_min);
-#ifndef BUG
           if (me_failed(me_gq))
             return ES_FAILED;
-#endif // BUG
           
           if (me_gq == ME_INT_VAL) {
             --unassigned;
             break;
           }
           ModEvent me_lq = v.lq(home,new_max);
-#ifndef BUG
           if (me_failed(me_lq))
             return ES_FAILED;
-#endif // BUG
           if (me_lq == ME_INT_VAL) {
             --unassigned;
             break;
@@ -931,21 +956,15 @@ public:
         if (nremoves > 0) {
           assert(nremoves < v.size());
           if (nremoves == v.size() - 1) {
-#ifdef BUG
-            v.eq(home,last_support);
-#else 
             GECODE_ME_CHECK(v.eq(home,last_support));
-#endif // BUG
        
             --unassigned;
             break;
           } else {
             Iter::Values::Array r(nq_start,nremoves);
             ModEvent me = v.minus_v(home,r,false);
-#ifndef BUG
             if (me_failed(me))
               return ES_FAILED;
-#endif // BUG
             if (me == ME_INT_VAL) {
               --unassigned;
               break;
@@ -988,12 +1007,7 @@ public:
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
-#ifdef BUG
-      v.eq(home,t[a.index])
-#else      
       GECODE_ME_CHECK(v.eq(home,t[a.index]));
-#endif // BUG
-      
     }
     return home.ES_SUBSUMED(*this);
   }
@@ -1031,27 +1045,30 @@ public:
   }
 
   void printState() {
-    printf("state for %d\n", id);
-    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-      CTAdvisor<View> a = a0.advisor();
-      printf("x[%d] = ", a.index);
-      cout << a.view() << endl;
-    }
+    if (NOISY) {
+      printf("state for %d\n", id);
+      for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+        CTAdvisor<View> a = a0.advisor();
+        printf("x[%d] = ", a.index);
+        cout << a.view() << endl;
+      }
           
-    printf("limit=%d\n", limit);
-    printf("nset=%d\n", nset());
-    words.print();
-    printf("index=");
-    if (limit >= static_cast<int>(Support::BitSetData::data(words.size()))) {
-      printf("limit=%d,nwords=%d, limit >= nwords = %d\n", limit,
-             Support::BitSetData::data(words.size()),
-             limit >= Support::BitSetData::data(words.size()));
+      printf("limit=%d\n", limit);
+      printf("nset=%d\n", nset());
+      words.print();
+      printf("index=");
+      if (limit >= static_cast<int>(Support::BitSetData::data(words.size()))) {
+        printf("limit=%d,nwords=%d, limit >= nwords = %d\n", limit,
+               Support::BitSetData::data(words.size()),
+               limit >= Support::BitSetData::data(words.size()));
+      }
+      assert(limit < static_cast<int>(Support::BitSetData::data(words.size())));
+      for (int i = 0; i <= limit; i++) {
+        //  printf("%d (%d(%d))", index[i], !words.getword(i).none(), !words.getword(index[i]).none());
+      }
+      printf("\n");
+
     }
-    assert(limit < static_cast<int>(Support::BitSetData::data(words.size())));
-    for (int i = 0; i <= limit; i++) {
-      //  printf("%d (%d(%d))", index[i], !words.getword(i).none(), !words.getword(index[i]).none());
-    }
-    printf("\n");
   }
 };
 
