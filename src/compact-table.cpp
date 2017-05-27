@@ -601,7 +601,10 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-        
+
+    assert(nset() > 0);
+    assert(limit >= 0);
+    
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
@@ -953,6 +956,21 @@ public:
 
     return count_unassigned == unassigned;
   }
+
+  int nset() {
+    int count = 0;
+    for (int i = 0; i <= limit; i++) {
+      int offset = index[i];
+      for (int j = 0; j < BitSet::get_bpb(); j++) {
+        count += words.get(offset*BitSet::get_bpb() + j);
+        if (offset*BitSet::get_bpb() + j == words.size() - 1) {
+          break;
+        }
+      }
+    }
+    return count;
+  }
+
   
 };
 
