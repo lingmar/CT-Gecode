@@ -622,7 +622,8 @@ public:
     }
 
     printState();
-    
+
+    touched_var = -1;
     status = NOT_PROPAGATING;
     assert(limit >= 0);
     assert(nset() > 0);
@@ -662,7 +663,7 @@ public:
       printf("Entry advise for prop %d, var %d\n", id, a.index);      
     }
 
-    if (disabled()) {
+    if (disabled() && NOISY) {
       printf("Prop %d disabled\n", id);
     }
 
@@ -671,11 +672,14 @@ public:
       if (NOISY) {
         printf("FAIL %d\n", id);        
       }
-      if (disabled()) {
+      if (disabled() && NOISY) {
         printf("ES_NOFIX, %d\n", id);
         return home.ES_NOFIX_DISPOSE(c,a);
       }
-      printf("ES_FAILED, %d\n", id);
+      if (NOISY) {
+        printf("ES_FAILED, %d\n", id);        
+      }
+
       return ES_FAILED;
     }
         
@@ -753,11 +757,14 @@ public:
       if (NOISY) {
         printf("FAIL %d\n", id);        
       }
-      if (disabled()) {
+      if (disabled() && NOISY) {
         printf("ES_NOFIX, %d\n", id);
         return home.ES_NOFIX_DISPOSE(c,a);
       }
-      printf("ES_FAILED, %d\n", id);
+      if (NOISY) {
+        printf("ES_FAILED, %d\n", id);        
+      }
+
       return ES_FAILED;
     }
 
@@ -801,7 +808,6 @@ public:
       
       // No point filtering variable if it was the only modified variable
       if (touched_var == i) {
-        touched_var = -1;
         continue;
       }
 
