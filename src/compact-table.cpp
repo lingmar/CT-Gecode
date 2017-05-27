@@ -5,6 +5,8 @@
 #include <assert.h>
 #include "info-base.hpp"
 
+int propid = 0;
+
 //#define NOISY 0
 //#define BUG 0
 
@@ -12,7 +14,7 @@
 
 //#define LONG_FILTER
 //#define FIX
-#define DELTA
+//#define DELTA
 
 //#define forceinline __attribute__ ((noinline))
 
@@ -277,6 +279,8 @@ protected:
   int* index;
   /// Equal to number of non-zero words minus 1
   int limit;
+  /// Debugging
+  int id;
 private:
   /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
   forceinline void
@@ -289,6 +293,10 @@ private:
       index[i] = i;
     // Set the set nr of bits in words
     clearall(s, true);
+    assert(nzerowords());
+    assert(limit >= 0);
+    assert(nset() == s);
+    assert(limit <= Support::BitSetData::data(words.size()) - 1);
   }
   /// Check if sparse bit set is empty
   forceinline bool
@@ -298,56 +306,82 @@ private:
   /// Clear the mask
   forceinline void
   clear_mask(BitSet& mask) {
-    BitSet::clear_by_map(mask,index,limit);
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::clear_by_map(mask,limit);
   }
   /// Add bits in \a b to \a mask
   forceinline void
   add_to_mask(const BitSet& b, BitSet& mask) const {
+    assert(limit >= 0);
+    assert(nzerowords());
     BitSet::orbs(mask, b, index, limit);
   }
   /// Intersect words with \a mask
   forceinline void
   intersect_with_mask(const BitSet& mask) {
+    assert(limit >= 0);
+    assert(nzerowords());
     BitSet::intersect_by_map(words,mask,index,&limit);
   }
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   forceinline int
   intersect_index(const BitSet& b) const {
+    assert(limit >= 0);
+    assert(nzerowords());
     return BitSet::intersect_index_by_map(words,b,index,limit);
   }
   /// Perform "nand" with \a b
   forceinline bool
   nand_with_mask(const BitSet& b) {
+    assert(limit >= 0);
+    assert(nzerowords());
     return BitSet::nand_by_map(words,b,index,&limit);
   }
   /// Test whether exactly one bit is set
   forceinline bool
   one() const {
-    return limit == 0 && words.one(index[limit]);
+    assert(limit >= 0);
+    assert(nzerowords());
+    return limit == 0 && words.one(0);
   }
   /// Get the index of the set bit (only after one() returns true)
   forceinline unsigned int
   index_of_fixed() const {
+    assert(limit >= 0);
+    assert(nzerowords());
     // The word index is index[limit]
     // Bit index is word_index*bpb + bit_index
-    unsigned int bit_index = words.getword(index[limit]).next();
-    return index[limit] * words.get_bpb() + bit_index;
+    unsigned int bit_index = words.getword(0).next();
+    return index[0] * words.get_bpb() + bit_index;
   }
-  /// Flip the bits in mask
-  void flip_mask(BitSet& b) const {
-    BitSet::flip_by_map(b,index,limit);
-  }
+  // /// Flip the bits in mask
+  // void flip_mask(BitSet& b) const {
+  //   BitSet::flip_by_map(b,index,limit);
+  // }
   /// Clear \a set bits in words
   void clearall(unsigned int sz, bool setbits) {
-      int start_bit = 0;
-      int complete_words = sz / BitSet::get_bpb();
-      if (complete_words > 0) {
-        start_bit = complete_words * BitSet::get_bpb() + 1;
-        words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,setbits);
+    int start_bit = 0;
+    int complete_words = sz / BitSet::get_bpb();
+    if (complete_words > 0) {
+      start_bit = complete_words * BitSet::get_bpb() + 1;
+      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,setbits);
+    }
+    for (unsigned int i = start_bit; i < sz; i++) {
+      setbits ? words.set(i) : words.clear(i);
+    }
+  }
+  int nset() {
+    int count = 0;
+    for (int i = 0; i <= limit; i++) {
+      for (int j = 0; j < BitSet::get_bpb(); j++) {
+        count += words.get(i*BitSet::get_bpb() + j);
+        if (i*BitSet::get_bpb() + j == words.size() - 1) {
+          break;
+        }
       }
-      for (unsigned int i = start_bit; i < sz; i++) {
-        setbits ? words.set(i) : words.clear(i);
-      }
+    }
+    return count;
   }
   
 public:
@@ -374,6 +408,7 @@ public:
       status(NOT_PROPAGATING),
       touched_var(-1),
       arity(x0.size()),
+      id(propid++),
       unassigned(x0.size())
   {
     // Initialise supports and post advisors
@@ -383,8 +418,11 @@ public:
       home.fail();
       return;
     } 
-    
+
     init_sparse_bit_set(home, nsupports);
+
+    printf("Constructor %d\n", id);
+    printState();
     
     // Because we use heap allocated data
     home.notice(*this,AP_DISPOSE);
@@ -509,23 +547,23 @@ public:
       arity(p.arity),
       unassigned(p.unassigned),
       max_dom_size(p.max_dom_size),
+      id(p.id),
       limit(p.limit)
+      //words(home,BitSet::get_bpb()*(p.limit+1),p.words)
   {
+    printf("COPY\n");
     // Update advisors
     c.update(home,share,p.c);
 #ifdef FIX
     tupleSet.update(home,share,p.tupleSet);
 #endif // FIX
     index = home.alloc<int>(limit + 1);
-    int max_index = p.index[0];
-    for (int i = limit+1; i--; ) {
+    for (int i = limit+1; i--; )
       index[i] = p.index[i];
-      if (index[i] > max_index)
-        max_index = index[i];
-    }
-    unsigned int nbits = (max_index + 1) * BitSet::get_bpb();
+    unsigned int nbits = (limit + 1) * BitSet::get_bpb();
     words.allocate(home, nbits);
     words.copy(nbits, p.words);
+    assert(limit <= Support::BitSetData::data(words.size()) - 1);
   }
 
   // Create copy during cloning
@@ -553,11 +591,15 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
+    printf("Entry propagate for prop %d\n", id);
+    printState();
+
     status = PROPAGATING;
     
     if (is_empty())
       return ES_FAILED;
 
+    assert(nset() > 0);
 #ifdef FIX
     ExecStatus msg;
     if (one()) 
@@ -567,8 +609,12 @@ public:
 #else
     ExecStatus msg = filterDomains(home);
 #endif // FIX
-
+    printf("Exit propagate for prop %d\n", id);
+    printState();
+    
     status = NOT_PROPAGATING;
+    assert(limit >= 0);
+    assert(nset() > 0);
     return msg;
   }
 
@@ -601,7 +647,14 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-        
+    
+    printf("Entry advise for prop %d, var %d\n", id, a.index);
+    printState();
+    
+    assert(nset() > 0);
+    assert(limit >= 0);
+    assert(nzerowords());
+    
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
@@ -612,7 +665,14 @@ public:
 
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      intersect_with_mask(a.supports[x.val()]);
+      // Region r(home);
+      // BitSet mask;
+      // mask.allocate(r,words.size());
+      // clear_mask(mask);
+          
+      // add_to_mask(a.supports[x.val()]);
+      // intersect_with_mask(a.supports[x.val()]);
+      reset_based_update(a,home);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
@@ -651,10 +711,18 @@ public:
     }
 #endif // DELTA
 
-    // Do not fail a disabled propagator
-    if (is_empty())
-      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+    printf("Exit advise for prop %d, var %d\n", id, a.index);
+    printState();
     
+    // Do not fail a disabled propagator
+    if (is_empty()) {
+      printf("FAIL %d\n", id);
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+    }
+
+    assert(nset() > 0);
+    assert(limit >= 0);
+    assert(nzerowords());
     // Schedule propagator and dispose if assigned
     if (touched_var == -1) // no touched variable yet!
       touched_var = a.index;
@@ -673,6 +741,7 @@ public:
     if (unassigned == 0)
       return home.ES_SUBSUMED(*this);
 
+    assert(nzerowords());
     // Count the number of scanned unassigned variables
     unsigned int count_unassigned = unassigned;
     // Array to collect values to remove
@@ -895,16 +964,14 @@ public:
 
   forceinline bool
   supported(CTAdvisor<View>& a, int row) {
-    // TODO: index > maxindex in validTuples?
-    int index = a.residues[row];
+    int r = a.residues[row];
+    r = limit + 1;
     const BitSet& support_row = a.supports(row);
-    Support::BitSetData w = BitSet::a(words,support_row,index);
-
     bool flag = true;
-    if (w.none()) {
-      index = intersect_index(support_row);
-      if (index != -1) {
-        a.residues[row] = index;
+    if (r > limit || BitSet::a(words,r,support_row,index[r]).none()) {
+      r = intersect_index(support_row);
+      if (r != -1) {
+        a.residues[row] = r;
       } else {
         flag = false;
       }
@@ -944,6 +1011,15 @@ public:
     return sizeof(*this);
   }
 
+  bool nzerowords() const {
+    for (int i = 0; i <= limit; i++) {
+      if (words.getword(i).none()) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   bool unassignedCorrect() {
     int count_unassigned = 0;
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
@@ -953,8 +1029,33 @@ public:
 
     return count_unassigned == unassigned;
   }
-  
+
+  void printState() {
+    printf("state for %d\n", id);
+    for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+      CTAdvisor<View> a = a0.advisor();
+      printf("x[%d] = ", a.index);
+      cout << a.view() << endl;
+    }
+          
+    printf("limit=%d\n", limit);
+    printf("nset=%d\n", nset());
+    words.print();
+    printf("index=");
+    if (limit >= static_cast<int>(Support::BitSetData::data(words.size()))) {
+      printf("limit=%d,nwords=%d, limit >= nwords = %d\n", limit,
+             Support::BitSetData::data(words.size()),
+             limit >= Support::BitSetData::data(words.size()));
+    }
+    assert(limit < static_cast<int>(Support::BitSetData::data(words.size())));
+    for (int i = 0; i <= limit; i++) {
+      //  printf("%d (%d(%d))", index[i], !words.getword(i).none(), !words.getword(index[i]).none());
+    }
+    printf("\n");
+  }
 };
+
+
 
 // Post the table constraint
 namespace Gecode {
