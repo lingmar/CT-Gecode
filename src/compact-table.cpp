@@ -53,7 +53,7 @@ public:
       IndexType type;
       /// Info object
       InfoBase* info;
-      /// Default constructor (yields empty set)
+      /// Default constructor (yields empty object)
       SupportsI(void) {}
       /// Copy \a s
       SupportsI(const SupportsI& s) 
@@ -288,7 +288,7 @@ private:
     for (int i = limit+1; i--; )
       index[i] = i;
     // Set the set nr of bits in words
-    clearall(s, true);
+    setall(s);
   }
   /// Check if sparse bit set is empty
   forceinline bool
@@ -298,36 +298,43 @@ private:
   /// Clear the mask
   forceinline void
   clear_mask(BitSet& mask) {
+    assert(limit >= 0);
     BitSet::clear_by_map(mask,index,limit);
   }
   /// Add bits in \a b to \a mask
   forceinline void
   add_to_mask(const BitSet& b, BitSet& mask) const {
-    BitSet::orbs(mask, b, index, limit);
+    assert(limit >= 0);
+    BitSet::or_by_map(mask, b, index, limit);
   }
   /// Intersect words with \a mask
   forceinline void
   intersect_with_mask(const BitSet& mask) {
+    assert(limit >= 0);
     BitSet::intersect_by_map(words,mask,index,&limit);
   }
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   forceinline int
   intersect_index(const BitSet& b) const {
+    assert(limit >= 0);
     return BitSet::intersect_index_by_map(words,b,index,limit);
   }
   /// Perform "nand" with \a b
   forceinline bool
   nand_with_mask(const BitSet& b) {
+    assert(limit >= 0);
     return BitSet::nand_by_map(words,b,index,&limit);
   }
   /// Test whether exactly one bit is set
   forceinline bool
   one() const {
+    assert(limit >= 0);
     return limit == 0 && words.one(index[limit]);
   }
   /// Get the index of the set bit (only after one() returns true)
   forceinline unsigned int
   index_of_fixed() const {
+    assert(limit >= 0);
     // The word index is index[limit]
     // Bit index is word_index*bpb + bit_index
     unsigned int bit_index = words.getword(index[limit]).next();
@@ -335,19 +342,21 @@ private:
   }
   /// Flip the bits in mask
   void flip_mask(BitSet& b) const {
+    assert(limit >= 0);
     BitSet::flip_by_map(b,index,limit);
   }
-  /// Clear \a set bits in words
-  void clearall(unsigned int sz, bool setbits) {
-      int start_bit = 0;
-      int complete_words = sz / BitSet::get_bpb();
-      if (complete_words > 0) {
-        start_bit = complete_words * BitSet::get_bpb() + 1;
-        words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,setbits);
-      }
-      for (unsigned int i = start_bit; i < sz; i++) {
-        setbits ? words.set(i) : words.clear(i);
-      }
+  /// Clear set bits in words
+  void setall(unsigned int sz) {
+    assert(limit >= 0);
+    int start_bit = 0;
+    int complete_words = sz / BitSet::get_bpb();
+    if (complete_words > 0) {
+      start_bit = complete_words * BitSet::get_bpb() + 1;
+      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
+    }
+    for (unsigned int i = start_bit; i < sz; i++) {
+      words.set(i);
+    }
   }
   
 public:
@@ -568,6 +577,7 @@ public:
     ExecStatus msg = filterDomains(home);
 #endif // FIX
 
+    touched_var = -1;
     status = NOT_PROPAGATING;
     return msg;
   }
@@ -601,9 +611,6 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-
-    assert(nset() > 0);
-    assert(limit >= 0);
     
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
@@ -613,6 +620,13 @@ public:
       return ES_FIX;
     }
 
+    // Do not fail a disabled propagator
+    if (is_empty())
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+
+    assert(nset() > 0);
+    assert(limit >= 0);
+    
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
       intersect_with_mask(a.supports[x.val()]);
@@ -644,7 +658,7 @@ public:
             nand_with_mask(s);
         }
       
-      } else { // Domain size smaller than delta, incremental update
+      } else { // Domain size smaller than delta, use reset-based update
         reset_based_update(a,home);
       }
     } 
@@ -658,12 +672,13 @@ public:
     if (is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
     
-    // Schedule propagator and dispose if assigned
+    // Save index if only modified variable
     if (touched_var == -1) // no touched variable yet!
       touched_var = a.index;
     else if (touched_var != a.index) // some other variable is touched
       touched_var = -2;
-      
+
+    // Schedule propagator and dispose if assigned
     if (a.view().assigned()) {
       unassigned--;
       return home.ES_NOFIX_DISPOSE(c,a);
@@ -693,10 +708,8 @@ public:
       int i = a.index;
       
       // No point filtering variable if it was the only modified variable
-      if (touched_var == i) {
-        touched_var = -1;
+      if (touched_var == i)
         continue;
-      }
 
       switch (v.size()) {
       case 1: {  // Variable assigned, nothing to be done.
@@ -957,6 +970,7 @@ public:
     return count_unassigned == unassigned;
   }
 
+  // Debugging purpose only
   int nset() {
     int count = 0;
     for (int i = 0; i <= limit; i++) {

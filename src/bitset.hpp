@@ -51,8 +51,8 @@ public:
   /// Test whether exactly one bit is set for word index \i
   bool one(unsigned int i) const;
   /// Perform or with \a a and \a b with mapping \a map
-  static void orbs(BitSet& a, const BitSet& b,
-                   const int* map, int map_size);
+  static void or_by_map(BitSet& a, const BitSet& b,
+                        const int* map, int map_size);
   /// Find index of non-empty intersecting word with \a a and \a b
   static int intersect_index_by_map(const BitSet& a, const BitSet& b,
                              const int* map, int map_last);
@@ -86,7 +86,7 @@ template<class A>
 forceinline
 BitSet::BitSet(A& a,unsigned int sz,bool setbits)
   : BitSetBase(a,sz,setbits) {
-  // Clear bit sz (set in RawBitSetBase)
+  // Clear the sentinel bit
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
@@ -94,7 +94,7 @@ template<class A>
 forceinline
 BitSet::BitSet(A& a, const BitSet& bs)
   : BitSetBase(a,bs) {
-  // Clear bit sz
+  // Clear the sentinel bit
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
@@ -105,7 +105,7 @@ BitSet::BitSet(A& a, unsigned int sz, const BitSet& bs)
   assert(sz <= bs.sz);
   for (unsigned int i = Gecode::Support::BitSetData::data(sz+1); i--; )
     data[i] = bs.data[i];
-  // Clear bit sz
+  // Clear the sentinel bit
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
@@ -190,7 +190,7 @@ BitSet::init(A& a, unsigned int s, bool setbits) {
   assert(sz == 0);
   RawBitSetBase::init(a,s,setbits);
   sz=s;
-  // Clear bit sz
+  // Clear the sentinel bit
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 
@@ -201,8 +201,8 @@ BitSet::one(unsigned int i) const {
 }
 
 forceinline void
-BitSet::orbs(BitSet& a, const BitSet& b,
-             const int* map, int map_last) {
+BitSet::or_by_map(BitSet& a, const BitSet& b,
+                  const int* map, int map_last) {
   Gecode::Support::BitSetData* a_data = a.data;
   Gecode::Support::BitSetData* b_data = b.data;
   for (int i = map_last; i >= 0; i--) {
