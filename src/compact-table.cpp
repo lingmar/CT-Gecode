@@ -13,9 +13,7 @@ int propid = 0;
 
 //#define LONG_FILTER
 //#define FIX
-//#define DELTA
-
-//#define forceinline __attribute__ ((noinline))
+#define DELTA
 
 /** 
  * Threshold value for using hash table
@@ -429,12 +427,6 @@ public:
 
     init_sparse_bit_set(home, nsupports);
 
-    if (NOISY) {
-      printf("Constructor %d\n", id);      
-    }
-
-    printState();
-    
     // Because we use heap allocated data
     home.notice(*this,AP_DISPOSE);
     
@@ -562,10 +554,6 @@ public:
       limit(p.limit)
       //words(home,BitSet::get_bpb()*(p.limit+1),p.words)
   {
-    if (NOISY) {
-      printf("COPY %d\n", id);      
-    }
-
     // Update advisors
     c.update(home,share,p.c);
 #ifdef FIX
@@ -605,17 +593,9 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
-    if (NOISY) {
-      printf("Entry propagate for prop %d\n", id);      
-    }
-
-    printState();
-
     status = PROPAGATING;
-    
     if (is_empty())
       return ES_FAILED;
-
     assert(nset() > 0);
 #ifdef FIX
     ExecStatus msg;
@@ -626,11 +606,6 @@ public:
 #else
     ExecStatus msg = filterDomains(home);
 #endif // FIX
-    if (NOISY) {
-      printf("Exit propagate for prop %d\n", id);      
-    }
-
-    printState();
 
     touched_var = -1;
     status = NOT_PROPAGATING;
@@ -668,37 +643,13 @@ public:
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-    if (NOISY) {
-      printf("Entry advise for prop %d, var %d\n", id, a.index);      
-    }
-
-    if (disabled() && NOISY) {
-      printf("Prop %d disabled\n", id);
-    }
 
     // Do not fail a disabled propagator
-    if (is_empty()) {
-      if (NOISY) {
-        printf("FAIL %d\n", id);        
-      }
-      if (disabled() && NOISY) {
-        printf("ES_NOFIX, %d\n", id);
-        return home.ES_NOFIX_DISPOSE(c,a);
-      }
-      if (NOISY) {
-        printf("ES_FAILED, %d\n", id);        
-      }
+    if (is_empty())
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
 
-      return ES_FAILED;
-    }
+    assert(limit >= 0);
         
-    printState();
-
-    assert(!home.failed());
-    // assert(nset() > 0);
-    // assert(limit >= 0);
-    // assert(nzerowords());
-    
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
@@ -748,37 +699,21 @@ public:
     }
 #endif // DELTA
 
-    if (NOISY) {
-      printf("Exit advise for prop %d, var %d\n", id, a.index);      
-    }
-
-    printState();
-    
     // Do not fail a disabled propagator
-    if (is_empty()) {
-      if (NOISY) {
-        printf("FAIL %d\n", id);        
-      }
-      if (disabled() && NOISY) {
-        printf("ES_NOFIX, %d\n", id);
-        return home.ES_NOFIX_DISPOSE(c,a);
-      }
-      if (NOISY) {
-        printf("ES_FAILED, %d\n", id);        
-      }
-
-      return ES_FAILED;
-    }
-
+    if (is_empty())
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+    
     assert(nset() > 0);
     assert(limit >= 0);
     assert(nzerowords());
-    // Schedule propagator and dispose if assigned
+    
+    // Update touched_var
     if (touched_var == -1) // no touched variable yet!
       touched_var = a.index;
     else if (touched_var != a.index) // some other variable is touched
       touched_var = -2;
-      
+
+    // Schedule propagator and dispose if assigned
     if (a.view().assigned()) {
       unassigned--;
       return home.ES_NOFIX_DISPOSE(c,a);
@@ -791,7 +726,7 @@ public:
     if (unassigned == 0)
       return home.ES_SUBSUMED(*this);
 
-    assert(nzerowords());
+    assert(limit >= 0);
     // Count the number of scanned unassigned variables
     unsigned int count_unassigned = unassigned;
     // Array to collect values to remove
