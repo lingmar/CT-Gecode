@@ -291,7 +291,7 @@ private:
     for (int i = limit+1; i--; )
       index[i] = i;
     // Set the set nr of bits in words
-    clearall(s, true);
+    clearall(s);
     assert(nzerowords());
     assert(limit >= 0);
     assert(nset() == s);
@@ -307,14 +307,14 @@ private:
   clear_mask(BitSet& mask) {
     assert(limit >= 0);
     assert(nzerowords());
-    BitSet::clear_by_map(mask,limit);
+    BitSet::clear_by_map(mask, static_cast<unsigned int>(limit));
   }
   /// Add bits in \a b to \a mask
   forceinline void
   add_to_mask(const BitSet& b, BitSet& mask) const {
     assert(limit >= 0);
     assert(nzerowords());
-    BitSet::orbs(mask, b, index, limit);
+    BitSet::or_by_map(mask, b, index, static_cast<unsigned int>(limit));
   }
   /// Intersect words with \a mask
   forceinline void
@@ -322,13 +322,25 @@ private:
     assert(limit >= 0);
     assert(nzerowords());
     BitSet::intersect_by_map(words,mask,index,&limit);
+                             //static_cast<unsigned int*>(&limit));
+  }
+  /// Intersect words with a sparse mask
+  forceinline void
+  intersect_with_mask_sparse(const BitSet& mask) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::intersect_by_map(words,mask,index,&limit);
+    //static_cast<unsigned int*>(&limit));
   }
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   forceinline int
-  intersect_index(const BitSet& b) const {
+  intersect_index(const BitSet& b, int max_index) const {
     assert(limit >= 0);
+    assert(max_index >= 0);
+    assert(max_index <= limit);
     assert(nzerowords());
-    return BitSet::intersect_index_by_map(words,b,index,limit);
+    return BitSet::intersect_index_by_map(words,b,index,
+                                          static_cast<unsigned int>(max_index));
   }
   /// Perform "nand" with \a b
   forceinline bool
@@ -336,6 +348,7 @@ private:
     assert(limit >= 0);
     assert(nzerowords());
     return BitSet::nand_by_map(words,b,index,&limit);
+    //static_cast<unsigned int*>(&limit));
   }
   /// Test whether exactly one bit is set
   forceinline bool
@@ -349,27 +362,25 @@ private:
   index_of_fixed() const {
     assert(limit >= 0);
     assert(nzerowords());
+    assert(one());
     // The word index is index[limit]
     // Bit index is word_index*bpb + bit_index
     unsigned int bit_index = words.getword(0).next();
     return index[0] * words.get_bpb() + bit_index;
   }
-  // /// Flip the bits in mask
-  // void flip_mask(BitSet& b) const {
-  //   BitSet::flip_by_map(b,index,limit);
-  // }
   /// Clear \a set bits in words
-  void clearall(unsigned int sz, bool setbits) {
+  void clearall(unsigned int sz) {
     int start_bit = 0;
     int complete_words = sz / BitSet::get_bpb();
     if (complete_words > 0) {
       start_bit = complete_words * BitSet::get_bpb() + 1;
-      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,setbits);
+      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
     }
     for (unsigned int i = start_bit; i < sz; i++) {
-      setbits ? words.set(i) : words.clear(i);
+      words.set(i);
     }
   }
+  // Debugging only
   int nset() {
     int count = 0;
     for (int i = 0; i <= limit; i++) {
@@ -989,19 +1000,24 @@ public:
 
   forceinline bool
   supported(CTAdvisor<View>& a, int row) {
-    int r = a.residues[row];
-    r = limit + 1;
+    int r = static_cast<int>(a.residues[row]);
     const BitSet& support_row = a.supports(row);
-    bool flag = true;
-    if (r > limit || BitSet::a(words,r,support_row,index[r]).none()) {
-      r = intersect_index(support_row);
-      if (r != -1) {
-        a.residues[row] = r;
-      } else {
-        flag = false;
-      }
-    }
-    return flag;
+
+    if (r == 0)
+      return !BitSet::a(words,r,support_row,index[r]).none();
+
+    if (r > limit)
+      r = intersect_index(support_row, limit);
+    else if (!BitSet::a(words,r,support_row,index[r]).none())
+      return true;
+    else
+      r = intersect_index(support_row, r-1);
+
+    if (r != -1) {
+      a.residues[row] = static_cast<unsigned int>(r);
+      return true;
+    } 
+    return false;
   }
 
 #ifdef FIX
