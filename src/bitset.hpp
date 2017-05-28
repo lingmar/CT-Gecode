@@ -66,7 +66,7 @@ public:
   static void intersect_by_map_sparse(BitSet& a, const BitSet& b,
                                       int* map, int* map_last);
   /// Nand \a with mask \b with words described by \a map
-  static bool nand_by_map(BitSet& a, const BitSet& b,
+  static void nand_by_map(BitSet& a, const BitSet& b,
                              int* map, int* map_last);
   /// Clear the words in \a b that occur in \a map
   static void clear_by_map(BitSet& b, unsigned int map_last);
@@ -257,17 +257,23 @@ BitSet::intersect_by_map(BitSet& a, const BitSet& b,
   assert(*map_last < Support::BitSetData::data(a.sz));
   assert(*map_last < Support::BitSetData::data(b.sz));
   int local_map_last = *map_last;
+  assert(!a_data[local_map_last].none());
   for (int i = local_map_last; i >= 0; i--) {
+    assert(!a_data[i].none());
+    assert(!a_data[local_map_last].none());
     BitSetData w = BitSetData::a(a_data[i],b_data[i]);
     if (!w.same(a_data[i])) {
       a_data[i] = w;
       if (w.none()) {
+        assert(a_data[i].none());
+        assert(i == local_map_last || !a_data[local_map_last].none());
         a_data[i] = a_data[local_map_last];
         a_data[local_map_last] = w;
         map[i] = map[local_map_last];
         local_map_last--;
       }
     }
+    assert(i == local_map_last + 1 || !a_data[i].none());
   }
   *map_last = local_map_last;
 }
@@ -289,42 +295,47 @@ BitSet::intersect_by_map_sparse(BitSet& a, const BitSet& b,
     if (!w.same(a_data[i])) {
       a_data[i] = w;
       if (w.none()) {
+        assert(a_data[i].none());
+        assert(i == local_map_last || !a_data[local_map_last].none());
         a_data[i] = a_data[local_map_last];
         a_data[local_map_last] = w;
         map[i] = map[local_map_last];
         local_map_last--;
       }
     }
+    assert(i == local_map_last + 1 || !a_data[i].none());
   }
   *map_last = local_map_last;
 }
 
 
-forceinline bool
+forceinline void
 BitSet::nand_by_map(BitSet& a, const BitSet& b,
                        int* map, int* map_last) {
   using namespace Gecode::Support;
   BitSetData* a_data = a.data;
   BitSetData* b_data = b.data;
   int local_map_last = *map_last;
-  bool diff = false;
+  assert(local_map_last < Support::BitSetData::data(a.sz));
   for (int i = local_map_last; i >= 0; i--) {
     int offset = map[i];
-    assert(offset < Support::BitSetData::data(a.sz));
     assert(offset < Support::BitSetData::data(b.sz));
-    BitSetData rev = BitSetData::reverse(b_data[offset]);
-    BitSetData w = BitSetData::a(a_data[offset],rev);
-    if (!w.same(a_data[offset])) {
-      diff = true;
-      a_data[offset] = w;
+    BitSetData flipped = BitSetData::reverse(b_data[offset]);
+    BitSetData w = BitSetData::a(a_data[i],flipped);
+    if (!w.same(a_data[i])) {
+      a_data[i] = w;
       if (w.none()) {
+        assert(a_data[i].none());
+        assert(i == local_map_last || !a_data[local_map_last].none());
+        a_data[i] = a_data[local_map_last];
+        a_data[local_map_last] = w;
         map[i] = map[local_map_last];
         local_map_last--;
       }
     }
+    assert(i == local_map_last + 1 || !a_data[i].none());
   }
   *map_last = local_map_last;
-  return diff;
 }
 
 forceinline void

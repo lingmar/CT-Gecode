@@ -334,14 +334,15 @@ private:
     assert(max_index <= limit);
     assert(nzerowords());
     return BitSet::intersect_index_by_map(words,b,index,
-                                          static_cast<unsigned int>(max_index));
+                                          static_cast<unsigned int>(limit));
+                                          //static_cast<unsigned int>(max_index));
   }
   /// Perform "nand" with \a b
-  forceinline bool
+  forceinline void
   nand_with_mask(const BitSet& b) {
     assert(limit >= 0);
     assert(nzerowords());
-    return BitSet::nand_by_map(words,b,index,&limit);
+    BitSet::nand_by_map(words,b,index,&limit);
     //static_cast<unsigned int*>(&limit));
   }
   /// Test whether exactly one bit is set
@@ -593,6 +594,7 @@ public:
     if (is_empty())
       return ES_FAILED;
     assert(nset() > 0);
+    assert(nzerowords());
 #ifdef FIX
     ExecStatus msg;
     if (one()) 
@@ -607,11 +609,14 @@ public:
     status = NOT_PROPAGATING;
     assert(limit >= 0);
     assert(nset() > 0);
+    assert(nzerowords());
     return msg;
   }
 
   forceinline void
   reset_based_update(CTAdvisor<View> a, Space& home) {
+    assert(nzerowords());
+    assert(limit >= 0);
     // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
@@ -633,6 +638,8 @@ public:
       ++rngs;
     }
     intersect_with_mask(mask);
+    assert(nzerowords());
+        
   }
   
   forceinline virtual ExecStatus
@@ -645,6 +652,7 @@ public:
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
 
     assert(limit >= 0);
+    assert(nzerowords());
         
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
@@ -657,6 +665,7 @@ public:
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
       intersect_with_mask_sparse(a.supports[x.val()]);
+      //reset_based_update(a,home);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
@@ -972,6 +981,9 @@ public:
   bool nzerowords() const {
     for (int i = 0; i <= limit; i++) {
       if (words.getword(i).none()) {
+        printf("word %d is zero\n", i);
+        printf("limit=%d\n", limit);
+        
         return false;
       }
     }
