@@ -322,15 +322,13 @@ private:
     assert(limit >= 0);
     assert(nzerowords());
     BitSet::intersect_by_map(words,mask,index,&limit);
-                             //static_cast<unsigned int*>(&limit));
   }
-  /// Intersect words with a sparse mask
+  /// Intersect words with \a mask
   forceinline void
   intersect_with_mask_sparse(const BitSet& mask) {
     assert(limit >= 0);
     assert(nzerowords());
-    BitSet::intersect_by_map(words,mask,index,&limit);
-    //static_cast<unsigned int*>(&limit));
+    BitSet::intersect_by_map_sparse(words,mask,index,&limit);
   }
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   forceinline int
@@ -711,14 +709,7 @@ public:
 
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      // Region r(home);
-      // BitSet mask;
-      // mask.allocate(r,words.size());
-      // clear_mask(mask);
-          
-      // add_to_mask(a.supports[x.val()]);
-      // intersect_with_mask(a.supports[x.val()]);
-      reset_based_update(a,home);
+      intersect_with_mask_sparse(a.supports[x.val()]);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
