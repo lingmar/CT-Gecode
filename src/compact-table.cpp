@@ -5,8 +5,6 @@
 #include <assert.h>
 #include "info-base.hpp"
 
-int propid = 0;
-
 #define NOISY 0
 
 //#define DEBUG
@@ -414,7 +412,6 @@ public:
       status(NOT_PROPAGATING),
       touched_var(-1),
       arity(x0.size()),
-      id(propid++),
       unassigned(x0.size())
   {
     // Initialise supports and post advisors
@@ -550,7 +547,6 @@ public:
       arity(p.arity),
       unassigned(p.unassigned),
       max_dom_size(p.max_dom_size),
-      id(p.id),
       limit(p.limit)
       //words(home,BitSet::get_bpb()*(p.limit+1),p.words)
   {
@@ -992,32 +988,32 @@ public:
     return count_unassigned == unassigned;
   }
 
-  void printState() {
-    if (NOISY) {
-      printf("state for %d\n", id);
-      for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-        CTAdvisor<View> a = a0.advisor();
-        printf("x[%d] = ", a.index);
-        cout << a.view() << endl;
-      }
+  // void printState() {
+  //   if (NOISY) {
+  //     printf("state for %d\n", id);
+  //     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
+  //       CTAdvisor<View> a = a0.advisor();
+  //       printf("x[%d] = ", a.index);
+  //       cout << a.view() << endl;
+  //     }
           
-      printf("limit=%d\n", limit);
-      printf("nset=%d\n", nset());
-      words.print();
-      printf("index=");
-      if (limit >= static_cast<int>(Support::BitSetData::data(words.size()))) {
-        printf("limit=%d,nwords=%d, limit >= nwords = %d\n", limit,
-               Support::BitSetData::data(words.size()),
-               limit >= Support::BitSetData::data(words.size()));
-      }
-      assert(limit < static_cast<int>(Support::BitSetData::data(words.size())));
-      for (int i = 0; i <= limit; i++) {
-        //  printf("%d (%d(%d))", index[i], !words.getword(i).none(), !words.getword(index[i]).none());
-      }
-      printf("\n");
+  //     printf("limit=%d\n", limit);
+  //     printf("nset=%d\n", nset());
+  //     words.print();
+  //     printf("index=");
+  //     if (limit >= static_cast<int>(Support::BitSetData::data(words.size()))) {
+  //       printf("limit=%d,nwords=%d, limit >= nwords = %d\n", limit,
+  //              Support::BitSetData::data(words.size()),
+  //              limit >= Support::BitSetData::data(words.size()));
+  //     }
+  //     assert(limit < static_cast<int>(Support::BitSetData::data(words.size())));
+  //     for (int i = 0; i <= limit; i++) {
+  //       //  printf("%d (%d(%d))", index[i], !words.getword(i).none(), !words.getword(index[i]).none());
+  //     }
+  //     printf("\n");
 
-    }
-  }
+  //   }
+  // }
 };
 
 
