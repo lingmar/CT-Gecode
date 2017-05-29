@@ -334,8 +334,9 @@ private:
     assert(max_index <= limit);
     assert(nzerowords());
     return BitSet::intersect_index_by_map(words,b,index,
-                                          static_cast<unsigned int>(limit));
-                                          //static_cast<unsigned int>(max_index));
+                                          static_cast<unsigned int>(max_index));
+                                          //static_cast<unsigned int>(limit));
+                                          
   }
   /// Perform "nand" with \a b
   forceinline void
