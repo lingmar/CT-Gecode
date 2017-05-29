@@ -184,9 +184,6 @@ BitSet::a(const BitSet& a, unsigned int i,
 
 forceinline Gecode::Support::BitSetData
 BitSet::getword(unsigned int i) const {
-  if (i >= Support::BitSetData::data(sz)) {
-    printf("i=%d,nwords=%d\n", i, Support::BitSetData::data(sz));
-  }
   assert(i < Support::BitSetData::data(sz));
   return data[i];
 }
