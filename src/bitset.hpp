@@ -205,7 +205,7 @@ BitSet::init(A& a, unsigned int s, bool setbits) {
   assert(sz == 0);
   RawBitSetBase::init(a,s,setbits);
   sz=s;
-  // Clear bit sz
+  // Clear sentinel bit
   Gecode::Support::RawBitSetBase::clear(sz);
 }
 

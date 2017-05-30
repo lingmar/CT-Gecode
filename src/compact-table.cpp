@@ -116,9 +116,10 @@ public:
       }
     };
   public:
-
+    forceinline
     Supports(void) {}
 
+    forceinline
     Supports(BitSet* s, int nsupports, int offset,
              IndexType type, View x)
       : SharedHandle(new SupportsI()) {
@@ -126,24 +127,24 @@ public:
     }
 
     /// Copy \a s
+    forceinline
     Supports(const Supports& s)
       : SharedHandle(s) {
     }
-    /// Assignment operator
-    Supports& operator =(const Supports& s) {
-      return static_cast<SupportsI&>(SharedHandle::operator =(s));
-    }
     /// [] operator
-    const BitSet& operator [](unsigned int i) {
+    forceinline const BitSet&
+    operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
     }
     /// () operator returns the actual row
-    const BitSet& operator ()(unsigned int i) {
+    forceinline const BitSet&
+    operator ()(unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports_raw(i);
     }
     /// Initialise from parameters
+    forceinline
     void init(BitSet* s,
               int nsupports, int offset,
               IndexType type, View x) {
@@ -152,14 +153,16 @@ public:
         init(s,nsupports,offset,type,x);
     }
     /// Update function
-    void update(Space& home, bool share, SharedHandle& sh) {
+    forceinline void
+    update(Space& home, bool share, SharedHandle& sh) {
       SharedHandle::update(home,share,sh);
     }
     /// Get the index for a value
-    int row(int val) {
+    forceinline int
+    row(int val) {
       return static_cast<SupportsI*>(object())->info->row(val);
     }
-    /// Print
+    /// Print (dbugging)
     void print() const {
       const SupportsI* si = static_cast<SupportsI*>(object());
       printf("nvals=%d, min=%d\n",si->nvals,si->min);
@@ -261,7 +264,7 @@ protected:
   unsigned int unassigned;
   /// -2 if more than one touched var, -1 if none, else index of the only touched var
   int touched_var;
-  /// Whether propagator is propagating
+  /// Whether propagator is propagating or not
   Status status;
   /// Largest domain size
   unsigned int max_dom_size;
@@ -270,12 +273,11 @@ protected:
   // *** Sparse bit-set *** //
   /// Valid bits
   BitSet words;
-  /// Maps words to supports
+  /// Maps the current index to its original index in words
   int* index;
-  /// Equal to number of non-zero words minus 1
+  /// Equals to the number of non-zero words minus 1
   int limit;
-  /// Debugging
-  int id;
+  
 private:
   /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
   forceinline void
@@ -335,8 +337,7 @@ private:
     assert(nzerowords());
     return BitSet::intersect_index_by_map(words,b,index,
                                           static_cast<unsigned int>(max_index));
-                                          //static_cast<unsigned int>(limit));
-                                          
+    
   }
   /// Perform "nand" with \a b
   forceinline void
@@ -346,7 +347,7 @@ private:
     BitSet::nand_by_map(words,b,index,&limit);
     //static_cast<unsigned int*>(&limit));
   }
-  /// Test whether exactly one bit is set
+  /// Test whether exactly one bit is set in words
   forceinline bool
   one() const {
     assert(limit >= 0);
@@ -365,7 +366,8 @@ private:
     return index[0] * words.get_bpb() + bit_index;
   }
   /// Clear \a set bits in words
-  void clearall(unsigned int sz) {
+  forceinline void
+  clearall(unsigned int sz) {
     int start_bit = 0;
     int complete_words = sz / BitSet::get_bpb();
     if (complete_words > 0) {
@@ -425,11 +427,11 @@ public:
     } 
 
     init_sparse_bit_set(home, nsupports);
-
-    // Because we use heap allocated data
+    
+    // Because we use heap allocated data in advisors
     home.notice(*this,AP_DISPOSE);
     
-    // Schedule in case no advisors have been posted or in case we can subsume
+    // Schedule in case we can subsume
     if (unassigned <= 1)
       View::schedule(home,*this,Int::ME_INT_VAL);
   }
@@ -463,7 +465,7 @@ public:
     }
 
     int support_cnt = 0;
-    int bpb = BitSet::get_bpb(); /** Bits per base in bitsets **/
+    int bpb = BitSet::get_bpb(); // Bits per base (word) in bitsets
     
     // Look for supports and set correct bits in supports
     for (int i = 0; i < ts.tuples(); i++) {
@@ -487,6 +489,7 @@ public:
             supports[row].init(r,ts.tuples(),false);
 
           supports[row].set(support_cnt);
+          // Save the index in words where a support is found for the value
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
@@ -550,7 +553,6 @@ public:
       unassigned(p.unassigned),
       max_dom_size(p.max_dom_size),
       limit(p.limit)
-      //words(home,BitSet::get_bpb()*(p.limit+1),p.words)
   {
     // Update advisors
     c.update(home,share,p.c);
@@ -596,6 +598,7 @@ public:
       return ES_FAILED;
     assert(nset() > 0);
     assert(nzerowords());
+    assert(limit >= 0);
 #ifdef FIX
     ExecStatus msg;
     if (one()) 
@@ -640,7 +643,6 @@ public:
     }
     intersect_with_mask(mask);
     assert(nzerowords());
-        
   }
   
   forceinline virtual ExecStatus
@@ -979,6 +981,7 @@ public:
     return sizeof(*this);
   }
 
+  /** Debugging **/
   bool nzerowords() const {
     for (int i = 0; i <= limit; i++) {
       if (words.getword(i).none()) {
