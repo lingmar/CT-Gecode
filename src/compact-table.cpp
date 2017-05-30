@@ -73,7 +73,8 @@ public:
       }
       
       /// Initialise from parameters
-      void init(const BitSet* s,
+      forceinline void
+      init(const BitSet* s,
                 int nsupports, int offset,
                 IndexType t, View x) {
         type = t;
@@ -97,11 +98,13 @@ public:
         
       }
       /// Copy function
-      virtual Object* copy(void) const {
+      forceinline virtual Object*
+      copy(void) const {
         return new SupportsI(*this);
       }
       /// Desctructor
-      virtual ~SupportsI(void) {
+      forceinline virtual
+      ~SupportsI(void) {
         switch (type) {
         case ARRAYY: {
           static_cast<InfoArray*>(info)->~InfoArray();
@@ -120,8 +123,9 @@ public:
     };
   public:
 
-    Supports(void) {}
+    forceinline Supports(void) {}
 
+    forceinline
     Supports(BitSet* s, int nsupports, int offset,
              IndexType type, View x)
       : SharedHandle(new SupportsI()) {
@@ -129,37 +133,38 @@ public:
     }
 
     /// Copy \a s
-    Supports(const Supports& s)
+    forceinline Supports(const Supports& s)
       : SharedHandle(s) {
     }
-    /// Assignment operator
-    Supports& operator =(const Supports& s) {
-      return static_cast<SupportsI&>(SharedHandle::operator =(s));
-    }
     /// [] operator
-    const BitSet& operator [](unsigned int i) {
+    forceinline const BitSet&
+    operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
     }
     /// () operator returns the actual row
-    const BitSet& operator ()(unsigned int i) {
+    forceinline const BitSet&
+    operator ()(unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports_raw(i);
     }
     /// Initialise from parameters
-    void init(BitSet* s,
-              int nsupports, int offset,
-              IndexType type, View x) {
+    forceinline void
+    init(BitSet* s,
+         int nsupports, int offset,
+         IndexType type, View x) {
       
       static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,type,x);
     }
     /// Update function
-    void update(Space& home, bool share, SharedHandle& sh) {
+    forceinline void
+    update(Space& home, bool share, SharedHandle& sh) {
       SharedHandle::update(home,share,sh);
     }
     /// Get the index for a value
-    int row(int val) {
+    forceinline int
+    row(int val) {
       return static_cast<SupportsI*>(object())->info->row(val);
     }
     /// Print

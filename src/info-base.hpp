@@ -205,6 +205,7 @@ private:
         DEBUG_PRINT(("%d: {%d,%d}\n",i,table[i].key,table[i].value));
       }
     }
+    forceinline
     ~HashTable(void) {
       heap.rfree(table);
     }
