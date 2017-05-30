@@ -70,9 +70,10 @@ public:
       }
       
       /// Initialise from parameters
-      void init(const BitSet* s,
-                int nsupports, int offset,
-                IndexType t, View x) {
+      forceinline void
+      init(const BitSet* s,
+           int nsupports, int offset,
+           IndexType t, View x) {
         type = t;
         switch (type) {
         case ARRAYY:  {
@@ -94,11 +95,13 @@ public:
         
       }
       /// Copy function
-      virtual Object* copy(void) const {
+      forceinline virtual Object*
+      copy(void) const {
         return new SupportsI(*this);
       }
       /// Desctructor
-      virtual ~SupportsI(void) {
+      forceinline virtual
+      ~SupportsI(void) {
         switch (type) {
         case ARRAYY: {
           static_cast<InfoArray*>(info)->~InfoArray();
