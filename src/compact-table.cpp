@@ -361,12 +361,19 @@ private:
   }
   /// Perform "nand" with \a b
   forceinline void
-  nand_with_mask(const BitSet& b) {
+  nand_with_mask_one(const BitSet& b) {
     assert(limit >= 0);
     assert(nzerowords());
-    BitSet::nand_by_map(words,b,index,&limit);
-    //static_cast<unsigned int*>(&limit));
+    BitSet::nand_by_map_one(words,b,index,&limit);
   }
+  /// Perform "nand" with the "or" of \a a and \a b
+  forceinline void
+  nand_with_mask_two(const BitSet& a, const BitSet& b) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::nand_by_map_two(words,a,b,index,&limit);
+  }
+
   /// Test whether exactly one bit is set in words
   forceinline bool
   one() const {
@@ -652,83 +659,83 @@ public:
       break;
     }
     default:
-          // Collect all tuples to be kept in a temporary mask
-    Region r(home);
-    BitSet mask;
-    mask.allocate(r,words.size());
+      // Collect all tuples to be kept in a temporary mask
+      Region r(home);
+      BitSet mask;
+      mask.allocate(r,words.size());
 
-    Int::ViewRanges<View> rngs(a.view());
-    //cout << a.view() << endl;
+      Int::ViewRanges<View> rngs(a.view());
+      //cout << a.view() << endl;
     
 #ifdef CLEAR_MASK
-    clear_mask(mask);
-    int cur, max, row;
-    while (rngs()) {
-      cur = rngs.min();
-      max = rngs.max();
-      row = a.supports.row(cur);
-      while (cur <= max) {
-        assert(a.view().in(cur));
-        add_to_mask(a.supports(row),mask);
-        ++cur;
-        ++row;
+      clear_mask(mask);
+      int cur, max, row;
+      while (rngs()) {
+        cur = rngs.min();
+        max = rngs.max();
+        row = a.supports.row(cur);
+        while (cur <= max) {
+          assert(a.view().in(cur));
+          add_to_mask(a.supports(row),mask);
+          ++cur;
+          ++row;
+        }
+        ++rngs;
       }
-      ++rngs;
-    }
 #else
-    assert(rngs());
-    int cur = rngs.min();
-    int max = rngs.max();
-    int row = a.supports.row(cur);
-    assert(row >= 0);
-    // Find the support entries for the first two values,
-    // to initialise the map from
-    const BitSet& first = a.supports(row);
-    if (cur < max) { // First range has more than one value
-      ++cur;
-      ++row;
-      assert(a.view().in(cur));
-    } else { // First range has only one value
       assert(rngs());
-      ++rngs;
-      cur = rngs.min();
-      max = rngs.max();
-      row = a.supports.row(cur);
+      int cur = rngs.min();
+      int max = rngs.max();
+      int row = a.supports.row(cur);
       assert(row >= 0);
-      assert(a.view().in(cur));
-    }  
-    // Initailise mask
-    init_mask(first,a.supports(row),mask);
+      // Find the support entries for the first two values,
+      // to initialise the map from
+      const BitSet& first = a.supports(row);
+      if (cur < max) { // First range has more than one value
+        ++cur;
+        ++row;
+        assert(a.view().in(cur));
+      } else { // First range has only one value
+        assert(rngs());
+        ++rngs;
+        cur = rngs.min();
+        max = rngs.max();
+        row = a.supports.row(cur);
+        assert(row >= 0);
+        assert(a.view().in(cur));
+      }  
+      // Initailise mask
+      init_mask(first,a.supports(row),mask);
 
-    // Flush the first range to start on a fresh range later
-    ++cur;
-    ++row;
-    while (cur <= max) {
-      assert(a.view().in(cur));
-      add_to_mask(a.supports(row),mask);
+      // Flush the first range to start on a fresh range later
       ++cur;
       ++row;
-    }      
-    ++rngs;
-    
-    // New, fresh range
-    while (rngs()) {
-      cur = rngs.min();
-      max = rngs.max();
-      row = a.supports.row(cur);
-      
       while (cur <= max) {
         assert(a.view().in(cur));
         add_to_mask(a.supports(row),mask);
         ++cur;
         ++row;
-      }
+      }      
       ++rngs;
-    }
+    
+      // New, fresh range
+      while (rngs()) {
+        cur = rngs.min();
+        max = rngs.max();
+        row = a.supports.row(cur);
+      
+        while (cur <= max) {
+          assert(a.view().in(cur));
+          add_to_mask(a.supports(row),mask);
+          ++cur;
+          ++row;
+        }
+        ++rngs;
+      }
 #endif // CLEAR_MASK
     
-    // Int::ViewRanges<View> rngs(a.view());
-    intersect_with_mask(mask);
+      // Int::ViewRanges<View> rngs(a.view());
+      intersect_with_mask(mask);
       break;
     }
 
@@ -781,10 +788,24 @@ public:
       assert(max_row >= min_row);
 
       if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
-        for (int i = min_row; i <= max_row; i++) {
-          const BitSet& s = a.supports(i);
-          if (!s.empty()) 
-            nand_with_mask(s);
+        for (int i = min_row; i <= max_row; i+=2) { // Nand supports two and two
+          if (i != max_row) {                 // At least two values left
+            assert(i + 1 <= max_row);
+            const BitSet& s1 = a.supports(i);
+            const BitSet& s2 = a.supports(i+1);
+            if (!s1.empty() && !s2.empty()) { // Both non-empty
+              nand_with_mask_two(s1,s2);
+            } else if (!s1.empty()) {         // s1 non-empty, s2 empty
+              nand_with_mask_one(s1);
+            } else if (!s2.empty()) {         // s2 non-empty, s1 empty
+              nand_with_mask_one(s2);
+            }
+          } else {                            // Last value
+            assert(static_cast<unsigned int>(max_row - min_row + 1) % 2 == 1);
+            const BitSet& s = a.supports(i);
+            if (!s.empty()) 
+              nand_with_mask_one(s);
+          }
         }
       
       } else { // Domain size smaller than delta, incremental update

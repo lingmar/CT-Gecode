@@ -73,8 +73,12 @@ public:
                                           const BitSet& m2, int* map,
                                           int* map_last);
   /// Nand \a with mask \b with words described by \a map
-  static void nand_by_map(BitSet& a, const BitSet& b,
-                             int* map, int* map_last);
+  static void nand_by_map_one(BitSet& a, const BitSet& b,
+                              int* map, int* map_last);
+  /// Nand \a a with the or of /a b1 and /a b2, described by \a map
+  static void nand_by_map_two(BitSet& a,
+                              const BitSet& b1, const BitSet& b2,
+                              int* map, int* map_last);
   /// Clear the words in \a b that occur in \a map
   static void clear_to_limit(BitSet& b, unsigned int limit);
   /// Clear the words in \a b that occur in \a map
@@ -364,8 +368,8 @@ BitSet::intersect_by_map_sparse_two(BitSet& a, const BitSet& b1,
 
 
 forceinline void
-BitSet::nand_by_map(BitSet& a, const BitSet& b,
-                    int* map, int* map_last) {
+BitSet::nand_by_map_one(BitSet& a, const BitSet& b,
+                        int* map, int* map_last) {
   using namespace Gecode::Support;
   BitSetData* a_data = a.data;
   BitSetData* b_data = b.data;
@@ -391,6 +395,40 @@ BitSet::nand_by_map(BitSet& a, const BitSet& b,
   }
   *map_last = local_map_last;
 }
+
+forceinline void
+BitSet::nand_by_map_two(BitSet& a,
+                        const BitSet& b1, const BitSet& b2,
+                        int* map, int* map_last) {
+  using namespace Gecode::Support;
+  BitSetData* a_data = a.data;
+  BitSetData* b1_data = b1.data;
+  BitSetData* b2_data = b2.data;
+  int local_map_last = *map_last;
+  assert(local_map_last < Support::BitSetData::data(a.sz));
+  for (int i = local_map_last; i >= 0; i--) {
+    int offset = map[i];
+    assert(offset < Support::BitSetData::data(b1.sz));
+    assert(offset < Support::BitSetData::data(b2.sz));
+    BitSetData flipped = BitSetData::reverse(BitSetData::o(b1_data[offset],
+                                                           b2_data[offset]));
+    BitSetData w = BitSetData::a(a_data[i],flipped);
+    if (!w.same(a_data[i])) {
+      a_data[i] = w;
+      if (w.none()) {
+        assert(a_data[i].none());
+        assert(i == local_map_last || !a_data[local_map_last].none());
+        a_data[i] = a_data[local_map_last];
+        a_data[local_map_last] = w;
+        map[i] = map[local_map_last];
+        local_map_last--;
+      }
+    }
+    assert(i == local_map_last + 1 || !a_data[i].none());
+  }
+  *map_last = local_map_last;
+}
+
 
 forceinline void
 BitSet::clear_to_limit(BitSet& b, unsigned int limit) {
