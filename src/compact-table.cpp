@@ -13,6 +13,8 @@
 //#define FIX
 #define DELTA
 
+#define CLEAR_MASK
+
 /** 
  * Threshold value for using hash table
  * Defined as domain-width / domain-size for each variable
@@ -121,7 +123,7 @@ public:
   public:
     forceinline
     Supports(void) {}
-
+    
     forceinline
     Supports(BitSet* s, int nsupports, int offset,
              IndexType type, View x)
@@ -308,8 +310,15 @@ private:
   clear_mask(BitSet& mask) {
     assert(limit >= 0);
     assert(nzerowords());
-    BitSet::clear_by_map(mask, static_cast<unsigned int>(limit));
+    BitSet::clear_to_limit(mask, static_cast<unsigned int>(limit));
   }
+  forceinline void
+  init_mask(const BitSet& a, const BitSet& b, BitSet& mask) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::init_from_bs(mask,a,b,index,static_cast<unsigned int>(limit));
+  }
+  
   /// Add bits in \a b to \a mask
   forceinline void
   add_to_mask(const BitSet& b, BitSet& mask) const {
@@ -326,11 +335,19 @@ private:
   }
   /// Intersect words with \a mask
   forceinline void
-  intersect_with_mask_sparse(const BitSet& mask) {
+  intersect_with_mask_sparse_one(const BitSet& mask) {
     assert(limit >= 0);
     assert(nzerowords());
     BitSet::intersect_by_map_sparse(words,mask,index,&limit);
   }
+  /// Intersect words with the or of \a and \a b
+  forceinline void
+  intersect_with_mask_sparse_two(const BitSet& a, const BitSet& b) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::intersect_by_map_sparse_two(words,a,b,index,&limit);
+  }
+
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   forceinline int
   intersect_index(const BitSet& b, int max_index) const {
@@ -624,13 +641,27 @@ public:
   reset_based_update(CTAdvisor<View> a, Space& home) {
     assert(nzerowords());
     assert(limit >= 0);
-    // Collect all tuples to be kept in a temporary mask
+    assert(a.view().size() >= 2);
+    switch (a.view().size()) {
+    case 2: {
+      // Intersect with validTuples directly
+      int row_min = a.supports.row(a.view().min());
+      int row_max = a.supports.row(a.view().max());
+      intersect_with_mask_sparse_two(a.supports(row_min),
+                                     a.supports(row_max));
+      break;
+    }
+    default:
+          // Collect all tuples to be kept in a temporary mask
     Region r(home);
     BitSet mask;
     mask.allocate(r,words.size());
-    clear_mask(mask);
 
     Int::ViewRanges<View> rngs(a.view());
+    //cout << a.view() << endl;
+    
+#ifdef CLEAR_MASK
+    clear_mask(mask);
     int cur, max, row;
     while (rngs()) {
       cur = rngs.min();
@@ -644,7 +675,63 @@ public:
       }
       ++rngs;
     }
+#else
+    assert(rngs());
+    int cur = rngs.min();
+    int max = rngs.max();
+    int row = a.supports.row(cur);
+    assert(row >= 0);
+    // Find the support entries for the first two values,
+    // to initialise the map from
+    const BitSet& first = a.supports(row);
+    if (cur < max) { // First range has more than one value
+      ++cur;
+      ++row;
+      assert(a.view().in(cur));
+    } else { // First range has only one value
+      assert(rngs());
+      ++rngs;
+      cur = rngs.min();
+      max = rngs.max();
+      row = a.supports.row(cur);
+      assert(row >= 0);
+      assert(a.view().in(cur));
+    }  
+    // Initailise mask
+    init_mask(first,a.supports(row),mask);
+
+    // Flush the first range to start on a fresh range later
+    ++cur;
+    ++row;
+    while (cur <= max) {
+      assert(a.view().in(cur));
+      add_to_mask(a.supports(row),mask);
+      ++cur;
+      ++row;
+    }      
+    ++rngs;
+    
+    // New, fresh range
+    while (rngs()) {
+      cur = rngs.min();
+      max = rngs.max();
+      row = a.supports.row(cur);
+      
+      while (cur <= max) {
+        assert(a.view().in(cur));
+        add_to_mask(a.supports(row),mask);
+        ++cur;
+        ++row;
+      }
+      ++rngs;
+    }
+#endif // CLEAR_MASK
+    
+    // Int::ViewRanges<View> rngs(a.view());
     intersect_with_mask(mask);
+      break;
+    }
+
     assert(nzerowords());
   }
   
@@ -670,7 +757,7 @@ public:
 
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      intersect_with_mask_sparse(a.supports[x.val()]);
+      intersect_with_mask_sparse_one(a.supports[x.val()]);
       //reset_based_update(a,home);
     }
 #ifdef DELTA
