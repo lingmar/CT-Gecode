@@ -13,7 +13,7 @@
 //#define FIX
 #define DELTA
 
-#define CLEAR_MASK
+//#define CLEAR_MASK
 
 /** 
  * Threshold value for using hash table
