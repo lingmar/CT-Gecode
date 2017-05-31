@@ -1169,7 +1169,7 @@ namespace Gecode { namespace FlatZinc {
         REG expression;
         for (int i = 0; i<noOfTuples; i++) {
           REG r;
-          for (int j = 0; j<x.size; j++) {
+          for (int j = 0; j<x.size(); j++) {
             r += REG(tuples[i*noOfVars+j]);
           }
           expression |= r;
