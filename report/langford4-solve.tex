@@ -2,88 +2,60 @@
     xmode=log,
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
-    ylabel={\# solved},
-    legend pos=south east
-    % table/create on use/cumulative distribution/.style={
-    %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
-    % }
+    ylabel={\% solved},
+    legend pos=south east,
+    cycle list/Set1-6,
+            % define fill color for the marker
+            mark list fill={.!75!white},
+            mark options={solid},
+            cycle multiindex* list={
+                Set1-6
+                    \nextlist
+                [3 of]linestyles
+                    \nextlist
+                very thick
+                \nextlist
+                mark=o,
+                mark=*,
+                mark=square,
+                mark=triangle,
+                mark=+
+            },
     ]
-    \addplot 
-    [mark=triangle*,
-    mark size=1.5,
-    mark options={solid},
-    green] 
-    coordinates {
-    (0.058, 1)
-(0.132, 2)
-(0.329, 3)
-(1.823, 4)
-(8.112, 5)
-(33.017, 6)
-(120.803, 7)
-(363.914, 8)
-(1413.459, 9)
-(5603.217, 10)
-(19765.723, 11)
-(73912.108, 12)
-    };
 
-    \addplot 
-    [blue,
-    mark=*,
-    mark size=1.5,
-    mark options={solid}]
+    \addplot
     coordinates {
-    (0.092, 1)
-(0.098, 2)
-(0.463, 3)
-(1.878, 4)
-(8.110, 5)
-(35.000, 6)
-(142.860, 7)
-(432.512, 8)
-(1723.973, 9)
-(7901.494, 10)
-(32196.678, 11)
-(128007.189, 12)
+      (1270, 25)
+      (5380, 50)
+      (18920, 75)
+      (73260, 100)
+      
     };
+    \addplot
+    coordinates {
+      (1520, 25)
+      (7210, 50)
+      (28940, 75)
+      (123500, 100)
+      
+    };
+    \addplot
+    coordinates {
+      (1870, 25)
+      (8850, 50)
+      (35160, 75)
+      (147120, 100)
+      
+    };
+    \addplot
+    coordinates {
+      (1080, 25)
+      (4990, 50)
+      (19700, 75)
+      (81080, 100)
+      
+    };
+    
 
-    \addplot [brown!60!black,
-    mark options={fill=brown!40},
-    mark=otimes*,
-    mark size=1.5]
-    coordinates {
-    (0.109, 1)
-(0.128, 2)
-(0.688, 3)
-(2.704, 4)
-(11.551, 5)
-(48.432, 6)
-(182.516, 7)
-(555.251, 8)
-(2049.388, 9)
-(10221.700, 10)
-(35753.402, 11)
-(154083.689, 12)
-    };
-
-    \addplot 
-    [red,
-    mark size=1.5,
-    mark=square*]
-    coordinates {
-    (0.071, 1)
-(0.182, 2)
-(0.388, 3)
-(1.284, 4)
-(6.161, 5)
-(27.306, 6)
-(122.418, 7)
-(406.670, 8)
-(1348.185, 9)
-(6807.826, 10)
-(22264.357, 11)
-(92509.716, 12)
-    };
-    \legend{DFA,B,I,CT}
+    \legend{ DFA, B, I, \textbf{CT} }
   \end{axis}

@@ -10,6 +10,12 @@
 \usepackage{pgfplotstable}
 %\pgfplotsset{plot coordinates/math parser=false}
 \usetikzlibrary{calc}
+\pgfplotsset{compat=newest}
+%\usetikzlibrary{colorbrewer}
+ \usetikzlibrary{
+   pgfplots.colorbrewer,
+ }
+\pgfplotsset{compat=newest}
 \usepackage{cwpuzzle}
 %\usepackage{algpseudocode}
 \usepackage{astra}
@@ -83,6 +89,7 @@
 \newcommand{\LastSizes}{\texttt{lastSize}}
 \newcommand{\Supports}{\texttt{supports}}
 \newcommand{\Residues}{\texttt{residues}}
+\newcommand{\Vars}{\texttt{vars}}
 
 % Pseduo code
 \newcommand{\ForEach}[1]{\textbf{foreach } {#1} \textbf{ do }}
@@ -315,7 +322,7 @@ satisfy the set of constraints for the
 problem, but also maximise or minimise some given function on the variables.
 
 A constraint programming solver (CP solver) is a software that
-takes constraint problems expressed in some modeling language as input,
+takes constraint problems expressed in some modelling language as input,
 tries to solve them, and outputs the results to the user of the software.
 The process of solving a problem consists of generating a search tree by branching
 on partitions of the possible values for the variables. 
@@ -392,8 +399,7 @@ and such that each digit appears at most once in each entry.
       |<4:>  |  3   |  1   |<15:> |  7   |  8   |  -   |.
     \end{Kakuro}
   \end{minipage}
-  \caption{A Kakuro puzzle~\protect\footnotemark (left) and its solution (right).
-  \Todo{Todo: solve the Kakuro.}}
+  \caption{A Kakuro puzzle~\protect\footnotemark (left) and its solution (right).}
   \label{fig:kakuro}
 \end{figure}
 
@@ -489,24 +495,26 @@ A current mapping of domains to variables is called a~\emph{store}:
   a variable~$v_i$ under~$s$ by~$s(v_i)$.% or~$\Dom{v_i}$.
   \begin{itemize}
     \item A store~$s$ is \emph{failed} if and only if~$s(v_i) = \emptyset$ for some~$v_i \in V$.
+    
     \item   A variable~$v_i \in V$ is \emph{fixed}, or \emph{assigned},
       by a store~$s$ if and only if~$|s(v_i)| = 1$. 
+    
     \item A store~$s$ is an \emph{assignment store} if all variables are 
       fixed under~$s$.
 
-    \item Let~$c$ be an $n$-ary constraint on~$V$.
-      A store~$s$ is a \emph{solution store} 
-      to~$c$ if and only if~$s$ is an assignment store and the
-      corresponding~$n$-tuple is a solution to~$c$:
-      $\forall i \in \Set{1,\ldots,n}, s(v_i) = \Set{a_i}$,
-      and~$\left<a_1,\ldots,a_n\right>$ is a solution to~$c$.
-
-    % \item Let~$c$ be an $m$-ary constraint on a subsequence of~$V$,
-    %   where~$m \leq n$. A store~$s$ is a \emph{solution store} 
+    % \item Let~$c$ be an $n$-ary constraint on~$V$.
+    %   A store~$s$ is a \emph{solution store} 
     %   to~$c$ if and only if~$s$ is an assignment store and the
-    %   corresponding~$m$-tuple is a solution to~$c$:
-    %   $\forall i \in \Set{1,\ldots,m}, s(v_i) = \Set{a_i}$,
-    %   and~$\left<a_1,\ldots,a_m\right>$ is a solution to~$c$.
+    %   corresponding~$n$-tuple is a solution to~$c$:
+    %   $\forall i \in \Set{1,\ldots,n}, s(v_i) = \Set{a_i}$,
+    %   and~$\left<a_1,\ldots,a_n\right>$ is a solution to~$c$.
+
+    \item Let~$c$ be an $m$-ary constraint on a subsequence of~$V$,
+      where~$m \leq n$. A store~$s$ is a \emph{solution store} 
+      to~$c$ if and only if all variables in~$\mathit{vars}(c)$
+      are assigned, and the corresponding~$m$-tuple is a solution to~$c$:
+      $\forall i \in \Set{1,\ldots,m}, s(v_i) = \Set{a_i}$,
+      and~$\left<a_1,\ldots,a_m\right>$ is a solution to~$c$.
 
     \item A store~$s_1$ is \emph{stronger} than a store~$s_2$, 
       written~$s_1 \preceq s_2$, if and only if~$s_1(v_i) \subseteq s_2(v_i)$ 
@@ -1008,7 +1016,8 @@ obligations.
 
 When posting the propagator, the input is an initial table, that is
 a list of tuples $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of
-length~$p_o$. In what follows, we call the \emph{initial valid table}
+length~$p_0$, and $\mathit{vars}(c)$, the variables that are associated with~$c$.
+In what follows, we call the \emph{initial valid table}
 for~$c$ the sublist~$T \subseteq T_0$ of size~$p \leq p_0$ where all
 tuples are a support on~$c$ for the initial domains of~$\mathit{vars}(c)$.
 For a variable~$x$, we distinguish between its \emph{initial domain}
@@ -1056,6 +1065,8 @@ The propagator state has the following fields:
     we have that~$\Residues[x,a]$ denotes the index of the word in~$\CurrTable$
     where a support was found for~$(x,a)$ the last time it was sought.
 
+  \item $\Vars$, an array of variables that represent~$\mathit{vars}(c)$.
+
 \end{itemize}
 
 \Algoref{algo:CT} shows the CT algorithm. Lines 1-4 initialise the propagator
@@ -1100,8 +1111,8 @@ initial table~$\localvar{T_0}$ as argument.
 
 \Linesref{line:init:3}{line:init:4}~initialise local variables for later use.
 
-\Linesref{line:init:residue}{line:init:supports}~initialise the fields
-~\Residues~and~\Supports.
+\Linesref{line:init:residue}{line:init:vars}~initialise the fields
+~\Residues,~\Supports and~\Vars.
 The field \Supports~is initialised as an array of empty bit-sets,
 with one bit-set for each
 variable-value pair, and the size of each
@@ -1401,7 +1412,7 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
  
   There are two cases: either
   it is the first time $CT$ is applied or it has been applied before.
-  If it is the first time: then \InitialiseCT() is called.
+  If it is the first time, then \InitialiseCT() is called.
   Since $\tau$ is not a solution to~$c$, there is at least one variable-value
   pair~$(x_i,s(x_i))$ that is not supported, so~$s(x_i)$ will be pruned
   from~$x$ in \InitialiseCT(), which will return a failed store, which results
@@ -1622,22 +1633,30 @@ presented in \Chapref{sec:implementation}.
 The benchmarks consist of $30$~series 
 with a total of~$1507$ CSP instances that were used in the
 experiments in~\cite{\CTpaper}. The instances contain \Table~constraints
-only.
+only, which is desirable for various reasons: if there were
+other constraints in the instances, then less time of the total runtime
+would be spent in the propagators that are measured.
+Since all the propagators
+used in the experiments are domain consistent, they all perform the
+same amount of filtering, and therefore it is only the difference in
+runtime that is interesting to measure. Furthermore,
+the fact that the benchmarks are used in~\cite{\CTpaper} to evaluate
+the performance of CT in OR-tools suggests that they also
+provide an appropriate evaluation of the performance of CT in Gecode.
 
-
-  \begin{table}[h]%\small
-    \caption{Benchmarks series and their characteristics.}
-    \label{tab:benchmarks}
-    
-    \begin{sideways}
-      \centering
-      \begin{tabular}{lcccc}  % right alignment --> decimal point alignment
-        name & number of instances & arity & table size & variable domains \\
-        \midrule
-        \input{benchmarks.tex} 
-      \end{tabular}
-    \end{sideways}
-    \end{table}
+\begin{table}[h]%\small
+  \caption{Benchmarks series and their characteristics.}
+  \label{tab:benchmarks}
+  
+  \begin{sideways}
+    \centering
+    \begin{tabular}{lcccc}  % right alignment --> decimal point alignment
+      name & number of instances & arity & table size & variable domains \\
+      \midrule
+      \input{benchmarks.tex} 
+    \end{tabular}
+  \end{sideways}
+\end{table}
 
 \clearpage
 
@@ -1776,8 +1795,8 @@ time-efficient one where the extension is also given as a tuple set:
 %      \end{algorithm}
 % \clearpage
 
-   \item[I -- Incremental positive tuple set propagator]
-     This is based on explicit support maintenance.  The propagator state
+  \item[I -- Incremental positive tuple set propagator]
+    This is based on explicit support maintenance.  The propagator state
 has the following fields, where a \emph{literal} is a $\langle x,n
 \rangle$ pair:
 
@@ -1889,13 +1908,13 @@ need to be restored.
 \subsubsection{Evaluation Setup}
 The winning variant from the experiments in~\Secref{sec:compare},
 CT($\Delta$), was compared against the two existing propagators
-in Gecode for the~\Table~constraint, as well with the propagator
+in Gecode for the~\Table~constraint, as well as with the propagator
 for the \Regular~constraint on the benchmarks series
 listed in Table~\ref{tab:benchmarks}. The propagators are
 denoted:
 
 \begin{description}
-  \item[CT] The Compact-Table Propagator, version CT($\Delta$).
+  \item[CT] The compact-table propagator, version CT($\Delta$).
   \item[DFA] Layered graph (DFA) propagator, based on~\cite{Pesant:seqs}.
   \item[B] Basic positive tuple set propagator, based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
   \item[I] Incremental positive tuple set propagator.
@@ -1922,7 +1941,7 @@ The plots from the experiments are presented in Appendix~\ref{app:compare-gecode
 \paragraph{Overall performance.}
 Comparing CT against B and I over all series, CT performs either as well as,
 or better than both B and I. 
-B or I does not outperform CT on any of the series, except possibly
+B or I does not outperform CT on any of the series, except
 on \emph{AIM-100} and \emph{AIM-200}, where B is marginally faster than CT.
 On some of the series CT is up to a factor 10 faster.
 
@@ -1933,7 +1952,7 @@ time seems to be spent in the initialisation of DFA, while
 the solvetime is very close to~$0$ for all instances.
 The reason might be that DFA is a more suitable algorithm for the
 problem types in these series, for example if DFA can
-compress the input table into a space and/or time-efficient DFA
+compress the input table into a compact DFA
 in these cases. On the other series however, DFA is outperformed
 by the other algorithms.
 
@@ -1954,7 +1973,7 @@ by the other algorithms.
 
 \paragraph{The impact of table size on performance.}
 Most of the series have varying table sizes, and on those series it is hard to
-analyze the impact of table size on performance.
+analyse the impact of table size on performance.
 However, looking at the series that do not vary so much in table size,
 there seems to be a correlation between table size and performance.
 The increase
@@ -1964,7 +1983,7 @@ instances with large table sizes only (see \emph{A5}, \emph{A10},
 that contain only small tables (see \emph{AIM-*}, \emph{Dubois}, and \emph{Geom}).
 
 The property shows particularly well on the four \emph{Rands JC*} series, where
-arity and domain size are constant while the table size increase from
+arity and domain size are constant while the table size increases from
 $2500$ to~$10000$ in steps of~$2500$. On these series, the performance gain
 seems to increase with an increasing table size.
 
@@ -1975,7 +1994,7 @@ seems to increase with an increasing table size.
 
 
 \paragraph{The impact of arity on performance.}
-Again, many of the series have varying arities, so to analyze the impact of arity
+Many of the series have varying arities, so to analyse the impact of arity
 we are limited to the series that do not vary so much in arity.
 Many series where CT shows little or none performance gain have
 constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
@@ -1983,7 +2002,7 @@ constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
 \emph{TSP 25/Quat}). 
 However, the series with low arities also have small tables, while the series
 with larger arities tend to have larger tables, which makes it hard to
-tell whether the it is the arity or the table size that impact the performance gain.
+tell whether it is the arity or the table size that impact the performance gain.
 %But it is possible that there is a correlation between arities and performance.
 
 % This suggests that there is a weak positive correlation between arity of the constraints
@@ -2012,7 +2031,7 @@ tell whether the it is the arity or the table size that impact the performance g
 
 
 \paragraph{The impact of domain size on performance.}
-It is hard to draw any conclusions of whether the domain size affect
+It is hard to draw any conclusions of whether the domain size affects
 the performance gain of CT. Among the series with small domain sizes, some
 have little or no performance gains (see \emph{AIM-*}, \emph{Dubois}) and
 some have a large performance gains (see \emph{MDD 05}, \emph{BDD Large}).
@@ -2027,10 +2046,10 @@ while some have larger performance gain (see \emph{Rands JC*}, \emph{Crosswords 
 % better than B and I. One exception to this is \emph{BDD Large},
 % with domain size~$2$, where CT outperforms the other algorithms.
 
-\paragraph{Runtime vs. Solvetime.}
-Both the runtime and the solvetime was measured. The runtime is the solvetime
+\paragraph{Runtime vs. solve time.}
+Both the runtime and the solve time ware measured. The runtime is the solve time
 plus the parsing of the FlatZinc file as well as the posting of the propagators.
-The discrepancy between the runtime and solvetime is different for the various
+The discrepancy between the runtime and solve time is different for the various
 algorithms. It is largest for DFA, which shows that the initialisation of DFA
 takes longer time compared to the other algorithms.
 CT has a larger discrepancy than B and I, so initialising CT takes longer time
@@ -2073,20 +2092,21 @@ In this bachelor thesis project, a new propagator algorithm for the~\Table~const
 called Compact-Table (CT), was implemented in the constraint solver Gecode, and its performance
 was evaluated compared to the existing propagators for~\Table~in Gecode, as well
 as the propagator for the \Constraint{Regular} constraint.
-The results of the evaluation is that CT outperforms the existing propagators
+The result of the evaluation is that CT outperforms the existing propagators
 in Gecode for \Table, which suggests that CT should be included in the solver.
-The performance gains from CT seems to be largest for constraints with large tables,
+The performance gains from CT seem to be largest for constraints with large tables,
 and more modest for constraints with low arities.
 
 For the implementation to reach production quality, there
 are a few things that need to be revised. The following lists some known
-improvements and flaws.
+improvements and flaws:
 
 \begin{itemize}
   \item There is an unfound error that causes a crash due to corrupt data 
     in very few cases.
     The most likely cause of this error is that some allocated memory area
     is too small, and that the data is modified outside of this area.
+    \Todo{Work in progress.}
     
   \item Some memory allocations in the initialisation of the propagator
     depend on the domain widths rather
@@ -2104,7 +2124,8 @@ improvements and flaws.
   \item In the variant using delta information, the current implementation
     uses the incremental update if~$|\Delta_x| < |s(x)|$. It is possible
     that this condition can be generalised to~$|\Delta_x| < k \cdot |s(x)|$,
-    where~$k \in \mathbb{R}$, something that remains to be investigated.
+    for some suitable~$k \in \mathbb{R}$; this is something that remains 
+    to be investigated.
     
   \item Implement the generalisations of the CT algorithm described
     in~\cite{DBLP:conf/aaai/VerhaegheLS17}.
@@ -2122,125 +2143,283 @@ improvements and flaws.
 % % This appendix presents the source code for the implementation
 % % described in \Chapref{sec:implementation}.
 % \newpage
-% \appendix
-% \section{Plots from Comparison of Different Versions of CT}
-% \label{app:compare-ct}
-% % the \\ insures the section title is centered below the phrase: AppendixA
+\appendix
+\section{Plots from Comparison of Different Versions of CT}
+\label{app:compare-ct}
+% the \\ insures the section title is centered below the phrase: AppendixA
 
-% Each plot shows the number of instances solved as a function
-% of timeout limit in milliseconds. The measured time is the total
-% runtime, including parsing of the FlatZinc file and the posting of
-% the propagators.
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds. The measured time is the total
+runtime, including parsing of the FlatZinc file and the posting of
+the propagators.
 
-% %\clearpage
+%\clearpage
 
-% \begin{figure}[H]
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{randsJC2500-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{Rands JC2500.} }
-%     \vspace{\baselineskip}
-%   \end{minipage}\qquad
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{randsJC5000-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{Rands JC5000}. }
-%     \vspace{\baselineskip}
-%   \end{minipage}\qquad
-% \end{figure}
+\begin{figure}[H]
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{randsJC2500-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Rands JC2500.} }
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{randsJC5000-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Rands JC5000}. }
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+\end{figure}
 
-% \begin{figure}
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{langford4-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{Langford 4}.}
-%     \vspace{\baselineskip}
-%   \end{minipage}\qquad
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{a5-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{A5}.}
-%     \vspace{\baselineskip}
-%   \end{minipage}\qquad
+\begin{figure}
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{langford4-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Langford 4}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.9]
+      \input{a5-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{A5}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
 
-% \end{figure}
+\end{figure}
 
-% \begin{figure}
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.8]
-%       \input{TSP_Quat_20-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{TSP Quat 20}.}
-%     \vspace{\baselineskip}
-%   \end{minipage}\qquad
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.8]
-%       \input{geom-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{Geom}.}
-%     \vspace{\baselineskip}
-%   \end{minipage}\qquad
-%   \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.8]
-%       \input{Crosswords_lexVg-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{Crosswords LexVG}.}
-%     \vspace{\baselineskip}
-%   \end{minipage} \qquad
-%     \begin{minipage}[b][8cm][s]{0.45\textwidth}
-%     \centering
-%     \vfill
-%     \begin{tikzpicture}[scale=0.8]
-%       \input{aim-50-pos-compare.tex}
-%     \end{tikzpicture}
-%     \vfill
-%     \caption{\textbf{AIM 50}.}
-%     \vspace{\baselineskip}
-%   \end{minipage} \qquad
+\begin{figure}
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{TSP_Quat_20-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{TSP Quat 20}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{geom-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Geom}.}
+    \vspace{\baselineskip}
+  \end{minipage}\qquad
+  \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{Crosswords_lexVg-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{Crosswords LexVG}.}
+    \vspace{\baselineskip}
+  \end{minipage} \qquad
+    \begin{minipage}[b][8cm][s]{0.45\textwidth}
+    \centering
+    \vfill
+    \begin{tikzpicture}[scale=0.8]
+      \input{aim-50-pos-compare.tex}
+    \end{tikzpicture}
+    \vfill
+    \caption{\textbf{AIM 50}.}
+    \vspace{\baselineskip}
+  \end{minipage} \qquad
   
-% \end{figure}
+\end{figure}
 
-% \clearpage
+\clearpage
 
-% \section{Plots from Comparison of CT against Existing Propagators}
-% \label{app:compare-gecode}
+\section{Plots from Comparison of CT against Existing Propagators}
+\label{app:compare-gecode}
 
-% Each plot shows the number of instances solved as a function
-% of timeout limit in milliseconds. The leftmost column shows 
-% runtime,
-% the rightmost column shows solvetime.
+Each plot shows the number of instances solved as a function
+of timeout limit in milliseconds. The leftmost column shows 
+runtime,
+the rightmost column shows solve time.
 
-% \Todo{Todo: One figure per serie, referring to left/right does not work.}
+\Todo{Todo: One figure per serie, referring to left/right does not work.}
 
-% \input{graphs.tex}
+\input{graphs.tex}
+
+\begin{tikzpicture}%[scale=0.9]
+  \input{total-run.tex}
+\end{tikzpicture}
+
+\clearpage
+\section{Bugfix}
+
+\begin{tabular}{cc}
+  \begin{tikzpicture}[scale=0.9]
+    \input{randsJC2500-bug.tex}
+  \end{tikzpicture}
+  &
+  \begin{tikzpicture}[scale=0.9]
+    \input{randsJC5000-bug.tex}
+  \end{tikzpicture}
+  \\
+  \begin{tikzpicture}[scale=0.9]
+    \input{langford2-bug.tex}
+  \end{tikzpicture}
+  &
+  \begin{tikzpicture}[scale=0.9]
+    \input{langford4-bug.tex}
+  \end{tikzpicture}
+  \\
+\end{tabular}
+
+\begin{tabular}{cc}
+  \begin{tikzpicture}[scale=0.9]
+    \input{aim-50-pos-bug.tex}
+  \end{tikzpicture}
+  &
+  \begin{tikzpicture}[scale=0.9]
+    \input{a5-bug.tex}
+  \end{tikzpicture}
+  \\
+  \begin{tikzpicture}[scale=0.9]<
+    \input{Crosswords_lexVg-bug.tex}
+  \end{tikzpicture}
+  &
+  \begin{tikzpicture}[scale=0.9]
+    \input{kakuroext_easy-bug.tex}
+  \end{tikzpicture}
+  \\
+\end{tabular}
+
+\clearpage
+\section{Compact Compact-Table}
+\begin{tabular}{cc}
+  %\begin{figure}
+    \begin{tikzpicture}[scale=0.9]
+      \input{randsJC2500-compact.tex}
+    \end{tikzpicture}
+   % \caption{\textbf{RandsJC2500.}}
+  %\end{figure}
+  &
+%    \begin{figure}
+      \begin{tikzpicture}[scale=0.9]
+        \input{randsJC5000-compact.tex}
+      \end{tikzpicture}
+ %     \caption{\textbf{RandsJC2500.}}
+  %  \end{figure}
+    
+  \\
+  %\begin{figure}
+    \begin{tikzpicture}[scale=0.9]
+      \input{randsJC7500-compact.tex}
+    \end{tikzpicture}
+   % \caption{\textbf{A5.}}
+  %\end{figure}
+  &
+      \begin{tikzpicture}[scale=0.9]
+        \input{randsJC10000-compact.tex}
+      \end{tikzpicture}
+  \\
+\end{tabular}
+
+\begin{tabular}{cc}
+  %\begin{figure}
+    \begin{tikzpicture}[scale=0.9]
+      \input{dubois-compact.tex}
+    \end{tikzpicture}
+   % \caption{\textbf{Dubois.}}
+  %\end{figure}
+  &
+  %   %\begin{figure}
+    
+    \begin{tikzpicture}[scale=0.9]
+      \input{a5-compact.tex}
+    \end{tikzpicture}
+    
+  %   %\caption{\textbf{Geom.}}
+  % %\end{figure}
+  \\
+  \begin{tikzpicture}[scale=0.9]
+    \input{TSP_Quat_20-compact.tex}
+  \end{tikzpicture}
+  &
+    \begin{tikzpicture}[scale=0.9]
+      \input{Crosswords_lexVg-compact.tex}
+    \end{tikzpicture}
+  \\
+\end{tabular}
 
 
- \end{document}
+\begin{tabular}{cc}
+
+    \begin{tikzpicture}[scale=0.9]
+      \input{Crosswords_wordsPuzzle-compact.tex}
+    \end{tikzpicture}
+
+  &
+    \begin{tikzpicture}[scale=0.9]
+      \input{TSP_25-compact.tex}
+    \end{tikzpicture}
+    
+  %   %\caption{\textbf{Geom.}}
+  % %\end{figure}
+  \\
+  \begin{tikzpicture}[scale=0.9]
+    \input{aim-50-pos-compact.tex}
+  \end{tikzpicture}
+  &
+    \begin{tikzpicture}[scale=0.9]
+      \input{bddLarge-compact.tex}
+    \end{tikzpicture}
+  \\
+\end{tabular}
+
+\begin{tabular}{cc}
+
+    \begin{tikzpicture}[scale=0.9]
+      \input{kakuroext_easy-compact.tex}
+    \end{tikzpicture}
+
+  &
+    \begin{tikzpicture}[scale=0.9]
+      \input{k5_n10_d10_m15_p08-compact.tex}
+    \end{tikzpicture}
+    
+  %   %\caption{\textbf{Geom.}}
+  % %\end{figure}
+  \\
+  \begin{tikzpicture}[scale=0.9]
+    \input{langford4-compact.tex}
+  \end{tikzpicture}
+  % &
+  %   \begin{tikzpicture}[scale=0.9]
+  %     \input{bddLarge-compact.tex}
+  %   \end{tikzpicture}
+  \\
+\end{tabular}
+
+%"" "Crosswords_wordsPuzzle" "TSP_25" "aim-50-pos" "bddLarge" "kakuroext_easy" "k5_n10_d10_m15_p08" "langford4"; do
+
+\clearpage
+\section{Barchart}
+
+\input{barchart.tex}
+
+\end{document}
 
 %%% Local Variables:
 %%% mode: latex
