@@ -1,0 +1,48 @@
+\begin{axis}[
+    xmode=log,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\% solved},
+    legend pos=south east
+    ]
+
+    \addplot
+    [mark=triangle*,
+    mark size=1.5,
+    mark options={solid},
+    green]
+    coordinates {
+      (290, 10)
+      (880, 20)
+      (1040, 30)
+      (1160, 40)
+      (2920, 50)
+      (3380, 60)
+      (5410, 70)
+      (7490, 80)
+      (8700, 90)
+      (37900, 100)
+      
+    };
+
+    \addplot
+    [blue,
+    mark=*,
+    mark size=1.5,
+    mark options={solid}]
+    coordinates {
+      (300, 10)
+      (900, 20)
+      (1060, 30)
+      (1200, 40)
+      (2970, 50)
+      (3420, 60)
+      (5470, 70)
+      (7610, 80)
+      (8810, 90)
+      (38640, 100)
+      
+    };
+
+    \legend{master,compact}
+  \end{axis}

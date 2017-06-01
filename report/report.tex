@@ -75,7 +75,7 @@
 
 % SparseBitSet
 \newcommand{\Words}{\texttt{words}}
-\newcommand{\Index}{\texttt{index}}
+\newcommand{\Index}{\texttt{currToOrig}}
 \newcommand{\Mask}{\texttt{mask}}
 \newcommand{\Limit}{\texttt{limit}}
 \newcommand{\SparseBitSet}{\texttt{SparseBitSet}}
@@ -923,16 +923,22 @@ of the class~\SparseBitSet~and their types. Here follows a more detailed descrip
     the~$i$th bit of the~$j$th word is 1 if and only if 
     the~$\left((j-1) \cdot 64 + i\right)$th element of
     the set is present. Initially, all words in this array have all their bits set to~$1$,
-    except the last word, which may have a suffix of bits set to~$0$. \Todo{Example.}
+    except the last word, which may have a suffix of bits set to~$0$. 
+
+    As will be described later, the words in~\Words~are re-ordered
+    so that all the non-zero words are
+    located at indices less than or equal to \Limit, and all the words that
+    consist of only zeros are located at positions strictly greater than~\Limit.
+    \Todo{Example.}
 
   \item \Index~is an array that manages the indices of the words in~\Words,
     making it possible to perform operations on non-zero words only.
-    In~\Index, the
-    indices of all the non-zero words are at positions less than or
-    equal to the value of the field~\Limit, and the indices of the zero words are
-    at positions strictly greater than~\Limit. 
-
-  \item \Limit~is the index of~\Index~corresponding to the last non-zero word in~\Words.
+    For each word in \Words, \Index~maps its \emph{current} index to its
+    \emph{original} index: for a word with current index~$i$,~\Index[$i$]
+    is its original index in \Words.
+    
+  \item \Limit~is the index of~\Index and~\Words~corresponding
+    to the last non-zero word in~\Words.
     Thus it is one smaller than the number of non-zero words in~\Words.
 
   \item \Mask~is a local temporary array that is used to modify the bits in~\Words.
@@ -945,7 +951,7 @@ The class invariant describing the state of the class is as follows:
 \begin{alignat}{1}
   \label{eq:invariant}
   &\Index~\text{is a permutation of~} [0,\dots,p-1],\text{~and} \\
-  &\forall i \in \Set{0,\dots,p-1}: i \leq \Limit \Leftrightarrow \Words[\Index[i]] \neq 0^{64}
+  &\forall i \in \Set{0,\dots,p-1}: i \leq \Limit \Leftrightarrow \Words[i] \neq 0^{64}
 \end{alignat}
 
 %\begin{alignat}{1}
@@ -2264,153 +2270,153 @@ the rightmost column shows solve time.
   \input{total-run.tex}
 \end{tikzpicture}
 
-\clearpage
-\section{Bugfix}
+% \clearpage
+% \section{Bugfix}
 
-\begin{tabular}{cc}
-  \begin{tikzpicture}[scale=0.9]
-    \input{randsJC2500-bug.tex}
-  \end{tikzpicture}
-  &
-  \begin{tikzpicture}[scale=0.9]
-    \input{randsJC5000-bug.tex}
-  \end{tikzpicture}
-  \\
-  \begin{tikzpicture}[scale=0.9]
-    \input{langford2-bug.tex}
-  \end{tikzpicture}
-  &
-  \begin{tikzpicture}[scale=0.9]
-    \input{langford4-bug.tex}
-  \end{tikzpicture}
-  \\
-\end{tabular}
+% \begin{tabular}{cc}
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{randsJC2500-bug.tex}
+%   \end{tikzpicture}
+%   &
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{randsJC5000-bug.tex}
+%   \end{tikzpicture}
+%   \\
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{langford2-bug.tex}
+%   \end{tikzpicture}
+%   &
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{langford4-bug.tex}
+%   \end{tikzpicture}
+%   \\
+% \end{tabular}
 
-\begin{tabular}{cc}
-  \begin{tikzpicture}[scale=0.9]
-    \input{aim-50-pos-bug.tex}
-  \end{tikzpicture}
-  &
-  \begin{tikzpicture}[scale=0.9]
-    \input{a5-bug.tex}
-  \end{tikzpicture}
-  \\
-  \begin{tikzpicture}[scale=0.9]<
-    \input{Crosswords_lexVg-bug.tex}
-  \end{tikzpicture}
-  &
-  \begin{tikzpicture}[scale=0.9]
-    \input{kakuroext_easy-bug.tex}
-  \end{tikzpicture}
-  \\
-\end{tabular}
+% \begin{tabular}{cc}
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{aim-50-pos-bug.tex}
+%   \end{tikzpicture}
+%   &
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{a5-bug.tex}
+%   \end{tikzpicture}
+%   \\
+%   \begin{tikzpicture}[scale=0.9]<
+%     \input{Crosswords_lexVg-bug.tex}
+%   \end{tikzpicture}
+%   &
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{kakuroext_easy-bug.tex}
+%   \end{tikzpicture}
+%   \\
+% \end{tabular}
 
-\clearpage
-\section{Compact Compact-Table}
-\begin{tabular}{cc}
-  %\begin{figure}
-    \begin{tikzpicture}[scale=0.9]
-      \input{randsJC2500-compact.tex}
-    \end{tikzpicture}
-   % \caption{\textbf{RandsJC2500.}}
-  %\end{figure}
-  &
-%    \begin{figure}
-      \begin{tikzpicture}[scale=0.9]
-        \input{randsJC5000-compact.tex}
-      \end{tikzpicture}
- %     \caption{\textbf{RandsJC2500.}}
-  %  \end{figure}
+% \clearpage
+% \section{Compact Compact-Table}
+% \begin{tabular}{cc}
+%   %\begin{figure}
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{randsJC2500-compact.tex}
+%     \end{tikzpicture}
+%    % \caption{\textbf{RandsJC2500.}}
+%   %\end{figure}
+%   &
+% %    \begin{figure}
+%       \begin{tikzpicture}[scale=0.9]
+%         \input{randsJC5000-compact.tex}
+%       \end{tikzpicture}
+%  %     \caption{\textbf{RandsJC2500.}}
+%   %  \end{figure}
     
-  \\
-  %\begin{figure}
-    \begin{tikzpicture}[scale=0.9]
-      \input{randsJC7500-compact.tex}
-    \end{tikzpicture}
-   % \caption{\textbf{A5.}}
-  %\end{figure}
-  &
-      \begin{tikzpicture}[scale=0.9]
-        \input{randsJC10000-compact.tex}
-      \end{tikzpicture}
-  \\
-\end{tabular}
+%   \\
+%   %\begin{figure}
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{randsJC7500-compact.tex}
+%     \end{tikzpicture}
+%    % \caption{\textbf{A5.}}
+%   %\end{figure}
+%   &
+%       \begin{tikzpicture}[scale=0.9]
+%         \input{randsJC10000-compact.tex}
+%       \end{tikzpicture}
+%   \\
+% \end{tabular}
 
-\begin{tabular}{cc}
-  %\begin{figure}
-    \begin{tikzpicture}[scale=0.9]
-      \input{dubois-compact.tex}
-    \end{tikzpicture}
-   % \caption{\textbf{Dubois.}}
-  %\end{figure}
-  &
-  %   %\begin{figure}
+% \begin{tabular}{cc}
+%   %\begin{figure}
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{dubois-compact.tex}
+%     \end{tikzpicture}
+%    % \caption{\textbf{Dubois.}}
+%   %\end{figure}
+%   &
+%   %   %\begin{figure}
     
-    \begin{tikzpicture}[scale=0.9]
-      \input{a5-compact.tex}
-    \end{tikzpicture}
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{a5-compact.tex}
+%     \end{tikzpicture}
     
-  %   %\caption{\textbf{Geom.}}
-  % %\end{figure}
-  \\
-  \begin{tikzpicture}[scale=0.9]
-    \input{TSP_Quat_20-compact.tex}
-  \end{tikzpicture}
-  &
-    \begin{tikzpicture}[scale=0.9]
-      \input{Crosswords_lexVg-compact.tex}
-    \end{tikzpicture}
-  \\
-\end{tabular}
+%   %   %\caption{\textbf{Geom.}}
+%   % %\end{figure}
+%   \\
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{TSP_Quat_20-compact.tex}
+%   \end{tikzpicture}
+%   &
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{Crosswords_lexVg-compact.tex}
+%     \end{tikzpicture}
+%   \\
+% \end{tabular}
 
 
-\begin{tabular}{cc}
+% \begin{tabular}{cc}
 
-    \begin{tikzpicture}[scale=0.9]
-      \input{Crosswords_wordsPuzzle-compact.tex}
-    \end{tikzpicture}
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{Crosswords_wordsPuzzle-compact.tex}
+%     \end{tikzpicture}
 
-  &
-    \begin{tikzpicture}[scale=0.9]
-      \input{TSP_25-compact.tex}
-    \end{tikzpicture}
+%   &
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{TSP_25-compact.tex}
+%     \end{tikzpicture}
     
-  %   %\caption{\textbf{Geom.}}
-  % %\end{figure}
-  \\
-  \begin{tikzpicture}[scale=0.9]
-    \input{aim-50-pos-compact.tex}
-  \end{tikzpicture}
-  &
-    \begin{tikzpicture}[scale=0.9]
-      \input{bddLarge-compact.tex}
-    \end{tikzpicture}
-  \\
-\end{tabular}
+%   %   %\caption{\textbf{Geom.}}
+%   % %\end{figure}
+%   \\
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{aim-50-pos-compact.tex}
+%   \end{tikzpicture}
+%   &
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{bddLarge-compact.tex}
+%     \end{tikzpicture}
+%   \\
+% \end{tabular}
 
-\begin{tabular}{cc}
+% \begin{tabular}{cc}
 
-    \begin{tikzpicture}[scale=0.9]
-      \input{kakuroext_easy-compact.tex}
-    \end{tikzpicture}
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{kakuroext_easy-compact.tex}
+%     \end{tikzpicture}
 
-  &
-    \begin{tikzpicture}[scale=0.9]
-      \input{k5_n10_d10_m15_p08-compact.tex}
-    \end{tikzpicture}
+%   &
+%     \begin{tikzpicture}[scale=0.9]
+%       \input{k5_n10_d10_m15_p08-compact.tex}
+%     \end{tikzpicture}
     
-  %   %\caption{\textbf{Geom.}}
-  % %\end{figure}
-  \\
-  \begin{tikzpicture}[scale=0.9]
-    \input{langford4-compact.tex}
-  \end{tikzpicture}
-  % &
-  %   \begin{tikzpicture}[scale=0.9]
-  %     \input{bddLarge-compact.tex}
-  %   \end{tikzpicture}
-  \\
-\end{tabular}
+%   %   %\caption{\textbf{Geom.}}
+%   % %\end{figure}
+%   \\
+%   \begin{tikzpicture}[scale=0.9]
+%     \input{langford4-compact.tex}
+%   \end{tikzpicture}
+%   % &
+%   %   \begin{tikzpicture}[scale=0.9]
+%   %     \input{bddLarge-compact.tex}
+%   %   \end{tikzpicture}
+%   \\
+% \end{tabular}
 
 %"" "Crosswords_wordsPuzzle" "TSP_25" "aim-50-pos" "bddLarge" "kakuroext_easy" "k5_n10_d10_m15_p08" "langford4"; do
 

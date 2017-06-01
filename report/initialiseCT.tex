@@ -1,8 +1,8 @@
       \PROCEDURE \InitialiseCT($s$: store, % $vars$: array of variables,
-      $\ T_0$: list of tuples) : store
+      $\ T_0$: list of tuples, $\mathit{vars}(c)$: seq. of variables) : store
       \FOREACH{$x \in s$} \label{line:init:-1} %\COMMENT{Initial bounds propagation} 
-          \STATE $R \leftarrow \Set{a \in s(x) : a > \localvar{T_0}.\function{max}()
-                 \ \lor \ a < \localvar{T_0}.\function{min}()}$
+          \STATE $R \leftarrow \Set{a \in s(x) : a > T_0.\function{max}()
+                 \ \lor \ a < T_0.\function{min}()}$
            \STATE $s \leftarrow s[x \mapsto s(x) \setminus R]$                   
            \IF{$s(x) = \emptyset$}
                \RETURN{$\emptyset$} \label{line:init:wipeout0}
@@ -10,9 +10,9 @@
 
        \ENDFOREACH \label{line:init:0}
 
-      \STATE $\localvar{npairs} \leftarrow \function{sum}\Set{|s(x)| : x \in s}$
+      \STATE $\localvar{npairs} \leftarrow \function{sum}\Set{|s(x)| : x \in \Vars}$
       \COMMENT{Number of variable-value pairs}\label{line:init:3}
-      \STATE $\localvar{ntuples} \leftarrow \localvar{T_0}.\function{size}()$ \COMMENT{Number of tuples}
+      \STATE $\localvar{ntuples} \leftarrow T_0.\function{size}()$ \COMMENT{Number of tuples}
       \STATE $\localvar{nsupports} \leftarrow 0$ \COMMENT{Number of found supports} \label{line:init:4}
       
       %      \STATE $\Scp \leftarrow \localvar{variables}$ \label{line:init:1}
@@ -20,25 +20,26 @@
  %     ~\text{filled with -1}$ \COMMENT{Dummy value} \label{line:init:2}
       \STATE $\Residues \leftarrow \text{array of length~} \localvar{npairs}$ \label{line:init:residue}
       
-      \STATE $\Supports \leftarrow$ \text{array of length~}$\localvar{npairs}$ \label{line:init:supports}
-      \text{with bit-sets of size~}$\localvar{ntuples}$ \label{line:init:5}
+      \STATE $\Supports \leftarrow$ \text{array of length~}$\localvar{npairs}$ \text{with bit-sets of size~}$\localvar{ntuples}$ \label{line:init:supports}
+      \STATE $\Vars \gets \mathit{vars}(c)$ \label{line:init:vars}       
+      
       % BitSets$(\localvar{size}, \localvar{ntuples})$ 
       %\COMMENT{bit-set matrix with $\localvar{size}$ rows and $\localvar{ntuples}$ columns} 
 
       \FOREACH{$t \in T_0$} \label{line:init:6}
         \STATE $\localvar{supported} \leftarrow \T{true}$
-        \FOREACH{$x \in s$}
+        \FOREACH{$x \in \Vars$}
           \IF{$t[x] \notin s(x)$}
             \STATE $\localvar{supported} \leftarrow \T{false}$
             \STATE $\textbf{break}$ \COMMENT{Exit loop}
           \ENDIF
         \ENDFOREACH
           \IF{$\localvar{supported}$} 
-            \FOREACH{$x \in s$} \label{line:init:9}
+            \FOREACH{$x \in \Vars$} \label{line:init:9}
               \STATE $\Supports[x,t[x]][\localvar{nsupports}] \leftarrow 1$ \label{line:init:10}
               \STATE $\Residues[x,t[x]] \leftarrow \Floor{\frac{\localvar{nsupports}}{64}}$
               \COMMENT{Index for the support in~$\CurrTable$}\label{line:init:11}
-              \STATE $\localvar{nsupports} \leftarrow \localvar{nsupports} + 1$
+              \STATE $\localvar{nsupports} \leftarrow \localvar{nsupports} + 1$ \label{line:init:12}
             \ENDFOREACH
             %\STATE setElemsInColumn($\localvar{nsupports}$, $t$) 
           \ENDIF
@@ -46,7 +47,7 @@
       %\COMMENT{Mark tuple as supported}
 
      % \STATE $\Supports.\text{trimToWidth}(\localvar{nsupports})$ \COMMENT{Keep only the first $\localvar{nsupports}$ bits for each row}
-      \FOREACH{$x \in s$} \label{line:init:12}
+      \FOREACH{$x \in \Vars$} \label{line:init:12}
          \STATE $R \leftarrow \Set{a \in s(x) : \Supports[x,a] = \emptyset}$
          \STATE $s \leftarrow s[x \mapsto s(x) \setminus R]$ \label{line:init:14}          
          \IF{$s(x) = \emptyset$}
@@ -54,7 +55,7 @@
          \ENDIF
           
       \ENDFOREACH
-      \STATE $\CurrTable \leftarrow \SparseBitSet$ \text{with} $\localvar{nsupports}$ \text{bits~} \label{line:init:15}
+      \STATE $\CurrTable \leftarrow \SparseBitSet$ \text{with} $\localvar{nsupports}$ \text{bits set to 1~} \label{line:init:15}
       \RETURN{$s$}
       %      \RETURN{$Fixpoint$}
       %\Endfunc

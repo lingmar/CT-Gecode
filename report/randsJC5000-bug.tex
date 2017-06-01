@@ -1,0 +1,29 @@
+\begin{axis}[
+    xmode=log,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\# solved},
+    legend pos=south east
+    % table/create on use/cumulative distribution/.style={
+    %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
+    % }
+    ]
+
+    \addplot [brown!60!black,
+    mark options={fill=brown!40},
+    mark=otimes*,
+    mark size=1.5]
+    coordinates {
+    (2684.556,1) (3037.945,2) (4338.162,3) (5771.940,4) (24541.853,5) (27967.347,6) (36060.594,7) (68735.220,8) (103641.866,9) (244658.378,10)
+    };
+
+    \addplot 
+    [red,
+    mark size=1.5,
+    mark=square*]
+    coordinates {
+    (2972.726,1) (3598.228,2) (5008.444,3) (6631.690,4) (28562.240,5) (31320.804,6) (41281.695,7) (77943.893,8) (116106.950,9) (286321.319,10)
+    };
+
+    \legend{Bugfree,Buggy}
+  \end{axis}

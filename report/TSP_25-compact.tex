@@ -1,0 +1,67 @@
+\begin{axis}[
+    xmode=log,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\% solved},
+    legend pos=south east,
+    cycle list/Set1-6,
+            % define fill color for the marker
+            mark list fill={.!75!white},
+            mark options={solid},
+            cycle multiindex* list={
+                Set1-6
+                    \nextlist
+                [3 of]linestyles
+                    \nextlist
+                very thick
+                \nextlist
+                mark=o,
+                mark=*,
+                mark=square,
+                mark=triangle,
+                mark=+
+            },
+    ]
+
+    \addplot
+    coordinates {
+      (170, 7)
+      (200, 13)
+      (310, 20)
+      (420, 27)
+      (430, 33)
+      (460, 40)
+      (3220, 47)
+      (3320, 53)
+      (4790, 60)
+      (5210, 67)
+      (9080, 73)
+      (9830, 80)
+      (12520, 87)
+      (40470, 93)
+      (72470, 100)
+      
+    };
+    \addplot
+    coordinates {
+      (180, 7)
+      (200, 13)
+      (320, 20)
+      (440, 27)
+      (450, 33)
+      (470, 40)
+      (3340, 47)
+      (3440, 53)
+      (4950, 60)
+      (5400, 67)
+      (9350, 73)
+      (10090, 80)
+      (12910, 87)
+      (41890, 93)
+      (74570, 100)
+      
+    };
+    
+
+    \legend{Master,Compact}
+  \end{axis}

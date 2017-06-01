@@ -1,20 +1,20 @@
-\begin{algorithm}[H]
+\begin{algorithm}[t]
 \begin{algorithmic}[1]
   \PROCEDURE $\CompactTable(s:~\text{store}) : \Tuple{\StatusMessage,\ \text{store}}$
   \IF[executed in a constructor]{the propagator is being posted}
-    \STATE $s \leftarrow \InitialiseCT(s,T_0)$
+    \STATE $s \leftarrow \InitialiseCT(s,T_0,\mathit{vars}(c))$
     \IF{$s = \emptyset$
 }
       \RETURN $\Tuple{\FAIL, \emptyset}$
     \ENDIF
   \ELSE[executed in an advisor]
-    \FOREACH{variable~$x \in s$ whose domain has changed since last time}
+    \FOREACH{variable~$x \in \Vars$ whose domain has changed since last invocation}
       \STATE \UpdateTable($s,x$)
       \IF{$\CurrTable$.isEmpty()}
         \RETURN $\Tuple{\FAIL,\emptyset}$
       \ENDIF
     \ENDFOREACH
-      \IF[executed in the propagate function]{\CurrTable~has changed since last time}
+      \IF{\CurrTable~has changed since last invocation}
          \STATE $s \leftarrow \FilterDomains(s)$
       \ENDIF
   \ENDIF
