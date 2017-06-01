@@ -167,14 +167,6 @@ public:
     row(int val) {
       return static_cast<SupportsI*>(object())->info->row(val);
     }
-    /// Print (dbugging)
-    void print() const {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      printf("nvals=%d, min=%d\n",si->nvals,si->min);
-      for (int j = 0; j < si->nvals; j++) {
-        si->info->get_supports(j).print();
-      }
-    }
   };
   /// Index of the view the advisor is assigned to
   int index;
@@ -182,8 +174,8 @@ public:
   Supports supports;
   /// The word index of the last found support for each value
   unsigned int* residues;
-  /// Number of values
-  unsigned int nvals;
+
+  int offset;
   
   /// Constructor
   forceinline
@@ -197,13 +189,14 @@ public:
             IndexType type)
     : ViewAdvisor<View>(home,p,c,x0),
     index(i),
+    offset(0),
     supports(s0,nsupports,offset,type,x0)
   {
     // Initialise residues
     switch (type) {
     case ARRAYY: {
       // Sparse array
-      nvals = x0.max() - x0.min() + 1;
+      int nvals = x0.max() - x0.min() + 1;
       residues = home.alloc<unsigned int>(nvals);
       for (unsigned int i = 0; i < nvals; i++)
         residues[i] = res[i + offset];
@@ -211,7 +204,7 @@ public:
     }
     case HASHH: {
       // Pack the residues tight        
-      nvals = x0.size();
+      int nvals = x0.size();
       residues = home.alloc<unsigned int>(nvals);
       int count = 0;
       int diff = x0.min();
@@ -234,15 +227,22 @@ public:
   /// Copy constructor
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
-    : ViewAdvisor<View>(home,share,a),
-    index(a.index), nvals(a.nvals)
+    : ViewAdvisor<View>(home,share,a)
   {
-    // Update shared handle
-    supports.update(home,share,a.supports);
-    // Copy residues
-    residues = home.alloc<unsigned int>(nvals);
-    for (int i = nvals; i--; )
-      residues[i] = a.residues[i];
+    View x = a.view();
+    if (!x.assigned()) {
+      index = a.index;
+      // Update shared handle
+      supports.update(home,share,a.supports);
+      // Copy residues
+      const int min_row = supports.row(x.min()) - a.offset;
+      const int max_row = supports.row(x.max()) - a.offset;
+      offset = a.offset + min_row;
+      residues = home.alloc<unsigned int>(x.width());
+      int cnt = 0;
+      for (int i = min_row; i <= max_row; i++)
+        residues[cnt++] = a.residues[i];
+    }
   }
     
   forceinline void
@@ -689,7 +689,7 @@ public:
       int row = a.supports.row(cur);
       assert(row >= 0);
       // Find the support entries for the first two values,
-      // to initialise the map from
+      // to initialise the mask from
       const BitSet& first = a.supports(row);
       if (cur < max) { // First range has more than one value
         ++cur;
@@ -874,10 +874,11 @@ public:
       case 2: { // Consider min and max values
         const int min_val = v.min();
         const int max_val = v.max();
+        const unsigned int offset = a.offset;
 
         // Fix to max_val if min_val not supported
         const int row_min = a.supports.row(min_val);
-        if (!supported(a,row_min)) {
+        if (!supported(a,row_min,offset)) {
           GECODE_ME_CHECK(v.eq(home,max_val));          
           --unassigned;
           break;
@@ -885,7 +886,7 @@ public:
 
         // Fix to min_val if max_val not supported
         const int row_max = a.supports.row(max_val);
-        if (!supported(a,row_max)) {
+        if (!supported(a,row_max,offset)) {
           GECODE_ME_CHECK(v.eq(home,min_val));    
           --unassigned;
           break;
@@ -896,6 +897,7 @@ public:
         break;
       } default:
 #ifdef LONG_FILTER
+        const unsigned int offset = a.offset;
         const int min_val = v.min();
         const int max_val = v.max();
         int new_min = min_val;
@@ -907,7 +909,7 @@ public:
           // Increase new_min to smallest supported value
           int row = a.supports.row(new_min);
           for (; new_min <= max_val; ++new_min) {
-            if (supported(a,row))
+            if (supported(a,row,offset))
               break;
             ++row;
           }
@@ -922,7 +924,7 @@ public:
           // Decrease new_max to largest supported value
           row = a.supports.row(new_max);
           for (; new_max >= new_min; --new_max) {
-            if (supported(a,row))
+            if (supported(a,row,offset))
               break;
             --row;
           }
@@ -937,7 +939,7 @@ public:
           // Filter out values in between min and max
           row = a.supports.row(new_min + 1);
           for (int val = new_min + 1; val < new_max; ++val) {
-            if (!supported(a,row))
+            if (!supported(a,row,offset))
               nq[nremoves++] = val;
             ++row;
           }
@@ -955,7 +957,7 @@ public:
             row = a.supports.row(cur);
             while (cur <= max) {
               assert(a.view().in(cur));
-              if (!supported(a,row)) {
+              if (!supported(a,row,offset)) {
                 nq[nremoves++] = cur;
               } else {
                 if (new_min == Limits::max) {
@@ -991,6 +993,7 @@ public:
             nremoves--;
         }
 #else
+        unsigned int offset = a.offset;
         Int::ViewRanges<View> rngs(v);
         int cur, max, row;
         int last_support;
@@ -1001,7 +1004,7 @@ public:
           row = a.supports.row(cur);
           while (cur <= max) {
             assert(v.in(cur));
-            if (!supported(a,row))
+            if (!supported(a,row,offset))
               *(nq++) = cur;
             else
               last_support = cur;
@@ -1044,8 +1047,8 @@ public:
   }
 
   forceinline bool
-  supported(CTAdvisor<View>& a, int row) {
-    int r = static_cast<int>(a.residues[row]);
+  supported(CTAdvisor<View>& a, int row, unsigned int offset) {
+    int r = static_cast<int>(a.residues[row - offset]);
     const BitSet& support_row = a.supports(row);
 
     if (r == 0)
@@ -1059,7 +1062,8 @@ public:
       r = intersect_index(support_row, r-1);
 
     if (r != -1) {
-      a.residues[row] = static_cast<unsigned int>(r);
+      assert(r >= 0);
+      a.residues[row - offset] = static_cast<unsigned int>(r);
       return true;
     } 
     return false;
@@ -1114,33 +1118,6 @@ public:
 
     return count_unassigned == unassigned;
   }
-
-  // void printState() {
-  //   if (NOISY) {
-  //     printf("state for %d\n", id);
-  //     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-  //       CTAdvisor<View> a = a0.advisor();
-  //       printf("x[%d] = ", a.index);
-  //       cout << a.view() << endl;
-  //     }
-          
-  //     printf("limit=%d\n", limit);
-  //     printf("nset=%d\n", nset());
-  //     words.print();
-  //     printf("index=");
-  //     if (limit >= static_cast<int>(Support::BitSetData::data(words.size()))) {
-  //       printf("limit=%d,nwords=%d, limit >= nwords = %d\n", limit,
-  //              Support::BitSetData::data(words.size()),
-  //              limit >= Support::BitSetData::data(words.size()));
-  //     }
-  //     assert(limit < static_cast<int>(Support::BitSetData::data(words.size())));
-  //     for (int i = 0; i <= limit; i++) {
-  //       //  printf("%d (%d(%d))", index[i], !words.getword(i).none(), !words.getword(index[i]).none());
-  //     }
-  //     printf("\n");
-
-  //   }
-  // }
 };
 
 
