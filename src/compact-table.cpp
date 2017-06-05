@@ -5,8 +5,7 @@
 #include <assert.h>
 #include "info-base.hpp"
 
-//#define NOISY 0
-//#define BUG 0
+#define NOISY 0
 
 //#define DEBUG
 
@@ -14,7 +13,7 @@
 //#define FIX
 #define DELTA
 
-//#define forceinline __attribute__ ((noinline))
+#define CLEAR_MASK
 
 /** 
  * Threshold value for using hash table
@@ -53,7 +52,7 @@ public:
       IndexType type;
       /// Info object
       InfoBase* info;
-      /// Default constructor (yields empty object)
+      /// Default constructor (yields empty set)
       SupportsI(void) {}
       /// Copy \a s
       SupportsI(const SupportsI& s) 
@@ -75,8 +74,8 @@ public:
       /// Initialise from parameters
       forceinline void
       init(const BitSet* s,
-                int nsupports, int offset,
-                IndexType t, View x) {
+           int nsupports, int offset,
+           IndexType t, View x) {
         type = t;
         switch (type) {
         case ARRAYY:  {
@@ -122,9 +121,9 @@ public:
       }
     };
   public:
-
-    forceinline Supports(void) {}
-
+    forceinline
+    Supports(void) {}
+    
     forceinline
     Supports(BitSet* s, int nsupports, int offset,
              IndexType type, View x)
@@ -133,7 +132,8 @@ public:
     }
 
     /// Copy \a s
-    forceinline Supports(const Supports& s)
+    forceinline
+    Supports(const Supports& s)
       : SharedHandle(s) {
     }
     /// [] operator
@@ -149,10 +149,10 @@ public:
       return si->info->get_supports_raw(i);
     }
     /// Initialise from parameters
-    forceinline void
-    init(BitSet* s,
-         int nsupports, int offset,
-         IndexType type, View x) {
+    forceinline
+    void init(BitSet* s,
+              int nsupports, int offset,
+              IndexType type, View x) {
       
       static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,type,x);
@@ -167,14 +167,6 @@ public:
     row(int val) {
       return static_cast<SupportsI*>(object())->info->row(val);
     }
-    /// Print
-    void print() const {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      printf("nvals=%d, min=%d\n",si->nvals,si->min);
-      for (int j = 0; j < si->nvals; j++) {
-        si->info->get_supports(j).print();
-      }
-    }
   };
   /// Index of the view the advisor is assigned to
   int index;
@@ -182,8 +174,8 @@ public:
   Supports supports;
   /// The word index of the last found support for each value
   unsigned int* residues;
-  /// Number of values
-  unsigned int nvals;
+
+  int offset;
   
   /// Constructor
   forceinline
@@ -197,13 +189,14 @@ public:
             IndexType type)
     : ViewAdvisor<View>(home,p,c,x0),
     index(i),
+    offset(0),
     supports(s0,nsupports,offset,type,x0)
   {
     // Initialise residues
     switch (type) {
     case ARRAYY: {
       // Sparse array
-      nvals = x0.max() - x0.min() + 1;
+      int nvals = x0.max() - x0.min() + 1;
       residues = home.alloc<unsigned int>(nvals);
       for (unsigned int i = 0; i < nvals; i++)
         residues[i] = res[i + offset];
@@ -211,7 +204,7 @@ public:
     }
     case HASHH: {
       // Pack the residues tight        
-      nvals = x0.size();
+      int nvals = x0.size();
       residues = home.alloc<unsigned int>(nvals);
       int count = 0;
       int diff = x0.min();
@@ -234,15 +227,22 @@ public:
   /// Copy constructor
   forceinline
   CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
-    : ViewAdvisor<View>(home,share,a),
-    index(a.index), nvals(a.nvals)
+    : ViewAdvisor<View>(home,share,a)
   {
-    // Update shared handle
-    supports.update(home,share,a.supports);
-    // Copy residues
-    residues = home.alloc<unsigned int>(nvals);
-    for (int i = nvals; i--; )
-      residues[i] = a.residues[i];
+    View x = a.view();
+    if (!x.assigned()) {
+      index = a.index;
+      // Update shared handle
+      supports.update(home,share,a.supports);
+      // Copy residues
+      const int min_row = supports.row(x.min()) - a.offset;
+      const int max_row = supports.row(x.max()) - a.offset;
+      offset = a.offset + min_row;
+      residues = home.alloc<unsigned int>(x.width());
+      int cnt = 0;
+      for (int i = min_row; i <= max_row; i++)
+        residues[cnt++] = a.residues[i];
+    }
   }
     
   forceinline void
@@ -269,7 +269,7 @@ protected:
   unsigned int unassigned;
   /// -2 if more than one touched var, -1 if none, else index of the only touched var
   int touched_var;
-  /// Whether propagator is propagating
+  /// Whether propagator is propagating or not
   Status status;
   /// Largest domain size
   unsigned int max_dom_size;
@@ -278,10 +278,11 @@ protected:
   // *** Sparse bit-set *** //
   /// Valid bits
   BitSet words;
-  /// Maps words to supports
+  /// Maps the current index to its original index in words
   int* index;
-  /// Equal to number of non-zero words minus 1
+  /// Equals to the number of non-zero words minus 1
   int limit;
+  
 private:
   /// Initialise sparse bit-set with space for \a s bits (only after call to default constructor)
   forceinline void
@@ -293,7 +294,11 @@ private:
     for (int i = limit+1; i--; )
       index[i] = i;
     // Set the set nr of bits in words
-    setall(s);
+    clearall(s);
+    assert(nzerowords());
+    assert(limit >= 0);
+    assert(nset() == s);
+    assert(limit <= Support::BitSetData::data(words.size()) - 1);
   }
   /// Check if sparse bit set is empty
   forceinline bool
@@ -304,55 +309,92 @@ private:
   forceinline void
   clear_mask(BitSet& mask) {
     assert(limit >= 0);
-    BitSet::clear_by_map(mask,index,limit);
+    assert(nzerowords());
+    BitSet::clear_to_limit(mask, static_cast<unsigned int>(limit));
   }
+  forceinline void
+  init_mask(const BitSet& a, const BitSet& b, BitSet& mask) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::init_from_bs(mask,a,b,index,static_cast<unsigned int>(limit));
+  }
+  
   /// Add bits in \a b to \a mask
   forceinline void
   add_to_mask(const BitSet& b, BitSet& mask) const {
     assert(limit >= 0);
-    BitSet::or_by_map(mask, b, index, limit);
+    assert(nzerowords());
+    BitSet::or_by_map(mask, b, index, static_cast<unsigned int>(limit));
   }
   /// Intersect words with \a mask
   forceinline void
   intersect_with_mask(const BitSet& mask) {
     assert(limit >= 0);
+    assert(nzerowords());
     BitSet::intersect_by_map(words,mask,index,&limit);
   }
+  /// Intersect words with \a mask
+  forceinline void
+  intersect_with_mask_sparse_one(const BitSet& mask) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::intersect_by_map_sparse(words,mask,index,&limit);
+  }
+  /// Intersect words with the or of \a and \a b
+  forceinline void
+  intersect_with_mask_sparse_two(const BitSet& a, const BitSet& b) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::intersect_by_map_sparse_two(words,a,b,index,&limit);
+  }
+
   /// Get the index of a non-zero intersect with \a b, or -1 if none exists
   forceinline int
-  intersect_index(const BitSet& b) const {
+  intersect_index(const BitSet& b, int max_index) const {
     assert(limit >= 0);
-    return BitSet::intersect_index_by_map(words,b,index,limit);
+    assert(max_index >= 0);
+    assert(max_index <= limit);
+    assert(nzerowords());
+    return BitSet::intersect_index_by_map(words,b,index,
+                                          static_cast<unsigned int>(max_index));
+    
   }
   /// Perform "nand" with \a b
-  forceinline bool
-  nand_with_mask(const BitSet& b) {
+  forceinline void
+  nand_with_mask_one(const BitSet& b) {
     assert(limit >= 0);
-    return BitSet::nand_by_map(words,b,index,&limit);
+    assert(nzerowords());
+    BitSet::nand_by_map_one(words,b,index,&limit);
   }
-  /// Test whether exactly one bit is set
+  /// Perform "nand" with the "or" of \a a and \a b
+  forceinline void
+  nand_with_mask_two(const BitSet& a, const BitSet& b) {
+    assert(limit >= 0);
+    assert(nzerowords());
+    BitSet::nand_by_map_two(words,a,b,index,&limit);
+  }
+
+  /// Test whether exactly one bit is set in words
   forceinline bool
   one() const {
     assert(limit >= 0);
-    return limit == 0 && words.one(index[limit]);
+    assert(nzerowords());
+    return limit == 0 && words.one(0);
   }
   /// Get the index of the set bit (only after one() returns true)
   forceinline unsigned int
   index_of_fixed() const {
     assert(limit >= 0);
+    assert(nzerowords());
+    assert(one());
     // The word index is index[limit]
     // Bit index is word_index*bpb + bit_index
-    unsigned int bit_index = words.getword(index[limit]).next();
-    return index[limit] * words.get_bpb() + bit_index;
+    unsigned int bit_index = words.getword(0).next();
+    return index[0] * words.get_bpb() + bit_index;
   }
-  /// Flip the bits in mask
-  void flip_mask(BitSet& b) const {
-    assert(limit >= 0);
-    BitSet::flip_by_map(b,index,limit);
-  }
-  /// Clear set bits in words
-  void setall(unsigned int sz) {
-    assert(limit >= 0);
+  /// Clear \a set bits in words
+  forceinline void
+  clearall(unsigned int sz) {
     int start_bit = 0;
     int complete_words = sz / BitSet::get_bpb();
     if (complete_words > 0) {
@@ -362,6 +404,19 @@ private:
     for (unsigned int i = start_bit; i < sz; i++) {
       words.set(i);
     }
+  }
+  // Debugging only
+  int nset() {
+    int count = 0;
+    for (int i = 0; i <= limit; i++) {
+      for (int j = 0; j < BitSet::get_bpb(); j++) {
+        count += words.get(i*BitSet::get_bpb() + j);
+        if (i*BitSet::get_bpb() + j == words.size() - 1) {
+          break;
+        }
+      }
+    }
+    return count;
   }
   
 public:
@@ -397,13 +452,13 @@ public:
       home.fail();
       return;
     } 
-    
+
     init_sparse_bit_set(home, nsupports);
     
-    // Because we use heap allocated data
+    // Because we use heap allocated data in advisors
     home.notice(*this,AP_DISPOSE);
     
-    // Schedule in case no advisors have been posted or in case we can subsume
+    // Schedule in case we can subsume
     if (unassigned <= 1)
       View::schedule(home,*this,Int::ME_INT_VAL);
   }
@@ -437,7 +492,7 @@ public:
     }
 
     int support_cnt = 0;
-    int bpb = BitSet::get_bpb(); /** Bits per base in bitsets **/
+    int bpb = BitSet::get_bpb(); // Bits per base (word) in bitsets
     
     // Look for supports and set correct bits in supports
     for (int i = 0; i < ts.tuples(); i++) {
@@ -461,6 +516,7 @@ public:
             supports[row].init(r,ts.tuples(),false);
 
           supports[row].set(support_cnt);
+          // Save the index in words where a support is found for the value
           residues[row] = support_cnt / bpb;
         }
         support_cnt++;
@@ -531,15 +587,12 @@ public:
     tupleSet.update(home,share,p.tupleSet);
 #endif // FIX
     index = home.alloc<int>(limit + 1);
-    int max_index = p.index[0];
-    for (int i = limit+1; i--; ) {
+    for (int i = limit+1; i--; )
       index[i] = p.index[i];
-      if (index[i] > max_index)
-        max_index = index[i];
-    }
-    unsigned int nbits = (max_index + 1) * BitSet::get_bpb();
+    unsigned int nbits = (limit + 1) * BitSet::get_bpb();
     words.allocate(home, nbits);
     words.copy(nbits, p.words);
+    assert(limit <= Support::BitSetData::data(words.size()) - 1);
   }
 
   // Create copy during cloning
@@ -568,10 +621,11 @@ public:
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
     status = PROPAGATING;
-    
     if (is_empty())
       return ES_FAILED;
-
+    assert(nset() > 0);
+    assert(nzerowords());
+    assert(limit >= 0);
 #ifdef FIX
     ExecStatus msg;
     if (one()) 
@@ -584,39 +638,122 @@ public:
 
     touched_var = -1;
     status = NOT_PROPAGATING;
+    assert(limit >= 0);
+    assert(nset() > 0);
+    assert(nzerowords());
     return msg;
   }
 
   forceinline void
   reset_based_update(CTAdvisor<View> a, Space& home) {
-    // Collect all tuples to be kept in a temporary mask
-    Region r(home);
-    BitSet mask;
-    mask.allocate(r,words.size());
-    clear_mask(mask);
+    assert(nzerowords());
+    assert(limit >= 0);
+    assert(a.view().size() >= 2);
+    switch (a.view().size()) {
+    case 2: {
+      // Intersect with validTuples directly
+      int row_min = a.supports.row(a.view().min());
+      int row_max = a.supports.row(a.view().max());
+      intersect_with_mask_sparse_two(a.supports(row_min),
+                                     a.supports(row_max));
+      break;
+    }
+    default:
+      // Collect all tuples to be kept in a temporary mask
+      Region r(home);
+      BitSet mask;
+      mask.allocate(r,words.size());
 
-    Int::ViewRanges<View> rngs(a.view());
-    int cur, max, row;
-    while (rngs()) {
-      cur = rngs.min();
-      max = rngs.max();
-      row = a.supports.row(cur);
+      Int::ViewRanges<View> rngs(a.view());
+      //cout << a.view() << endl;
+    
+#ifdef CLEAR_MASK
+      clear_mask(mask);
+      int cur, max, row;
+      while (rngs()) {
+        cur = rngs.min();
+        max = rngs.max();
+        row = a.supports.row(cur);
+        while (cur <= max) {
+          assert(a.view().in(cur));
+          add_to_mask(a.supports(row),mask);
+          ++cur;
+          ++row;
+        }
+        ++rngs;
+      }
+#else
+      assert(rngs());
+      int cur = rngs.min();
+      int max = rngs.max();
+      int row = a.supports.row(cur);
+      assert(row >= 0);
+      // Find the support entries for the first two values,
+      // to initialise the mask from
+      const BitSet& first = a.supports(row);
+      if (cur < max) { // First range has more than one value
+        ++cur;
+        ++row;
+        assert(a.view().in(cur));
+      } else { // First range has only one value
+        assert(rngs());
+        ++rngs;
+        cur = rngs.min();
+        max = rngs.max();
+        row = a.supports.row(cur);
+        assert(row >= 0);
+        assert(a.view().in(cur));
+      }  
+      // Initailise mask
+      init_mask(first,a.supports(row),mask);
+
+      // Flush the first range to start on a fresh range later
+      ++cur;
+      ++row;
       while (cur <= max) {
         assert(a.view().in(cur));
         add_to_mask(a.supports(row),mask);
         ++cur;
         ++row;
-      }
+      }      
       ++rngs;
+    
+      // New, fresh range
+      while (rngs()) {
+        cur = rngs.min();
+        max = rngs.max();
+        row = a.supports.row(cur);
+      
+        while (cur <= max) {
+          assert(a.view().in(cur));
+          add_to_mask(a.supports(row),mask);
+          ++cur;
+          ++row;
+        }
+        ++rngs;
+      }
+#endif // CLEAR_MASK
+    
+      // Int::ViewRanges<View> rngs(a.view());
+      intersect_with_mask(mask);
+      break;
     }
-    intersect_with_mask(mask);
+
+    assert(nzerowords());
   }
   
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-    
+
+    // Do not fail a disabled propagator
+    if (is_empty())
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+
+    assert(limit >= 0);
+    assert(nzerowords());
+        
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
@@ -625,16 +762,10 @@ public:
       return ES_FIX;
     }
 
-    // Do not fail a disabled propagator
-    if (is_empty())
-      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
-
-    assert(nset() > 0);
-    assert(limit >= 0);
-    
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      intersect_with_mask(a.supports[x.val()]);
+      intersect_with_mask_sparse_one(a.supports[x.val()]);
+      //reset_based_update(a,home);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
@@ -657,13 +788,27 @@ public:
       assert(max_row >= min_row);
 
       if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
-        for (int i = min_row; i <= max_row; i++) {
-          const BitSet& s = a.supports(i);
-          if (!s.empty()) 
-            nand_with_mask(s);
+        for (int i = min_row; i <= max_row; i+=2) { // Nand supports two and two
+          if (i != max_row) {                 // At least two values left
+            assert(i + 1 <= max_row);
+            const BitSet& s1 = a.supports(i);
+            const BitSet& s2 = a.supports(i+1);
+            if (!s1.empty() && !s2.empty()) { // Both non-empty
+              nand_with_mask_two(s1,s2);
+            } else if (!s1.empty()) {         // s1 non-empty, s2 empty
+              nand_with_mask_one(s1);
+            } else if (!s2.empty()) {         // s2 non-empty, s1 empty
+              nand_with_mask_one(s2);
+            }
+          } else {                            // Last value
+            assert(static_cast<unsigned int>(max_row - min_row + 1) % 2 == 1);
+            const BitSet& s = a.supports(i);
+            if (!s.empty()) 
+              nand_with_mask_one(s);
+          }
         }
       
-      } else { // Domain size smaller than delta, use reset-based update
+      } else { // Domain size smaller than delta, incremental update
         reset_based_update(a,home);
       }
     } 
@@ -677,7 +822,11 @@ public:
     if (is_empty())
       return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
     
-    // Save index if only modified variable
+    assert(nset() > 0);
+    assert(limit >= 0);
+    assert(nzerowords());
+    
+    // Update touched_var
     if (touched_var == -1) // no touched variable yet!
       touched_var = a.index;
     else if (touched_var != a.index) // some other variable is touched
@@ -696,6 +845,7 @@ public:
     if (unassigned == 0)
       return home.ES_SUBSUMED(*this);
 
+    assert(limit >= 0);
     // Count the number of scanned unassigned variables
     unsigned int count_unassigned = unassigned;
     // Array to collect values to remove
@@ -713,8 +863,9 @@ public:
       int i = a.index;
       
       // No point filtering variable if it was the only modified variable
-      if (touched_var == i)
+      if (touched_var == i) {
         continue;
+      }
 
       switch (v.size()) {
       case 1: {  // Variable assigned, nothing to be done.
@@ -723,27 +874,20 @@ public:
       case 2: { // Consider min and max values
         const int min_val = v.min();
         const int max_val = v.max();
+        const unsigned int offset = a.offset;
 
         // Fix to max_val if min_val not supported
         const int row_min = a.supports.row(min_val);
-        if (!supported(a,row_min)) {
-#ifdef BUG
-          v.eq(home,max_val);
-#else
+        if (!supported(a,row_min,offset)) {
           GECODE_ME_CHECK(v.eq(home,max_val));          
-#endif // BUG
           --unassigned;
           break;
         }
 
         // Fix to min_val if max_val not supported
         const int row_max = a.supports.row(max_val);
-        if (!supported(a,row_max)) {
-#ifdef BUG
-          v.eq(home,min_val);
-#else          
+        if (!supported(a,row_max,offset)) {
           GECODE_ME_CHECK(v.eq(home,min_val));    
-#endif // BUG
           --unassigned;
           break;
         }
@@ -753,6 +897,7 @@ public:
         break;
       } default:
 #ifdef LONG_FILTER
+        const unsigned int offset = a.offset;
         const int min_val = v.min();
         const int max_val = v.max();
         int new_min = min_val;
@@ -764,15 +909,13 @@ public:
           // Increase new_min to smallest supported value
           int row = a.supports.row(new_min);
           for (; new_min <= max_val; ++new_min) {
-            if (supported(a,row))
+            if (supported(a,row,offset))
               break;
             ++row;
           }
           ModEvent me_gq = v.gq(home,new_min);
-#ifndef BUG
           if (me_failed(me_gq))
             return ES_FAILED;
-#endif // BUG
     
           if (me_gq == ME_INT_VAL) {
             --unassigned;
@@ -781,15 +924,13 @@ public:
           // Decrease new_max to largest supported value
           row = a.supports.row(new_max);
           for (; new_max >= new_min; --new_max) {
-            if (supported(a,row))
+            if (supported(a,row,offset))
               break;
             --row;
           }
           ModEvent me_lq = v.lq(home,new_max);
-#ifndef BUG
           if (me_failed(me_lq)) 
             return ES_FAILED;
-#endif // BUG
      
           if (me_lq == ME_INT_VAL) {
             --unassigned;
@@ -798,7 +939,7 @@ public:
           // Filter out values in between min and max
           row = a.supports.row(new_min + 1);
           for (int val = new_min + 1; val < new_max; ++val) {
-            if (!supported(a,row))
+            if (!supported(a,row,offset))
               nq[nremoves++] = val;
             ++row;
           }
@@ -816,7 +957,7 @@ public:
             row = a.supports.row(cur);
             while (cur <= max) {
               assert(a.view().in(cur));
-              if (!supported(a,row)) {
+              if (!supported(a,row,offset)) {
                 nq[nremoves++] = cur;
               } else {
                 if (new_min == Limits::max) {
@@ -833,20 +974,16 @@ public:
 
           // Perform bounds propagation first
           ModEvent me_gq = v.gq(home,new_min);
-#ifndef BUG
           if (me_failed(me_gq))
             return ES_FAILED;
-#endif // BUG
           
           if (me_gq == ME_INT_VAL) {
             --unassigned;
             break;
           }
           ModEvent me_lq = v.lq(home,new_max);
-#ifndef BUG
           if (me_failed(me_lq))
             return ES_FAILED;
-#endif // BUG
           if (me_lq == ME_INT_VAL) {
             --unassigned;
             break;
@@ -856,6 +993,7 @@ public:
             nremoves--;
         }
 #else
+        unsigned int offset = a.offset;
         Int::ViewRanges<View> rngs(v);
         int cur, max, row;
         int last_support;
@@ -866,7 +1004,7 @@ public:
           row = a.supports.row(cur);
           while (cur <= max) {
             assert(v.in(cur));
-            if (!supported(a,row))
+            if (!supported(a,row,offset))
               *(nq++) = cur;
             else
               last_support = cur;
@@ -883,21 +1021,15 @@ public:
         if (nremoves > 0) {
           assert(nremoves < v.size());
           if (nremoves == v.size() - 1) {
-#ifdef BUG
-            v.eq(home,last_support);
-#else 
             GECODE_ME_CHECK(v.eq(home,last_support));
-#endif // BUG
        
             --unassigned;
             break;
           } else {
             Iter::Values::Array r(nq_start,nremoves);
             ModEvent me = v.minus_v(home,r,false);
-#ifndef BUG
             if (me_failed(me))
               return ES_FAILED;
-#endif // BUG
             if (me == ME_INT_VAL) {
               --unassigned;
               break;
@@ -915,22 +1047,26 @@ public:
   }
 
   forceinline bool
-  supported(CTAdvisor<View>& a, int row) {
-    // TODO: index > maxindex in validTuples?
-    int index = a.residues[row];
+  supported(CTAdvisor<View>& a, int row, unsigned int offset) {
+    int r = static_cast<int>(a.residues[row - offset]);
     const BitSet& support_row = a.supports(row);
-    Support::BitSetData w = BitSet::a(words,support_row,index);
 
-    bool flag = true;
-    if (w.none()) {
-      index = intersect_index(support_row);
-      if (index != -1) {
-        a.residues[row] = index;
-      } else {
-        flag = false;
-      }
-    }
-    return flag;
+    if (r == 0)
+      return !BitSet::a(words,r,support_row,index[r]).none();
+
+    if (r > limit)
+      r = intersect_index(support_row, limit);
+    else if (!BitSet::a(words,r,support_row,index[r]).none())
+      return true;
+    else
+      r = intersect_index(support_row, r-1);
+
+    if (r != -1) {
+      assert(r >= 0);
+      a.residues[row - offset] = static_cast<unsigned int>(r);
+      return true;
+    } 
+    return false;
   }
 
 #ifdef FIX
@@ -942,12 +1078,7 @@ public:
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
-#ifdef BUG
-      v.eq(home,t[a.index])
-#else      
       GECODE_ME_CHECK(v.eq(home,t[a.index]));
-#endif // BUG
-      
     }
     return home.ES_SUBSUMED(*this);
   }
@@ -965,6 +1096,19 @@ public:
     return sizeof(*this);
   }
 
+  /** Debugging **/
+  bool nzerowords() const {
+    for (int i = 0; i <= limit; i++) {
+      if (words.getword(i).none()) {
+        printf("word %d is zero\n", i);
+        printf("limit=%d\n", limit);
+        
+        return false;
+      }
+    }
+    return true;
+  }
+  
   bool unassignedCorrect() {
     int count_unassigned = 0;
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
@@ -974,24 +1118,9 @@ public:
 
     return count_unassigned == unassigned;
   }
-
-  // Debugging purpose only
-  int nset() {
-    int count = 0;
-    for (int i = 0; i <= limit; i++) {
-      int offset = index[i];
-      for (int j = 0; j < BitSet::get_bpb(); j++) {
-        count += words.get(offset*BitSet::get_bpb() + j);
-        if (offset*BitSet::get_bpb() + j == words.size() - 1) {
-          break;
-        }
-      }
-    }
-    return count;
-  }
-
-  
 };
+
+
 
 // Post the table constraint
 namespace Gecode {

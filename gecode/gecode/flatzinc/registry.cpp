@@ -1158,7 +1158,7 @@ namespace Gecode { namespace FlatZinc {
       int noOfVars   = x.size();
       int noOfTuples = tuples.size() == 0 ? 0 : (tuples.size()/noOfVars);
 
-      printf("ntuples=%d\n", noOfTuples);
+      //printf("ntuples=%d\n", noOfTuples);
       
       char* prop = getenv("TABLE_PROPAGATOR");
                
@@ -1167,9 +1167,9 @@ namespace Gecode { namespace FlatZinc {
         
         // Build regular expression
         REG expression;
-        for (int i = noOfTuples; i--; ) {
+        for (int i = 0; i<noOfTuples; i++) {
           REG r;
-          for (int j = noOfVars; j--; ) {
+          for (int j = 0; j<x.size(); j++) {
             r += REG(tuples[i*noOfVars+j]);
           }
           expression |= r;

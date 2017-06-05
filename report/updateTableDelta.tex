@@ -4,7 +4,7 @@
           \FOREACH{$a \in \Delta_x$} \label{line:updateTableDelta:5} 
             \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTableDelta:6} 
           \ENDFOREACH      
-          \STATE $\CurrTable$.reverseMask() \label{line:updateTableDelta:7} 
+          \STATE $\CurrTable$.flipMask() \label{line:updateTableDelta:7} 
         \ELSE
           \FOREACH{$a \in s(x)$} \label{line:updateTableDelta:8} 
             \STATE $\CurrTable$.addToMask($\Supports[x,a]$) \label{line:updateTableDelta:9} 

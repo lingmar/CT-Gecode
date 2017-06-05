@@ -26,6 +26,7 @@ public:
   /// Default constructor
   InfoBase(void) {}
   /// Copy constructor
+  forceinline
   InfoBase(const InfoBase& ib) {
     supports = heap.alloc<BitSet>(ib.nvals);
     copy(ib);
@@ -60,8 +61,8 @@ public:
     return supports[row];
   }
   
-  template<class View>
-  void init(const BitSet* supports,int nsupports, int offset,View x);
+  template<class View> void
+  init(const BitSet* supports,int nsupports, int offset,View x);
 
   virtual int row(int val) = 0;
 
@@ -86,10 +87,6 @@ public:
   /// Copy constructor
   InfoArray(const InfoArray& s)
     : InfoBase(s), min(s.min), max(s.max) {}
-
-  // virtual const BitSet& get_supports(int val) {
-  //   return suports[row(val)];
-  // }
   
   template<class View>
   forceinline void
@@ -116,7 +113,6 @@ public:
 
   forceinline virtual int
   row(int val) {
-    //printf("val - min = %d - %d = %d\n",val,min,val-min );
     return val >= min && val <= max ? val - min : -1;
   }  
 };
@@ -205,7 +201,6 @@ private:
         DEBUG_PRINT(("%d: {%d,%d}\n",i,table[i].key,table[i].value));
       }
     }
-    forceinline
     ~HashTable(void) {
       heap.rfree(table);
     }
@@ -224,10 +219,6 @@ public:
     DEBUG_PRINT(("Copy InfoHash\n"));
   }
 
-  // virtual const BitSet& get_supports(int val) {
-  //   return supports[row(val)];
-  // }  
-  
   forceinline virtual void
   allocate(int n) {
     InfoBase::allocate(n);

@@ -1,7 +1,7 @@
         \PROCEDURE \FilterDomains($s$) : store     \label{line:filterDom:0}
         % \Func{filterDomains}{} 
     %  \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
-      \FOREACH{$x \in s \text{~such that~} |s(x)| > 1$} \label{line:filterDom:2}
+      \FOREACH{$x \in \Vars \text{~such that~} |s(x)| > 1$} \label{line:filterDom:2}
             \FOREACH{$a \in s(x)$} \label{line:filterDom:3}
               \STATE $\localvar{index} \leftarrow \Residues[x,a]$ \label{line:filterDom:res1}
               \IF{$\CurrTable[index] \ \& \ \Supports[x,a][index] = 0$} \label{line:filterDom:res2} %\COMMENT{bit-wise and}
