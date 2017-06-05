@@ -1,0 +1,96 @@
+\begin{axis}[
+    xmode=log,
+    every axis plot/.style={thin},
+    xlabel={timeout limit (ms)},
+    ylabel={\% solved},
+    legend pos=south east,
+    cycle list/Set1-6,
+            % define fill color for the marker
+            mark list fill={.!75!white},
+            mark options={solid},
+            cycle multiindex* list={
+                Set1-6
+                    \nextlist
+                [3 of]linestyles
+                    \nextlist
+                very thick
+                \nextlist
+                mark=o,
+                mark=*,
+                mark=square,
+                mark=triangle,
+                mark=+
+            },
+    ]
+
+    \addplot
+    coordinates {
+      (0, 48)
+      (10, 52)
+      (20, 56)
+      (30, 57)
+      (40, 60)
+      (70, 63)
+      (120, 65)
+      (140, 67)
+      (150, 68)
+      (180, 70)
+      (320, 71)
+      (380, 73)
+      (440, 75)
+      (670, 76)
+      (810, 78)
+      (1080, 79)
+      (1170, 81)
+      (1800, 83)
+      (2130, 84)
+      (2740, 86)
+      (3050, 87)
+      (3540, 89)
+      (5510, 90)
+      (9800, 92)
+      (10060, 94)
+      (10270, 95)
+      (13580, 97)
+      (18620, 98)
+      (22210, 100)
+      
+    };
+    \addplot
+    coordinates {
+      (0, 48)
+      (10, 52)
+      (20, 56)
+      (30, 57)
+      (40, 60)
+      (70, 62)
+      (80, 63)
+      (120, 65)
+      (140, 67)
+      (160, 68)
+      (190, 70)
+      (330, 71)
+      (390, 73)
+      (450, 75)
+      (710, 76)
+      (850, 78)
+      (1130, 79)
+      (1220, 81)
+      (1870, 83)
+      (2260, 84)
+      (2870, 86)
+      (3210, 87)
+      (3710, 89)
+      (5800, 90)
+      (10380, 92)
+      (10630, 94)
+      (10830, 95)
+      (14430, 97)
+      (19700, 98)
+      (23690, 100)
+      
+    };
+    
+
+    \legend{Master,Compact}
+  \end{axis}

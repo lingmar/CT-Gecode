@@ -7,12 +7,12 @@
 
     \item[]
     \Func{initSparseBitSet}{$\localvar{nbits}$: int} \label{line:initsbs:start}
-      \STATE $\localvar{p} \leftarrow \Ceiling{\frac{\localvar{nbits}}{64}}$
-      \STATE $\Words \leftarrow \text{~array of long of length~} \localvar{p} \text{, first~} 
+      \STATE $\localvar{p} \gets \Ceiling{\frac{\localvar{nbits}}{64}}$
+      \STATE $\Words \gets \text{~array of long of length~} \localvar{p} \text{, first~} 
       \localvar{nbits} \text{~set to 1}$
-      \STATE $\Mask \leftarrow \text{~array of long of length} \localvar{p} \text{, all bits set to~}0$
-      \STATE $\Index \leftarrow [0, \ldots, \localvar{p} - 1]$
-      \STATE $\Limit \leftarrow \localvar{p-1}$ \label{line:initsbs:end}
+      \STATE $\Mask \gets \text{~array of long of length} \localvar{p} \text{, all bits set to~}0$
+      \STATE $\Index \gets [0, \ldots, \localvar{p} - 1]$
+      \STATE $\Limit \gets \localvar{p-1}$ \label{line:initsbs:end}
       \Endfunc
 
     \item[]
@@ -22,64 +22,55 @@
     \item[]
       \Func{clearMask}{} \label{line:clearMask:1}
       \For{i}{0}{\Limit} \label{line:clearMask:2}
-        \STATE $\localvar{offset} \leftarrow \Index[i]$ \label{line:clearMask:3}
-        \STATE $\texttt{mask}[\localvar{offset}] \leftarrow 0^{64}$ \label{line:clearMask:4}
-      \ENDFOR
+      %        \STATE $\localvar{offset} \gets \Index[i]$ \label{line:clearMask:3}
+        \STATE $\texttt{mask}[\localvar{i}] \gets 0^{64}$ \label{line:clearMask:4}
+      \EndFor
       \Endfunc
 
     \item[]
-      \Func{reverseMask}{} \label{line:reverse:1}
+      \Func{flipMask}{} \label{line:reverse:1}
       \For{i}{0}{\Limit} \label{line:reverse:2}
-      \STATE $\Offset \leftarrow \Index[i]$ \label{line:reverse:3}
-      \STATE $\texttt{mask}[\Offset] \leftarrow \ \sim\texttt{mask}[\Offset]$ \COMMENT{bitwise NOT} \label{line:reverse:4}
-      \ENDFOR
+      %      \STATE $\Offset \gets \Index[i]$ \label{line:reverse:3}
+      \STATE $\texttt{mask}[\localvar{i}] \gets \ \sim\texttt{mask}[\localvar{i}]$ \COMMENT{bitwise NOT} \label{line:reverse:4}
+      \EndFor
       \Endfunc
-
-
-
-    % \item[] 
-    %   \Func{reverseMask}{}  \COMMENT{Not currently used in CT algorithm}
-    %   \STATE $\ForEachTo{i}{0}{\Limit}$
-    %   \STATE $\localvar{offset} \leftarrow \Index[i]$
-    %   \STATE $\texttt{mask}[\localvar{offset}] \leftarrow 
-    %   {\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
-    %   \texttt{mask}[\localvar{offset}]$ \COMMENT{bitwise NOT}
-      %\Endfunc
 
     \item[]
       \Func{addToMask}{$\localvar{m}$: array of long} \label{line:addToMask:1}
       \For{i}{0}{\Limit} \label{line:addToMask:2}
-      \STATE $\localvar{offset} \leftarrow \Index[i]$ \label{line:addToMask:3}
-      \STATE $\texttt{mask}[\localvar{offset}] \leftarrow \texttt{mask}[\localvar{offset}] \ | \ 
+      \STATE $\localvar{offset} \gets \Index[i]$ \label{line:addToMask:3}
+      \STATE $\texttt{mask}[\localvar{i}] \gets \texttt{mask}[\localvar{i}] \ | \ 
       \localvar{m}[\localvar{offset}]$ \COMMENT{bitwise OR} \label{line:addToMask:4}
-      \ENDFOR
+      \EndFor
       \Endfunc
 
     \item[]
       \Func{intersectWithMask}{} \label{line:intersect:1}
-      %\FOR{$i \leftarrow \Limit \Downto 0$}
+      %\FOR{$i \gets \Limit \Downto 0$}
       \ForDown{i}{\Limit}{0} \label{line:intersect:2}
-      \STATE $\localvar{offset} \leftarrow \Index[i]$ \label{line:intersect:3}
-      \STATE $w \leftarrow \Words[\localvar{offset}] \ \& \ \Mask[\localvar{offset}]$ \COMMENT{bitwise AND} \label{line:intersect:4}
-      \IF{$w \neq \Words[\localvar{offset}]$} \label{line:intersect:5}
-      \STATE $\Words[\localvar{offset}] \leftarrow w$ \label{line:intersect:6}
-      \IF{$w = 0^{64}$} \label{line:intersect:7}
-      \STATE $\Index[i] \leftarrow \Index[\Limit]$ \label{line:intersect:8}
-      \STATE $\Index[\Limit] \leftarrow \localvar{offset}$ \label{line:intersect:8.5}
-      \STATE $\Limit \leftarrow \Limit - 1$ \label{line:intersect:9}
-      \ENDIF
-      \ENDIF
-      \ENDFOR
+      %      \STATE $\localvar{offset} \gets \Index[i]$ \label{line:intersect:3}
+        \STATE $w \gets \Words[\localvar{i}] \ \& \ \Mask[\localvar{i}]$ \COMMENT{bitwise AND} \label{line:intersect:4}
+        \IF{$w \neq \Words[\localvar{i}]$} \label{line:intersect:5}
+          \STATE $\Words[\localvar{i}] \gets w$ \label{line:intersect:6}
+          \IF{$w = 0^{64}$} \label{line:intersect:7}
+            \STATE $\Words[i] \gets \Words[\Limit]$ \label{line:intersect:7.1}
+            \STATE $\Words[\Limit] \gets w$ \label{line:intersect:7.2}
+            \STATE $\Index[i] \gets \Index[\Limit]$ \label{line:intersect:8}
+            \STATE $\Index[\Limit] \gets \localvar{i}$ \label{line:intersect:8.5}
+            \STATE $\Limit \gets \Limit - 1$ \label{line:intersect:9}
+          \ENDIF
+        \ENDIF
+      \EndFor
       \Endfunc
 
     \item[]
       \FuncRet{intersectIndex}{$\localvar{m}$: array of long}{int} \label{line:interIdx:1}
       \For{i}{0}{\Limit} \label{line:interIdx:2}
-      \STATE $\Offset \leftarrow \Index[i]$ \label{line:interIdx:4}
-      \IF{$\Words[\Offset] \ \& \ m[\Offset] \neq 0^{64}$} \label{line:interIdx:5}
-      \RETURN{$\Offset$} \label{line:interIdx:6}
-      \ENDIF
-      \ENDFOR
+        \STATE $\Offset \gets \Index[i]$ \label{line:interIdx:4}
+        \IF{$\Words[\localvar{i}] \ \& \ m[\Offset] \neq 0^{64}$} \label{line:interIdx:5}
+          \RETURN{$\localvar{i}$} \label{line:interIdx:6}
+        \ENDIF
+      \EndFor
       \RETURN{$-1$} \label{line:interIdx:7}
       \Endfunc
 

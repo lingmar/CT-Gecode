@@ -1,7 +1,7 @@
-\IF[executed in the propagate function]{\CurrTable~has changed since last time}       
+\IF{\CurrTable~has changed since last invocation}       
   \IF{($index \leftarrow \CurrTable$.indexOfFixed())$ \ \neq -1$}
   %\STATE \FixDomains($index$)
-    \RETURN $\Tuple{\SUBSUMED, [x \mapsto T[index][x]]_{x \in s}}$
+    \RETURN $\Tuple{\SUBSUMED, s[x \mapsto T[index][x] : x \in \Vars]}$
   \ELSE
     \STATE $s \leftarrow \FilterDomains(s)$
   \ENDIF
