@@ -1460,7 +1460,8 @@ proving~\Thmref{thm:prop} is trivial.
 \section{Implementation}
 \label{sec:implementation}
 
-\Todo{Todo: Structure up this section.}
+\Todo{Todo: Describe more clearly what modifications were made to the algoritms
+  to suit the target solver.}
 
 Now the implementation of the CT algorithm presented in 
 \Secref{sec:algorithms} will be described.
@@ -1525,9 +1526,9 @@ experiments.
 % OR-tools kod
 % Incremental
 % Noll-ord
-\paragraph{Copying only the non-zero words in \CurrTable.}
-\Todo{Work in progress: compactifying CT so that only non-zero words are kept
-  in \CurrTable, reducing the cloning-overhead.}
+% \paragraph{Copying only the non-zero words in \CurrTable.}
+% \Todo{Work in progress: compactifying CT so that only non-zero words are kept
+%   in \CurrTable, reducing the cloning-overhead.}
 % Some effort was spent on redesigning the sparse bit-set to only keep the
 % non-zero words to save memory and minimise copying by placing
 % all the zero-words at the end of the array. However, the swapping of
@@ -1637,19 +1638,24 @@ presented in \Chapref{sec:implementation}.
 
 \label{evaluation:setup}
 
-The benchmarks consist of $30$~series 
-with a total of~$1507$ CSP instances that were used in the
-experiments in~\cite{\CTpaper}. The instances contain \Table~constraints
-only, which is desirable for various reasons: if there were
-other constraints in the instances, then less time of the total runtime
-would be spent in the propagators that are measured.
-Since all the propagators
-used in the experiments are domain consistent, they all perform the
-same amount of filtering, and therefore it is only the difference in
-runtime that is interesting to measure. Furthermore,
-the fact that the benchmarks are used in~\cite{\CTpaper} to evaluate
-the performance of CT in OR-tools suggests that they also
-provide an appropriate evaluation of the performance of CT in Gecode.
+The benchmarks consist of $30$~groups 
+with a total of~$1507$ CSP instances involving \Table~constraints only
+that were used in the
+experiments in~\cite{\CTpaper}.
+These instances were chosen because
+they contain a large variety of instances,
+and the fact that they were used in~\cite{\CTpaper}
+to evaluate CT in OR-tools
+suggests that they are also appropriate for evaluating CT
+in the context of Gecode. 
+
+The fact that the instances contain \Table~constraints only is not an
+issue, because since all the propagators are domain consistent, they will
+perform the same amount of propagation at each node in the search tree,
+and therefore it is only the difference
+in runtime that is interesting to measure. Consequently, if the intances would contain
+other constraints than \Table, then a less amount of the total runtime would be spent
+in the propagators that are measured, which would give a weaker performance difference.
 
 \begin{table}[h]%\small
   \caption{Benchmarks series and their characteristics.}
@@ -1671,7 +1677,7 @@ The models used in~\cite{\CTpaper} were originally written in XCSP2.1,
 an XML format used for expressing CSP models. The models were compiled
 to MiniZinc~\cite{MiniZinc} using the compiler in~\Todo{[cite to compiler]}.
 Of the~$1621$ instances that were used in~\cite{\CTpaper},
-only~$1507$ could be used due to parse errors in the compilation.
+only~$1507$ could be used due to parse errors in the compilation process.
 The benchmarks series and their characteristics are presented in Table~\ref{tab:benchmarks}.
 The experiments were run
 under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
@@ -1683,18 +1689,11 @@ version was compared against the existing propagators for
 the \Table~constraint in Gecode, as well as with the propagator for the
 \Constraint{Regular}~constraint.
 
-The rest of this section presents the results of the experiments.
-
-% First the results of comparing different versions of CT are presented,
-% and then the results of comparing the seemingly best version of CT with 
-% the existing propagators in Gecode for the~\Table~constraint.
-
-
-% In \Secref{evaluation:setup},
-% the evaluation setup is described. In \Secref{evaluation:results} presents
-% the results of the evaluation. The results are discussed in \Secref{evaluation:discussion}.
-
-
+A timeout of~$1000$ seconds was used throughout the experiments.
+Instances that i) could be solved within $1$~s for all propagators, or
+ii) caused a memory-out for at least one of the propagators,
+were filtered out from the results.
+Instances that timed out were not filtered out from the results.
 
 \subsection{Comparing Different Versions of CT}
 \label{sec:compare}
@@ -1927,171 +1926,88 @@ denoted:
   \item[I] Incremental positive tuple set propagator.
 \end{description}
 
-%B is more memory-efficient than I, and I is expected to be faster than B.
-
 \subsubsection{Results}
 
-The plots from the experiments are presented in Appendix~\ref{app:compare-gecode}.
+The final set of instances used in the results consists of~$661$ instances,
+having filtered out instances that were either solved in less than~$1$~s for all
+propagators, or that caused a memory-out for at least one propagator.
+Figure~\ref{fig:total}~shows the percentage of instances solved as a function
+of timeout limit in ms for these~$661$ instances. Within the timeout of~$1000$ s,
+CT could solve the highest number of instances ($76$~\%), followed by B ($70$~\%),
+I ($69$~\%), and DFA ($69$~\%).
 
+\begin{figure}
+  \centering
+  \begin{tikzpicture}%[scale=0.9]
+    \input{total-run.tex}
+  \end{tikzpicture}
+  \caption{Percentage of instances solved as a funcion of time for the DFA, B, I, and CT 
+    propagators.}
+  \label{fig:total}
+\end{figure}
+
+The plots from each individual group of benchmarks are presented 
+in Appendix~\ref{app:compare-gecode},
+except for the groups \emph{MDD 07} and \emph{MDD 09}, where all instances
+either timed out or caused a memory-out.
 
 \subsubsection{Discussion}
 
-% Compare CT/B/I
-% Discuss DFA
-% Discuss runtime/solvetime
-% Formen på kurvorna är lika för CT, B, I
-% If CT were to replace or be an alternative to another algorithm,
-% it would be so for either B or I...
-% More relevant to compare CT against B and I
-% Memory-bound/CPU-bound
+\paragraph{Runtime.}
+CT performs either as well as or better than all other propagators,
+on all groups except \emph{AIM 200}, where CT was slightly slower than B and DFA
+on two instances, and on \emph{BDD Small} and \emph{BDD Large} where CT was slightly
+slower than B and I on the small instances. At best, CT is about a factor 10 faster
+than the other algorithms on some groups.
+CT could solve as many instances as, or more, than all other propagators,
+on all groups except \emph{Pigeons Plus} where DFA could solve one more instance.
 
-\paragraph{Overall performance.}
-Comparing CT against B and I over all series, CT performs either as well as,
-or better than both B and I. 
-B or I does not outperform CT on any of the series, except
-on \emph{AIM-100} and \emph{AIM-200}, where B is marginally faster than CT.
-On some of the series CT is up to a factor 10 faster.
+Another notable observation is that B seems to outperform I, even though I is said to
+be more efficient than B in terms of execution speed.
 
-Comparing CT against DFA, DFA outperforms CT on \emph{MDD 07/09},
-\emph{AIM-*}, \emph{Pigeons plus} and \emph{TSP 25}.
-Also, DFA performs well on \emph{Mod Renault}, where a constant
-time seems to be spent in the initialisation of DFA, while
-the solvetime is very close to~$0$ for all instances.
-The reason might be that DFA is a more suitable algorithm for the
-problem types in these series, for example if DFA can
-compress the input table into a compact DFA
-in these cases. On the other series however, DFA is outperformed
-by the other algorithms.
+On the various groups the performance gain from CT varies, which might depend
+on the characteristics for the different groups of benchmarks. Here the impact
+of \emph{table size}, \emph{arity} and \emph{domain size} on runtime performance
+is discussed:
 
-% Also, for the \emph{AIM-*}
-% series 
-% On \emph{MDD 07/09}
-% the other algorithms timed out on all instances, which suggests that
-% DFA is a more suitable algorithm for the problem type.
-% The \emph{AIM-*}-series all small table sizes,
-% only~$3-7$ tuples, which might be the reason why DFA outperforms the other
-% algorithms on these instances. Why DFA outperforms the other algorithms
-% on \emph{TSP 25} is harder to explain, looking 
+\begin{description}
+  \item[Table size] The increase
+    of performance for CT compared to the other propagators
+    is larger on the groups that contain 
+    instances with large table sizes only (see \emph{A5}, \emph{A10},
+    \emph{K5}, \emph{MDD 05}, and \emph{Rands JC*}), than on the groups
+    that contain only small tables (see \emph{AIM-*}, \emph{Dubois}, and \emph{Geom}).
+    
+    The property shows particularly well on the four \emph{Rands JC*} groups, where
+    arity and domain size are constant while the table size increases from
+    $2500$ to~$10000$ in steps of~$2500$. On these groups, the performance gain
+    seems to increase with an increasing table size.
 
-% Looking at the shape of the curves for the different algorithms,
-% we see that DFA behaves differently than the other algorithms; the shape of the curves
-% of CT, B, and I are very similar to each other for all series, while the shape of the
-% curves of DFA is different from the other algorithms in most cases.
+    \item[Arity] Many groups where CT shows little or none performance gain have
+      constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
+      \emph{Langford *}), though there are exceptions to this (see \emph{Pigeons Plus},
+      \emph{TSP *}). 
+      However, the groups with low arities also have small tables, while the groups
+      with larger arities tend to have larger tables, which makes it hard to
+      tell whether it is the arity or the table size that impact the performance gain.
+      
+    \item[Domain size] It is hard to draw any conclusions of whether the domain size affects
+      the performance gain of CT. Among the groups with small domain sizes, some
+      have little or no performance gains (see \emph{AIM-*}, \emph{Dubois}) and
+      some have large performance gains (see \emph{MDD 05}, \emph{BDD Large}).
+      The same is true for the groups with larger domain sizes; some have
+      modest performance gains (see \emph{Nonograms}, \emph{Kakuro *}),
+      while some have larger performance gain (see \emph{Rands JC*}, \emph{Crosswords *}).
+\end{description}
 
-\paragraph{The impact of table size on performance.}
-Most of the series have varying table sizes, and on those series it is hard to
-analyse the impact of table size on performance.
-However, looking at the series that do not vary so much in table size,
-there seems to be a correlation between table size and performance.
-The increase
-of performance for CT compared to B and I is larger on the series that contain 
-instances with large table sizes only (see \emph{A5}, \emph{A10},
-\emph{K5}, \emph{MDD 05}, and \emph{Rands JC*}), than on the series
-that contain only small tables (see \emph{AIM-*}, \emph{Dubois}, and \emph{Geom}).
-
-The property shows particularly well on the four \emph{Rands JC*} series, where
-arity and domain size are constant while the table size increases from
-$2500$ to~$10000$ in steps of~$2500$. On these series, the performance gain
-seems to increase with an increasing table size.
-
-% However, the series that contain small tables also contain low-arity constraints
-% (arities~$2-3$),
-% while the series with larger table sizes have larger arities, which makes
-% it hard to tell which property if any that cause the difference in performance gain.
-
-
-\paragraph{The impact of arity on performance.}
-Many of the series have varying arities, so to analyse the impact of arity
-we are limited to the series that do not vary so much in arity.
-Many series where CT shows little or none performance gain have
-constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
-\emph{Langford *}), though there are exceptions to this (see \emph{Pigeons Plus},
-\emph{TSP 25/Quat}). 
-However, the series with low arities also have small tables, while the series
-with larger arities tend to have larger tables, which makes it hard to
-tell whether it is the arity or the table size that impact the performance gain.
-%But it is possible that there is a correlation between arities and performance.
-
-% This suggests that there is a weak positive correlation between arity of the constraints
-% and the performance.
-
-% There seems to be a weak 
-% CT seems to perform better on the benchmark series that contain
-% constraints with higher arities, than on the series that 
-% contain constraints with low aritities.
-% However, there seems to be other factors
-% beside the arity that affect the performance.
-
-% The series that consist of instances with only \emph{binary or ternary}
-% constraints are \textbf{Geom}, \textbf{Langford 2/3/4}, \textbf{Nonograms}. 
-% On all of these series, CT is either
-% neither faster or slower than B or I, or only slightly faster than these algorithms.
-
-% The series that consist of \emph{binary or ternary}, but not only binary, constraints
-% are \textbf{AIM-50/100/200}, \textbf{Dubois}, and the \textbf{TSP} series.
-% On AIM-50/100/200 and Dubois, CT is neither slower or faster than B or I.
-% On the TSP series CT outperforms B and I.
-
-% The series where CT performs best compared to B and I are \textbf{RandsJC*}
-% ($7$-ary constraints), \textbf{}
-
-
-
-\paragraph{The impact of domain size on performance.}
-It is hard to draw any conclusions of whether the domain size affects
-the performance gain of CT. Among the series with small domain sizes, some
-have little or no performance gains (see \emph{AIM-*}, \emph{Dubois}) and
-some have a large performance gains (see \emph{MDD 05}, \emph{BDD Large}).
-The same is true for the series with larger domain sizes; some have
-modest performance gains (see \emph{Nonograms}, \emph{Kakuro *}),
-while some have larger performance gain (see \emph{Rands JC*}, \emph{Crosswords *}).
-%There seems to be a weak correlation between domain size and performance.
-
-% CT seems to perform best on series where the domain sizes are
-% medium sized or large. On the series that contain instances with
-% small domain sizes ($2-3$), CT generally does not perform
-% better than B and I. One exception to this is \emph{BDD Large},
-% with domain size~$2$, where CT outperforms the other algorithms.
-
-\paragraph{Runtime vs. solve time.}
-Both the runtime and the solve time ware measured. The runtime is the solve time
-plus the parsing of the FlatZinc file as well as the posting of the propagators.
-The discrepancy between the runtime and solve time is different for the various
-algorithms. It is largest for DFA, which shows that the initialisation of DFA
-takes longer time compared to the other algorithms.
-CT has a larger discrepancy than B and I, so initialising CT takes longer time
-than initialising B and I. The reason could be that CT performs more initial propagation
-than B and I, or that the initialisation of the data structures is more time-consuming
-for CT. \Todo{Todo: Check if CT performs more initial propagation}.
-
-
-% From the results there seem to be no notable correspondance between
-% domain size and performance. Among the series that have small
-% domain sizes there are instances that do not perform better than B and I
-% (\textbf{AIM-*}, \textbf{Dubois}) and instances that do perform
-% better than B and I (\textbf{BDD Large}). The same is true for series
-% with larger domain sizes, in some of them CT is not faster than
-% B and I (\textbf{Langford 2/3/4})
-
-% that have large domain sizes
-
-
+\paragraph{Memory usage.}
+It can be seen that CT, B, and I has about the same maximum memory usage 
+while DFA consistently has a higher maximum memory usage.
+  
+\paragraph{Profiling.}
+It can be seen that the distribution of how the time is spent between propagation, advisors
+and copying varies between different propagators and different groups of benchmarks.
 % Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
-
-% The set of 1,621 instances that were used for the experiments in~\cite{\CTpaper}
-% were also used here. The instances were compiled (using~\cite{xcsp2mzn})
-% from XCSP 2.1~\cite{DBLP:joxurnals/corr/abs-0902-2362} format 
-% -- an XML based format to represent combinatorial constraint problems -- to
-% MiniZinc~\cite{MiniZinc} -- a solver-independent constraint modeling language.
-% \Todo{By various reasons, only X instances were used.} The instances were run
-% once on a \todo{quantum computer} for every propagator and a timeout of
-% 1,000 seconds was used.
-
-% Due to the high number of instances, the runtime for
-% each instance was only measured once. A timeout of 1000 seconds was used.
-
-
-
 \section{Conclusions and Future Work}
 \label{conclusions}
 
@@ -2109,11 +2025,6 @@ are a few things that need to be revised. The following lists some known
 improvements and flaws:
 
 \begin{itemize}
-  \item There is an unfound error that causes a crash due to corrupt data 
-    in very few cases.
-    The most likely cause of this error is that some allocated memory area
-    is too small, and that the data is modified outside of this area.
-    \Todo{Work in progress.}
     
   \item Some memory allocations in the initialisation of the propagator
     depend on the domain widths rather
@@ -2134,6 +2045,10 @@ improvements and flaws:
     for some suitable~$k \in \mathbb{R}$; this is something that remains 
     to be investigated.
     
+  \item For \Table~constraints involving a small number (at most $64$)
+    tuples, the implementation could be simplified, which would save
+    memory and possibly increase execution speed.
+
   \item Implement the generalisations of the CT algorithm described
     in~\cite{DBLP:conf/aaai/VerhaegheLS17}.
 
@@ -2259,169 +2174,42 @@ the propagators.
 \section{Plots from Comparison of CT against Existing Propagators}
 \label{app:compare-gecode}
 
-Each plot shows the number of instances solved as a function
-of timeout limit in milliseconds.
-
-\input{graphs.tex}
-
-\begin{tikzpicture}%[scale=0.9]
-  \input{total-run.tex}
-\end{tikzpicture}
-
-% \clearpage
-% \section{Bugfix}
-
-% \begin{tabular}{cc}
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{randsJC2500-bug.tex}
-%   \end{tikzpicture}
-%   &
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{randsJC5000-bug.tex}
-%   \end{tikzpicture}
-%   \\
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{langford2-bug.tex}
-%   \end{tikzpicture}
-%   &
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{langford4-bug.tex}
-%   \end{tikzpicture}
-%   \\
-% \end{tabular}
-
-% \begin{tabular}{cc}
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{aim-50-pos-bug.tex}
-%   \end{tikzpicture}
-%   &
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{a5-bug.tex}
-%   \end{tikzpicture}
-%   \\
-%   \begin{tikzpicture}[scale=0.9]<
-%     \input{Crosswords_lexVg-bug.tex}
-%   \end{tikzpicture}
-%   &
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{kakuroext_easy-bug.tex}
-%   \end{tikzpicture}
-%   \\
-% \end{tabular}
-
-% \clearpage
-% \section{Compact Compact-Table}
-% \begin{tabular}{cc}
-%   %\begin{figure}
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{randsJC2500-compact.tex}
-%     \end{tikzpicture}
-%    % \caption{\textbf{RandsJC2500.}}
-%   %\end{figure}
-%   &
-% %    \begin{figure}
-%       \begin{tikzpicture}[scale=0.9]
-%         \input{randsJC5000-compact.tex}
-%       \end{tikzpicture}
-%  %     \caption{\textbf{RandsJC2500.}}
-%   %  \end{figure}
-    
-%   \\
-%   %\begin{figure}
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{randsJC7500-compact.tex}
-%     \end{tikzpicture}
-%    % \caption{\textbf{A5.}}
-%   %\end{figure}
-%   &
-%       \begin{tikzpicture}[scale=0.9]
-%         \input{randsJC10000-compact.tex}
-%       \end{tikzpicture}
-%   \\
-% \end{tabular}
-
-% \begin{tabular}{cc}
-%   %\begin{figure}
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{dubois-compact.tex}
-%     \end{tikzpicture}
-%    % \caption{\textbf{Dubois.}}
-%   %\end{figure}
-%   &
-%   %   %\begin{figure}
-    
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{a5-compact.tex}
-%     \end{tikzpicture}
-    
-%   %   %\caption{\textbf{Geom.}}
-%   % %\end{figure}
-%   \\
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{TSP_Quat_20-compact.tex}
-%   \end{tikzpicture}
-%   &
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{Crosswords_lexVg-compact.tex}
-%     \end{tikzpicture}
-%   \\
-% \end{tabular}
-
-
-% \begin{tabular}{cc}
-
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{Crosswords_wordsPuzzle-compact.tex}
-%     \end{tikzpicture}
-
-%   &
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{TSP_25-compact.tex}
-%     \end{tikzpicture}
-    
-%   %   %\caption{\textbf{Geom.}}
-%   % %\end{figure}
-%   \\
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{aim-50-pos-compact.tex}
-%   \end{tikzpicture}
-%   &
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{bddLarge-compact.tex}
-%     \end{tikzpicture}
-%   \\
-% \end{tabular}
-
-% \begin{tabular}{cc}
-
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{kakuroext_easy-compact.tex}
-%     \end{tikzpicture}
-
-%   &
-%     \begin{tikzpicture}[scale=0.9]
-%       \input{k5_n10_d10_m15_p08-compact.tex}
-%     \end{tikzpicture}
-    
-%   %   %\caption{\textbf{Geom.}}
-%   % %\end{figure}
-%   \\
-%   \begin{tikzpicture}[scale=0.9]
-%     \input{langford4-compact.tex}
-%   \end{tikzpicture}
-%   % &
-%   %   \begin{tikzpicture}[scale=0.9]
-%   %     \input{bddLarge-compact.tex}
-%   %   \end{tikzpicture}
-%   \\
-% \end{tabular}
-
-%"" "Crosswords_wordsPuzzle" "TSP_25" "aim-50-pos" "bddLarge" "kakuroext_easy" "k5_n10_d10_m15_p08" "langford4"; do
+Each benchmark group has one figure, and each figure contains two plots:
+the first plot shows for each propagator the percentage of solved instances within that group
+as a function of timeout limit in milliseconds.
+The second plot shows both how the execution time is distriubted between propagation,
+advisors, and copying, as well as the maximum memory usage.
+For the first plot, measurements from all instances that took at least $1$~second to solve for all
+propagators, and that did not cause a memory-out for any of the propagators, are included.
+For the second plot, the measurements were made on one random instance within the group, such
+that the runtime was at least~$10$ s for the fastest algorithm.
 
 \clearpage
-\section{Barchart}
 
-\input{barchart.tex}
+\input{graphs-tuples.tex}
+
+% \section{Profiling}
+
+% \input{aim-100-1-6-unsat-3_pos-profile.tex}
+% \input{aim-200-1-6-sat-1_pos-profile.tex}
+% \input{crossword-m1-words-puzzle22-profile.tex}
+% \input{dubois-27_ext-profile.tex}
+% \input{instExtCW-m1c-lex-vg7-8-profile.tex}
+% \input{instExtCW-m1c-words-vg5-9-profile.tex}
+% \input{instExtModRen_29-profile.tex}
+% \input{instExtTSP-20-142-Quat-profile.tex}
+% \input{instExtTSP-20-142-profile.tex}
+% \input{instExtTSP-25-48-profile.tex}
+% \input{instExtgeo50-20-d4-75-70-profile.tex}
+% \input{instExtlangford-2-21-profile.tex}
+% \input{instExtlangford-3-17-profile.tex}
+% \input{mdd-a7-v24-d5-ps05-psh09-5-profile.tex}
+% \input{mdd-n25-d5-e56-r7-18-profile.tex}
+% \input{pigeonsPlus-10-5-profile.tex}
+% \input{rand-10-60-20-30-p51200-8_ext_glb-profile.tex}
+% \input{rand-7-40-8-40-02500-6-profile.tex}
+% \input{rand-7-40-8-40-05000-3-profile.tex}
+% \input{rand-7-40-8-40-10000-2-profile.tex}
 
 \end{document}
 

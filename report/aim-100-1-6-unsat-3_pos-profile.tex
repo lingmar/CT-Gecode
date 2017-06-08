@@ -1,0 +1,77 @@
+\begin{tikzpicture}[scale=0.9]
+  \begin{axis}[
+    ybar stacked,
+    axis y line*=left,
+    ymin=0,
+    ymax=100,
+    enlargelimits=0.15,
+    legend style={at={(0.3,-0.20)},
+      anchor=north,legend columns=-1},
+    ylabel={\% time spent},
+    symbolic x coords={DFA,B,I,CT},
+    xtick=data,
+    x tick label style={rotate=45,anchor=east},
+    ]
+
+    \addplot+[ybar]
+      plot coordinates {
+        (DFA, 6)
+          (B, 41)
+          (I, 9)
+          (CT, 16)
+          
+          }; \label{ propagate }
+    \addplot+[ybar]
+      plot coordinates {
+        (DFA, 19)
+          (B, 0)
+          (I, 9)
+          (CT, 8)
+          
+          }; \label{ advise }
+    \addplot+[ybar]
+      plot coordinates {
+        (DFA, 75)
+          (B, 59)
+          (I, 82)
+          (CT, 76)
+          
+          }; \label{ copy }
+    
+      \legend{  }
+      
+      \addlegendimage{/pgfplots/refstyle=propagate}\addlegendentry{ propagate }
+        
+        
+        \addlegendimage{/pgfplots/refstyle=advise}\addlegendentry{ advise }
+        
+        
+        \addlegendimage{/pgfplots/refstyle=copy}\addlegendentry{ copy }
+        
+        
+        
+
+   \end{axis}
+
+   \begin{axis}[
+      axis y line*=right,
+      axis x line=none,
+      ymin=0,
+      enlargelimits=0.15,
+      ylabel=maximum memory usage (MB),
+      legend style={at={(1.0,-0.20)},
+        anchor=north,legend columns=-1},
+      symbolic x coords={DFA,B,I,CT}
+    ]
+    \addplot+[only marks,mark size=10pt,mark=-,,mark options={.!75!red},red]
+    plot coordinates {
+      (DFA, 13.73046875)
+      (B, 13.369140625)
+      (I, 13.45703125)
+      (CT, 13.154296875)
+      
+    };
+    \addlegendentry{Memory usage}
+  \end{axis}
+
+\end{tikzpicture}

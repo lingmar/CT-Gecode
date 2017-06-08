@@ -1,0 +1,45 @@
+\begin{tikzpicture}[scale=0.9]
+  \begin{axis}[
+    ybar stacked,
+    ymin=0,
+    ymax=100,
+    enlargelimits=0.15,
+    legend style={at={(0.5,-0.20)},
+      anchor=north,legend columns=-1},
+    ylabel={\% time spent},
+    symbolic x coords={DFA,B,I,CT},
+    xtick=data,
+    x tick label style={rotate=45,anchor=east},
+    ]
+
+    \addplot+[ybar]
+      plot coordinates {
+        (DFA, 32)
+          (B, 100)
+          (I, 95)
+          (CT, 47)
+          
+          };
+    \addplot+[ybar]
+      plot coordinates {
+        (DFA, 41)
+          (B, 0)
+          (I, 4)
+          (CT, 35)
+          
+          };
+    \addplot+[ybar]
+      plot coordinates {
+        (DFA, 27)
+          (B, 0)
+          (I, 1)
+          (CT, 17)
+          
+          };
+    
+
+     \legend{Propagate,Advise,Copy}
+
+          \end{axis}
+
+\end{tikzpicture}
