@@ -1639,7 +1639,7 @@ presented in \Chapref{sec:implementation}.
 \label{evaluation:setup}
 
 The benchmarks consist of $30$~groups 
-with a total of~$1507$ CSP instances involving \Table~constraints only
+with a total of~$1507$ CSP instances, involving \Table~constraints only,
 that were used in the
 experiments in~\cite{\CTpaper}.
 These instances were chosen because
@@ -1658,7 +1658,7 @@ other constraints than \Table, then a less amount of the total runtime would be 
 in the propagators that are measured, which would give a weaker performance difference.
 
 \begin{table}[h]%\small
-  \caption{Benchmarks series and their characteristics.}
+  \caption{Groups of benchmarks and their characteristics.}
   \label{tab:benchmarks}
   
   \begin{sideways}
@@ -1678,7 +1678,7 @@ an XML format used for expressing CSP models. The models were compiled
 to MiniZinc~\cite{MiniZinc} using the compiler in~\Todo{[cite to compiler]}.
 Of the~$1621$ instances that were used in~\cite{\CTpaper},
 only~$1507$ could be used due to parse errors in the compilation process.
-The benchmarks series and their characteristics are presented in Table~\ref{tab:benchmarks}.
+The groups of benchmarks and their characteristics are presented in Table~\ref{tab:benchmarks}.
 The experiments were run
 under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
 Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
@@ -1699,8 +1699,8 @@ Instances that timed out were not filtered out from the results.
 \label{sec:compare}
 
 \subsubsection{Evaluation Setup}
-Four versions of CT were compared on a subset of the benchmarks
-series listed in Table~\ref{tab:benchmarks}, the series were chosen so 
+Four versions of CT were compared on a subset of the groups of benchmarks
+listed in Table~\ref{tab:benchmarks}, the groups were chosen so 
 that different characteristics in Table~\ref{tab:benchmarks} were captured.
 A timeout of 1000 seconds was
 used and each instance was run once for each version.
@@ -1915,7 +1915,7 @@ need to be restored.
 The winning variant from the experiments in~\Secref{sec:compare},
 CT($\Delta$), was compared against the two existing propagators
 in Gecode for the~\Table~constraint, as well as with the propagator
-for the \Regular~constraint on the benchmarks series
+for the \Regular~constraint on the groups of benchmarks
 listed in Table~\ref{tab:benchmarks}. The propagators are
 denoted:
 
@@ -2018,7 +2018,7 @@ as the propagator for the \Constraint{Regular} constraint.
 The result of the evaluation is that CT outperforms the existing propagators
 in Gecode for \Table, which suggests that CT should be included in the solver.
 The performance gains from CT seem to be largest for constraints with large tables,
-and more modest for constraints with low arities.
+and more modest for constraints with small tables.
 
 For the implementation to reach production quality, there
 are a few things that need to be revised. The following lists some known
