@@ -80,6 +80,17 @@
   decorations.markings,%
   shadows}
 
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+%\pgfplotsset{plot coordinates/math parser=false}
+\usetikzlibrary{calc}
+\pgfplotsset{compat=newest}
+%\usetikzlibrary{colorbrewer}
+ \usetikzlibrary{
+   pgfplots.colorbrewer,
+ }
+\pgfplotsset{compat=newest}
+
 %\usepackage[english]{babel} % or whatever
 \usepackage[utf8]{inputenc} % or whatever
 
@@ -573,7 +584,7 @@
   \textbf{Gecode} (Generic Constraint Development Environment)
 
   \begin{itemize}
-    \item A constraint solver (a software that solves constraint problems).
+    \item A constraint programming solver (a software that solves constraint problems).
     \item Written in C++, modular, extensible, and has state-of-the-art performance.
     \item Supports the programming of new propagators.
     \item Uses copying during branching, not trailing
@@ -607,9 +618,10 @@
   \item   First implemented in OR-tools (uses trailing during branching)
   \item   Published in a 2016 paper~\cite{\CTpaper} -- the starting
     point of this project
-  \item   Promising results - outperforms previously known algorithms in the
+  \item   Promising results -- outperforms previously known algorithms in the
     benchmarks in \cite{\CTpaper}
-  \item   No attempt to implement it in Gecode (until now)
+  \item   Previously no attempt to implement it in Gecode 
+    (to the best of my knowledge)
   \end{itemize}
 
 \end{frame}
@@ -780,8 +792,8 @@
   When a variable~$x$ is modified, there are two ways to update~\CurrTable:
   \smallskip
   \begin{description}
-    \item[$\Cardinality{\Delta_x} < \Cardinality{\Dom{x}}$] Reset-based update
-    \item[$\Cardinality{\Delta_x} \geq \Cardinality{\Dom{x}}$] Incremental update
+    \item[$\Cardinality{\Delta_x} < \Cardinality{\Dom{x}}$] Incremental update
+    \item[$\Cardinality{\Delta_x} \geq \Cardinality{\Dom{x}}$] Reset-based update
   \end{description}
 
   \bigskip
@@ -1065,7 +1077,7 @@
 \begin{frame}
   \frametitle{Sparse bit-set}
   \begin{itemize}
-    \item Bit-wise operations are performed on nonzero-words only
+    \item Bit-wise operations are performed on non-zero words only
   \end{itemize}
   \bigskip
   \small
@@ -1076,7 +1088,7 @@
     \texttt{words} = & \textbf{0} \textbf{1} \textbf{0} \textbf{0} & \textbf{0} \textbf{0} \textbf{1} \textbf{0} & \alt<2>{\color{red}0 0 0 0}{\textbf{1} \textbf{0} \textbf{0} \textbf{0}} & \textbf{1} \textbf{0} \textbf{0} \textbf{1}\\
     \texttt{mask} = & 0 0 0 0 & 0 0 0 0 & 0 0 0 0 & 0 0 0 0 \\
     \texttt{index} = & \alt<2>{[\textbf{0}, \textbf{1}, {\color{red}\textbf{3}}, {\color{red}2}]}{[\textbf{0}, \textbf{1}, {\textbf{2}}, \textbf{3}]} &&& \\
-    \texttt{limit} = & \alt<2>{\color{red}3}{4} & & & \\
+    \texttt{limit} = & \alt<2>{\color{red}2}{3} & & & \\
     \hline
   \end{tabular}
 \end{frame}
@@ -1094,11 +1106,11 @@
   \begin{itemize}
     \item   Compared CT against
       \begin{itemize}
-      \item $2$~previously existing propagators for \Table
+      \item $2$~existing propagators for \Table
       \item $1$~propagator for \Constraint{Regular}
       \end{itemize} 
     \item Same benchmark set that was used in~\cite{\CTpaper}
-      (compiled to MiniZinc)
+      (translated to MiniZinc)
       \begin{itemize}
         \item $1507$~instances over~$30$ series 
         \item Table sizes:~$1-1.6 \cdot 10^6$ tuples
@@ -1122,6 +1134,24 @@
 \end{frame}
 
 %\subsection{Results}
+
+\begin{frame}
+  \frametitle{All instances}
+  \centering
+  \begin{tikzpicture}[scale=0.5]
+      \input{../report/total-run.tex}
+    \end{tikzpicture} 
+    
+    \bigskip
+    
+    \small
+    $661$ instances after filtering out those where
+    \begin{itemize}
+      \item the runtime was~$< 1$ s for all algorithm ($639$~instances), or
+      \item at least one algorithm ran out of memory ($207$~instances).
+    \end{itemize}
+
+\end{frame}
 
 \begin{frame}
   \frametitle{Small tables}
@@ -1261,10 +1291,9 @@
 \begin{frame}
   \frametitle{Results}
   \begin{itemize}
-    \item On all series, CT either outperforms or performs as well as the existing
-      propagators for~\Table
-    \item DFA overall slowest, but fastest on some series
+    \item CT seems to outperfom the other propagators
     \item CT has largest performance gains on series with large tables
+    \item DFA overall slowest
   \end{itemize}
 \end{frame}
 
@@ -1289,7 +1318,7 @@
     %   \end{itemize}
     \item Future work:
       \begin{itemize}
-      \item This project is to be seen as a proof of concept - not a final version
+      \item Proof of concept -- not a final version
       \item Inclusion into Gecode?
       \item Implement and evaluate generalisations of CT described
         in~\cite{DBLP:conf/aaai/VerhaegheLS17}
