@@ -10,7 +10,7 @@
 //#define DEBUG
 
 //#define LONG_FILTER
-//#define FIX
+#define FIX
 #define DELTA
 
 #define CLEAR_MASK
@@ -1078,7 +1078,8 @@ public:
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
       CTAdvisor<View> a = a0.advisor();
       View v = a.view();
-      GECODE_ME_CHECK(v.eq(home,t[a.index]));
+      if (!v.assigned())
+        GECODE_ME_CHECK(v.eq(home,t[a.index]));
     }
     return home.ES_SUBSUMED(*this);
   }
