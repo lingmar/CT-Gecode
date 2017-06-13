@@ -10,7 +10,7 @@
 //#define DEBUG
 
 //#define LONG_FILTER
-#define FIX
+//#define FIX
 #define DELTA
 
 #define CLEAR_MASK
@@ -903,6 +903,7 @@ public:
         int new_min = min_val;
         int new_max = max_val;
         int nremoves = 0;
+        int last_support;
         
         // Iterate over single range if domain is an interval
         if (v.range()) {
@@ -941,6 +942,8 @@ public:
           for (int val = new_min + 1; val < new_max; ++val) {
             if (!supported(a,row,offset))
               nq[nremoves++] = val;
+            else
+              last_support = val;
             ++row;
           }
           
@@ -965,6 +968,7 @@ public:
                   nremoves = 0; // Will be covered by gq
                 }
                 new_max = cur; // Will collect the largest supported value
+                last_support = cur;
               }
               ++cur;
               ++row;
