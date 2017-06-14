@@ -7,8 +7,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -113,13 +113,13 @@ namespace Gecode { namespace Float { namespace Trigonometric {
 
   template<class A, class B>
   forceinline
-  Tan<A,B>::Tan(Space& home, bool share, Tan<A,B>& p)
-    : MixBinaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND>(home,share,p) {}
+  Tan<A,B>::Tan(Space& home, Tan<A,B>& p)
+    : MixBinaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND>(home,p) {}
 
   template<class A, class B>
   Actor*
-  Tan<A,B>::copy(Space& home, bool share) {
-    return new (home) Tan<A,B>(home,share,*this);
+  Tan<A,B>::copy(Space& home) {
+    return new (home) Tan<A,B>(home,*this);
   }
 
   template<class A, class B>
@@ -199,13 +199,13 @@ namespace Gecode { namespace Float { namespace Trigonometric {
 
   template<class A, class B>
   forceinline
-  ATan<A,B>::ATan(Space& home, bool share, ATan<A,B>& p)
-    : MixBinaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND>(home,share,p) {}
+  ATan<A,B>::ATan(Space& home, ATan<A,B>& p)
+    : MixBinaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND>(home,p) {}
 
   template<class A, class B>
   Actor*
-  ATan<A,B>::copy(Space& home, bool share) {
-    return new (home) ATan<A,B>(home,share,*this);
+  ATan<A,B>::copy(Space& home) {
+    return new (home) ATan<A,B>(home,*this);
   }
 
   template<class A, class B>

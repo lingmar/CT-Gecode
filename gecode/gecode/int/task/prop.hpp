@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,9 +46,9 @@ namespace Gecode { namespace Int {
 
   template<class Task, class PL>
   forceinline
-  TaskProp<Task,PL>::TaskProp(Space& home, bool shared, TaskProp<Task,PL>& p)
-    : Propagator(home,shared,p) {
-    t.update(home,shared,p.t);
+  TaskProp<Task,PL>::TaskProp(Space& home, TaskProp<Task,PL>& p)
+    : Propagator(home,p) {
+    t.update(home,p.t);
   }
 
   template<class Task, class PL>

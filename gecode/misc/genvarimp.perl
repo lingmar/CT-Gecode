@@ -7,8 +7,8 @@
 #     Christian Schulte, 2007
 #
 #  Last modified:
-#     $Date$ by $Author$
-#     $Revision$
+#     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+#     $Revision: 15697 $
 #
 #  This file is part of Gecode, the generic constraint
 #  development environment:
@@ -662,7 +662,7 @@ EOF
   print <<EOF
   protected:
     /// Constructor for cloning \\a x
-    $class[$f](Gecode::Space& home, bool share, $class[$f]\& x);
+    $class[$f](Gecode::Space& home, $class[$f]\& x);
   public:
     /// Constructor for creating static instance of variable
     $class[$f](void);
@@ -684,7 +684,7 @@ EOF
      */
     void subscribe(Gecode::Space& home, Gecode::Propagator& p, Gecode::PropCond pc, bool assigned, bool schedule);
     /// Subscribe advisor \\a a if \\a assigned is false.
-    void subscribe(Gecode::Space& home, Gecode::Advisor& a, bool assigned);
+    void subscribe(Gecode::Space& home, Gecode::Advisor& a, bool assigned, bool failed);
     /// Notify that variable implementation has been modified with modification event \\a me and delta information \\a d
     Gecode::ModEvent notify(Gecode::Space& home, Gecode::ModEvent me, Gecode::Delta& d);
     /// \\brief Schedule propagator \\a p
@@ -738,8 +738,8 @@ if ($dispose[$f]) {
   }
 
   forceinline
-  $class[$f]::$class[$f](Gecode::Space& home, bool share, $class[$f]\& x)
-    : $base[$f](home,share,x) {
+  $class[$f]::$class[$f](Gecode::Space& home, $class[$f]\& x)
+    : $base[$f](home,x) {
      _next_d = static_cast<$class[$f]*>(vars_d(home)); vars_d(home,this);
   }
 
@@ -761,8 +761,8 @@ EOF
     : $base[$f](home) {}
 
   forceinline
-  $class[$f]::$class[$f](Gecode::Space& home, bool share, $class[$f]\& x)
-    : $base[$f](home,share,x) {}
+  $class[$f]::$class[$f](Gecode::Space& home, $class[$f]\& x)
+    : $base[$f](home,x) {}
 EOF
 ;
 }
@@ -773,8 +773,8 @@ EOF
     $base[$f]::subscribe(home,p,pc,assigned,$me_subscribe[$f],schedule);
   }
   forceinline void
-  $class[$f]::subscribe(Gecode::Space& home, Gecode::Advisor& a, bool assigned) {
-    $base[$f]::subscribe(home,a,assigned);
+  $class[$f]::subscribe(Gecode::Space& home, Gecode::Advisor& a, bool assigned, bool failed) {
+    $base[$f]::subscribe(home,a,assigned,failed);
   }
 
   forceinline void

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-24 20:41:24 +0200 (Wed, 24 May 2017) $ by $Author: schulte $
+ *     $Revision: 15773 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -322,6 +322,26 @@ namespace Gecode {
       virtual void help(void);
     };
 
+    /**
+     * \brief Search trace option
+     *
+     */
+    class GECODE_DRIVER_EXPORT SearchTraceOption : public BaseOption {
+    protected:
+      SearchTracer* cur; ///< Current value
+    public:
+      /// Initialize with no tracing
+      SearchTraceOption(void);
+      /// Set default tracer
+      void value(SearchTracer* t);
+      /// Return current option value
+      SearchTracer* value(void) const;
+      /// Parse option at first position and return number of parsed arguments
+      virtual int parse(int argc, char* argv[]);
+      /// Print help text
+      virtual void help(void);
+    };
+
   }
 
   /**
@@ -401,13 +421,14 @@ namespace Gecode {
 
     /// \name Execution options
     //@{
-    Driver::StringOption      _mode;       ///< Script mode to run
-    Driver::UnsignedIntOption _samples;    ///< How many samples
-    Driver::UnsignedIntOption _iterations; ///< How many iterations per sample
-    Driver::BoolOption        _print_last; ///< Print only last solution found
-    Driver::StringValueOption _out_file;   ///< Where to print solutions
-    Driver::StringValueOption _log_file;   ///< Where to print statistics
-    Driver::TraceOption       _trace;      ///< Trace flags for tracing
+    Driver::StringOption      _mode;          ///< Script mode to run
+    Driver::UnsignedIntOption _samples;       ///< How many samples
+    Driver::UnsignedIntOption _iterations;    ///< How many iterations per sample
+    Driver::BoolOption        _print_last;    ///< Print only last solution found
+    Driver::StringValueOption _out_file;      ///< Where to print solutions
+    Driver::StringValueOption _log_file;      ///< Where to print statistics
+    Driver::TraceOption       _trace;         ///< Trace flags for tracing
+    Driver::SearchTraceOption _search_tracer; ///< Search tracer
     //@}
 
   public:
@@ -596,6 +617,11 @@ namespace Gecode {
     void trace(int f);
     /// Return trace flags
     int trace(void) const;
+
+    /// Set search tracer
+    void search_tracer(SearchTracer* t);
+    /// Return search tracer
+    SearchTracer* search_tracer(void) const;
     //@}
 
 #ifdef GECODE_HAS_GIST
@@ -705,7 +731,7 @@ namespace Gecode { namespace Driver {
     /// Constructor
     ScriptBase(const Options& opt);
     /// Constructor used for cloning
-    ScriptBase(bool share, ScriptBase& e);
+    ScriptBase(ScriptBase& e);
     /// Print a solution to \a os
     virtual void print(std::ostream& os) const;
     /// Compare with \a s
@@ -727,8 +753,6 @@ namespace Gecode { namespace Driver {
     template<class Script, template<class> class Engine, class Options,
              template<class, template<class> class> class Meta>
     static void runMeta(const Options& opt, Script* s);
-    /// Catch wrong definitions of copy constructor
-    explicit ScriptBase(ScriptBase& e);
   };
 
 #ifdef GECODE_HAS_FLOAT_VARS
@@ -741,8 +765,8 @@ namespace Gecode { namespace Driver {
     ExtractStepOption(const Options& opt)
       : BaseSpace(opt.step()) {}
     /// Constructor used for cloning
-    ExtractStepOption(bool share, BaseSpace& e)
-      : BaseSpace(share,e) {}
+    ExtractStepOption(BaseSpace& e)
+      : BaseSpace(e) {}
   };
 
 #endif
@@ -754,8 +778,8 @@ namespace Gecode { namespace Driver {
     /// Constructor
     IgnoreStepOption(const Options&) {}
     /// Constructor used for cloning
-    IgnoreStepOption(bool share, BaseSpace& e)
-      : BaseSpace(share,e) {}
+    IgnoreStepOption(BaseSpace& e)
+      : BaseSpace(e) {}
   };
 
 

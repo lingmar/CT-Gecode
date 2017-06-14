@@ -7,8 +7,8 @@
  *     Guido Tack, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -79,17 +79,15 @@ namespace Test { namespace Set {
           sel[i].init(x.lub, x[selector.val()]);
         }
 
-        FakeSpace* fs = new FakeSpace;
         bool ret;
         {
-          Region r(*fs);
+          Region r;
           Iter::Ranges::NaryUnion u(r, sel, selected);
 
           CountableSetRanges z(x.lub, x[4]);
           ret = Iter::Ranges::equal(u, z);
         }
         delete[] sel;
-        delete fs;
         return ret;
       }
       /// Post constraint on \a x
@@ -131,17 +129,15 @@ namespace Test { namespace Set {
           sel[i].init(iss[selector.val()]);
         }
 
-        FakeSpace* fs = new FakeSpace;
         bool ret;
         {
-          Region r(*fs);
+          Region r;
           Iter::Ranges::NaryUnion u(r, sel, selected);
 
           CountableSetRanges z(x.lub, x[1]);
           ret = Iter::Ranges::equal(u, z);
         }
         delete[] sel;
-        delete fs;
         return ret;
       }
       /// Post constraint on \a x
@@ -176,16 +172,14 @@ namespace Test { namespace Set {
           }
           sel[i].init(x.lub, x[selector.val()]);
         }
-        FakeSpace* fs = new FakeSpace;
         bool ret;
         {
-          Region r(*fs);
+          Region r;
           Iter::Ranges::NaryInter u(r, sel, selected);
 
           CountableSetRanges z(x.lub, x[4]);
           ret = Iter::Ranges::equal(u, z);
         }
-        delete fs;
         delete [] sel;
         return ret;
       }
@@ -222,16 +216,14 @@ namespace Test { namespace Set {
           }
           sel[i].init(x.lub, x[selector.val()]);
         }
-        FakeSpace* fs = new FakeSpace;
         bool ret;
         {
-          Region r(*fs);
+          Region r;
           Iter::Ranges::NaryInter u(r,sel, selected);
 
           CountableSetRanges z(x.lub, x[4]);
           ret = Iter::Ranges::equal(u, z);
         }
-        delete fs;
         delete [] sel;
         return ret;
       }
@@ -277,16 +269,14 @@ namespace Test { namespace Set {
         }
 
         bool ret;
-        FakeSpace* fs = new FakeSpace;
         {
-          Region r(*fs);
+          Region r;
           Iter::Ranges::NaryUnion u(r, sel, selected);
           ret = Iter::Ranges::size(u) == cardsum;
           u.reset();
           CountableSetRanges z(x.lub, x[4]);
           ret &= Iter::Ranges::equal(u, z);
         }
-        delete fs;
         delete[] sel;
         return ret;
       }

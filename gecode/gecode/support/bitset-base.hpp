@@ -11,8 +11,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2016-04-19 17:19:45 +0200 (Tue, 19 Apr 2016) $ by $Author: schulte $
+ *     $Revision: 14967 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -112,12 +112,6 @@ namespace Gecode { namespace Support {
     void o(BitSetData a, unsigned int i);
     /// Return "or" of \a a and \a b
     static BitSetData o(BitSetData a, BitSetData b);
-    /// Check if \a is the same
-    bool same(BitSetData a);
-    /// Check whether exactly one bit is set
-    bool one() const;
-    /// Reverse all bits in \a b
-    static BitSetData reverse(BitSetData b);
   };
 
   /// Status of a bitset
@@ -280,7 +274,7 @@ namespace Gecode { namespace Support {
       return static_cast<unsigned int>(p-1)+i;
     }
 #else
-    while (!get(i)) i++; 
+    while (!get(i)) i++;
     return i;
 #endif
   }
@@ -318,13 +312,7 @@ namespace Gecode { namespace Support {
     ab.bits = a.bits & b.bits;
     return ab;
   }
-  forceinline BitSetData
-  BitSetData::reverse(BitSetData b) {
-    BitSetData rv;
-    rv.bits = ~b.bits;
-    return rv;
-  }
-    
+
   forceinline void
   BitSetData::o(BitSetData a) {
     bits |= a.bits;
@@ -340,15 +328,7 @@ namespace Gecode { namespace Support {
     ab.bits = a.bits | b.bits;
     return ab;
   }
-  forceinline bool
-  BitSetData::same(BitSetData a) {
-    return bits == a.bits;
-  }
-  forceinline bool
-  BitSetData::one() const {
-    return (bits & (bits - static_cast<Base>(1U))) ==
-      static_cast<Base>(0U);
-  }
+
 
   /*
    * Basic bit sets

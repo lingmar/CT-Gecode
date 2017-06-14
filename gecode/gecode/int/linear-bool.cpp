@@ -7,8 +7,8 @@
  *     Christian Schulte, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -47,7 +47,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=1; t[i].x=x[i];
@@ -62,7 +62,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=1; t[i].x=x[i];
@@ -81,7 +81,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=a[i]; t[i].x=x[i];
@@ -100,7 +100,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t =
       re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
@@ -131,7 +131,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=1; t[i].x=x[i];
@@ -146,7 +146,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=1; t[i].x=x[i];
@@ -164,7 +164,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=a[i]; t[i].x=x[i];
@@ -182,7 +182,7 @@ namespace Gecode {
     GECODE_POST;
 
     int n=x.size();
-    Region re(home);
+    Region re;
     Linear::Term<BoolView>* t = re.alloc<Linear::Term<BoolView> >(n);
     for (int i=n; i--; ) {
       t[i].a=a[i]; t[i].x=x[i];

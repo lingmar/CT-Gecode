@@ -7,8 +7,8 @@
  *     Christian Schulte, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -66,8 +66,8 @@ namespace Gecode { namespace Int { namespace BinPacking {
   }
 
   forceinline void
-  Item::update(Space& home, bool share, Item& i) {
-    x.update(home,share,i.x);
+  Item::update(Space& home, Item& i) {
+    x.update(home,i.x);
     s = i.s;
   }
 
@@ -161,10 +161,10 @@ namespace Gecode { namespace Int { namespace BinPacking {
   }
 
   forceinline
-  Pack::Pack(Space& home, bool shared, Pack& p)
-    : Propagator(home,shared,p), t(p.t) {
-    l.update(home,shared,p.l);
-    bs.update(home,shared,p.bs);
+  Pack::Pack(Space& home, Pack& p)
+    : Propagator(home,p), t(p.t) {
+    l.update(home,p.l);
+    bs.update(home,p.bs);
   }
 
   forceinline size_t

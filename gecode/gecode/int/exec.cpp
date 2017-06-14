@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-30 21:40:16 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+ *     $Revision: 15814 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -36,46 +36,54 @@
  */
 
 #include <gecode/int/exec.hh>
-#include <gecode/kernel/wait.hh>
 
 namespace Gecode {
 
   void
-  wait(Home home, IntVar x, void (*c)(Space& home),
+  wait(Home home, IntVar x, std::function<void(Space& home)> c,
        IntPropLevel) {
     GECODE_POST;
-    GECODE_ES_FAIL(Kernel::UnaryWait<Int::IntView>::post(home,x,c));
+    GECODE_ES_FAIL(UnaryWait<Int::IntView>::post(home,x,c));
   }
 
   void
-  wait(Home home, BoolVar x, void (*c)(Space& home),
+  wait(Home home, BoolVar x, std::function<void(Space& home)> c,
        IntPropLevel) {
     GECODE_POST;
-    GECODE_ES_FAIL(Kernel::UnaryWait<Int::BoolView>::post(home,x,c));
+    GECODE_ES_FAIL(UnaryWait<Int::BoolView>::post(home,x,c));
   }
 
   void
-  wait(Home home, const IntVarArgs& x, void (*c)(Space& home),
+  wait(Home home, const IntVarArgs& x, std::function<void(Space& home)> c,
        IntPropLevel) {
     GECODE_POST;
     ViewArray<Int::IntView> xv(home,x);
-    GECODE_ES_FAIL(Kernel::NaryWait<Int::IntView>::post(home,xv,c));
+    GECODE_ES_FAIL(NaryWait<Int::IntView>::post(home,xv,c));
   }
 
   void
-  wait(Home home, const BoolVarArgs& x, void (*c)(Space& home),
+  wait(Home home, const BoolVarArgs& x, std::function<void(Space& home)> c,
        IntPropLevel) {
     GECODE_POST;
     ViewArray<Int::BoolView> xv(home,x);
-    GECODE_ES_FAIL(Kernel::NaryWait<Int::BoolView>::post(home,xv,c));
+    GECODE_ES_FAIL(NaryWait<Int::BoolView>::post(home,xv,c));
+  }
+
+
+  void
+  when(Home home, BoolVar x,
+       std::function<void(Space& home)> t,
+       std::function<void(Space& home)> e,
+       IntPropLevel) {
+    GECODE_POST;
+    GECODE_ES_FAIL(Int::Exec::When::post(home,x,t,e));
   }
 
   void
   when(Home home, BoolVar x,
-       void (*t)(Space& home), void (*e)(Space& home),
+       std::function<void(Space& home)> t,
        IntPropLevel) {
-    GECODE_POST;
-    GECODE_ES_FAIL(Int::Exec::When::post(home,x,t,e));
+    when(home, x, t, [](Space&) {});
   }
 
 }

@@ -7,8 +7,8 @@
  *     Christopher Mears, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-21 16:51:20 +0200 (Sun, 21 May 2017) $ by $Author: schulte $
+ *     $Revision: 15751 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -170,7 +170,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Left-branch update
     virtual void update(Literal) = 0;
     /// Copy function
-    virtual SymmetryImp<View>* copy(Space& home, bool share) const = 0;
+    virtual SymmetryImp<View>* copy(Space& home) const = 0;
     /// Disposal
     virtual size_t dispose(Space& home) = 0;
     /// Unused destructor
@@ -200,7 +200,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Compute symmetric literals
     virtual ArgArray<Literal> symmetric(Literal, const ViewArray<View>&) const;
     /// Copy function
-    SymmetryImp<View>* copy(Space& home, bool share) const;
+    SymmetryImp<View>* copy(Space& home) const;
   };
   /// Implementation of a value symmetry.
   template <class View>
@@ -220,7 +220,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Compute symmetric literals
     virtual ArgArray<Literal> symmetric(Literal, const ViewArray<View>&) const;
     /// Copy function
-    SymmetryImp<View>* copy(Space& home, bool share) const;
+    SymmetryImp<View>* copy(Space& home) const;
   };
   /// Implementation of a variable sequence symmetry.
   template <class View>
@@ -254,7 +254,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Constructor for creation
     VariableSequenceSymmetryImp<View>(Space& home, int *_indices, unsigned int n, unsigned int seqsize);
     /// Copy constructor
-    VariableSequenceSymmetryImp<View>(Space& home, bool share, const VariableSequenceSymmetryImp<View>& s);
+    VariableSequenceSymmetryImp<View>(Space& home, const VariableSequenceSymmetryImp<View>& s);
     /// Disposal
     virtual size_t dispose(Space& home);
     /// Search left-branch update
@@ -262,7 +262,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Compute symmetric literals
     virtual ArgArray<Literal> symmetric(Literal, const ViewArray<View>&) const;
     /// Copy function
-    SymmetryImp<View>* copy(Space& home, bool share) const;
+    SymmetryImp<View>* copy(Space& home) const;
   };
   /// Implementation of a value sequence symmetry.
   template <class View>
@@ -296,7 +296,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Compute symmetric literals
     virtual ArgArray<Literal> symmetric(Literal, const ViewArray<View>&) const;
     /// Copy function
-    SymmetryImp<View>* copy(Space& home, bool share) const;
+    SymmetryImp<View>* copy(Space& home) const;
   };
 
   /// %Choice storing position and value, and symmetric literals to be
@@ -319,8 +319,6 @@ namespace Gecode { namespace Int { namespace LDSB {
     const Literal* literals(void) const;
     /// Return number of literals
     int nliterals(void) const;
-    /// Report size occupied
-    virtual size_t size(void) const;
     /// Archive into \a e
     virtual void archive(Archive& e) const;
   };
@@ -333,10 +331,11 @@ namespace Gecode { namespace Int { namespace LDSB {
    * \a View) and value (of type \a Val).
    *
    */
-  template<class View, int n, class Val, unsigned int a>
-  class LDSBBrancher : public ViewValBrancher<View,n,Val,a> {
-    typedef typename ViewBrancher<View,n>::BranchFilter BranchFilter;
+  template<class View, int n, class Val, unsigned int a,
+           class Filter, class Print>
+  class LDSBBrancher : public ViewValBrancher<View,n,Val,a,Filter,Print> {
   public:
+    using typename ViewValBrancher<View,n,Val,a,Filter,Print>::Var;
     /// Array of symmetry implementations
     SymmetryImp<View>** _syms;
     /// Number of symmetry implementations
@@ -344,22 +343,16 @@ namespace Gecode { namespace Int { namespace LDSB {
     // Position of variable that last choice was created for
     int _prevPos;
   protected:
-    /// Function type for printing variable and value selection
-    typedef void (*VarValPrint)(const Space& home, const Brancher& b,
-                                unsigned int alt,
-                                typename View::VarType x, int i,
-                                const Val& m,
-                                std::ostream& o);
     /// Constructor for cloning \a b
-    LDSBBrancher(Space& home, bool share, LDSBBrancher& b);
+    LDSBBrancher(Space& home, LDSBBrancher& b);
     /// Constructor for creation
     LDSBBrancher(Home home,
                  ViewArray<View>& x,
                  ViewSel<View>* vs[n],
                  ValSelCommitBase<View,Val>* vsc,
                  SymmetryImp<View>** syms, int nsyms,
-                 BranchFilter bf,
-                 VarValPrint vvp);
+                 BranchFilter<Var> bf,
+                 VarValPrint<Var,Val> vvp);
   public:
     /// Return choice
     virtual const Choice* choice(Space& home);
@@ -368,7 +361,7 @@ namespace Gecode { namespace Int { namespace LDSB {
     /// Perform commit for choice \a c and alternative \a b
     virtual ExecStatus commit(Space& home, const Choice& c, unsigned int b);
     /// Perform cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Delete brancher and return its size
     virtual size_t dispose(Space& home);
     /// Brancher post function
@@ -378,9 +371,19 @@ namespace Gecode { namespace Int { namespace LDSB {
                      ValSelCommitBase<View,Val>* vsc,
                      SymmetryImp<View>** syms,
                      int nsyms,
-                     BranchFilter bf,
-                     VarValPrint vvp);
+                     BranchFilter<Var> bf,
+                     VarValPrint<Var,Val> vvp);
   };
+
+  /// Post LDSB brancher
+  template<class View, int n, class Val, unsigned int a>
+  void postldsbbrancher(Home home,
+                        ViewArray<View>& x,
+                        ViewSel<View>* vs[n],
+                        ValSelCommitBase<View,Val>* vsc,
+                        SymmetryImp<View>** syms, int nsyms,
+                        BranchFilter<typename View::VarType> bf,
+                        VarValPrint<typename View::VarType,Val> vvp);
 
   /// Exclude value \v from variable view \x
   template<class View>

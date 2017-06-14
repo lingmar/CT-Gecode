@@ -14,8 +14,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,8 +54,8 @@ namespace Gecode { namespace Float {
     : FloatVarImpBase(home), dom(d) {}
 
   forceinline
-  FloatVarImp::FloatVarImp(Space& home, bool share, FloatVarImp& x)
-    : FloatVarImpBase(home, share, x), dom(x.dom) {}
+  FloatVarImp::FloatVarImp(Space& home, FloatVarImp& x)
+    : FloatVarImpBase(home, x), dom(x.dom) {}
 
 
   /*
@@ -135,7 +135,7 @@ namespace Gecode { namespace Float {
 
   forceinline ModEvent
   FloatVarImp::gq(Space& home, FloatNum n) {
-    if (n > dom.max())  return ME_FLOAT_FAILED;
+    if (n > dom.max())  return fail(home);
     if ((n <= dom.min()) || assigned()) return ME_FLOAT_NONE;
     FloatDelta d(dom.min(),n);
     ModEvent me = ME_FLOAT_BND;
@@ -147,7 +147,7 @@ namespace Gecode { namespace Float {
   }
   forceinline ModEvent
   FloatVarImp::gq(Space& home, const FloatVal& n) {
-    if (n.min() > dom.max())  return ME_FLOAT_FAILED;
+    if (n.min() > dom.max())  return fail(home);
     if ((n.min() <= dom.min()) || assigned()) return ME_FLOAT_NONE;
     FloatDelta d(dom.min(),n.min());
     ModEvent me = ME_FLOAT_BND;
@@ -161,7 +161,7 @@ namespace Gecode { namespace Float {
 
   forceinline ModEvent
   FloatVarImp::lq(Space& home, FloatNum n) {
-    if (n < dom.min())  return ME_FLOAT_FAILED;
+    if (n < dom.min())  return fail(home);
     if ((n >= dom.max()) || assigned()) return ME_FLOAT_NONE;
     FloatDelta d(n,dom.max());
     ModEvent me = ME_FLOAT_BND;
@@ -173,7 +173,7 @@ namespace Gecode { namespace Float {
   }
   forceinline ModEvent
   FloatVarImp::lq(Space& home, const FloatVal& n) {
-    if (n.max() < dom.min())  return ME_FLOAT_FAILED;
+    if (n.max() < dom.min())  return fail(home);
     if ((n.max() >= dom.max()) || assigned()) return ME_FLOAT_NONE;
     FloatDelta d(n.max(),dom.max());
     ModEvent me = ME_FLOAT_BND;
@@ -188,7 +188,7 @@ namespace Gecode { namespace Float {
   forceinline ModEvent
   FloatVarImp::eq(Space& home, FloatNum n) {
     if (!dom.in(n))
-      return ME_FLOAT_FAILED;
+      return fail(home);
     if (assigned())
       return ME_FLOAT_NONE;
     FloatDelta d;
@@ -198,7 +198,7 @@ namespace Gecode { namespace Float {
   forceinline ModEvent
   FloatVarImp::eq(Space& home, const FloatVal& n) {
     if (!overlap(dom,n))
-      return ME_FLOAT_FAILED;
+      return fail(home);
     if (assigned() || subset(dom,n))
       return ME_FLOAT_NONE;
     FloatDelta d;
@@ -217,41 +217,15 @@ namespace Gecode { namespace Float {
    */
 
   forceinline FloatVarImp*
-  FloatVarImp::copy(Space& home, bool share) {
+  FloatVarImp::copy(Space& home) {
     return copied() ? static_cast<FloatVarImp*>(forward())
-      : perform_copy(home,share);
+      : perform_copy(home);
   }
 
   /// Return copy of not-yet copied variable
   forceinline FloatVarImp*
-  FloatVarImp::perform_copy(Space& home, bool share) {
-    return new (home) FloatVarImp(home, share, *this);
-  }
-
-  /*
-   * Dependencies
-   *
-   */
-  forceinline void
-  FloatVarImp::subscribe(Space& home, Propagator& p, PropCond pc, bool schedule) {
-    FloatVarImpBase::subscribe(home,p,pc,assigned(),schedule);
-  }
-  forceinline void
-  FloatVarImp::cancel(Space& home, Propagator& p, PropCond pc) {
-    FloatVarImpBase::cancel(home,p,pc,assigned());
-  }
-
-  forceinline void
-  FloatVarImp::reschedule(Space& home, Propagator& p, PropCond pc) {
-    FloatVarImpBase::reschedule(home,p,pc,assigned());
-  }
-  forceinline void
-  FloatVarImp::subscribe(Space& home, Advisor& a) {
-    FloatVarImpBase::subscribe(home,a,assigned());
-  }
-  forceinline void
-  FloatVarImp::cancel(Space& home, Advisor& a) {
-    FloatVarImpBase::cancel(home,a,assigned());
+  FloatVarImp::perform_copy(Space& home) {
+    return new (home) FloatVarImp(home, *this);
   }
 
   forceinline ModEventDelta

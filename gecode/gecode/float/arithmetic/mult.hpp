@@ -9,8 +9,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -97,14 +97,13 @@ namespace Gecode { namespace Float { namespace Arithmetic {
 
   template<class View>
   forceinline
-  MultZeroOne<View>::MultZeroOne(Space& home, bool share,
-                                    MultZeroOne<View>& p)
-    : BinaryPropagator<View,PC_FLOAT_BND>(home,share,p) {}
+  MultZeroOne<View>::MultZeroOne(Space& home, MultZeroOne<View>& p)
+    : BinaryPropagator<View,PC_FLOAT_BND>(home,p) {}
 
   template<class View>
   Actor*
-  MultZeroOne<View>::copy(Space& home, bool share) {
-    return new (home) MultZeroOne<View>(home,share,*this);
+  MultZeroOne<View>::copy(Space& home) {
+    return new (home) MultZeroOne<View>(home,*this);
   }
 
   template<class View>
@@ -146,15 +145,14 @@ namespace Gecode { namespace Float { namespace Arithmetic {
 
   template<class VA, class VB, class VC>
   forceinline
-  MultPlus<VA,VB,VC>::MultPlus(Space& home, bool share,
-                                   MultPlus<VA,VB,VC>& p)
+  MultPlus<VA,VB,VC>::MultPlus(Space& home, MultPlus<VA,VB,VC>& p)
     : MixTernaryPropagator<VA,PC_FLOAT_BND,VB,PC_FLOAT_BND,VC,PC_FLOAT_BND>
-  (home,share,p) {}
+  (home,p) {}
 
   template<class VA, class VB, class VC>
   Actor*
-  MultPlus<VA,VB,VC>::copy(Space& home, bool share) {
-    return new (home) MultPlus<VA,VB,VC>(home,share,*this);
+  MultPlus<VA,VB,VC>::copy(Space& home) {
+    return new (home) MultPlus<VA,VB,VC>(home,*this);
   }
 
   template<class VA, class VB, class VC>
@@ -193,13 +191,13 @@ namespace Gecode { namespace Float { namespace Arithmetic {
 
   template<class View>
   forceinline
-  Mult<View>::Mult(Space& home, bool share, Mult<View>& p)
-    : TernaryPropagator<View,PC_FLOAT_BND>(home,share,p) {}
+  Mult<View>::Mult(Space& home, Mult<View>& p)
+    : TernaryPropagator<View,PC_FLOAT_BND>(home,p) {}
 
   template<class View>
   Actor*
-  Mult<View>::copy(Space& home, bool share) {
-    return new (home) Mult<View>(home,share,*this);
+  Mult<View>::copy(Space& home) {
+    return new (home) Mult<View>(home,*this);
   }
 
   template<class View>

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -77,14 +77,14 @@ namespace Gecode { namespace Int { namespace Dom {
 
   template<class View, ReifyMode rm>
   forceinline
-  ReRange<View,rm>::ReRange(Space& home, bool share, ReRange& p)
-    : ReUnaryPropagator<View,PC_INT_DOM,BoolView>(home,share,p),
+  ReRange<View,rm>::ReRange(Space& home, ReRange& p)
+    : ReUnaryPropagator<View,PC_INT_DOM,BoolView>(home,p),
       min(p.min), max(p.max) {}
 
   template<class View, ReifyMode rm>
   Actor*
-  ReRange<View,rm>::copy(Space& home, bool share) {
-    return new (home) ReRange<View,rm>(home,share,*this);
+  ReRange<View,rm>::copy(Space& home) {
+    return new (home) ReRange<View,rm>(home,*this);
   }
 
   template<class View, ReifyMode rm>

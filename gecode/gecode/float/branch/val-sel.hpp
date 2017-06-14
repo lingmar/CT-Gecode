@@ -9,8 +9,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,11 +54,11 @@ namespace Gecode {
 namespace Gecode { namespace Float { namespace Branch {
 
   forceinline
-  ValSelLq::ValSelLq(Space& home, const ValBranch& vb)
+  ValSelLq::ValSelLq(Space& home, const ValBranch<Var>& vb)
     : ValSel<FloatView,FloatNumBranch>(home,vb) {}
   forceinline
-  ValSelLq::ValSelLq(Space& home, bool shared, ValSelLq& vs)
-    : ValSel<FloatView,FloatNumBranch>(home,shared,vs) {}
+  ValSelLq::ValSelLq(Space& home, ValSelLq& vs)
+    : ValSel<FloatView,FloatNumBranch>(home,vs) {}
   forceinline FloatNumBranch
   ValSelLq::val(const Space&, FloatView x, int) {
     FloatNumBranch nl;
@@ -67,11 +67,11 @@ namespace Gecode { namespace Float { namespace Branch {
   }
 
   forceinline
-  ValSelGq::ValSelGq(Space& home, const ValBranch& vb)
+  ValSelGq::ValSelGq(Space& home, const ValBranch<Var>& vb)
     : ValSel<FloatView,FloatNumBranch>(home,vb) {}
   forceinline
-  ValSelGq::ValSelGq(Space& home, bool shared, ValSelGq& vs)
-    : ValSel<FloatView,FloatNumBranch>(home,shared,vs) {}
+  ValSelGq::ValSelGq(Space& home, ValSelGq& vs)
+    : ValSel<FloatView,FloatNumBranch>(home,vs) {}
   forceinline FloatNumBranch
   ValSelGq::val(const Space&, FloatView x, int) {
     FloatNumBranch nl;
@@ -80,12 +80,11 @@ namespace Gecode { namespace Float { namespace Branch {
   }
 
   forceinline
-  ValSelRnd::ValSelRnd(Space& home, const ValBranch& vb)
+  ValSelRnd::ValSelRnd(Space& home, const ValBranch<Var>& vb)
     : ValSel<FloatView,FloatNumBranch>(home,vb), r(vb.rnd()) {}
   forceinline
-  ValSelRnd::ValSelRnd(Space& home, bool shared, ValSelRnd& vs)
-    : ValSel<FloatView,FloatNumBranch>(home,shared,vs) {
-    r.update(home,shared,vs.r);
+  ValSelRnd::ValSelRnd(Space& home, ValSelRnd& vs)
+    : ValSel<FloatView,FloatNumBranch>(home,vs), r(vs.r) {
   }
   forceinline FloatNumBranch
   ValSelRnd::val(const Space&, FloatView x, int) {

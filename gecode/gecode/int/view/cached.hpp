@@ -7,8 +7,8 @@
  *     Guido Tack, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -266,8 +266,8 @@ namespace Gecode { namespace Int {
    */
   template<class View>
   void
-  CachedView<View>::update(Space& home, bool share, CachedView<View>& y) {
-    DerivedView<View>::update(home,share,y);
+  CachedView<View>::update(Space& home, CachedView<View>& y) {
+    DerivedView<View>::update(home,y);
     if (y._firstRange) {
       _firstRange = new (home) RangeList(y._firstRange->min(),
                                          y._firstRange->max(),NULL);

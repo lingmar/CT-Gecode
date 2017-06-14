@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,7 +53,7 @@ namespace Gecode { namespace Int { namespace NValues {
       return ES_OK;
     }
 
-    x.unique(home);
+    x.unique();
 
     if (x.size() == 1) {
       GECODE_ME_CHECK(y.lq(home,1));
@@ -94,13 +94,13 @@ namespace Gecode { namespace Int { namespace NValues {
 
   template<class VY>
   forceinline
-  GqInt<VY>::GqInt(Space& home, bool share, GqInt<VY>& p)
-    : IntBase<VY>(home, share, p) {}
+  GqInt<VY>::GqInt(Space& home, GqInt<VY>& p)
+    : IntBase<VY>(home, p) {}
 
   template<class VY>
   Propagator*
-  GqInt<VY>::copy(Space& home, bool share) {
-    return new (home) GqInt<VY>(home, share, *this);
+  GqInt<VY>::copy(Space& home) {
+    return new (home) GqInt<VY>(home, *this);
   }
 
   template<class VY>

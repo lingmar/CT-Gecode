@@ -7,8 +7,8 @@
  *     Christian Schulte, 2015
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,8 +44,8 @@ namespace Gecode { namespace Int { namespace Distinct {
     : BinaryPropagator<IntView,PC_INT_DOM>(home,x0,x1), c0(d0), c1(d1) {}
 
   forceinline
-  EqIte::EqIte(Space& home, bool share, EqIte& p)
-    : BinaryPropagator<IntView,PC_INT_DOM>(home,share,p),
+  EqIte::EqIte(Space& home, EqIte& p)
+    : BinaryPropagator<IntView,PC_INT_DOM>(home,p),
       c0(p.c0), c1(p.c1) {}
 
 

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2002
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -527,50 +527,135 @@ namespace Gecode {
   rel(Home home, const BoolVarArgs& x, IntRelType irt, const BoolVarArgs& y,
       IntPropLevel) {
     using namespace Int;
-    if (x.size() != y.size())
-      throw ArgumentSizeMismatch("Int::rel");
     GECODE_POST;
 
     switch (irt) {
     case IRT_GR:
       {
         ViewArray<BoolView> xv(home,x), yv(home,y);
-        GECODE_ES_FAIL(Rel::LexLqLe<BoolView>::post(home,yv,xv,true));
+        GECODE_ES_FAIL((Rel::LexLqLe<BoolView,BoolView>
+                        ::post(home,yv,xv,true)));
       }
       break;
     case IRT_LE:
       {
         ViewArray<BoolView> xv(home,x), yv(home,y);
-        GECODE_ES_FAIL(Rel::LexLqLe<BoolView>::post(home,xv,yv,true));
+        GECODE_ES_FAIL((Rel::LexLqLe<BoolView,BoolView>
+                        ::post(home,xv,yv,true)));
       }
       break;
     case IRT_GQ:
       {
         ViewArray<BoolView> xv(home,x), yv(home,y);
-        GECODE_ES_FAIL(Rel::LexLqLe<BoolView>::post(home,yv,xv,false));
+        GECODE_ES_FAIL((Rel::LexLqLe<BoolView,BoolView>
+                        ::post(home,yv,xv,false)));
       }
       break;
     case IRT_LQ:
       {
         ViewArray<BoolView> xv(home,x), yv(home,y);
-        GECODE_ES_FAIL(Rel::LexLqLe<BoolView>::post(home,xv,yv,false));
+        GECODE_ES_FAIL((Rel::LexLqLe<BoolView,BoolView>
+                        ::post(home,xv,yv,false)));
       }
       break;
     case IRT_EQ:
       for (int i=x.size(); i--; ) {
         GECODE_ES_FAIL((Bool::Eq<BoolView,BoolView>
-                             ::post(home,x[i],y[i])));
+                        ::post(home,x[i],y[i])));
       }
       break;
     case IRT_NQ:
       {
         ViewArray<BoolView> xv(home,x), yv(home,y);
-        GECODE_ES_FAIL(Rel::LexNq<BoolView>::post(home,xv,yv));
+        GECODE_ES_FAIL((Rel::LexNq<BoolView,BoolView>
+                        ::post(home,xv,yv)));
       }
       break;
     default:
       throw UnknownRelation("Int::rel");
     }
+  }
+
+  namespace {
+
+    /// Return view array
+    ViewArray<Int::ConstIntView>
+    viewarray(Space& home, const IntArgs& x) {
+      ViewArray<Int::ConstIntView> xv(home, x.size());
+      for (int i = x.size(); i--; ) {
+        if ((x[i] != 0) && (x[i] != 1))
+          throw Int::NotZeroOne("Int::rel");
+        xv[i] = Int::ConstIntView(x[i]);
+      }
+      return xv;
+    }
+
+  }
+
+  void
+  rel(Home home, const BoolVarArgs& x, IntRelType irt, const IntArgs& y,
+      IntPropLevel) {
+    using namespace Int;
+    GECODE_POST;
+
+    switch (irt) {
+    case IRT_GR:
+      {
+        ViewArray<BoolView> xv(home,x);
+        ViewArray<ConstIntView> yv(viewarray(home,y));
+        GECODE_ES_FAIL((Rel::LexLqLe<ConstIntView,BoolView>
+                        ::post(home,yv,xv,true)));
+      }
+      break;
+    case IRT_LE:
+      {
+        ViewArray<BoolView> xv(home,x);
+        ViewArray<ConstIntView> yv(viewarray(home,y));
+        GECODE_ES_FAIL((Rel::LexLqLe<BoolView,ConstIntView>
+                        ::post(home,xv,yv,true)));
+      }
+      break;
+    case IRT_GQ:
+      {
+        ViewArray<BoolView> xv(home,x);
+        ViewArray<ConstIntView> yv(viewarray(home,y));
+        GECODE_ES_FAIL((Rel::LexLqLe<ConstIntView,BoolView>
+                        ::post(home,yv,xv,false)));
+      }
+      break;
+    case IRT_LQ:
+      {
+        ViewArray<BoolView> xv(home,x);
+        ViewArray<ConstIntView> yv(viewarray(home,y));
+        GECODE_ES_FAIL((Rel::LexLqLe<BoolView,ConstIntView>
+                        ::post(home,xv,yv,false)));
+      }
+      break;
+    case IRT_EQ:
+      if (x.size() != y.size()) {
+        home.fail();
+      } else {
+        for (int i=x.size(); i--; )
+          GECODE_ME_FAIL(BoolView(x[i]).eq(home,y[i]));
+      }
+      break;
+    case IRT_NQ:
+      {
+        ViewArray<BoolView> xv(home,x); 
+        ViewArray<ConstIntView> yv(viewarray(home,y));
+        GECODE_ES_FAIL((Rel::LexNq<BoolView,ConstIntView>
+                        ::post(home,xv,yv)));
+      }
+      break;
+    default:
+      throw UnknownRelation("Int::rel");
+    }
+  }
+
+  void
+  rel(Home home, const IntArgs& x, IntRelType irt, const BoolVarArgs& y,
+      IntPropLevel ipl) {
+    rel(home,y,irt,x,ipl);
   }
 
   void
@@ -695,7 +780,7 @@ namespace Gecode {
     using namespace Int;
     GECODE_POST;
     int m = x.size();
-    Region r(home);
+    Region r;
     switch (o) {
     case BOT_AND:
       {
@@ -704,7 +789,7 @@ namespace Gecode {
           NegBoolView nb(x[i]); b[i]=nb;
         }
         NegBoolView ny(y);
-        b.unique(home);
+        b.unique();
         GECODE_ES_FAIL((Bool::NaryOr<NegBoolView,NegBoolView>
                              ::post(home,b,ny)));
       }
@@ -712,7 +797,7 @@ namespace Gecode {
     case BOT_OR:
       {
         ViewArray<BoolView> b(home,x);
-        b.unique(home);
+        b.unique();
         GECODE_ES_FAIL((Bool::NaryOr<BoolView,BoolView>::post(home,b,y)));
       }
       break;
@@ -760,7 +845,7 @@ namespace Gecode {
       throw NotZeroOne("Int::rel");
     GECODE_POST;
     int m = x.size();
-    Region r(home);
+    Region r;
     switch (o) {
     case BOT_AND:
       if (n == 0) {
@@ -768,7 +853,7 @@ namespace Gecode {
         for (int i=m; i--; ) {
           NegBoolView nb(x[i]); b[i]=nb;
         }
-        b.unique(home);
+        b.unique();
         GECODE_ES_FAIL(Bool::NaryOrTrue<NegBoolView>::post(home,b));
       } else {
         for (int i=m; i--; ) {
@@ -783,7 +868,7 @@ namespace Gecode {
         }
       } else {
         ViewArray<BoolView> b(home,x);
-        b.unique(home);
+        b.unique();
         GECODE_ES_FAIL(Bool::NaryOrTrue<BoolView>::post(home,b));
       }
       break;
@@ -836,7 +921,7 @@ namespace Gecode {
           NegBoolView nxi(x[i]); xv[i]=nxi;
         }
         ViewArray<BoolView> yv(home,y);
-        xv.unique(home); yv.unique(home);
+        xv.unique(); yv.unique();
         GECODE_ES_FAIL((Bool::ClauseTrue<NegBoolView,BoolView>
                         ::post(home,xv,yv)));
       } else {
@@ -862,7 +947,7 @@ namespace Gecode {
         for (int i=y.size(); i--; ) {
           NegBoolView nyi(y[i]); yv[i]=nyi;
         }
-        xv.unique(home); yv.unique(home);
+        xv.unique(); yv.unique();
         GECODE_ES_FAIL((Bool::ClauseTrue<BoolView,NegBoolView>
                         ::post(home,xv,yv)));
       }
@@ -885,7 +970,7 @@ namespace Gecode {
           NegBoolView n(x[i]); xv[i]=n;
         }
         ViewArray<BoolView> yv(home,y);
-        xv.unique(home); yv.unique(home);
+        xv.unique(); yv.unique();
         NegBoolView nz(z);
         GECODE_ES_FAIL((Bool::Clause<NegBoolView,BoolView>
                         ::post(home,xv,yv,nz)));
@@ -898,7 +983,7 @@ namespace Gecode {
         for (int i=y.size(); i--; ) {
           NegBoolView n(y[i]); yv[i]=n;
         }
-        xv.unique(home); yv.unique(home);
+        xv.unique(); yv.unique();
         GECODE_ES_FAIL((Bool::Clause<BoolView,NegBoolView>
                         ::post(home,xv,yv,z)));
       }
@@ -920,6 +1005,15 @@ namespace Gecode {
       GECODE_ES_FAIL((Bool::IteDom<IntView,IntView,IntView>
                       ::post(home,b,x,y,z)));
     }
+  }
+
+  void
+  ite(Home home, BoolVar b, BoolVar x, BoolVar y, BoolVar z,
+      IntPropLevel) {
+    using namespace Int;
+    GECODE_POST;
+    GECODE_ES_FAIL((Bool::IteBnd<BoolView,BoolView,BoolView>
+                    ::post(home,b,x,y,z)));
   }
 
 }

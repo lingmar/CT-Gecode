@@ -11,8 +11,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -60,10 +60,10 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   forceinline
-  ChannelInt<View>::ChannelInt(Space& home, bool share, ChannelInt& p)
-    : Propagator(home,share,p) {
-    xs.update(home,share,p.xs);
-    ys.update(home,share,p.ys);
+  ChannelInt<View>::ChannelInt(Space& home, ChannelInt& p)
+    : Propagator(home,p) {
+    xs.update(home,p.xs);
+    ys.update(home,p.ys);
   }
 
   template<class View>
@@ -116,8 +116,8 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   Actor*
-  ChannelInt<View>::copy(Space& home, bool share) {
-    return new (home) ChannelInt(home,share,*this);
+  ChannelInt<View>::copy(Space& home) {
+    return new (home) ChannelInt(home,*this);
   }
 
   template<class View>

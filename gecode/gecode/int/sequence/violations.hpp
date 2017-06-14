@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,7 +51,7 @@ namespace Gecode { namespace Int { namespace Sequence {
     /// Initialize violation set for \a n violations
     void init(Space& home, unsigned int n);
     /// Update violation set during cloning
-    void update(Space& home, bool shared, Violations& v);
+    void update(Space& home, Violations& v);
     /// Return whether set is empty
     bool empty(void) const;
     /// Add \a i to violation set
@@ -77,7 +77,7 @@ namespace Gecode { namespace Int { namespace Sequence {
   }
 
   forceinline void
-  Violations::update(Space& home, bool, Violations& v) {
+  Violations::update(Space& home, Violations& v) {
     assert(v.empty());
     init(home,v.size());
   }

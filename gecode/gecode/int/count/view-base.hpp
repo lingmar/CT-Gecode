@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,11 +51,11 @@ namespace Gecode { namespace Int { namespace Count {
 
   template<class VX, class VY, class VZ>
   forceinline
-  ViewBase<VX,VY,VZ>::ViewBase(Space& home, bool share, ViewBase<VX,VY,VZ>& p)
-    : Propagator(home,share,p), c(p.c) {
-    x.update(home,share,p.x);
-    y.update(home,share,p.y);
-    z.update(home,share,p.z);
+  ViewBase<VX,VY,VZ>::ViewBase(Space& home, ViewBase<VX,VY,VZ>& p)
+    : Propagator(home,p), c(p.c) {
+    x.update(home,p.x);
+    update(y,home,p.y);
+    z.update(home,p.z);
   }
 
   template<class VX, class VY, class VZ>

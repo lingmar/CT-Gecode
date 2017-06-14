@@ -13,8 +13,8 @@
  *     Guido Tack, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -79,7 +79,7 @@ namespace Gecode { namespace Int { namespace GCC {
             ViewArray<IntView>& x, ViewArray<Card>& k) {
     int n = x.size();
     int m = k.size();
-    Region r(home);
+    Region r;
     UnReachable* rv = r.alloc<UnReachable>(m);
     for(int i = m; i--; )
       rv[i].minb=rv[i].maxb=rv[i].le=rv[i].gr=rv[i].eq=0;
@@ -256,7 +256,7 @@ namespace Gecode { namespace Int { namespace GCC {
     /// Mark datstructure as requiring reinitialization
     void reinit(void);
     /// Test whether already initialized
-    bool initialized(void) const;
+    operator bool(void) const;
     //@}
     /// \name Access
     //@{
@@ -298,8 +298,8 @@ namespace Gecode { namespace Int { namespace GCC {
   PartialSum<Card>::PartialSum(void) : sum(NULL), size(-1) {}
 
   template<class Card>
-  forceinline bool
-  PartialSum<Card>::initialized(void) const {
+  forceinline
+  PartialSum<Card>::operator bool(void) const {
     return size != -1;
   }
   template<class Card>

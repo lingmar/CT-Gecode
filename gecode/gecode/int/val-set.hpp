@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -102,8 +102,7 @@ namespace Gecode { namespace Int {
   }
 
   forceinline void
-  ValSet::update(Space& home, bool share, ValSet& vs) {
-    (void) share;
+  ValSet::update(Space& home, ValSet& vs) {
     if (vs.n > 0) {
       n = vs.n;
       // Count number of ranges

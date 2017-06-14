@@ -9,8 +9,8 @@
  *     Christian Schulte, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2016-04-19 17:19:45 +0200 (Tue, 19 Apr 2016) $ by $Author: schulte $
+ *     $Revision: 14967 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -41,7 +41,6 @@
 
 #include <gecode/minimodel.hh>
 #include <climits>
-#include "../../../src/compact-table.cpp"
 
 namespace Test { namespace Int {
 
@@ -417,66 +416,12 @@ namespace Test { namespace Int {
          t.add(t5);
          t.add(t5);
          t.finalize();
-         
-         //extensional(home, x, t, ipl);
-         extensional2(home, x, t);
+
+         extensional(home, x, t, ipl);
        }
      };
 
-     
      /// %Test with tuple set
-     class TupleSetC : public Test {
-       mutable Gecode::TupleSet t;
-     public:
-       /// Create and register test
-       TupleSetC(Gecode::IntPropLevel ipl0)
-         : Test("Extensional::TupleSet::C::"+str(ipl0),
-                4,1,5,false,ipl0) {
-         using namespace Gecode;
-         IntArgs t1 (4,  2, 1, 2, 4);
-         IntArgs t2 (4,  2, 2, 1, 4);
-         IntArgs t3 (4,  4, 3, 4, 1);
-         IntArgs t4 (4,  1, 3, 2, 3);
-         IntArgs t5 (4,  3, 3, 3, 2);
-         IntArgs t6 (4,  5, 1, 4, 4);
-         IntArgs t7 (4,  2, 5, 1, 5);
-         IntArgs t8 (4,  4, 3, 5, 1);
-         IntArgs t9 (4,  1, 5, 2, 5);
-         IntArgs t10(4,  5, 3, 3, 2);
-         t.add(t1);
-         t.add(t2);
-         t.add(t3);
-         t.add(t4);
-         t.add(t5);
-         t.add(t6);
-         t.add(t7);
-         t.add(t8);
-         t.add(t9);
-         t.add(t10);
-         t.finalize();
-       }
-       /// %Test whether \a x is solution
-       virtual bool solution(const Assignment& x) const {
-         using namespace Gecode;
-         for (int i = 0; i < t.tuples(); ++i) {
-           TupleSet::Tuple l = t[i];
-           bool same = true;
-           for (int j = 0; j < t.arity() && same; ++j)
-             if (l[j] != x[j]) same = false;
-           if (same) return true;
-         }
-         return false;
-       }
-       /// Post constraint on \a x
-       virtual void post(Gecode::Space& home, Gecode::IntVarArray& x) {
-         using namespace Gecode;
-         
-         //extensional(home, x, t, ipl);
-         extensional2(home, x, t);
-       }
-     };
-
-      /// %Test with tuple set
      class TupleSetB : public Test {
        mutable Gecode::TupleSet t;
      public:
@@ -522,9 +467,7 @@ namespace Test { namespace Int {
        /// Post constraint on \a x
        virtual void post(Gecode::Space& home, Gecode::IntVarArray& x) {
          using namespace Gecode;
-         
-         //extensional(home, x, t, ipl);
-         extensional2(home, x, t);
+         extensional(home, x, t, ipl);
        }
      };
 
@@ -608,10 +551,6 @@ namespace Test { namespace Int {
      TupleSetB tsbm(Gecode::IPL_MEMORY);
      TupleSetB tsbs(Gecode::IPL_SPEED);
 
-     //TupleSetC tscm(Gecode::IPL_MEMORY);
-     //TupleSetC tscs(Gecode::IPL_SPEED);
-
-     
      TupleSetBool tsboolm(Gecode::IPL_MEMORY, 0.3);
      TupleSetBool tsbools(Gecode::IPL_SPEED, 0.3);
      //@}

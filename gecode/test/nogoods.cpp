@@ -11,8 +11,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-31 10:34:40 +0200 (Wed, 31 May 2017) $ by $Author: schulte $
+ *     $Revision: 15817 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -86,12 +86,12 @@ namespace Test {
         }
       }
       /// Constructor for cloning \a s
-      Queens(bool share, Queens& s) : Space(share,s) {
-        q.update(*this, share, s.q);
+      Queens(Queens& s) : Space(s) {
+        q.update(*this, s.q);
       }
       /// Perform copying during cloning
-      virtual Space* copy(bool share) {
-        return new Queens(share,*this);
+      virtual Space* copy(void) {
+        return new Queens(*this);
       }
       /// Check whether two solutions are the same
       bool same(const Queens& s) const {
@@ -167,12 +167,12 @@ namespace Test {
         }
       }
       /// Constructor for copying \a s
-      Hamming(bool share, Hamming& s) : Space(share,s) {
-        x.update(*this, share, s.x);
+      Hamming(Hamming& s) : Space(s) {
+        x.update(*this, s.x);
       }
       /// Copy during cloning
-      virtual Space* copy(bool share) {
-        return new Hamming(share,*this);
+      virtual Space* copy(void) {
+        return new Hamming(*this);
       }
       /// Check whether two solutions are the same
       bool same(const Hamming& s) const {
@@ -241,7 +241,7 @@ namespace Test {
           o.stop = &ns;
           o.threads = t;
           o.nogoods_limit = 256U;
-          Search::Engine* e = Search::dfs(m,o);
+          Search::Engine* e = Search::dfsengine(m,o);
           while (true) {
             Model* s = static_cast<Model*>(e->next());
             delete s;

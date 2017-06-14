@@ -7,8 +7,8 @@
  *     Christian Schulte, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-16 12:11:51 +0100 (Thu, 16 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15434 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -49,7 +49,7 @@ namespace Gecode { namespace Float { namespace Branch {
     case FloatValBranch::SEL_SPLIT_RND:
       return new (home) ValSelCommit<ValSelRnd,ValCommitLqGq>(home,fvb);
     case FloatValBranch::SEL_VAL_COMMIT:
-      if (fvb.commit() == NULL) {
+      if (!fvb.commit()) {
         return new (home)
           ValSelCommit<ValSelFunction<FloatView>,ValCommitLqGq>(home,fvb);
       } else {
@@ -71,7 +71,7 @@ namespace Gecode { namespace Float { namespace Branch {
     case FloatAssign::SEL_RND:
       return new (home) ValSelCommit<ValSelRnd,ValCommitLqGq>(home,fa);
     case FloatAssign::SEL_VAL_COMMIT:
-      if (fa.commit() == NULL) {
+      if (!fa.commit()) {
         return new (home)
           ValSelCommit<ValSelFunction<FloatView>,ValCommitLqGq>(home,fa);
       } else {

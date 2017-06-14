@@ -9,8 +9,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -50,13 +50,13 @@ namespace Gecode { namespace Float { namespace Arithmetic {
 
   template<class A, class B, class C>
   forceinline
-  Div<A,B,C>::Div(Space& home, bool share, Div<A,B,C>& p)
-    : MixTernaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND,C,PC_FLOAT_BND>(home,share,p) {}
+  Div<A,B,C>::Div(Space& home, Div<A,B,C>& p)
+    : MixTernaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND,C,PC_FLOAT_BND>(home,p) {}
 
   template<class A, class B, class C>
   Actor*
-  Div<A,B,C>::copy(Space& home, bool share) {
-    return new (home) Div<A,B,C>(home,share,*this);
+  Div<A,B,C>::copy(Space& home) {
+    return new (home) Div<A,B,C>(home,*this);
   }
 
   template<class A, class B, class C>

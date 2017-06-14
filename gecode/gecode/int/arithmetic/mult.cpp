@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,8 +44,8 @@ namespace Gecode { namespace Int { namespace Arithmetic {
    *
    */
   Actor*
-  MultBnd::copy(Space& home, bool share) {
-    return new (home) MultBnd(home,share,*this);
+  MultBnd::copy(Space& home) {
+    return new (home) MultBnd(home,*this);
   }
 
   ExecStatus
@@ -198,8 +198,8 @@ namespace Gecode { namespace Int { namespace Arithmetic {
    *
    */
   Actor*
-  MultDom::copy(Space& home, bool share) {
-    return new (home) MultDom(home,share,*this);
+  MultDom::copy(Space& home) {
+    return new (home) MultDom(home,*this);
   }
 
   PropCost

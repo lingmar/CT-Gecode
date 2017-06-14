@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -59,14 +59,13 @@ namespace Gecode { namespace Int { namespace Count {
 
   template<class VX, class VY, class VZ, bool shr>
   forceinline
-  LqView<VX,VY,VZ,shr>::LqView(Space& home, bool share,
-                               LqView<VX,VY,VZ,shr>& p)
-    : ViewBase<VX,VY,VZ>(home,share,p) {}
+  LqView<VX,VY,VZ,shr>::LqView(Space& home, LqView<VX,VY,VZ,shr>& p)
+    : ViewBase<VX,VY,VZ>(home,p) {}
 
   template<class VX, class VY, class VZ, bool shr>
   Actor*
-  LqView<VX,VY,VZ,shr>::copy(Space& home, bool share) {
-    return new (home) LqView<VX,VY,VZ,shr>(home,share,*this);
+  LqView<VX,VY,VZ,shr>::copy(Space& home) {
+    return new (home) LqView<VX,VY,VZ,shr>(home,*this);
   }
 
   template<class VX, class VY, class VZ, bool shr>

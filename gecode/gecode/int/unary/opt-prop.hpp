@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,9 +46,8 @@ namespace Gecode { namespace Int { namespace Unary {
 
   template<class OptTask, class PL>
   forceinline
-  OptProp<OptTask,PL>::OptProp(Space& home, bool shared,
-                               OptProp<OptTask,PL>& p)
-    : TaskProp<OptTask,PL>(home,shared,p) {}
+  OptProp<OptTask,PL>::OptProp(Space& home, OptProp<OptTask,PL>& p)
+    : TaskProp<OptTask,PL>(home,p) {}
 
   template<class OptTask, class PL>
   ExecStatus
@@ -73,8 +72,8 @@ namespace Gecode { namespace Int { namespace Unary {
 
   template<class OptTask, class PL>
   Actor*
-  OptProp<OptTask,PL>::copy(Space& home, bool share) {
-    return new (home) OptProp<OptTask,PL>(home,share,*this);
+  OptProp<OptTask,PL>::copy(Space& home) {
+    return new (home) OptProp<OptTask,PL>(home,*this);
   }
 
   template<class OptTask, class PL>

@@ -11,8 +11,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -61,14 +61,14 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   forceinline
-  Card<View>::Card(Space& home, bool share, Card& p)
+  Card<View>::Card(Space& home, Card& p)
     : MixBinaryPropagator<View,PC_SET_CARD,
-      Gecode::Int::IntView,Gecode::Int::PC_INT_BND> (home, share, p) {}
+      Gecode::Int::IntView,Gecode::Int::PC_INT_BND> (home, p) {}
 
   template<class View>
   Actor*
-  Card<View>::copy(Space& home, bool share) {
-   return new (home) Card(home,share,*this);
+  Card<View>::copy(Space& home) {
+   return new (home) Card(home,*this);
   }
 
   template<class View>

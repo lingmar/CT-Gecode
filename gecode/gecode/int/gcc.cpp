@@ -13,8 +13,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -75,7 +75,7 @@ namespace Gecode {
     void removeDuplicates(Home home, A& c, IntArgs& v) {
       typedef typename A::value_type S;
       typedef std::pair<S,int> P;
-      Region re(home);
+      Region re;
       P* a = re.alloc<P>(c.size());
       for (int i=c.size(); i--;)
         a[i] = P(c[i],v[i]);
@@ -108,7 +108,7 @@ namespace Gecode {
     IntArgs v(_v);
     if (v.size() != c.size())
       throw ArgumentSizeMismatch("Int::count");
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::count");
 
     GECODE_POST;
@@ -153,7 +153,7 @@ namespace Gecode {
     IntArgs v(_v);
     if (v.size() != c.size())
       throw ArgumentSizeMismatch("Int::count");
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::count");
     for (int i=c.size(); i--; ) {
       Limits::check(v[i],"Int::count");

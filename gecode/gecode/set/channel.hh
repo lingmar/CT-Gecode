@@ -11,8 +11,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -69,12 +69,12 @@ namespace Gecode { namespace Set { namespace Channel {
     ViewArray<Gecode::Int::IntView> xs;
 
     /// Constructor for cloning \a p
-    ChannelSorted(Space& home, bool share,ChannelSorted& p);
+    ChannelSorted(Space& home, ChannelSorted& p);
     /// Constructor for posting
     ChannelSorted(Home home, View, ViewArray<Gecode::Int::IntView>&);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home,bool);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as PC_LINEAR_LO)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function
@@ -114,14 +114,14 @@ namespace Gecode { namespace Set { namespace Channel {
     ViewArray<CachedView<View> > ys;
 
     /// Constructor for cloning \a p
-    ChannelInt(Space& home, bool share,ChannelInt& p);
+    ChannelInt(Space& home, ChannelInt& p);
     /// Constructor for posting
     ChannelInt(Home home,
                ViewArray<Gecode::Int::CachedView<Gecode::Int::IntView> >&,
                ViewArray<CachedView<View> >&);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as PC_QUADRATIC_LO)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function
@@ -161,7 +161,7 @@ namespace Gecode { namespace Set { namespace Channel {
     using Super::y;
 
     /// Constructor for cloning \a p
-    ChannelBool(Space& home, bool share,ChannelBool& p);
+    ChannelBool(Space& home, ChannelBool& p);
     /// Constructor for posting
     ChannelBool(Home home,ViewArray<Gecode::Int::BoolView>&,
                 View);
@@ -177,7 +177,7 @@ namespace Gecode { namespace Set { namespace Channel {
       IndexAdvisor(Space& home, ChannelBool<View>& p, Council<A>& c,
                    int index);
       /// Constructor for cloning \a a
-      IndexAdvisor(Space& home, bool share, IndexAdvisor& a);
+      IndexAdvisor(Space& home, IndexAdvisor& a);
       /// Access index
       int index(void) const;
       /// Delete advisor
@@ -197,7 +197,7 @@ namespace Gecode { namespace Set { namespace Channel {
     bool running;
   public:
     /// Copy propagator during cloning
-    virtual Actor*   copy(Space& home,bool);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as PC_QUADRATIC_LO)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function
@@ -235,14 +235,14 @@ namespace Gecode { namespace Set { namespace Channel {
     ViewArray<CachedView<View> > ys;
 
     /// Constructor for cloning \a p
-    ChannelSet(Space& home, bool share, ChannelSet& p);
+    ChannelSet(Space& home, ChannelSet& p);
     /// Constructor for posting
     ChannelSet(Home home,
                ViewArray<CachedView<View> >&,
                ViewArray<CachedView<View> >&);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as PC_QUADRATIC_HI)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function

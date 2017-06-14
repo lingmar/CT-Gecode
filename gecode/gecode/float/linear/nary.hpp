@@ -9,8 +9,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,10 +53,10 @@ namespace Gecode { namespace Float { namespace Linear {
 
   template<class P, class N, PropCond pc>
   forceinline
-  Lin<P,N,pc>::Lin(Space& home, bool share, Lin<P,N,pc>& p)
-    : Propagator(home,share,p), c(p.c) {
-    x.update(home,share,p.x);
-    y.update(home,share,p.y);
+  Lin<P,N,pc>::Lin(Space& home, Lin<P,N,pc>& p)
+    : Propagator(home,p), c(p.c) {
+    x.update(home,p.x);
+    y.update(home,p.y);
   }
 
   template<class P, class N, PropCond pc>
@@ -81,50 +81,6 @@ namespace Gecode { namespace Float { namespace Linear {
     return sizeof(*this);
   }
 
-
-  /*
-   * Computing bounds
-   *
-   */
-//  template<class View>
-//  void
-//  bounds_p(Rounding& r, ModEventDelta med, ViewArray<View>& x, FloatVal& c, FloatNum& sl, FloatNum& su) {
-//    int n = x.size();
-//    if (FloatView::me(med) == ME_FLOAT_VAL) {
-//      for (int i = n; i--; ) {
-//        if (x[i].assigned()) {
-//          c -= x[i].val(); x[i] = x[--n];
-//        } else {
-//          sl = r.sub_up(sl,x[i].min()); su = r.sub_down(su,x[i].max());
-//        }
-//      }
-//      x.size(n);
-//    } else {
-//      for (int i = n; i--; ) {
-//        sl = r.sub_up(sl,x[i].min()); su = r.sub_down(su,x[i].max());
-//      }
-//    }
-//  }
-//
-//  template<class View>
-//  void
-//  bounds_n(Rounding& r, ModEventDelta med, ViewArray<View>& y, FloatVal& c, FloatNum& sl, FloatNum& su) {
-//    int n = y.size();
-//    if (FloatView::me(med) == ME_FLOAT_VAL) {
-//      for (int i = n; i--; ) {
-//        if (y[i].assigned()) {
-//          c += y[i].val(); y[i] = y[--n];
-//        } else {
-//          sl = r.add_up(sl,y[i].max()); su = r.add_down(su,y[i].min());
-//        }
-//      }
-//      y.size(n);
-//    } else {
-//      for (int i = n; i--; ) {
-//        sl = r.add_up(sl,y[i].max()); su = r.add_down(su,y[i].min());
-//      }
-//    }
-//  }
 
   template<class View>
   void
@@ -181,13 +137,13 @@ namespace Gecode { namespace Float { namespace Linear {
 
   template<class P, class N>
   forceinline
-  Eq<P,N>::Eq(Space& home, bool share, Eq<P,N>& p)
-    : Lin<P,N,PC_FLOAT_BND>(home,share,p) {}
+  Eq<P,N>::Eq(Space& home, Eq<P,N>& p)
+    : Lin<P,N,PC_FLOAT_BND>(home,p) {}
 
   template<class P, class N>
   Actor*
-  Eq<P,N>::copy(Space& home, bool share) {
-    return new (home) Eq<P,N>(home,share,*this);
+  Eq<P,N>::copy(Space& home) {
+    return new (home) Eq<P,N>(home,*this);
   }
 
   template<class P, class N>
@@ -310,13 +266,13 @@ namespace Gecode { namespace Float { namespace Linear {
 
   template<class P, class N>
   forceinline
-  Lq<P,N>::Lq(Space& home, bool share, Lq<P,N>& p)
-    : Lin<P,N,PC_FLOAT_BND>(home,share,p) {}
+  Lq<P,N>::Lq(Space& home, Lq<P,N>& p)
+    : Lin<P,N,PC_FLOAT_BND>(home,p) {}
 
   template<class P, class N>
   Actor*
-  Lq<P,N>::copy(Space& home, bool share) {
-    return new (home) Lq<P,N>(home,share,*this);
+  Lq<P,N>::copy(Space& home) {
+    return new (home) Lq<P,N>(home,*this);
   }
 
   template<class P, class N>

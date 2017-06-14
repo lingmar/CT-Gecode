@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -55,7 +55,7 @@ namespace Gecode { namespace Int { namespace NValues {
       return ES_OK;
     }
 
-    x.unique(home);
+    x.unique();
 
     GECODE_ME_CHECK(y.gq(home,1));
 
@@ -94,13 +94,13 @@ namespace Gecode { namespace Int { namespace NValues {
 
   template<class VY>
   forceinline
-  LqInt<VY>::LqInt(Space& home, bool share, LqInt<VY>& p)
-    : IntBase<VY>(home, share, p) {}
+  LqInt<VY>::LqInt(Space& home, LqInt<VY>& p)
+    : IntBase<VY>(home, p) {}
 
   template<class VY>
   Propagator*
-  LqInt<VY>::copy(Space& home, bool share) {
-    return new (home) LqInt<VY>(home, share, *this);
+  LqInt<VY>::copy(Space& home) {
+    return new (home) LqInt<VY>(home, *this);
   }
 
   template<class VY>
@@ -131,7 +131,7 @@ namespace Gecode { namespace Int { namespace NValues {
       return home.ES_SUBSUMED(*this);
 
     // Compute positions of disjoint views
-    Region r(home);
+    Region r;
     int* dis; int n_dis;
     disjoint(home,r,dis,n_dis);
 

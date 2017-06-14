@@ -7,8 +7,8 @@
 #     Guido Tack, 2008
 #
 #  Last modified:
-#     $Date$ by $Author$
-#     $Revision$
+#     $Date: 2008-02-25 14:01:43 +0100 (Mon, 25 Feb 2008) $ by $Author: tack $
+#     $Revision: 6301 $
 #
 #  This file is part of Gecode, the generic constraint
 #  development environment:

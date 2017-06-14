@@ -14,8 +14,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -82,7 +82,7 @@ namespace Gecode { namespace Float {
     /// Domain information
     FloatVal dom;
     /// Constructor for cloning \a x
-    FloatVarImp(Space& home, bool share, FloatVarImp& x);
+    FloatVarImp(Space& home, FloatVarImp& x);
   public:
     /// Initialize with interval \a d
     FloatVarImp(Space& home, const FloatVal& d);
@@ -143,15 +143,18 @@ namespace Gecode { namespace Float {
      * subscriptions during propagation).
      *
      */
-    void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
-    /// Cancel subscription of propagator \a p with propagation condition \a pc
-    void cancel(Space& home, Propagator& p, PropCond pc);
+    GECODE_FLOAT_EXPORT void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
     /// Re-schedule propagator \a p with propagation condition \a pc
-    void reschedule(Space& home, Propagator& p, PropCond pc);
-    /// Subscribe advisor \a a to variable
-    void subscribe(Space& home, Advisor& a);
-    /// Cancel subscription of advisor \a a
-    void cancel(Space& home, Advisor& a);
+    GECODE_FLOAT_EXPORT void reschedule(Space& home, Propagator& p, PropCond pc);
+    /** \brief Subscribe advisor \a a to variable
+     *
+     * The advisor \a a is only subscribed if \a assigned is false.
+     *
+     * If \a fail is true, the advisor \a a is also run when a variable
+     * operation triggers failure. This feature is undocumented.
+     *
+     */
+    GECODE_FLOAT_EXPORT void subscribe(Space& home, Advisor& a, bool fail);
     //@}
 
     /// \name Variable implementation-dependent propagator support
@@ -163,12 +166,12 @@ namespace Gecode { namespace Float {
 
   private:
     /// Return copy of not-yet copied variable
-    GECODE_FLOAT_EXPORT FloatVarImp* perform_copy(Space& home, bool share);
+    GECODE_FLOAT_EXPORT FloatVarImp* perform_copy(Space& home);
   public:
     /// \name Cloning
     //@{
     /// Return copy of this variable
-    FloatVarImp* copy(Space& home, bool share);
+    FloatVarImp* copy(Space& home);
     //@}
 
     /// \name Delta information for advisors

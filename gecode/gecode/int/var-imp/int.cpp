@@ -7,8 +7,8 @@
  *     Christian Schulte, 2002
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -172,7 +172,7 @@ namespace Gecode { namespace Int {
       fst()->dispose(home,p);
       fst(NULL); holes = 0;
       if (failed)
-        return ME_INT_FAILED;
+        return fail(home);
     }
     IntDelta d;
     return notify(home,ME_INT_VAL,d);
@@ -184,7 +184,7 @@ namespace Gecode { namespace Int {
     ModEvent me = ME_INT_DOM;
     if (range()) {
       if ((m == dom.min()) && (m == dom.max()))
-        return ME_INT_FAILED;
+        return fail(home);
       if (m == dom.min()) {
         dom.min(m+1);
         me = assigned() ? ME_INT_VAL : ME_INT_BND;
@@ -316,8 +316,8 @@ namespace Gecode { namespace Int {
    */
 
   forceinline
-  IntVarImp::IntVarImp(Space& home, bool share, IntVarImp& x)
-    : IntVarImpBase(home,share,x), dom(x.dom.min(),x.dom.max()) {
+  IntVarImp::IntVarImp(Space& home, IntVarImp& x)
+    : IntVarImpBase(home,x), dom(x.dom.min(),x.dom.max()) {
     holes = x.holes;
     if (holes) {
       int m = 1;
@@ -352,8 +352,28 @@ namespace Gecode { namespace Int {
   }
 
   IntVarImp*
-  IntVarImp::perform_copy(Space& home, bool share) {
-    return new (home) IntVarImp(home,share,*this);
+  IntVarImp::perform_copy(Space& home) {
+    return new (home) IntVarImp(home,*this);
+  }
+
+  /*
+   * Dependencies
+   *
+   */
+  void
+  IntVarImp::subscribe(Space& home, Propagator& p, PropCond pc,
+                       bool schedule) {
+    IntVarImpBase::subscribe(home,p,pc,dom.min()==dom.max(),schedule);
+  }
+
+  void
+  IntVarImp::reschedule(Space& home, Propagator& p, PropCond pc) {
+    IntVarImpBase::reschedule(home,p,pc,dom.min()==dom.max());
+  }
+
+  void
+  IntVarImp::subscribe(Space& home, Advisor& a, bool fail) {
+    IntVarImpBase::subscribe(home,a,dom.min()==dom.max(),fail);
   }
 
 }}

@@ -11,8 +11,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -200,9 +200,9 @@ namespace Test {
       TestSpace(int n, Gecode::FloatVal& d, Gecode::FloatNum s, Test* t,
                 Gecode::ReifyMode rm);
       /// Constructor for cloning \a s
-      TestSpace(bool share, TestSpace& s);
+      TestSpace(TestSpace& s);
       /// Copy space during cloning
-      virtual Gecode::Space* copy(bool share);
+      virtual Gecode::Space* copy(void);
       /// Add constraints to skip solutions to the \a a assignment
       virtual void dropUntil(const Assignment& a);
       /// Test whether all variables are assigned

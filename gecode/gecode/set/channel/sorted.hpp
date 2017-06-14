@@ -11,8 +11,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -58,10 +58,10 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   forceinline
-  ChannelSorted<View>::ChannelSorted(Space& home, bool share, ChannelSorted& p)
-    : Propagator(home,share,p) {
-    x0.update(home,share,p.x0);
-    xs.update(home,share,p.xs);
+  ChannelSorted<View>::ChannelSorted(Space& home, ChannelSorted& p)
+    : Propagator(home,p) {
+    x0.update(home,p.x0);
+    xs.update(home,p.xs);
   }
 
   template<class View>
@@ -107,8 +107,8 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   Actor*
-  ChannelSorted<View>::copy(Space& home, bool share) {
-    return new (home) ChannelSorted(home,share,*this);
+  ChannelSorted<View>::copy(Space& home) {
+    return new (home) ChannelSorted(home,*this);
   }
 
   template<class View>
@@ -188,9 +188,9 @@ namespace Gecode { namespace Set { namespace Channel {
             ++inter;
           }
 
-          int i=xs_size-1;
-          for (int j=to; j>=from;j--,i--) {
-            GECODE_ME_CHECK_MODIFIED(loopFlag, xs[i].eq(home,j));
+          int k=xs_size-1;
+          for (int j=to; j>=from;j--,k--) {
+            GECODE_ME_CHECK_MODIFIED(loopFlag, xs[k].eq(home,j));
           }
         }
       }

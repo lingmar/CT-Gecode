@@ -9,8 +9,8 @@
  *     Christian Schulte, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,18 +53,6 @@ namespace Test {
      * \defgroup TaskTestSet Testing finite sets
      * \ingroup TaskTest
      */
-
-    /// Fake space for creation of regions
-    class FakeSpace : public Gecode::Space {
-    public:
-      /// Faked constructor
-      FakeSpace(void) {}
-      /// Faked copy function
-      virtual Gecode::Space* copy(bool share) {
-        (void) share;
-        return NULL;
-      }
-    };
 
     /**
      * \defgroup TaskTestSetSupport General set test support
@@ -235,13 +223,15 @@ namespace Test {
       SetTestSpace(int n, Gecode::IntSet& d0, int i, SetTest* t,
                    Gecode::ReifyMode rm, bool log=true);
       /// Constructor for cloning \a s
-      SetTestSpace(bool share, SetTestSpace& s);
+      SetTestSpace(SetTestSpace& s);
       /// Copy space during cloning
-      virtual Gecode::Space* copy(bool share);
+      virtual Gecode::Space* copy(void);
       /// Post propagator
       void post(void);
       /// Compute a fixpoint and check for failure
       bool failed(void);
+      /// Check for subsumption if \a b is true
+      bool subsumed(bool b);
       /// Perform set tell operation on \a x[i]
       void rel(int i, Gecode::SetRelType srt, const Gecode::IntSet& is);
       /// Perform cardinality tell operation on \a x[i]
@@ -305,6 +295,8 @@ namespace Test {
     protected:
       /// Whether to perform full tests for disabled propagators
       bool disabled;
+      /// Whether to check for subsumption
+      bool testsubsumed;
     public:
       /**
        * \brief Constructor
@@ -316,7 +308,7 @@ namespace Test {
       SetTest(const std::string& s,
               int a, const Gecode::IntSet& d, bool r=false, int w=0)
         : Base("Set::"+s), arity(a), lub(d), reified(r), withInt(w),
-          disabled(true) {}
+          disabled(true), testsubsumed(true) {}
       /// Check for solution
       virtual bool solution(const SetAssignment&) const = 0;
       /// Post propagator

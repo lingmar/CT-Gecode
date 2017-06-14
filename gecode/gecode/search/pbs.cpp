@@ -7,8 +7,8 @@
  *     Christian Schulte, 2015
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-30 21:40:16 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+ *     $Revision: 15814 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -35,39 +35,39 @@
  *
  */
 
-#include <gecode/search/meta/sequential/pbs.hh>
+#include <gecode/search/seq/pbs.hh>
 
-namespace Gecode { namespace Search { namespace Meta { namespace Sequential {
+namespace Gecode { namespace Search { namespace Seq {
 
   Stop*
-  stop(Stop* so) {
+  pbsstop(Stop* so) {
     return new PortfolioStop(so);
   }
 
   Engine*
-  engine(Engine** slaves, Stop** stops, unsigned int n_slaves,
-         const Statistics& stat, const Search::Options& opt, bool best) {
+  pbsengine(Engine** slaves, Stop** stops, unsigned int n_slaves,
+            const Statistics& stat, const Search::Options& opt, bool best) {
     if (best)
       return new PBS<true>(slaves,stops,n_slaves,stat,opt);
     else
       return new PBS<false>(slaves,stops,n_slaves,stat,opt);
   }
 
-}}}}
+}}}
 
 #ifdef GECODE_HAS_THREADS
 
-#include <gecode/search/meta/parallel/pbs.hh>
+#include <gecode/search/par/pbs.hh>
 
-namespace Gecode { namespace Search { namespace Meta { namespace Parallel {
+namespace Gecode { namespace Search { namespace Par {
 
   Stop*
-  stop(Stop* so) {
+  pbsstop(Stop* so) {
     return new PortfolioStop(so);
   }
 
   Engine*
-  engine(Engine** slaves, Stop** stops, unsigned int n_slaves,
+  pbsengine(Engine** slaves, Stop** stops, unsigned int n_slaves,
          const Statistics& stat, bool best) {
     if (best)
       return new PBS<CollectBest>(slaves,stops,n_slaves,stat);
@@ -75,8 +75,8 @@ namespace Gecode { namespace Search { namespace Meta { namespace Parallel {
       return new PBS<CollectAll>(slaves,stops,n_slaves,stat);
   }
 
-}}}}
+}}}
 
 #endif
 
-// STATISTICS: search-meta
+// STATISTICS: search-other

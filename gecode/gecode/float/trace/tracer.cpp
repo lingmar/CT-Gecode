@@ -7,8 +7,8 @@
  *     Christian Schulte, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-03-17 23:04:57 +0100 (Fri, 17 Mar 2017) $ by $Author: schulte $
+ *     $Revision: 15597 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,18 +54,36 @@ namespace Gecode {
 
   void
   StdFloatTracer::prune(const Space&, const FloatTraceRecorder& t,
-                        const ExecInfo& ei, int i, FloatTraceDelta& d) {
+                        const ViewTraceInfo& vti, int i, FloatTraceDelta& d) {
     os << "trace<Float>::prune(id:" << t.id();
     if (t.group().in())
       os << ",g:";t.group().id();
     os << "): [" << i << "] = " << t[i] << " - ["
        << d.min() << ".." << d.max()
-       << "] by " << ei << std::endl;
+       << "] by " << vti << std::endl;
   }
 
   void
   StdFloatTracer::fix(const Space&, const FloatTraceRecorder& t) {
     os << "trace<Float>::fix(id:" << t.id();
+    if (t.group().in())
+      os << ",g:";t.group().id();
+    os << ") slack: ";
+    double sl_i = static_cast<double>(t.slack().initial());
+    double sl_p = static_cast<double>(t.slack().previous());
+    double sl_c = static_cast<double>(t.slack().current());
+    double p_c = 100.0 * (sl_c / sl_i);
+    double p_d = 100.0 * (sl_p / sl_i) - p_c;
+    os << std::showpoint << std::setprecision(4)
+       << p_c << "% - "
+       << std::showpoint << std::setprecision(4)
+       << p_d << '%'
+       << std::endl;
+  }
+
+  void
+  StdFloatTracer::fail(const Space&, const FloatTraceRecorder& t) {
+    os << "trace<Float>::fail(id:" << t.id();
     if (t.group().in())
       os << ",g:";t.group().id();
     os << ") slack: ";
@@ -103,4 +121,4 @@ namespace Gecode {
 
 }
 
-// STATISTICS: float-other
+// STATISTICS: float-trace

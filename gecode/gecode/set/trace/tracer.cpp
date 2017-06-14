@@ -7,8 +7,8 @@
  *     Christian Schulte, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-03-17 23:04:57 +0100 (Fri, 17 Mar 2017) $ by $Author: schulte $
+ *     $Revision: 15597 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,7 +54,7 @@ namespace Gecode {
 
   void
   StdSetTracer::prune(const Space&, const SetTraceRecorder& t,
-                      const ExecInfo& ei, int i, SetTraceDelta& d) {
+                      const ViewTraceInfo& vti, int i, SetTraceDelta& d) {
     os << "trace<Set>::prune(id:" << t.id();
     if (t.group().in())
       os << ",g:";t.group().id();
@@ -82,12 +82,30 @@ namespace Gecode {
         }
       }
     }
-    os << "} by " << ei << std::endl;
+    os << "} by " << vti << std::endl;
   }
 
   void
   StdSetTracer::fix(const Space&, const SetTraceRecorder& t) {
     os << "trace<Set>::fix(id:" << t.id();
+    if (t.group().in())
+      os << ",g:";t.group().id();
+    os << ") slack: ";
+    double sl_i = static_cast<double>(t.slack().initial());
+    double sl_p = static_cast<double>(t.slack().previous());
+    double sl_c = static_cast<double>(t.slack().current());
+    double p_c = 100.0 * (sl_c / sl_i);
+    double p_d = 100.0 * (sl_p / sl_i) - p_c;
+    os << std::showpoint << std::setprecision(4)
+       << p_c << "% - "
+       << std::showpoint << std::setprecision(4)
+       << p_d << '%'
+       << std::endl;
+  }
+
+  void
+  StdSetTracer::fail(const Space&, const SetTraceRecorder& t) {
+    os << "trace<Set>::fail(id:" << t.id();
     if (t.group().in())
       os << ",g:";t.group().id();
     os << ") slack: ";
@@ -115,4 +133,4 @@ namespace Gecode {
 
 }
 
-// STATISTICS: set-other
+// STATISTICS: set-trace

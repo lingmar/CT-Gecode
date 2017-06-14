@@ -7,8 +7,8 @@
  *     Christian Schulte, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-01-09 16:29:59 +0100 (Mon, 09 Jan 2017) $ by $Author: schulte $
+ *     $Revision: 15365 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -50,9 +50,10 @@ namespace Gecode { namespace Set {
   forceinline ExecStatus
   Relax::operator ()(Home home, SetVar x, SetVar sx) {
     SetView xv(x);
-    SetVarGlbRanges l(xv);
+    SetView sxv(sx);
+    SetVarGlbRanges l(sxv);
     GECODE_ME_CHECK(xv.includeI(home, l));
-    SetVarLubRanges u(xv);
+    SetVarLubRanges u(sxv);
     GECODE_ME_CHECK(xv.intersectI(home, u));
     return ES_OK;
   }
@@ -61,7 +62,7 @@ namespace Gecode { namespace Set {
 
 namespace Gecode {
 
-  void 
+  void
   relax(Home home, const SetVarArgs& x, const SetVarArgs& sx,
         Rnd r, double p) {
     if (x.size() != sx.size())

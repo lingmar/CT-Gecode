@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -65,16 +65,16 @@ namespace Gecode { namespace Int { namespace Distinct {
 
   template<class View>
   forceinline
-  Bnd<View>::Bnd(Space& home, bool share, Bnd<View>& p)
-    : Propagator(home,share,p), min_x(p.min_x), max_x(p.max_x) {
-    x.update(home,share,p.x);
-    y.update(home,share,p.y);
+  Bnd<View>::Bnd(Space& home, Bnd<View>& p)
+    : Propagator(home,p), min_x(p.min_x), max_x(p.max_x) {
+    x.update(home,p.x);
+    y.update(home,p.y);
   }
 
   template<class View>
   Actor*
-  Bnd<View>::copy(Space& home, bool share) {
-    return new (home) Bnd<View>(home,share,*this);
+  Bnd<View>::copy(Space& home) {
+    return new (home) Bnd<View>(home,*this);
   }
 
   template<class View>
@@ -202,7 +202,7 @@ namespace Gecode { namespace Int { namespace Distinct {
            int* minsorted, int* maxsorted) {
     const int n = x.size();
 
-    Region r(home);
+    Region r;
 
     // Setup rank and bounds info
     HallInfo<IntType>* hall = r.alloc<HallInfo<IntType> >(2*n+2);
@@ -313,7 +313,7 @@ namespace Gecode { namespace Int { namespace Distinct {
 
     const int n = x.size();
 
-    Region r(home);
+    Region r;
 
     int* minsorted = r.alloc<int>(n);
     int* maxsorted = r.alloc<int>(n);
@@ -395,7 +395,7 @@ namespace Gecode { namespace Int { namespace Distinct {
     }
 
     if (y.size() == 2)
-      GECODE_REWRITE(*this,Rel::Nq<View>::post(home(*this),y[0],y[1]));
+      GECODE_REWRITE(*this,(Rel::Nq<View,View>::post(home(*this),y[0],y[1])));
 
     ExecStatus es = prop_bnd<View>(home,x,min_x,max_x);
 
@@ -412,7 +412,7 @@ namespace Gecode { namespace Int { namespace Distinct {
         MinInc<View> min_inc;
         Support::quicksort<View,MinInc<View> >(&x[0], n, min_inc);
       } else {
-        Region r(home);
+        Region r;
         int* minbucket = r.alloc<int>(d);
         View* minsorted = r.alloc<View>(n);
 
@@ -455,7 +455,7 @@ namespace Gecode { namespace Int { namespace Distinct {
       return home.ES_SUBSUMED(*this);
 
     if (x.size() == 2)
-      GECODE_REWRITE(*this,Rel::Nq<View>::post(home(*this),x[0],x[1]));
+      GECODE_REWRITE(*this,(Rel::Nq<View,View>::post(home(*this),x[0],x[1])));
 
     return es;
   }
@@ -464,7 +464,7 @@ namespace Gecode { namespace Int { namespace Distinct {
   ExecStatus
   Bnd<View>::post(Home home, ViewArray<View>& x){
     if (x.size() == 2)
-      return Rel::Nq<View>::post(home,x[0],x[1]);
+      return Rel::Nq<View,View>::post(home,x[0],x[1]);
     if (x.size() > 2)
       (void) new (home) Bnd<View>(home,x);
     return ES_OK;

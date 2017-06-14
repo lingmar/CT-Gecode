@@ -7,8 +7,8 @@
  *     Vincent Barichard, 2014
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2014-09-26 16:25:13 +0200 (Fri, 26 Sep 2014) $ by $Author: vbarichard $
+ *     $Revision: 14229 $
  *
  *  This file is part of Quacode:
  *     http://quacode.barichard.com

@@ -6,8 +6,8 @@
 %     Guido Tack, 2007
 %
 %  Last modified:
-%     $Date$ by $Author$
-%     $Revision$
+%     $Date: 2017-04-13 05:34:08 +0200 (Thu, 13 Apr 2017) $ by $Author: tack $
+%     $Revision: 15636 $
 %
 %  This file is part of Gecode, the generic constraint
 %  development environment:
@@ -34,6 +34,14 @@
 %
 %
 
+predicate gecode_global_cardinality_closed(array[int] of var int: x,
+                                           array[int] of int: cover,
+                                           array[int] of var int: counts);
+
 predicate global_cardinality_closed(array[int] of var int: x,
                                     array[int] of int: cover,
-                                    array[int] of var int: counts);
+                                    array[int] of var int: counts) =
+  assert(index_set(cover) = index_set(counts),
+      "global_cardinality_closed: " ++
+      "cover and counts must have identical index sets",
+    gecode_global_cardinality_closed(x,cover,counts);

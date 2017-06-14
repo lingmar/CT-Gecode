@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,9 +44,8 @@ namespace Gecode { namespace Int { namespace Unary {
 
   template<class ManTask, class PL>
   forceinline
-  ManProp<ManTask,PL>::ManProp(Space& home, bool shared,
-                                      ManProp<ManTask,PL>& p)
-    : TaskProp<ManTask,PL>(home,shared,p) {}
+  ManProp<ManTask,PL>::ManProp(Space& home, ManProp<ManTask,PL>& p)
+    : TaskProp<ManTask,PL>(home,p) {}
 
   template<class ManTask, class PL>
   forceinline ExecStatus
@@ -58,14 +57,14 @@ namespace Gecode { namespace Int { namespace Unary {
 
   template<class ManTask, class PL>
   Actor*
-  ManProp<ManTask,PL>::copy(Space& home, bool share) {
-    return new (home) ManProp<ManTask,PL>(home,share,*this);
+  ManProp<ManTask,PL>::copy(Space& home) {
+    return new (home) ManProp<ManTask,PL>(home,*this);
   }
 
   template<class ManTask, class PL>
   ExecStatus
   ManProp<ManTask,PL>::propagate(Space& home, const ModEventDelta&) {
-    GECODE_ES_CHECK(overload(home,t));
+    GECODE_ES_CHECK(overload(t));
 
     if (PL::basic)
       GECODE_ES_CHECK(timetabling(home,*this,t));

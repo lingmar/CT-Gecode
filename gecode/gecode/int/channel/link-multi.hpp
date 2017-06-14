@@ -7,8 +7,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,11 +46,11 @@ namespace Gecode { namespace Int { namespace Channel {
   }
 
   forceinline
-  LinkMulti::LinkMulti(Space& home, bool share, LinkMulti& p)
+  LinkMulti::LinkMulti(Space& home, LinkMulti& p)
     : MixNaryOnePropagator<BoolView,PC_BOOL_NONE,IntView,PC_INT_DOM>
-  (home,share,p), status(S_NONE), o(p.o) {
+  (home,p), status(S_NONE), o(p.o) {
     assert(p.status == S_NONE);
-    c.update(home,share,p.c);
+    c.update(home,p.c);
   }
 
   forceinline ExecStatus

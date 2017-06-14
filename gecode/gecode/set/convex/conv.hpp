@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,8 +53,8 @@ namespace Gecode { namespace Set { namespace Convex {
     : UnaryPropagator<SetView, PC_SET_ANY>(home,x) {}
 
   forceinline
-  Convex::Convex(Space& home, bool share, Convex& p)
-    : UnaryPropagator<SetView, PC_SET_ANY>(home,share,p) {}
+  Convex::Convex(Space& home, Convex& p)
+    : UnaryPropagator<SetView, PC_SET_ANY>(home,p) {}
 
   forceinline ExecStatus
   Convex::post(Home home, SetView x) {

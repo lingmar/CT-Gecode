@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-24 20:41:24 +0200 (Wed, 24 May 2017) $ by $Author: schulte $
+ *     $Revision: 15773 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -157,6 +157,19 @@ namespace Gecode {
     }
     inline int
     TraceOption::value(void) const {
+      return cur;
+    }
+
+    /*
+     * Search trace option
+     *
+     */
+    inline void
+    SearchTraceOption::value(SearchTracer* t) {
+      cur = t;
+    }
+    inline SearchTracer*
+    SearchTraceOption::value(void) const {
       return cur;
     }
 
@@ -507,6 +520,16 @@ namespace Gecode {
   inline int
   Options::trace(void) const {
     return _trace.value();
+  }
+
+  inline void
+  Options::search_tracer(SearchTracer* t) {
+    _search_tracer.value(t);
+  }
+
+  inline SearchTracer*
+  Options::search_tracer(void) const {
+    return _search_tracer.value();
   }
 
 #ifdef GECODE_HAS_GIST

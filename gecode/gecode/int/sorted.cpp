@@ -7,8 +7,8 @@
  *     Patrick Pekczynski, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,7 +45,7 @@ namespace Gecode {
     using namespace Int;
     if ((x.size() != y.size()) || (x.size() != z.size()))
       throw ArgumentSizeMismatch("Int::Sorted");
-    if (x.same(home,y) || x.same(home,z) || y.same(home,z))
+    if (x.same(y) || x.same(z) || y.same(z))
       throw ArgumentSame("Int::Sorted");
 
     GECODE_POST;
@@ -64,7 +64,7 @@ namespace Gecode {
     using namespace Int;
     if (x.size() != y.size())
       throw ArgumentSizeMismatch("Int::Sorted");
-    if (x.same(home,y))
+    if (x.same(y))
       throw ArgumentSame("Int::Sorted");
 
     GECODE_POST;

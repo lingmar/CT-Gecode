@@ -6,8 +6,8 @@
 %     Guido Tack, 2007
 %
 %  Last modified:
-%     $Date$ by $Author$
-%     $Revision$
+%     $Date: 2017-05-17 07:31:10 +0200 (Wed, 17 May 2017) $ by $Author: tack $
+%     $Revision: 15715 $
 %
 %  This file is part of Gecode, the generic constraint
 %  development environment:
@@ -34,4 +34,10 @@
 %
 %
 
-predicate table_bool(array[int] of var bool: x, array[int, int] of bool: t);
+predicate gecode_table_bool(array[int] of var bool: x, array[int, int] of bool: t);
+
+predicate table_bool(array[int] of var bool: x, array[int, int] of bool: t) =
+    assert (index_set_2of2(t) == index_set(x),
+        "The second dimension of the table must equal the number of variables "
+            ++ "in the first argument",
+        gecode_table_bool(x,t));

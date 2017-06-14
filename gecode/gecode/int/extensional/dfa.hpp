@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -78,8 +78,6 @@ namespace Gecode {
     GECODE_INT_EXPORT DFAI(void);
     /// Delete automaton implemenentation
     virtual ~DFAI(void);
-    /// Create a copy
-    GECODE_INT_EXPORT virtual SharedHandle::Object* copy(void) const;
   };
 
   forceinline

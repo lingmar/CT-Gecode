@@ -7,8 +7,8 @@
  *     Christian Schulte, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2016-12-02 13:20:09 +0100 (Fri, 02 Dec 2016) $ by $Author: schulte $
+ *     $Revision: 15304 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -441,12 +441,12 @@ namespace Test { namespace Int {
        }
      };
 
-     /// %Test for if-the-else-constraint
-     class ITE : public Test {
+     /// %Test for if-then-else-constraint
+     class ITEInt : public Test {
      public:
        /// Construct and register test
-       ITE(Gecode::IntPropLevel ipl)
-         : Test("ITE::"+str(ipl),4,-4,4,false,ipl) {}
+       ITEInt(Gecode::IntPropLevel ipl)
+         : Test("ITE::Int::"+str(ipl),4,-4,4,false,ipl) {}
        /// Check whether \a x is solution
        virtual bool solution(const Assignment& x) const {
          if ((x[0] < 0) || (x[0] > 1))
@@ -463,6 +463,27 @@ namespace Test { namespace Int {
            ite(home,channel(home,x[0]),x[1],x[2],x[3]);
          else
            rel(home, ite(channel(home,x[0]),x[1],x[2]) == x[3]);
+       }
+     };
+
+     /// %Test for if-then-else-constraint
+     class ITEBool : public Test {
+     public:
+       /// Construct and register test
+       ITEBool(void)
+         : Test("ITE::Bool",4,0,1,false) {}
+       /// Check whether \a x is solution
+       virtual bool solution(const Assignment& x) const {
+         if (x[0] == 1)
+           return x[1] == x[3];
+         else
+           return x[2] == x[3];
+       }
+       /// Post constraint
+       virtual void post(Gecode::Space& home, Gecode::IntVarArray& x) {
+         using namespace Gecode;
+         ite(home,channel(home,x[0]),channel(home,x[1]),
+             channel(home,x[2]),channel(home,x[3]));
        }
      };
 
@@ -516,8 +537,9 @@ namespace Test { namespace Int {
      };
 
      Create c;
-     ITE itebnd(Gecode::IPL_BND);
-     ITE itedom(Gecode::IPL_DOM);
+     ITEInt itebnd(Gecode::IPL_BND);
+     ITEInt itedom(Gecode::IPL_DOM);
+     ITEBool itebool;
 
      //@}
 

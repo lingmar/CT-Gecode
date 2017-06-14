@@ -7,8 +7,8 @@
  *     Christian Schulte, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-16 12:11:51 +0100 (Thu, 16 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15434 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -43,11 +43,11 @@ namespace Gecode {
 
   forceinline
   FloatValBranch::FloatValBranch(Rnd r)
-    : ValBranch(r), s(SEL_SPLIT_RND) {}
+    : ValBranch<FloatVar>(r), s(SEL_SPLIT_RND) {}
 
   forceinline
-  FloatValBranch::FloatValBranch(VoidFunction v, VoidFunction c)
-    : ValBranch(v,c), s(SEL_VAL_COMMIT) {}
+  FloatValBranch::FloatValBranch(FloatBranchVal v, FloatBranchCommit c)
+    : ValBranch<FloatVar>(v,c), s(SEL_VAL_COMMIT) {}
 
   forceinline FloatValBranch::Select
   FloatValBranch::select(void) const {
@@ -72,8 +72,7 @@ namespace Gecode {
 
   inline FloatValBranch
   FLOAT_VAL(FloatBranchVal v, FloatBranchCommit c) {
-    return FloatValBranch(function_cast<VoidFunction>(v),
-                          function_cast<VoidFunction>(c));
+    return FloatValBranch(v,c);
   }
 
 }

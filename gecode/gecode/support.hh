@@ -7,8 +7,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -142,8 +142,17 @@
 
 #include <gecode/support/thread/thread.hpp>
 
+#include <gecode/support/ref-count.hpp>
+
 #include <gecode/support/timer.hpp>
 #include <gecode/support/hw-rnd.hpp>
+
+/*
+ * Miscellaneous
+ *
+ */
+
+#include <gecode/support/run-jobs.hpp>
 
 #endif
 

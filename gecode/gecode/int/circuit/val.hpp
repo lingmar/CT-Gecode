@@ -7,8 +7,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -48,13 +48,13 @@ namespace Gecode { namespace Int { namespace Circuit {
 
   template<class View, class Offset>
   forceinline
-  Val<View,Offset>::Val(Space& home, bool share, Val<View,Offset>& p)
-    : Base<View,Offset>(home,share,p) {}
+  Val<View,Offset>::Val(Space& home, Val<View,Offset>& p)
+    : Base<View,Offset>(home,p) {}
 
   template<class View, class Offset>
   Actor*
-  Val<View,Offset>::copy(Space& home, bool share) {
-    return new (home) Val<View,Offset>(home,share,*this);
+  Val<View,Offset>::copy(Space& home) {
+    return new (home) Val<View,Offset>(home,*this);
   }
 
   template<class View, class Offset>

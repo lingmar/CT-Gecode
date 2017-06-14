@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,12 +53,12 @@ namespace Gecode { namespace Set { namespace Sequence {
     : NaryPropagator<SetView, PC_SET_ANY>(home,x) {}
 
   forceinline
-  Seq::Seq(Space& home, bool share, Seq& p)
-    : NaryPropagator<SetView, PC_SET_ANY>(home,share,p) {}
+  Seq::Seq(Space& home, Seq& p)
+    : NaryPropagator<SetView, PC_SET_ANY>(home,p) {}
 
   forceinline ExecStatus
   Seq::post(Home home, ViewArray<SetView> x) {
-    if (x.shared(home))
+    if (x.shared())
       return ES_FAILED;
     (void) new (home) Seq(home,x);
     return ES_OK;

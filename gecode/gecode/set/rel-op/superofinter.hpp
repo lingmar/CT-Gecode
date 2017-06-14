@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,9 +53,9 @@ namespace Gecode { namespace Set { namespace RelOp {
   template<class View0, class View1, class View2>
   forceinline
   SuperOfInter<View0,View1,View2>::SuperOfInter
-  (Space& home, bool share, SuperOfInter<View0,View1,View2>& p)
+  (Space& home, SuperOfInter<View0,View1,View2>& p)
     : MixTernaryPropagator<View0,PC_SET_ANY,View1,PC_SET_ANY,
-                             View2,PC_SET_CLUB>(home,share,p) {}
+                             View2,PC_SET_CLUB>(home,p) {}
 
   template<class View0, class View1, class View2>
   ExecStatus
@@ -67,8 +67,8 @@ namespace Gecode { namespace Set { namespace RelOp {
 
   template<class View0, class View1, class View2>
   Actor*
-  SuperOfInter<View0,View1,View2>::copy(Space& home, bool share) {
-    return new (home) SuperOfInter(home,share,*this);
+  SuperOfInter<View0,View1,View2>::copy(Space& home) {
+    return new (home) SuperOfInter(home,*this);
   }
 
   template<class View0, class View1, class View2>

@@ -7,8 +7,8 @@
  *     Mikael Lagerkvist, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -97,7 +97,7 @@ namespace Gecode { namespace Int { namespace Cumulatives {
     SharedArray<int>  c;
     const bool        at_most;
 
-    Val(Space& home, bool share, Val<ViewM, ViewP, ViewU, View>& p);
+    Val(Space& home, Val<ViewM, ViewP, ViewU, View>& p);
     Val(Home home, const ViewArray<ViewM>&, const ViewArray<View>&,
         const ViewArray<ViewP>&, const ViewArray<View>&,
         const ViewArray<ViewU>&, const SharedArray<int>&, bool);
@@ -108,7 +108,7 @@ namespace Gecode { namespace Int { namespace Cumulatives {
                      int* prune_tasks, int& prune_tasks_size);
   public:
     /// Create copy during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as low quadratic)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function

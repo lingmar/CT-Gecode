@@ -7,8 +7,8 @@
  *     Christian Schulte, 2013
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-16 12:11:51 +0100 (Thu, 16 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15434 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,18 +54,32 @@ namespace Gecode {
     AFC::init(home,x,d);
   }
 
-  forceinline
-  IntAFC::IntAFC(Home home, const BoolVarArgs& x, double d) {
-    AFC::init(home,x,d);
-  }
-
   forceinline void
   IntAFC::init(Home home, const IntVarArgs& x, double d) {
     AFC::init(home,x,d);
   }
 
+
+
+  forceinline
+  BoolAFC::BoolAFC(void) {}
+
+  forceinline
+  BoolAFC::BoolAFC(const BoolAFC& a)
+    : AFC(a) {}
+
+  forceinline BoolAFC&
+  BoolAFC::operator =(const BoolAFC& a) {
+    return static_cast<BoolAFC&>(AFC::operator =(a));
+  }
+
+  forceinline
+  BoolAFC::BoolAFC(Home home, const BoolVarArgs& x, double d) {
+    AFC::init(home,x,d);
+  }
+
   forceinline void
-  IntAFC::init(Home home, const BoolVarArgs& x, double d) {
+  BoolAFC::init(Home home, const BoolVarArgs& x, double d) {
     AFC::init(home,x,d);
   }
 

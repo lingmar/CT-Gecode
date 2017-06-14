@@ -9,8 +9,8 @@
  *     Mikael Lagerkvist, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2016-10-25 12:52:26 +0200 (Tue, 25 Oct 2016) $ by $Author: schulte $
+ *     $Revision: 15233 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -142,7 +142,7 @@ namespace Test {
                   << "\t\tsimple pattern for the tests to run" << std::endl
                   << "\t\tprefixing with \"-\" negates the pattern" << std::endl
                   << "\t\tprefixing with \"^\" requires a match at the beginning" << std::endl
-                  << "\t\tmultiple pattern-options may be given" 
+                  << "\t\tmultiple pattern-options may be given"
                   << std::endl
                   << "\t-start (string) default: (none)" << std::endl
                   << "\t\tsimple pattern for the first test to run" << std::endl

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2015
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -40,7 +40,7 @@ namespace Gecode { namespace Int { namespace Cumulative {
   template<class Task>
   forceinline ExecStatus
   subsumed(Space& home, Propagator& p, int c, TaskArray<Task>& t) {
-    Region r(home);
+    Region r;
 
     if (Event* e = Event::events(r,t)) {
       // Process events, use ccur as the capacity that is still free

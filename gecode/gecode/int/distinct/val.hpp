@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -47,7 +47,7 @@ namespace Gecode { namespace Int { namespace Distinct {
     assert(x.size() > 1);
     int n = x.size();
 
-    Region r(home);
+    Region r;
     int* stack = r.alloc<int>(n);
     int* c_v = &stack[0];
     // c_n is the current number of values on stack
@@ -153,13 +153,13 @@ namespace Gecode { namespace Int { namespace Distinct {
 
   template<class View>
   forceinline
-  Val<View>::Val(Space& home, bool share, Val<View>& p)
-    : NaryPropagator<View,PC_INT_VAL>(home,share,p) {}
+  Val<View>::Val(Space& home, Val<View>& p)
+    : NaryPropagator<View,PC_INT_VAL>(home,p) {}
 
   template<class View>
   Actor*
-  Val<View>::copy(Space& home, bool share) {
-    return new (home) Val<View>(home,share,*this);
+  Val<View>::copy(Space& home) {
+    return new (home) Val<View>(home,*this);
   }
 
   template<class View>
@@ -173,7 +173,7 @@ namespace Gecode { namespace Int { namespace Distinct {
   ExecStatus
   Val<View>::post(Home home, ViewArray<View>& x) {
     if (x.size() == 2)
-      return Rel::Nq<View>::post(home,x[0],x[1]);
+      return Rel::Nq<View,View>::post(home,x[0],x[1]);
     if (x.size() > 2)
       (void) new (home) Val<View>(home,x);
     return ES_OK;

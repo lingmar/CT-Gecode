@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -68,19 +68,19 @@ namespace Gecode { namespace Int { namespace NoOverlap {
 
   template<class Box>
   forceinline
-  OptProp<Box>::OptProp(Space& home, bool shared, OptProp<Box>& p)
-    : Base<Box>(home, shared, p, p.n + p.m), m(p.m) {}
+  OptProp<Box>::OptProp(Space& home, OptProp<Box>& p)
+    : Base<Box>(home, p, p.n + p.m), m(p.m) {}
 
   template<class Box>
   Actor*
-  OptProp<Box>::copy(Space& home, bool share) {
-    return new (home) OptProp<Box>(home,share,*this);
+  OptProp<Box>::copy(Space& home) {
+    return new (home) OptProp<Box>(home,*this);
   }
 
   template<class Box>
   ExecStatus
   OptProp<Box>::propagate(Space& home, const ModEventDelta& med) {
-    Region r(home);
+    Region r;
 
     if (BoolView::me(med) == ME_BOOL_VAL) {
       // Eliminate excluded boxes

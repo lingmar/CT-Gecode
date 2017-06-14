@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -70,10 +70,10 @@ namespace Gecode { namespace Int { namespace NoOverlap {
 
   template<class Box>
   forceinline
-  Base<Box>::Base(Space& home, bool shared, Base<Box>& p, int m)
-    : Propagator(home,shared,p), b(home.alloc<Box>(m)), n(p.n) {
+  Base<Box>::Base(Space& home, Base<Box>& p, int m)
+    : Propagator(home,p), b(home.alloc<Box>(m)), n(p.n) {
     for (int i=m; i--; )
-      b[i].update(home,shared,p.b[i]);
+      b[i].update(home,p.b[i]);
   }
 
   template<class Box>

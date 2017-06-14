@@ -9,8 +9,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,13 +54,11 @@ namespace Gecode { namespace Set { namespace Element {
   template<class View, class View0, class View1>
   forceinline
   ElementIntersection<View,View0,View1>::
-  ElementIntersection(Space& home, bool share,
-                      ElementIntersection<View,View0,View1>& p)
-    : Propagator(home,share,p) {
-    x0.update(home,share,p.x0);
-    x1.update(home,share,p.x1);
-    iv.update(home,share,p.iv);
-    universe.update(home,share,p.universe);
+  ElementIntersection(Space& home, ElementIntersection<View,View0,View1>& p)
+    : Propagator(home,p), universe(p.universe) {
+    x0.update(home,p.x0);
+    x1.update(home,p.x1);
+    iv.update(home,p.iv);
   }
 
   template<class View, class View0, class View1>
@@ -109,15 +107,15 @@ namespace Gecode { namespace Set { namespace Element {
 
   template<class View, class View0, class View1>
   Actor*
-  ElementIntersection<View,View0,View1>::copy(Space& home, bool share) {
-    return new (home) ElementIntersection<View,View0,View1>(home,share,*this);
+  ElementIntersection<View,View0,View1>::copy(Space& home) {
+    return new (home) ElementIntersection<View,View0,View1>(home,*this);
   }
 
   template<class View, class View0, class View1>
   ExecStatus
   ElementIntersection<View,View0,View1>::propagate(Space& home,
                                                    const ModEventDelta&) {
-    Region r(home);
+    Region r;
     int n = iv.size();
 
     bool loopVar;

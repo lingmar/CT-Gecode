@@ -7,8 +7,8 @@
  *     Christian Schulte, 2015
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-30 21:40:16 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+ *     $Revision: 15814 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -35,18 +35,18 @@
  *
  */
 
-#include <gecode/search/meta/rbs.hh>
+#include <gecode/search/seq/rbs.hh>
 
-namespace Gecode { namespace Search { namespace Meta {
+namespace Gecode { namespace Search { namespace Seq {
 
   Stop*
-  stop(Stop* stop) {
+  rbsstop(Stop* stop) {
     return new RestartStop(stop);
   }
 
   Engine*
-  engine(Space* master, Stop* stop, Engine* slave,
-         const Search::Statistics& stat, const Options& opt, bool best) {
+  rbsengine(Space* master, Stop* stop, Engine* slave,
+            const Search::Statistics& stat, const Options& opt, bool best) {
     return new RBS(master,static_cast<RestartStop*>(stop), slave,
                    stat,opt,best);
   }
@@ -54,4 +54,4 @@ namespace Gecode { namespace Search { namespace Meta {
 
 }}}
 
-// STATISTICS: search-meta
+// STATISTICS: search-seq

@@ -9,8 +9,8 @@ o *  Main authors:
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -43,10 +43,10 @@ namespace Gecode {
 
   void
   linear(Home home,
-         const FloatVarArgs& x, FloatRelType frt, FloatNum c) {
+         const FloatVarArgs& x, FloatRelType frt, FloatVal c) {
     using namespace Float;
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size());
     for (int i = x.size(); i--; ) {
       t[i].a=1.0; t[i].x=x[i];
@@ -56,10 +56,10 @@ namespace Gecode {
 
   void
   linear(Home home,
-         const FloatVarArgs& x, FloatRelType frt, FloatNum c, Reify r) {
+         const FloatVarArgs& x, FloatRelType frt, FloatVal c, Reify r) {
     using namespace Float;
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size());
     for (int i = x.size(); i--; ) {
       t[i].a=1.0; t[i].x=x[i];
@@ -70,12 +70,12 @@ namespace Gecode {
   void
   linear(Home home,
          const FloatValArgs& a, const FloatVarArgs& x, FloatRelType frt,
-         FloatNum c) {
+         FloatVal c) {
     using namespace Float;
     if (a.size() != x.size())
       throw ArgumentSizeMismatch("Float::linear");
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size());
     for (int i = x.size(); i--; ) {
       t[i].a=a[i]; t[i].x=x[i];
@@ -86,12 +86,12 @@ namespace Gecode {
   void
   linear(Home home,
          const FloatValArgs& a, const FloatVarArgs& x, FloatRelType frt,
-         FloatNum c, Reify r) {
+         FloatVal c, Reify r) {
     using namespace Float;
     if (a.size() != x.size())
       throw ArgumentSizeMismatch("Float::linear");
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term >(x.size());
     for (int i = x.size(); i--; ) {
       t[i].a=a[i]; t[i].x=x[i];
@@ -104,7 +104,7 @@ namespace Gecode {
          const FloatVarArgs& x, FloatRelType frt, FloatVar y) {
     using namespace Float;
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size()+1);
     for (int i = x.size(); i--; ) {
       t[i].a=1.0; t[i].x=x[i];
@@ -134,7 +134,7 @@ namespace Gecode {
          const FloatVarArgs& x, FloatRelType frt, FloatVar y, Reify r) {
     using namespace Float;
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size()+1);
     for (int i = x.size(); i--; ) {
       t[i].a=1.0; t[i].x=x[i];
@@ -151,7 +151,7 @@ namespace Gecode {
     if (a.size() != x.size())
       throw ArgumentSizeMismatch("Float::linear");
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size()+1);
     for (int i = x.size(); i--; ) {
       t[i].a=a[i]; t[i].x=x[i];
@@ -184,7 +184,7 @@ namespace Gecode {
     if (a.size() != x.size())
       throw ArgumentSizeMismatch("Float::linear");
     GECODE_POST;
-    Region re(home);
+    Region re;
     Linear::Term* t = re.alloc<Linear::Term>(x.size()+1);
     for (int i = x.size(); i--; ) {
       t[i].a=a[i]; t[i].x=x[i];

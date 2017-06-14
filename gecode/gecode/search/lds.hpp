@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-30 21:53:23 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+ *     $Revision: 15815 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -39,7 +39,7 @@ namespace Gecode { namespace Search {
 
   /// Create lds engine
   GECODE_SEARCH_EXPORT Engine*
-  lds(Space* s, const Options& o);
+  ldsengine(Space* s, const Options& o);
 
   /// A DFS engine builder
   template<class T>
@@ -71,7 +71,7 @@ namespace Gecode {
   template<class T>
   forceinline
   LDS<T>::LDS(T* s, const Search::Options& o)
-    : Search::Base<T>(Search::lds(s,o)) {}
+    : Search::Base<T>(Search::ldsengine(s,o)) {}
 
   template<class T>
   T*

@@ -9,8 +9,8 @@
  *     Guido Tack, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -140,8 +140,8 @@ namespace Gecode { namespace Int { namespace Unary {
   }
 
   forceinline void
-  ManFixPTask::update(Space& home, bool share, ManFixPTask& t) {
-    _s.update(home,share,t._s); _p=t._p;
+  ManFixPTask::update(Space& home, ManFixPTask& t) {
+    _s.update(home,t._s); _p=t._p;
   }
 
   forceinline void
@@ -300,8 +300,8 @@ namespace Gecode { namespace Int { namespace Unary {
   }
 
   forceinline void
-  ManFixPSETask::update(Space& home, bool share, ManFixPSETask& t) {
-    ManFixPTask::update(home,share,t); _t=t._t;
+  ManFixPSETask::update(Space& home, ManFixPSETask& t) {
+    ManFixPTask::update(home,t); _t=t._t;
   }
 
   template<class Char, class Traits>
@@ -426,10 +426,10 @@ namespace Gecode { namespace Int { namespace Unary {
   }
 
   forceinline void
-  ManFlexTask::update(Space& home, bool share, ManFlexTask& t) {
-    _s.update(home,share,t._s);
-    _p.update(home,share,t._p);
-    _e.update(home,share,t._e);
+  ManFlexTask::update(Space& home, ManFlexTask& t) {
+    _s.update(home,t._s);
+    _p.update(home,t._p);
+    _e.update(home,t._e);
   }
 
   forceinline void

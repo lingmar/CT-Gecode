@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,36 +45,23 @@ namespace Test {
   /// %Test for %Region memory area
   class Region : public Test::Base {
   protected:
-    /// Test space
-    class TestSpace : public Gecode::Space {
-    public:
-      /// Constructor for creation
-      TestSpace(void) {}
-      /// Constructor for cloning \a s
-      TestSpace(bool share, TestSpace& s) : Space(share,s) {}
-      /// Copy during cloning
-      virtual Space* copy(bool share) {
-        return new TestSpace(share,*this);
-      }
-    };
     /// How often to repeat
     static const int n_repeat = 16;
     /// How many blocks to allocate
     static const int n_blocks = 64;
     /// The size of a block
-    static const size_t size = Gecode::MemoryConfig::region_area_size * 4;
+    static const size_t size =
+      Gecode::Kernel::MemoryConfig::region_area_size * 4;
   public:
     /// Initialize test
     Region(void) : Test::Base("Region") {}
     /// Perform actual tests
     bool run(void) {
-      TestSpace* s = new TestSpace;
       for (int i=n_repeat; i--; ) {
-        Gecode::Region r(*s);
+        Gecode::Region r;
         for (int j=n_blocks; j--; )
           (void) r.alloc<char>(static_cast<unsigned long int>(size));
       }
-      delete s;
       return true;
     }
   };

@@ -9,8 +9,8 @@
  *     Guido Tack, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -48,7 +48,7 @@ namespace Gecode {
   unary(Home home, const IntVarArgs& s, const IntArgs& p, IntPropLevel ipl) {
     using namespace Gecode::Int;
     using namespace Gecode::Int::Unary;
-    if (s.same(home))
+    if (s.same())
       throw Int::ArgumentSame("Int::unary");
     if (s.size() != p.size())
       throw Int::ArgumentSizeMismatch("Int::unary");
@@ -121,7 +121,7 @@ namespace Gecode {
         const BoolVarArgs& m, IntPropLevel ipl) {
     using namespace Gecode::Int;
     using namespace Gecode::Int::Unary;
-    if (s.same(home))
+    if (s.same())
       throw Int::ArgumentSame("Int::unary");
     if ((s.size() != p.size()) || (s.size() != m.size()))
       throw Int::ArgumentSizeMismatch("Int::unary");

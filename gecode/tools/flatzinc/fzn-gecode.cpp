@@ -7,8 +7,8 @@
  *     Guido Tack, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-11 15:04:07 +0200 (Thu, 11 May 2017) $ by $Author: schulte $
+ *     $Revision: 15703 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,8 +44,6 @@ using namespace Gecode;
 
 int main(int argc, char** argv) {
 
-  //cout << "Here" << endl;
-  
   Support::Timer t_total;
   t_total.start();
   FlatZinc::FlatZincOptions opt("Gecode/FlatZinc");
@@ -62,12 +60,12 @@ int main(int argc, char** argv) {
 
   FlatZinc::Printer p;
   FlatZinc::FlatZincSpace* fg = NULL;
-  FlatZinc::FznRnd rnd(opt.seed());
+  Rnd rnd(opt.seed());
   try {
     if (!strcmp(filename, "-")) {
-      fg = FlatZinc::parse(cin, p, std::cerr, NULL, &rnd);
+      fg = FlatZinc::parse(cin, p, std::cerr, NULL, rnd);
     } else {
-      fg = FlatZinc::parse(filename, p, std::cerr, NULL, &rnd);
+      fg = FlatZinc::parse(filename, p, std::cerr, NULL, rnd);
     }
 
     if (fg) {

@@ -9,8 +9,8 @@
  *     Christian Schulte, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -47,7 +47,7 @@ namespace Gecode {
              const IntVarArgs& b, const IntArgs& s,
              IntPropLevel) {
     using namespace Int;
-    if (l.same(home,b))
+    if (l.same(b))
       throw ArgumentSame("Int::binpacking");
     if (b.size() != s.size())
       throw ArgumentSizeMismatch("Int::binpacking");
@@ -73,7 +73,7 @@ namespace Gecode {
              IntPropLevel) {
     using namespace Int;
 
-    if (l.same(home,b))
+    if (l.same(b))
       throw ArgumentSame("Int::binpacking");
 
     // The number of items
@@ -124,7 +124,7 @@ namespace Gecode {
     // Clique Finding and distinct posting
     {
       // First construct the conflict graph
-      Region r(home);
+      Region r;
       BinPacking::ConflictGraph cg(home,r,b,m);
 
       for (int i=0; i<n-1; i++) {
@@ -151,7 +151,7 @@ namespace Gecode {
             cg.edge(i,j);
         }
       }
-      
+
       if (cg.post() == ES_FAILED)
         home.fail();
 

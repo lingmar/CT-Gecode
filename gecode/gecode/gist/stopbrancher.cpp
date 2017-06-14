@@ -7,8 +7,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-21 16:51:20 +0200 (Sun, 21 May 2017) $ by $Author: schulte $
+ *     $Revision: 15751 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -40,10 +40,6 @@
 namespace Gecode { namespace Gist {
 
   StopChoice::StopChoice(const Brancher& b) : Choice(b,1) {}
-  size_t
-  StopChoice::size(void) const {
-    return sizeof(StopChoice);
-  }
   void
   StopChoice::archive(Archive& e) const {
     Choice::archive(e);
@@ -51,8 +47,8 @@ namespace Gecode { namespace Gist {
 
   StopBrancher::StopBrancher(Home home) : Brancher(home), done(false) {}
 
-  StopBrancher::StopBrancher(Space& home, bool share, StopBrancher& b)
-    : Brancher(home, share, b), done(b.done) {}
+  StopBrancher::StopBrancher(Space& home, StopBrancher& b)
+    : Brancher(home,b), done(b.done) {}
 
   bool
   StopBrancher::status(const Space&) const {
@@ -79,8 +75,8 @@ namespace Gecode { namespace Gist {
   }
 
   Actor*
-  StopBrancher::copy(Space& home, bool share) {
-    return new (home) StopBrancher(home, share, *this);
+  StopBrancher::copy(Space& home) {
+    return new (home) StopBrancher(home, *this);
   }
   void
   StopBrancher::post(Home home) {

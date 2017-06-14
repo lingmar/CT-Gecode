@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,15 +44,6 @@ namespace Gecode {
     IntSetObject* o = new IntSetObject;
     o->n = n;
     o->r = heap.alloc<Range>(n);
-    return o;
-  }
-
-  SharedHandle::Object*
-  IntSet::IntSetObject::copy(void) const {
-    IntSetObject* o = allocate(n);
-    o->size = size;
-    for (int i=n; i--; )
-      o->r[i]=r[i];
     return o;
   }
 

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2009-09-30 12:12:35 +0200 (Wed, 30 Sep 2009) $ by $Author: tack $
+ *     $Revision: 9779 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-03-01 04:28:36 +0100 (Wed, 01 Mar 2017) $ by $Author: schulte $
+ *     $Revision: 15541 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -77,6 +77,25 @@
 #else
 
 #define GECODE_NOT_NULL(p) assert(p != NULL);
+
+#endif
+
+/**
+ * \def GECODE_VALID_FUNCTION
+ * \brief Assert that a function is valid
+ *
+ * This is preferred over assert as it is used for optimization,
+ * if supported by a compiler (for example, Microsoft Visual C++).
+ *
+ */
+
+#if defined(_MSC_VER) && defined(NDEBUG)
+
+#define GECODE_VALID_FUNCTION(f) __assume(static_cast<bool>(f));
+
+#else
+
+#define GECODE_VALID_FUNCTION(f) assert(static_cast<bool>(f));
 
 #endif
 

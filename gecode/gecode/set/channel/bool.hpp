@@ -7,8 +7,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -55,9 +55,8 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   forceinline
-  ChannelBool<View>::IndexAdvisor::IndexAdvisor(Space& home, bool share,
-                                                IndexAdvisor& a)
-    : Advisor(home,share,a), idx(a.idx) {}
+  ChannelBool<View>::IndexAdvisor::IndexAdvisor(Space& home, IndexAdvisor& a)
+    : Advisor(home,a), idx(a.idx) {}
 
   template<class View>
   forceinline int
@@ -113,9 +112,9 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   forceinline
-  ChannelBool<View>::ChannelBool(Space& home, bool share, ChannelBool& p)
-    : Super(home,share,p), running(false) {
-    co.update(home, share, p.co);
+  ChannelBool<View>::ChannelBool(Space& home, ChannelBool& p)
+    : Super(home,p), running(false) {
+    co.update(home, p.co);
   }
 
   template<class View>
@@ -150,8 +149,8 @@ namespace Gecode { namespace Set { namespace Channel {
 
   template<class View>
   Actor*
-  ChannelBool<View>::copy(Space& home, bool share) {
-    return new (home) ChannelBool(home,share,*this);
+  ChannelBool<View>::copy(Space& home) {
+    return new (home) ChannelBool(home,*this);
   }
 
   template<class View>

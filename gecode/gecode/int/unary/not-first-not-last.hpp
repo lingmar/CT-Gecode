@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,7 +44,7 @@ namespace Gecode { namespace Int { namespace Unary {
   notlast(Space& home, TaskViewArray<ManTaskView>& t) {
     sort<ManTaskView,STO_LCT,true>(t);
 
-    Region r(home);
+    Region r;
 
     OmegaTree<ManTaskView> o(r,t);
     TaskViewIter<ManTaskView,STO_LST,true> q(r,t);
@@ -85,7 +85,7 @@ namespace Gecode { namespace Int { namespace Unary {
   notlast(Space& home, Propagator& p, TaskViewArray<OptTaskView>& t) {
     sort<OptTaskView,STO_LCT,true>(t);
 
-    Region r(home);
+    Region r;
 
     OmegaTree<OptTaskView> o(r,t);
     ManTaskViewIter<OptTaskView,STO_LST,true> q(r,t);

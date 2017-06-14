@@ -7,8 +7,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-16 12:11:51 +0100 (Thu, 16 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15434 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -41,24 +41,10 @@ namespace Gecode {
   template<class T>
   T ptr_cast(void* p);
 
-  /// Base type for any function pointer
-  typedef void (*VoidFunction)(void);
-
-  /// Cast function pointer
-  template<class F1, class F2>
-  F1 function_cast(F2 f);
-
-
   template<class T>
   forceinline T
   ptr_cast(void* p) {
     return static_cast<T>(p);
-  }
-
-  template<class F1, class F2>
-  forceinline F1
-  function_cast(F2 f) {
-    return F1(f);
   }
 
 }

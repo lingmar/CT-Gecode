@@ -9,8 +9,8 @@
  *     Guido Tack, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,7 +46,7 @@ namespace Gecode { namespace Int { namespace Cumulative {
     TaskViewArray<typename TaskTraits<ManTask>::TaskViewFwd> f(t);
     sort<typename TaskTraits<ManTask>::TaskViewFwd,STO_LCT,true>(f);
 
-    Region r(home);
+    Region r;
     OmegaTree<typename TaskTraits<ManTask>::TaskViewFwd> o(r,c,f);
 
     for (int i=0; i<f.size(); i++) {

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -68,12 +68,12 @@ namespace Gecode { namespace Int { namespace Member {
     /// Constructor for posting
     Prop(Home home, ValSet& vs, ViewArray<View>& x, View y);
     /// Constructor for cloning \a p
-    Prop(Space& home, bool share, Prop<View>& p);
+    Prop(Space& home, Prop<View>& p);
   public:
     /// Cost function
     virtual PropCost cost(const Space&, const ModEventDelta& med) const;
     /// Copy propagator during cloning
-    virtual Propagator* copy(Space& home, bool share);
+    virtual Propagator* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$y\in \{x_0,\ldots,x_{|x|-1}\}\f$
@@ -103,10 +103,10 @@ namespace Gecode { namespace Int { namespace Member {
     /// Constructor for posting
     ReProp(Home home, ValSet& vs, ViewArray<View>& x, View y, BoolView b);
     /// Constructor for cloning \a p
-    ReProp(Space& home, bool share, ReProp<View,rm>& p);
+    ReProp(Space& home, ReProp<View,rm>& p);
   public:
     /// Copy propagator during cloning
-    virtual Propagator* copy(Space& home, bool share);
+    virtual Propagator* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$\left(y\in \{x_0,\ldots,x_{|x|-1}\}\right)\Leftrightarrow b\f$

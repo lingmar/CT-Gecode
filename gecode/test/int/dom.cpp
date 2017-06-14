@@ -7,8 +7,8 @@
  *     Christian Schulte, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2016-10-25 12:52:26 +0200 (Tue, 25 Oct 2016) $ by $Author: schulte $
+ *     $Revision: 15233 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,7 +51,7 @@ namespace Test { namespace Int {
      class DomInt : public Test {
      public:
        /// Create and register test
-       DomInt(int n) 
+       DomInt(int n)
          : Test("Dom::Int::"+str(n),n,-4,4,n == 1,
                 Gecode::IPL_DOM) {}
        /// %Test whether \a x is solution
@@ -81,7 +81,7 @@ namespace Test { namespace Int {
      class DomRange : public Test {
      public:
        /// Create and register test
-       DomRange(int n) 
+       DomRange(int n)
          : Test("Dom::Range::"+str(n),n,-4,4,n == 1,
                 Gecode::IPL_DOM) {}
        /// %Test whether \a x is solution
@@ -136,7 +136,7 @@ namespace Test { namespace Int {
      class DomDom : public Test {
      public:
        /// Create and register test
-       DomDom(int n) 
+       DomDom(int n)
          : Test("Dom::Dom::"+str(n),n,-6,6,n == 1,
                 Gecode::IPL_DOM) {}
        /// %Test whether \a x is solution

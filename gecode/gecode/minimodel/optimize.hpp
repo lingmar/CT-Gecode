@@ -7,8 +7,8 @@
  *     Christian Schulte, 2008
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -41,16 +41,16 @@ namespace Gecode {
   IntMinimizeSpace::IntMinimizeSpace(void) {}
 
   forceinline
-  IntMinimizeSpace::IntMinimizeSpace(bool share, IntMinimizeSpace& s)
-    : Space(share,s) {}
+  IntMinimizeSpace::IntMinimizeSpace(IntMinimizeSpace& s)
+    : Space(s) {}
 
 
   forceinline
   IntMaximizeSpace::IntMaximizeSpace(void) {}
 
   forceinline
-  IntMaximizeSpace::IntMaximizeSpace(bool share, IntMaximizeSpace& s)
-    : Space(share,s) {}
+  IntMaximizeSpace::IntMaximizeSpace(IntMaximizeSpace& s)
+    : Space(s) {}
 
 
 #ifdef GECODE_HAS_FLOAT_VARS
@@ -60,9 +60,8 @@ namespace Gecode {
     : step(s) {}
 
   forceinline
-  FloatMinimizeSpace::FloatMinimizeSpace(bool share,
-                                         FloatMinimizeSpace& s)
-    : Space(share,s), step(s.step) {}
+  FloatMinimizeSpace::FloatMinimizeSpace(FloatMinimizeSpace& s)
+    : Space(s), step(s.step) {}
 
 
   forceinline
@@ -70,9 +69,8 @@ namespace Gecode {
     : step(s) {}
 
   forceinline
-  FloatMaximizeSpace::FloatMaximizeSpace(bool share,
-                                         FloatMaximizeSpace& s)
-    : Space(share,s), step(s.step) {}
+  FloatMaximizeSpace::FloatMaximizeSpace(FloatMaximizeSpace& s)
+    : Space(s), step(s.step) {}
 
 #endif
 

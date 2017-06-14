@@ -7,8 +7,8 @@
  *     Christian Schulte, 2013
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -41,15 +41,15 @@ namespace Gecode { namespace Set { namespace Branch {
   IncNGL::IncNGL(Space& home, SetView x, int n)
     : ViewValNGL<SetView,int,PC_SET_ANY>(home,x,n) {}
   forceinline
-  IncNGL::IncNGL(Space& home, bool share, IncNGL& ngl)
-    : ViewValNGL<SetView,int,PC_SET_ANY>(home,share,ngl) {}
+  IncNGL::IncNGL(Space& home, IncNGL& ngl)
+    : ViewValNGL<SetView,int,PC_SET_ANY>(home,ngl) {}
 
   forceinline
   ExcNGL::ExcNGL(Space& home, SetView x, int n)
     : ViewValNGL<SetView,int,PC_SET_ANY>(home,x,n) {}
   forceinline
-  ExcNGL::ExcNGL(Space& home, bool share, ExcNGL& ngl)
-    : ViewValNGL<SetView,int,PC_SET_ANY>(home,share,ngl) {}
+  ExcNGL::ExcNGL(Space& home, ExcNGL& ngl)
+    : ViewValNGL<SetView,int,PC_SET_ANY>(home,ngl) {}
 
 }}}
 

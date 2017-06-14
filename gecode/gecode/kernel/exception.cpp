@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-03-17 23:04:57 +0100 (Fri, 17 Mar 2017) $ by $Author: schulte $
+ *     $Revision: 15597 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -66,23 +66,26 @@ namespace Gecode {
   UnknownBrancher::UnknownBrancher(const char* l)
     : Exception(l,"Unknown brancher (illegal id)") {}
 
+  UninitializedAFC::UninitializedAFC(const char* l)
+    : Exception(l,"Uninitialized AFC information for branching") {}
+
+  UninitializedAction::UninitializedAction(const char* l)
+    : Exception(l,"Uninitialized action information for branching") {}
+
+  UninitializedCHB::UninitializedCHB(const char* l)
+    : Exception(l,"Uninitialized CHB information for branching") {}
+
   UninitializedRnd::UninitializedRnd(const char* l)
     : Exception(l,"Uninitialized random generator for branching") {}
 
   IllegalDecay::IllegalDecay(const char* l)
     : Exception(l,"Illegal decay factor") {}
 
-  UninitializedAFC::UninitializedAFC(const char* l)
-    : Exception(l,"Uninitialized AFC information for branching") {}
+  InvalidFunction::InvalidFunction(const char* l)
+    : Exception(l,"Invalid function") {}
 
-  UninitializedActivity::UninitializedActivity(const char* l)
-    : Exception(l,"Uninitialized activity information for branching") {}
-
-  AFCWrongArity::AFCWrongArity(const char* l)
-    : Exception(l,"AFC has wrong number of variables") {}
-
-  ActivityWrongArity::ActivityWrongArity(const char* l)
-    : Exception(l,"Activity has wrong number of variables") {}
+  MoreThanOneTracer::MoreThanOneTracer(const char* l)
+    : Exception(l,"Attempt create more than one non-variable tracer") {}
 
 }
 

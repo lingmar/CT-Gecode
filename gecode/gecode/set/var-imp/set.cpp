@@ -9,8 +9,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -77,7 +77,7 @@ namespace Gecode { namespace Set {
         glb.become(home, lub);
         glb.card(glb.size());
         lub.card(glb.size());
-        return ME_SET_FAILED;
+        return fail(home);
       }
       me = ME_SET_CLUB;
     }
@@ -99,7 +99,7 @@ namespace Gecode { namespace Set {
         glb.become(home, lub);
         glb.card(glb.size());
         lub.card(glb.size());
-        return ME_SET_FAILED;
+        return fail(home);
       }
       me = ME_SET_CGLB;
     }
@@ -118,8 +118,8 @@ namespace Gecode { namespace Set {
    */
 
   forceinline
-  SetVarImp::SetVarImp(Space& home, bool share, SetVarImp& x)
-    : SetVarImpBase(home,share,x) {
+  SetVarImp::SetVarImp(Space& home, SetVarImp& x)
+    : SetVarImpBase(home,x) {
     lub.update(home, x.lub);
     glb.card(x.cardMin());
     lub.card(x.cardMax());
@@ -132,9 +132,28 @@ namespace Gecode { namespace Set {
 
 
   SetVarImp*
-  SetVarImp::perform_copy(Space& home, bool share) {
-    return new (home) SetVarImp(home,share,*this);
+  SetVarImp::perform_copy(Space& home) {
+    return new (home) SetVarImp(home,*this);
   }
+
+  /*
+   * Dependencies
+   *
+   */
+  void
+  SetVarImp::subscribe(Space& home, Propagator& p, PropCond pc,
+                       bool schedule) {
+    SetVarImpBase::subscribe(home,p,pc,assigned(),schedule);
+  }
+  void
+  SetVarImp::subscribe(Space& home, Advisor& a, bool fail) {
+    SetVarImpBase::subscribe(home,a,assigned(),fail);
+  }
+  void
+  SetVarImp::reschedule(Space& home, Propagator& p, PropCond pc) {
+    SetVarImpBase::reschedule(home,p,pc,assigned());
+  }
+
 
 }}
 

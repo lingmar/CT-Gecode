@@ -7,8 +7,8 @@
  *     Christian Schulte, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -52,7 +52,7 @@ namespace Gecode { namespace Int {
     /// Update duplicated view from view \a y and modification delta \a d
     void prune(Space& home, IntView y, const Delta& d);
     /// Update during cloning
-    void update(Space& home, bool share, IntTraceView x);
+    void update(Space& home, IntTraceView x);
     /// Return slack measure
     static unsigned long long int slack(IntView x);
   };
@@ -110,7 +110,7 @@ namespace Gecode { namespace Int {
   }
 
   forceinline void
-  IntTraceView::update(Space& home, bool, IntTraceView y) {
+  IntTraceView::update(Space& home, IntTraceView y) {
     Iter::Ranges::RangeList yr(y.dom);
     RangeList::copy(home,dom,yr);
   }
@@ -123,4 +123,4 @@ namespace Gecode { namespace Int {
 
 }}
 
-// STATISTICS: int-other
+// STATISTICS: int-trace

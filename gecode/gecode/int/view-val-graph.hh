@@ -9,8 +9,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -314,12 +314,12 @@ namespace Gecode { namespace Int { namespace ViewValGraph {
     /// Find a matching for node \a x
     bool match(ViewNodeStack& m, ViewNode<View>* x);
     /// Compute the strongly connected components
-    void scc(Space& home);
+    void scc(void);
   public:
     /// Construct graph as not yet initialized
     Graph(void);
     /// Test whether graph has been initialized
-    bool initialized(void) const;
+    operator bool(void) const;
     /// Purge graph if necessary (reset information to avoid overflow)
     void purge(void);
   };

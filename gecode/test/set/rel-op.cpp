@@ -7,8 +7,8 @@
  *     Guido Tack, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -250,31 +250,28 @@ namespace Test { namespace Set {
           // fall through to union case
         case SOT_UNION:
           {
-            FakeSpace* fs = new FakeSpace;
             bool eq;
             if (withConst) {
-              Region r(*fs);
+              Region r;
               Iter::Ranges::NaryUnion u(r, isrs, realN);
               IntSetRanges isr(is);
               Iter::Ranges::Union<IntSetRanges,
                 Iter::Ranges::NaryUnion> uu(isr, u);
               eq = Iter::Ranges::equal(uu, xnr);
             } else {
-              Region r(*fs);
+              Region r;
               Iter::Ranges::NaryUnion u(r, isrs, realN);
               eq = Iter::Ranges::equal(u, xnr);
             }
             delete [] isrs;
-            delete fs;
             return eq;
           }
         case SOT_INTER:
           {
             if (withConst) {
-              FakeSpace* fs = new FakeSpace;
               bool eq;
               {
-                Region r(*fs);
+                Region r;
                 Iter::Ranges::NaryInter u(r, isrs, realN);
                 IntSetRanges isr(is);
                 Iter::Ranges::Inter<IntSetRanges,
@@ -283,7 +280,6 @@ namespace Test { namespace Set {
                            Iter::Ranges::equal(uu, xnr));
                 delete [] isrs;
               }
-              delete fs;
               return eq;
             } else {
               if (realN == 0) {
@@ -292,15 +288,13 @@ namespace Test { namespace Set {
                 delete [] isrs;
                 return ret;
               } else {
-                FakeSpace* fs = new FakeSpace;
                 bool eq;
                 {
-                  Region r(*fs);
+                  Region r;
                   Iter::Ranges::NaryInter u(r,isrs, realN);
                   eq = Iter::Ranges::equal(u, xnr);
                 }
                 delete [] isrs;
-                delete fs;
                 return eq;
               }
             }

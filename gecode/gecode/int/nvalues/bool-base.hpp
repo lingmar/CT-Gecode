@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,10 +51,10 @@ namespace Gecode { namespace Int { namespace NValues {
 
   template<class VY>
   forceinline
-  BoolBase<VY>::BoolBase(Space& home, bool share, BoolBase<VY>& p)
-    : Propagator(home,share,p), status(p.status) {
-    c.update(home,share,p.c);
-    y.update(home,share,p.y);
+  BoolBase<VY>::BoolBase(Space& home, BoolBase<VY>& p)
+    : Propagator(home,p), status(p.status) {
+    c.update(home,p.c);
+    y.update(home,p.y);
   }
 
   template<class VY>

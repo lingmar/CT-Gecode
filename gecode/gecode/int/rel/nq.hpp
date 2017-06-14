@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -43,14 +43,14 @@ namespace Gecode { namespace Int { namespace Rel {
    * Disequality
    *
    */
-  template<class View>
+  template<class V0, class V1>
   forceinline
-  Nq<View>::Nq(Home home, View x0, View x1)
-    : BinaryPropagator<View,PC_INT_VAL>(home,x0,x1) {}
+  Nq<V0,V1>::Nq(Home home, V0 x0, V1 x1)
+    : MixBinaryPropagator<V0,PC_INT_VAL,V1,PC_INT_VAL>(home,x0,x1) {}
 
-  template<class View>
+  template<class V0, class V1>
   ExecStatus
-  Nq<View>::post(Home home, View x0, View x1){
+  Nq<V0,V1>::post(Home home, V0 x0, V1 x1){
     if (x0.assigned()) {
       GECODE_ME_CHECK(x1.nq(home,x0.val()));
     } else if (x1.assigned()) {
@@ -58,31 +58,31 @@ namespace Gecode { namespace Int { namespace Rel {
     } else if (same(x0,x1)) {
       return ES_FAILED;
     } else {
-      (void) new (home) Nq<View>(home,x0,x1);
+      (void) new (home) Nq<V0,V1>(home,x0,x1);
     }
     return ES_OK;
   }
 
-  template<class View>
+  template<class V0, class V1>
   forceinline
-  Nq<View>::Nq(Space& home, bool share, Nq<View>& p)
-    : BinaryPropagator<View,PC_INT_VAL>(home,share,p) {}
+  Nq<V0,V1>::Nq(Space& home, Nq<V0,V1>& p)
+    : MixBinaryPropagator<V0,PC_INT_VAL,V1,PC_INT_VAL>(home,p) {}
 
-  template<class View>
+  template<class V0, class V1>
   Actor*
-  Nq<View>::copy(Space& home, bool share) {
-    return new (home) Nq<View>(home,share,*this);
+  Nq<V0,V1>::copy(Space& home) {
+    return new (home) Nq<V0,V1>(home,*this);
   }
 
-  template<class View>
+  template<class V0, class V1>
   PropCost
-  Nq<View>::cost(const Space&, const ModEventDelta&) const {
+  Nq<V0,V1>::cost(const Space&, const ModEventDelta&) const {
     return PropCost::unary(PropCost::LO);
   }
 
-  template<class View>
+  template<class V0, class V1>
   ExecStatus
-  Nq<View>::propagate(Space& home, const ModEventDelta&) {
+  Nq<V0,V1>::propagate(Space& home, const ModEventDelta&) {
     if (x0.assigned()) {
       GECODE_ME_CHECK(x1.nq(home,x0.val()));
     } else {
@@ -108,19 +108,19 @@ namespace Gecode { namespace Int { namespace Rel {
 
   template<class View>
   forceinline
-  NaryNq<View>::NaryNq(Space& home, bool share, NaryNq<View>& p)
-    : NaryPropagator<View,PC_INT_VAL>(home,share,p) {}
+  NaryNq<View>::NaryNq(Space& home, NaryNq<View>& p)
+    : NaryPropagator<View,PC_INT_VAL>(home,p) {}
 
   template<class View>
   Actor*
-  NaryNq<View>::copy(Space& home, bool share) {
-    return new (home) NaryNq<View>(home,share,*this);
+  NaryNq<View>::copy(Space& home) {
+    return new (home) NaryNq<View>(home,*this);
   }
 
   template<class View>
   inline ExecStatus
   NaryNq<View>::post(Home home, ViewArray<View>& x) {
-    x.unique(home);
+    x.unique();
     // Try to find an assigned view
     int n = x.size();
     if (n <= 1)
@@ -145,7 +145,7 @@ namespace Gecode { namespace Int { namespace Rel {
     if (n == 1)
       return ES_FAILED;
     if (n == 2)
-      return Nq<View>::post(home,x[0],x[1]);
+      return Nq<View,View>::post(home,x[0],x[1]);
     (void) new (home) NaryNq(home,x);
     return ES_OK;
   }

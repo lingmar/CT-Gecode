@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-24 20:41:24 +0200 (Wed, 24 May 2017) $ by $Author: schulte $
+ *     $Revision: 15773 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -202,7 +202,7 @@ namespace Gecode { namespace Driver {
       (void) Gist::dfs(root, opt);
     }
   };
-  
+
   /// Specialization for BAB
   template<typename S>
   class GistEngine<BAB<S> > {
@@ -222,8 +222,8 @@ namespace Gecode { namespace Driver {
 
   template<class BaseSpace>
   forceinline
-  ScriptBase<BaseSpace>::ScriptBase(bool share, ScriptBase& e)
-    : BaseSpace(share,e) {}
+  ScriptBase<BaseSpace>::ScriptBase(ScriptBase& e)
+    : BaseSpace(e) {}
 
   template<class BaseSpace>
   void
@@ -331,11 +331,13 @@ namespace Gecode { namespace Driver {
           so.a_d     = o.a_d();
           so.d_l     = o.d_l();
           so.assets  = o.assets();
+          so.slice   = o.slice();
           so.stop    = CombinedStop::create(o.node(),o.fail(), o.time(),
                                             o.interrupt());
           so.cutoff  = createCutoff(o);
           so.clone   = false;
           so.nogoods_limit = o.nogoods() ? o.nogoods_limit() : 0U;
+          so.tracer  = o.search_tracer();
           if (o.interrupt())
             CombinedStop::installCtrlHandler(true);
           {
@@ -424,6 +426,7 @@ namespace Gecode { namespace Driver {
           so.clone   = false;
           so.threads = o.threads();
           so.assets  = o.assets();
+          so.slice   = o.slice();
           so.c_d     = o.c_d();
           so.a_d     = o.a_d();
           so.d_l     = o.d_l();
@@ -431,6 +434,7 @@ namespace Gecode { namespace Driver {
                                             o.interrupt());
           so.cutoff  = createCutoff(o);
           so.nogoods_limit = o.nogoods() ? o.nogoods_limit() : 0U;
+          so.tracer  = o.search_tracer();
           if (o.interrupt())
             CombinedStop::installCtrlHandler(true);
           {
@@ -483,6 +487,7 @@ namespace Gecode { namespace Driver {
               so.clone   = false;
               so.threads = o.threads();
               so.assets  = o.assets();
+              so.slice   = o.slice();
               so.c_d     = o.c_d();
               so.a_d     = o.a_d();
               so.d_l     = o.d_l();
@@ -490,6 +495,7 @@ namespace Gecode { namespace Driver {
                                                 false);
               so.cutoff  = createCutoff(o);
               so.nogoods_limit = o.nogoods() ? o.nogoods_limit() : 0U;
+              so.tracer  = o.search_tracer();
               {
                 Meta<Script,Engine> e(s1,so);
                 do {

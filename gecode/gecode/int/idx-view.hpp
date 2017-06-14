@@ -11,8 +11,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -148,13 +148,13 @@ namespace Gecode { namespace Int {
 
   template<class View>
   forceinline void
-  IdxViewArray<View>::update(Space& home, bool share, IdxViewArray<View>& a) {
+  IdxViewArray<View>::update(Space& home, IdxViewArray<View>& a) {
     n = a.size();
     if (n>0) {
       xs = IdxView<View>::allocate(home,n);
       for (int i=n; i--; ) {
         xs[i].idx = a[i].idx;
-        xs[i].view.update(home,share,a[i].view);
+        xs[i].view.update(home,a[i].view);
       }
     }
   }

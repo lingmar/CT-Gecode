@@ -7,8 +7,8 @@
  *     Christian Schulte, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -56,8 +56,8 @@ namespace Gecode { namespace Int { namespace BinPacking {
   }
 
   Actor*
-  Pack::copy(Space& home, bool share) {
-    return new (home) Pack(home,share,*this);
+  Pack::copy(Space& home) {
+    return new (home) Pack(home,*this);
   }
 
   /// Record tell information
@@ -120,8 +120,8 @@ namespace Gecode { namespace Int { namespace BinPacking {
     // Number of bins
     int m = l.size();
 
+    Region region;
     {
-      Region region(home);
 
       // Possible sizes for bins
       int* s = region.alloc<int>(m);
@@ -210,7 +210,7 @@ namespace Gecode { namespace Int { namespace BinPacking {
         }
         n=k; bs.size(n);
       }
-
+      region.free();
     }
 
     // Only if the propagator is at fixpoint here, continue with the more
@@ -220,7 +220,6 @@ namespace Gecode { namespace Int { namespace BinPacking {
 
     // Now the invariant holds that no more assigned bins exist!
     {
-      Region region(home);
 
       // Size of items
       SizeSetMinusOne* s = region.alloc<SizeSetMinusOne>(m);
@@ -277,11 +276,11 @@ namespace Gecode { namespace Int { namespace BinPacking {
         }
       }
       n=k; bs.size(n);
+      region.free();
     }
 
     // Perform lower bound checking
     if (n > 0) {
-      Region region(home);
 
       // Find capacity estimate (we start from bs[0] as it might be
       // not packable, actually (will be detected later anyway)!
@@ -355,6 +354,7 @@ namespace Gecode { namespace Int { namespace BinPacking {
         if (n12 + o > m)
           return ES_FAILED;
       }
+      region.free();
     }
 
     return ES_NOFIX;

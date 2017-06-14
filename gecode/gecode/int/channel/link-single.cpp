@@ -7,8 +7,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -40,13 +40,13 @@
 namespace Gecode { namespace Int { namespace Channel {
 
   forceinline
-  LinkSingle::LinkSingle(Space& home, bool share, LinkSingle& p)
+  LinkSingle::LinkSingle(Space& home, LinkSingle& p)
     : MixBinaryPropagator<BoolView,PC_BOOL_VAL,IntView,PC_INT_VAL>
-  (home,share,p) {}
+  (home,p) {}
 
   Actor*
-  LinkSingle::copy(Space& home, bool share) {
-    return new (home) LinkSingle(home,share,*this);
+  LinkSingle::copy(Space& home) {
+    return new (home) LinkSingle(home,*this);
   }
 
   PropCost

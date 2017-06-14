@@ -13,8 +13,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,11 +44,11 @@
 namespace Gecode { namespace Set { namespace Branch {
 
   forceinline
-  ValSelMin::ValSelMin(Space& home, const ValBranch& vb)
+  ValSelMin::ValSelMin(Space& home, const ValBranch<Var>& vb)
     : ValSel<SetView,int>(home,vb) {}
   forceinline
-  ValSelMin::ValSelMin(Space& home, bool shared, ValSelMin& vs)
-    : ValSel<SetView,int>(home,shared,vs) {}
+  ValSelMin::ValSelMin(Space& home, ValSelMin& vs)
+    : ValSel<SetView,int>(home,vs) {}
   forceinline int
   ValSelMin::val(const Space&, SetView x, int) {
     UnknownRanges<SetView> u(x);
@@ -56,11 +56,11 @@ namespace Gecode { namespace Set { namespace Branch {
   }
 
   forceinline
-  ValSelMax::ValSelMax(Space& home, const ValBranch& vb)
+  ValSelMax::ValSelMax(Space& home, const ValBranch<Var>& vb)
     : ValSel<SetView,int>(home,vb) {}
   forceinline
-  ValSelMax::ValSelMax(Space& home, bool shared, ValSelMax& vs)
-    : ValSel<SetView,int>(home,shared,vs) {}
+  ValSelMax::ValSelMax(Space& home, ValSelMax& vs)
+    : ValSel<SetView,int>(home,vs) {}
   forceinline int
   ValSelMax::val(const Space&, SetView x, int) {
     int max = 0;
@@ -70,11 +70,11 @@ namespace Gecode { namespace Set { namespace Branch {
   }
 
   forceinline
-  ValSelMed::ValSelMed(Space& home, const ValBranch& vb)
+  ValSelMed::ValSelMed(Space& home, const ValBranch<Var>& vb)
     : ValSel<SetView,int>(home,vb) {}
   forceinline
-  ValSelMed::ValSelMed(Space& home, bool shared, ValSelMed& vs)
-    : ValSel<SetView,int>(home,shared,vs) {}
+  ValSelMed::ValSelMed(Space& home, ValSelMed& vs)
+    : ValSel<SetView,int>(home,vs) {}
   forceinline int
   ValSelMed::val(const Space&, SetView x, int) {
     UnknownRanges<SetView> u1(x);
@@ -94,12 +94,11 @@ namespace Gecode { namespace Set { namespace Branch {
   }
 
   forceinline
-  ValSelRnd::ValSelRnd(Space& home, const ValBranch& vb)
+  ValSelRnd::ValSelRnd(Space& home, const ValBranch<Var>& vb)
     : ValSel<SetView,int>(home,vb), r(vb.rnd()) {}
   forceinline
-  ValSelRnd::ValSelRnd(Space& home, bool shared, ValSelRnd& vs)
-    : ValSel<SetView,int>(home,shared,vs) {
-    r.update(home,shared,vs.r);
+  ValSelRnd::ValSelRnd(Space& home, ValSelRnd& vs)
+    : ValSel<SetView,int>(home,vs), r(vs.r) {
   }
   forceinline int
   ValSelRnd::val(const Space&, SetView x, int) {

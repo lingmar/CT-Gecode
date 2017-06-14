@@ -7,8 +7,8 @@
  *     Christian Schulte, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,23 +45,23 @@ namespace Gecode { namespace Search {
 
   /// Relax variables in \a x from solution \a sx with probability \a p
   template<class VarArgs, class Post>
-  forceinline void 
+  forceinline void
   relax(Home home, const VarArgs& x, const VarArgs& sx, Rnd r,
         double p, Post& post);
 
 
   template<class VarArgs, class Post>
-  forceinline void 
+  forceinline void
   relax(Home home, const VarArgs& x, const VarArgs& sx, Rnd r,
         double p, Post& post) {
     if (home.failed())
       return;
-    Region reg(home);
+    Region reg;
     // Which variables to assign
-    Support::BitSet<Region> ax(reg, static_cast<int>(x.size()));
+    Support::BitSet<Region> ax(reg, static_cast<unsigned int>(x.size()));
     // Select randomly with probability p to relax value
     for (int i=x.size(); i--; )
-      if (r(UINT_MAX) >= 
+      if (r(UINT_MAX) >=
           static_cast<unsigned int>(p * static_cast<double>(UINT_MAX)))
         ax.set(static_cast<unsigned int>(i));
     if (ax.all())

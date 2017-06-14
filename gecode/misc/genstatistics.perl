@@ -7,8 +7,8 @@
 #     Christian Schulte, 2005
 #
 #  Last modified:
-#     $Date$ by $Author$
-#     $Revision$
+#     $Date: 2017-05-30 21:40:16 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+#     $Revision: 15814 $
 #
 #  This file is part of Gecode, the generic constraint
 #  development environment:
@@ -39,8 +39,8 @@
 	     "iter","support","example","test","flatzinc");
 
 @catorder = ("core","memory","var","prop","branch","post",
-	     "int","set","float","minimodel","stress","any",
-	     "sequential","parallel","meta","search","flatzinc",
+	     "int","set","float","minimodel","stress","trace","any",
+	     "seq","par","search","flatzinc",
 	     "other");
 
 $modclear{"kernel"} = "Kernel";
@@ -60,12 +60,12 @@ $modclear{"flatzinc"} = "FlatZinc interpreter";
 
 $catclear{"core"} = "Core functionality";
 $catclear{"memory"} = "Memory management";
+$catclear{"trace"} = "Tracing support";
 $catclear{"var"} = "Variables, views, and variable implementations";
 $catclear{"prop"} = "Propagators";
 $catclear{"branch"} = "Branchers";
-$catclear{"sequential"} = "Sequential search engines";
-$catclear{"parallel"} = "Parallel search engines";
-$catclear{"meta"} = "Meta-search engines";
+$catclear{"seq"} = "Sequential search engines";
+$catclear{"par"} = "Parallel search engines";
 $catclear{"post"} = "Posting propagators for constraints";
 $catclear{"any"} = "All";
 $catclear{"other"} = "Miscellaneous";

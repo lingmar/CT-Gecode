@@ -9,8 +9,8 @@
  *     Tias Guns, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-03-09 09:51:58 +0100 (Thu, 09 Mar 2017) $ by $Author: schulte $
+ *     $Revision: 15565 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -41,21 +41,6 @@
 #include <gecode/int/div.hh>
 
 namespace Gecode { namespace Int { namespace Linear {
-
-  /// Inverse the relation
-  forceinline IntRelType
-  inverse(const IntRelType irt) {
-    switch (irt) {
-      case IRT_EQ: return IRT_NQ; break;
-      case IRT_NQ: return IRT_EQ; break;
-      case IRT_GQ: return IRT_LE; break;
-      case IRT_LQ: return IRT_GR; break;
-      case IRT_LE: return IRT_GQ; break;
-      case IRT_GR: return IRT_LQ; break;
-      default: GECODE_NEVER;
-    }
-    return IRT_EQ; // Avoid compiler warnings
-  }
 
   /// Eliminate assigned views
   forceinline void
@@ -642,7 +627,7 @@ namespace Gecode { namespace Int { namespace Linear {
     }
     if (r.var().zero()) {
       if (r.mode() != RM_IMP)
-        post(home,t,n,inverse(irt),c,ipl);
+        post(home,t,n,neg(irt),c,ipl);
       return;
     }
 

@@ -7,8 +7,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -400,7 +400,7 @@ namespace Gecode { namespace Gist {
   }
 
   void
-  VisualNode::computeShape(const NodeAllocator& na, VisualNode* root) {
+  VisualNode::computeShape(const NodeAllocator& na) {
     int numberOfShapes = getNumberOfChildren();
     Extent extent;
     if (na.hasLabel(this)) {
@@ -459,8 +459,7 @@ namespace Gecode { namespace Gist {
       // are merged left-to-right; alpha[i].second gives the distance between
       // shape[i] and shape[i+1], when shape[i] and shape[i+1] are merged
       // right-to-left.
-      assert(root->copy != NULL);
-      Region r(*root->copy);
+      Region r;
       std::pair<int,int>* alpha =
         r.alloc<std::pair<int,int> >(numberOfShapes);
 

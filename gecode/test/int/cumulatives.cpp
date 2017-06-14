@@ -7,8 +7,8 @@
  *     Mikael Lagerkvist, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -81,12 +81,12 @@ namespace Test { namespace Int {
          }
        }
        /// Constructor for cloning \a s
-       Ass(bool share, Ass& s) : Gecode::Space(share,s) {
-         x.update(*this, share, s.x);
+       Ass(Ass& s) : Gecode::Space(s) {
+         x.update(*this, s.x);
        }
        /// Create copy during cloning
-       virtual Gecode::Space* copy(bool share) {
-         return new Ass(share,*this);
+       virtual Gecode::Space* copy(void) {
+         return new Ass(*this);
        }
      };
 

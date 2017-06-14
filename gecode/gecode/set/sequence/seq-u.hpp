@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,8 +53,8 @@ namespace Gecode { namespace Set { namespace Sequence {
     : NaryOnePropagator<SetView,PC_SET_ANY>(home,x, y) {}
 
   forceinline
-  SeqU::SeqU(Space& home, bool share, SeqU& p)
-    : NaryOnePropagator<SetView,PC_SET_ANY>(home,share,p) {
+  SeqU::SeqU(Space& home, SeqU& p)
+    : NaryOnePropagator<SetView,PC_SET_ANY>(home,p) {
     unionOfDets.update(home, p.unionOfDets);
   }
 
@@ -67,7 +67,7 @@ namespace Gecode { namespace Set { namespace Sequence {
     case 1:
       return Rel::Eq<SetView,SetView>::post(home, x[0], y);
     default:
-      if (x.shared(home) || x.shared(home,y))
+      if (x.shared() || x.shared(y))
         return ES_FAILED;
       (void) new (home) SeqU(home,x,y);
       return ES_OK;

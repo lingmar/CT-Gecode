@@ -7,8 +7,8 @@
  *     Christian Schulte, 2008
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,7 +44,7 @@ namespace Gecode { namespace Search {
 
   /// Clone space \a s dependening on options \a o
   forceinline Space*
-  snapshot(Space* s, const Options& o, bool share=true);
+  snapshot(Space* s, const Options& o);
 
   /// Virtualize a worker to an engine
   template<class Worker>
@@ -72,8 +72,8 @@ namespace Gecode { namespace Search {
 
 
   forceinline Space*
-  snapshot(Space* s, const Options& o, bool share) {
-    return o.clone ? s->clone(share) : s;
+  snapshot(Space* s, const Options& o) {
+    return o.clone ? s->clone() : s;
   }
 
 

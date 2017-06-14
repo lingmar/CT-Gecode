@@ -9,8 +9,8 @@
  *     Guido Tack, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,7 +46,7 @@ namespace Gecode {
     Int::Limits::nonnegative(offset,"Int::circuit");
     if (x.size() == 0)
       throw Int::TooFewArguments("Int::circuit");
-    if (x.same(home))
+    if (x.same())
       throw Int::ArgumentSame("Int::circuit");
     GECODE_POST;
     ViewArray<Int::IntView> xv(home,x);
@@ -86,7 +86,7 @@ namespace Gecode {
     int n = x.size();
     if (n == 0)
       throw Int::TooFewArguments("Int::circuit");
-    if (x.same(home))
+    if (x.same())
       throw Int::ArgumentSame("Int::circuit");
     if ((y.size() != n) || (c.size() != n*n))
       throw Int::ArgumentSizeMismatch("Int::circuit");
@@ -131,7 +131,7 @@ namespace Gecode {
     int n=x.size();
     if (n == 0)
       throw Int::TooFewArguments("Int::path");
-    if (x.same(home))
+    if (x.same())
       throw Int::ArgumentSame("Int::path");
     GECODE_POST;
     ViewArray<Int::IntView> xv(home,n+1);
@@ -184,7 +184,7 @@ namespace Gecode {
     int n = x.size();
     if (n == 0)
       throw Int::TooFewArguments("Int::path");
-    if (x.same(home))
+    if (x.same())
       throw Int::ArgumentSame("Int::path");
     if ((y.size() != n) || (c.size() != n*n))
       throw Int::ArgumentSizeMismatch("Int::path");

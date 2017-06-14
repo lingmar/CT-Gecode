@@ -7,8 +7,8 @@
  *     Christian Schulte, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -77,13 +77,13 @@ namespace Gecode { namespace Int { namespace Count {
 
   template<class VX, class VY>
   forceinline
-  EqInt<VX,VY>::EqInt(Space& home, bool share, EqInt<VX,VY>& p)
-    : IntBase<VX,VY>(home,share,p) {}
+  EqInt<VX,VY>::EqInt(Space& home, EqInt<VX,VY>& p)
+    : IntBase<VX,VY>(home,p) {}
 
   template<class VX, class VY>
   Actor*
-  EqInt<VX,VY>::copy(Space& home, bool share) {
-    return new (home) EqInt<VX,VY>(home,share,*this);
+  EqInt<VX,VY>::copy(Space& home) {
+    return new (home) EqInt<VX,VY>(home,*this);
   }
 
   template<class VX, class VY>

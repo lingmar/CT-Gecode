@@ -13,8 +13,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2012-04-05 12:00:11 +0200 (Thu, 05 Apr 2012) $ by $Author: vbarichard $
+ *     $Revision: 12703 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:

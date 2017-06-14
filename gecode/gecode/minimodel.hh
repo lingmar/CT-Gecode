@@ -13,8 +13,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -2209,7 +2209,7 @@ namespace Gecode {
     /// Default constructor
     IntMinimizeSpace(void);
     /// Constructor for cloning
-    IntMinimizeSpace(bool share, IntMinimizeSpace& s);
+    IntMinimizeSpace(IntMinimizeSpace& s);
     /// Member function constraining according to decreasing cost
     GECODE_MINIMODEL_EXPORT
     virtual void constrain(const Space& best);
@@ -2226,7 +2226,7 @@ namespace Gecode {
     /// Default constructor
     IntMaximizeSpace(void);
     /// Constructor for cloning
-    IntMaximizeSpace(bool share, IntMaximizeSpace& s);
+    IntMaximizeSpace(IntMaximizeSpace& s);
     /// Member function constraining according to increasing cost
     GECODE_MINIMODEL_EXPORT
     virtual void constrain(const Space& best);
@@ -2265,7 +2265,7 @@ namespace Gecode {
     /// Constructor with step \a s
     FloatMinimizeSpace(FloatNum s=0.0);
     /// Constructor for cloning
-    FloatMinimizeSpace(bool share, FloatMinimizeSpace& s);
+    FloatMinimizeSpace(FloatMinimizeSpace& s);
     /// Member function constraining according to cost
     GECODE_MINIMODEL_EXPORT
     virtual void constrain(const Space& best);
@@ -2290,7 +2290,7 @@ namespace Gecode {
     /// Constructor with step \a s
     FloatMaximizeSpace(FloatNum s=0.0);
     /// Constructor for cloning
-    FloatMaximizeSpace(bool share, FloatMaximizeSpace& s);
+    FloatMaximizeSpace(FloatMaximizeSpace& s);
     /// Member function constraining according to cost
     GECODE_MINIMODEL_EXPORT
     virtual void constrain(const Space& best);

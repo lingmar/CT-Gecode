@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -483,20 +483,6 @@ namespace Gecode {
     heap.free<int>(re,n_states);
     heap.free<int>(state,n_states);
     heap.free<Transition>(trans,n_trans);
-  }
-
-  SharedHandle::Object*
-  DFA::DFAI::copy(void) const {
-    DFAI* d = new DFAI(n_trans);
-    d->n_states   = n_states;
-    d->n_symbols  = n_symbols;
-    d->n_trans    = n_trans;
-    d->max_degree = max_degree;
-    d->final_fst  = final_fst;
-    d->final_lst  = final_lst;
-    heap.copy<Transition>(&d->trans[0], &trans[0], n_trans);
-    d->fill();
-    return d;
   }
 
   void

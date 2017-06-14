@@ -6,9 +6,9 @@ dnl Copyright:
 dnl   Guido Tack, 2004, 2005
 dnl
 dnl Last modified:
-dnl   $Date$
-dnl   by $Author$
-dnl   $Revision$
+dnl   $Date: 2016-10-28 06:39:44 +0200 (Fri, 28 Oct 2016) $
+dnl   by $Author: tack $
+dnl   $Revision: 15243 $
 dnl
 dnl This file is part of Gecode, the generic constraint
 dnl development environment:
@@ -648,6 +648,17 @@ AC_DEFUN([AC_GECODE_GCC_GENERAL_SWITCHES],
   AC_GECODE_CHECK_COMPILERFLAG([-Wextra])
   AC_GECODE_CHECK_COMPILERFLAG([-Wall])
   AC_GECODE_CHECK_COMPILERFLAG([-pipe])
+
+  AC_ARG_ENABLE([cpp11],
+       AC_HELP_STRING([--enable-cpp11],
+         [compile for C++11 standard @<:@default=yes@:>@]))
+  if test "${enable_cpp11:-yes}" = "yes"; then
+    AC_GECODE_CHECK_COMPILERFLAG([-std=c++11])
+  else
+    AC_MSG_CHECKING(whether to compile for C++11 standard)
+    AC_MSG_RESULT(no)
+  fi
+
   AC_GECODE_CHECK_CXXFLAG(-ggdb,
      AC_GECODE_ADD_TO_COMPILERFLAGS(-ggdb),
      AC_GECODE_CHECK_COMPILERFLAG(-g))

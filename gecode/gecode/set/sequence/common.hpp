@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -50,7 +50,7 @@ namespace Gecode { namespace Set { namespace Sequence {
     int cur_max = BndSet::MAX_OF_EMPTY;
     int cur_min = BndSet::MIN_OF_EMPTY;
 
-    Region r(home);
+    Region r;
     Support::DynamicArray<int,Region> ub(r);
 
     for (int i=0; i<lastElem; i++) {

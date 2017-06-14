@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,13 +46,13 @@ namespace Gecode { namespace Int { namespace NValues {
 
   template<class VY>
   forceinline
-  LqBool<VY>::LqBool(Space& home, bool share, LqBool<VY>& p)
-    : BoolBase<VY>(home,share,p) {}
+  LqBool<VY>::LqBool(Space& home, LqBool<VY>& p)
+    : BoolBase<VY>(home,p) {}
 
   template<class VY>
   Actor*
-  LqBool<VY>::copy(Space& home, bool share) {
-    return new (home) LqBool<VY>(home,share,*this);
+  LqBool<VY>::copy(Space& home) {
+    return new (home) LqBool<VY>(home,*this);
   }
 
   template<class VY>
@@ -63,7 +63,7 @@ namespace Gecode { namespace Int { namespace NValues {
       return ES_OK;
     }
 
-    x.unique(home);
+    x.unique();
 
     GECODE_ME_CHECK(y.gq(home,1));
 

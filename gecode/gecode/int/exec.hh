@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -56,25 +56,30 @@ namespace Gecode { namespace Int { namespace Exec {
   class When : public UnaryPropagator<BoolView,PC_BOOL_VAL> {
   protected:
     using UnaryPropagator<BoolView,PC_BOOL_VAL>::x0;
-    /// Then function pointer
-    void (*t)(Space&);
+    /// Then function
+    SharedData<std::function<void(Space& home)>> t;
     /// Else function pointer
-    void (*e)(Space&);
+    SharedData<std::function<void(Space& home)>> e;
     /// Constructor for cloning \a p
-    When(Space& home, bool share, When& p);
+    When(Space& home, When& p);
     /// Constructor for creation
-    When(Home home, BoolView x, void (*t0)(Space&), void (*e0)(Space&));
+    When(Home home, BoolView x,
+         std::function<void(Space& home)> t,
+         std::function<void(Space& home)> e);
   public:
     /// Copy propagator during cloning
     GECODE_INT_EXPORT
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     GECODE_INT_EXPORT
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator
-    GECODE_INT_EXPORT
     static ExecStatus post(Home home, BoolView x,
-                           void (*t)(Space&), void (*e)(Space&));
+                           std::function<void(Space& home)> t,
+                           std::function<void(Space& home)> e);
+    /// Dispose propagator
+    GECODE_INT_EXPORT
+    virtual size_t dispose(Space& home);
   };
 
 }}}

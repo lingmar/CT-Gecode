@@ -7,8 +7,8 @@
  *     Guido Tack, 2014
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2014-11-04 13:28:32 +0100 (Tue, 04 Nov 2014) $ by $Author: schulte $
+ *     $Revision: 14287 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -274,7 +274,6 @@ supplier = array1d(1..10, [5, 2, 5, 1, 5, 2, 2, 3, 2, 3]);\n\
     };
 
     Create c;
-    //std::cout << "Here" << std::endl;
   }
 
 }}

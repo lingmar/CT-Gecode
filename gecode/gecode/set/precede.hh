@@ -13,8 +13,8 @@
  *     Guido Tack, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -75,7 +75,7 @@ namespace Gecode { namespace Set { namespace Precede {
       /// Create index advisor
       Index(Space& home, Propagator& p, Council<Index>& c, int i);
       /// Clone index advisor \a a
-      Index(Space& home, bool share, Index& a);
+      Index(Space& home, Index& a);
     };
     /// The advisor council
     Council<Index> c;
@@ -90,10 +90,10 @@ namespace Gecode { namespace Set { namespace Precede {
     /// Constructor for posting
     Single(Home home, ViewArray<View>& x, int s, int t, int beta, int gamma);
     /// Constructor for cloning \a p
-    Single(Space& home, bool share, Single<View>& p);
+    Single(Space& home, Single<View>& p);
   public:
     /// Copy propagator during cloning
-    virtual Propagator* copy(Space& home, bool share);
+    virtual Propagator* copy(Space& home);
     /// Cost function
     virtual PropCost cost(const Space&, const ModEventDelta&) const;
     /// Schedule function

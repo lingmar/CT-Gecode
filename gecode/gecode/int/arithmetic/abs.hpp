@@ -9,8 +9,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-31 10:37:10 +0200 (Wed, 31 May 2017) $ by $Author: schulte $
+ *     $Revision: 15818 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -73,30 +73,32 @@ namespace Gecode { namespace Int { namespace Arithmetic {
     if (x0.max() <= 0)
       GECODE_REWRITE(p,(Eq<MinusView,View>::post(home(p),MinusView(x0),x1)));
 
+
     GECODE_ME_CHECK(x1.lq(home,std::max(x0.max(),-x0.min())));
-    GECODE_ME_CHECK(x0.lq(home,x1.max()));
     GECODE_ME_CHECK(x0.gq(home,-x1.max()));
+    GECODE_ME_CHECK(x0.lq(home,x1.max()));
+    if (x1.min() > 0) {
+      if (-x1.min() < x0.min()) {
+        GECODE_ME_CHECK(x0.gq(home,x1.min()));
+      } else if (x0.max() < x1.min()) {
+        GECODE_ME_CHECK(x0.lq(home,-x1.min()));
+      }
+    }
     return ES_NOFIX;
   }
 
-  template<class View, PropCond pc>
+  template<class View>
   forceinline
-  AbsBnd<View,pc>::AbsBnd(Home home, View x0, View x1)
-    : BinaryPropagator<View,pc>(home,x0,x1) {}
+  AbsBnd<View>::AbsBnd(Home home, View x0, View x1)
+    : BinaryPropagator<View,PC_INT_BND>(home,x0,x1) {}
 
-  template<class View, PropCond pc>
+  template<class View>
   ExecStatus
-  AbsBnd<View,pc>::post(Home home, View x0, View x1) {
+  AbsBnd<View>::post(Home home, View x0, View x1) {
     if (x0.min() >= 0) {
-      if (pc == PC_INT_VAL)
-        return Rel::EqVal<View,View>::post(home,x0,x1);
-      else
-        return Rel::EqBnd<View,View>::post(home,x0,x1);
+      return Rel::EqBnd<View,View>::post(home,x0,x1);
     } else if (x0.max() <= 0) {
-      if (pc == PC_INT_VAL)
-        return Rel::EqVal<MinusView,View>::post(home,MinusView(x0),x1);
-      else
-        return Rel::EqBnd<MinusView,View>::post(home,MinusView(x0),x1);
+      return Rel::EqBnd<MinusView,View>::post(home,MinusView(x0),x1);
     } else {
       assert(!x0.assigned());
       GECODE_ME_CHECK(x1.gq(home,0));
@@ -105,38 +107,36 @@ namespace Gecode { namespace Int { namespace Arithmetic {
         Iter::Values::Array i(mp,2);
         GECODE_ME_CHECK(x0.inter_v(home,i,false));
       } else if (!same(x0,x1)) {
-        if (pc != PC_INT_VAL)
-          GECODE_ME_CHECK(x1.lq(home,std::max(-x0.min(),x0.max())));
-        (void) new (home) AbsBnd<View,pc>(home,x0,x1);
+        GECODE_ME_CHECK(x1.lq(home,std::max(-x0.min(),x0.max())));
+        (void) new (home) AbsBnd<View>(home,x0,x1);
       }
     }
     return ES_OK;
   }
 
-  template<class View, PropCond pc>
+  template<class View>
   forceinline
-  AbsBnd<View,pc>::AbsBnd(Space& home, bool share, AbsBnd<View,pc>& p)
-    : BinaryPropagator<View,pc>(home,share,p) {}
+  AbsBnd<View>::AbsBnd(Space& home, AbsBnd<View>& p)
+    : BinaryPropagator<View,PC_INT_BND>(home,p) {}
 
-  template<class View, PropCond pc>
+  template<class View>
   Actor*
-  AbsBnd<View,pc>::copy(Space& home,bool share) {
-    return new (home) AbsBnd<View,pc>(home,share,*this);
+  AbsBnd<View>::copy(Space& home) {
+    return new (home) AbsBnd<View>(home,*this);
   }
 
-  template<class View, PropCond pc>
+  template<class View>
   PropCost
-  AbsBnd<View,pc>::cost(const Space&, const ModEventDelta& med) const {
-    (void) med;
-    if ((pc == PC_INT_VAL) || (View::me(med) == ME_INT_VAL))
+  AbsBnd<View>::cost(const Space&, const ModEventDelta& med) const {
+    if (View::me(med) == ME_INT_VAL)
       return PropCost::unary(PropCost::LO);
     else
       return PropCost::binary(PropCost::LO);
   }
 
-  template<class View, PropCond pc>
+  template<class View>
   ExecStatus
-  AbsBnd<View,pc>::propagate(Space& home, const ModEventDelta&) {
+  AbsBnd<View>::propagate(Space& home, const ModEventDelta&) {
     return prop_abs_bnd<View,Rel::EqBnd>(home, *this, x0, x1);
   }
 
@@ -171,13 +171,13 @@ namespace Gecode { namespace Int { namespace Arithmetic {
 
   template<class View>
   forceinline
-  AbsDom<View>::AbsDom(Space& home, bool share, AbsDom<View>& p)
-    : BinaryPropagator<View,PC_INT_DOM>(home,share,p) {}
+  AbsDom<View>::AbsDom(Space& home, AbsDom<View>& p)
+    : BinaryPropagator<View,PC_INT_DOM>(home,p) {}
 
   template<class View>
   Actor*
-  AbsDom<View>::copy(Space& home,bool share) {
-    return new (home) AbsDom<View>(home,share,*this);
+  AbsDom<View>::copy(Space& home) {
+    return new (home) AbsDom<View>(home,*this);
   }
 
   template<class View>
@@ -198,7 +198,7 @@ namespace Gecode { namespace Int { namespace Arithmetic {
       return home.ES_NOFIX_PARTIAL(*this,View::med(ME_INT_DOM));
     }
 
-    Region r(home);
+    Region r;
 
     {
       ViewRanges<View> i(x0), j(x0);

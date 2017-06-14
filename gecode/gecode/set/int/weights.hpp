@@ -11,8 +11,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -160,12 +160,10 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   forceinline
-  Weights<View>::Weights(Space& home, bool share, Weights& p)
-    : Propagator(home,share,p) {
-    x.update(home,share,p.x);
-    y.update(home,share,p.y);
-    elements.update(home,share,p.elements);
-    weights.update(home,share,p.weights);
+  Weights<View>::Weights(Space& home, Weights& p)
+    : Propagator(home,p), elements(p.elements), weights(p.weights) {
+    x.update(home,p.x);
+    y.update(home,p.y);
   }
 
   template<class View>
@@ -175,7 +173,7 @@ namespace Gecode { namespace Set { namespace Int {
                       View x, Gecode::Int::IntView y) {
     if (elements.size() != weights.size())
       throw ArgumentSizeMismatch("Weights");
-    Region r(home);
+    Region r;
     int* els_arr = r.alloc<int>(elements.size());
     for (int i=elements.size(); i--;)
       els_arr[i] = elements[i];
@@ -213,8 +211,8 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   Actor*
-  Weights<View>::copy(Space& home, bool share) {
-    return new (home) Weights(home,share,*this);
+  Weights<View>::copy(Space& home) {
+    return new (home) Weights(home,*this);
   }
 
   /// Compute the weight of the elements in the iterator \a I
@@ -256,7 +254,7 @@ namespace Gecode { namespace Set { namespace Int {
     if (!x.assigned()) {
       // Collect the weights of the elements in the unknown set in an array
       int size = elements.size();
-      Region r(home);
+      Region r;
       int* minWeights = r.alloc<int>(size);
       int* maxWeights = r.alloc<int>(size);
 
@@ -281,7 +279,7 @@ namespace Gecode { namespace Set { namespace Int {
 
       // The maximum number of elements that can still be added to x
       int delta = static_cast<int>(std::min(x.unknownSize(), x.cardMax() - x.glbSize()));
-      
+
       // The weight of the elements already in x
       GlbRanges<View> glb(x);
       int glbWeight = weightI<GlbRanges<View> >(elements, weights, glb);

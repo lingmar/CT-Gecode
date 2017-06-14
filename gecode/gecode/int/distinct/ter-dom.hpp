@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -57,13 +57,13 @@ namespace Gecode { namespace Int { namespace Distinct {
 
   template<class View>
   forceinline
-  TerDom<View>::TerDom(Space& home, bool share, TerDom<View>& p)
-    : TernaryPropagator<View,PC_INT_DOM>(home,share,p) {}
+  TerDom<View>::TerDom(Space& home, TerDom<View>& p)
+    : TernaryPropagator<View,PC_INT_DOM>(home,p) {}
 
   template<class View>
   Actor*
-  TerDom<View>::copy(Space& home, bool share) {
-    return new (home) TerDom<View>(home,share,*this);
+  TerDom<View>::copy(Space& home) {
+    return new (home) TerDom<View>(home,*this);
   }
 
   /// Check whether x0 forms a Hall set of cardinality one

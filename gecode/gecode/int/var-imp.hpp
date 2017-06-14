@@ -11,8 +11,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -203,7 +203,7 @@ namespace Gecode { namespace Int {
 
   protected:
     /// Constructor for cloning \a x
-    IntVarImp(Space& home, bool share, IntVarImp& x);
+    IntVarImp(Space& home, IntVarImp& x);
   public:
     /// Initialize with range domain
     IntVarImp(Space& home, int min, int max);
@@ -342,15 +342,18 @@ namespace Gecode { namespace Int {
      * subscriptions during propagation).
      *
      */
-    void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
-    /// Cancel subscription of propagator \a p with propagation condition \a pc
-    void cancel(Space& home, Propagator& p, PropCond pc);
+    GECODE_INT_EXPORT void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
     /// Re-schedule propagator \a p
-    void reschedule(Space& home, Propagator& p, PropCond pc);
-    /// Subscribe advisor \a a to variable
-    void subscribe(Space& home, Advisor& a);
-    /// Cancel subscription of advisor \a a
-    void cancel(Space& home, Advisor& a);
+    GECODE_INT_EXPORT void reschedule(Space& home, Propagator& p, PropCond pc);
+    /** \brief Subscribe advisor \a a to variable
+     *
+     * The advisor \a a is only subscribed if \a assigned is false.
+     *
+     * If \a fail is true, the advisor \a a is also run when a variable
+     * operation triggers failure. This feature is undocumented.
+     *
+     */
+    GECODE_INT_EXPORT void subscribe(Space& home, Advisor& a, bool fail);
     //@}
 
     /// \name Variable implementation-dependent propagator support
@@ -362,12 +365,12 @@ namespace Gecode { namespace Int {
 
   private:
     /// Return copy of not-yet copied variable
-    GECODE_INT_EXPORT IntVarImp* perform_copy(Space& home, bool share);
+    GECODE_INT_EXPORT IntVarImp* perform_copy(Space& home);
   public:
     /// \name Cloning
     //@{
     /// Return copy of this variable
-    IntVarImp* copy(Space& home, bool share);
+    IntVarImp* copy(Space& home);
     //@}
 
     /// \name Delta information for advisors
@@ -503,7 +506,7 @@ namespace Gecode { namespace Int {
     GECODE_INT_EXPORT static BoolVarImp s_zero;
 
     /// Constructor for cloning \a x
-    BoolVarImp(Space& home, bool share, BoolVarImp& x);
+    BoolVarImp(Space& home, BoolVarImp& x);
     /// Initialize static instance assigned to \a n
     BoolVarImp(int n);
   public:
@@ -652,7 +655,7 @@ namespace Gecode { namespace Int {
      * The propagation condition \a pc can be a propagation condition
      * for integer variables, which will be mapped to PC_BOOL_VAL.
      */
-    void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
+    GECODE_INT_EXPORT void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
     /**
      * \brief Cancel subscription of propagator \a p with propagation condition \a pc
      *
@@ -660,10 +663,17 @@ namespace Gecode { namespace Int {
      * for integer variables, which will be mapped to PC_BOOL_VAL.
      */
     void cancel(Space& home, Propagator& p, PropCond pc);
-    /// Subscribe advisor \a a to variable
-    void subscribe(Space& home, Advisor& a);
+    /** \brief Subscribe advisor \a a to variable
+     *
+     * The advisor \a a is only subscribed if \a assigned is false.
+     *
+     * If \a fail is true, the advisor \a a is also run when a variable
+     * operation triggers failure. This feature is undocumented.
+     *
+     */
+    GECODE_INT_EXPORT void subscribe(Space& home, Advisor& a, bool fail);
     /// Cancel subscription of advisor \a a
-    void cancel(Space& home, Advisor& a);
+    void cancel(Space& home, Advisor& a, bool fail);
     //@}
 
     /// \name Variable implementation-dependent propagator support
@@ -677,7 +687,7 @@ namespace Gecode { namespace Int {
      */
     static void schedule(Space& home, Propagator& p, ModEvent me);
     /// Re-schedule propagator \a p
-    void reschedule(Space& home, Propagator& p, PropCond pc);
+    GECODE_INT_EXPORT void reschedule(Space& home, Propagator& p, PropCond pc);
     /// Translate modification event \a me to modification event delta for view
     static ModEventDelta med(ModEvent me);
     //@}
@@ -701,7 +711,7 @@ namespace Gecode { namespace Int {
     /// \name Cloning
     //@{
     /// Return copy of this variable
-    BoolVarImp* copy(Space& home, bool share);
+    BoolVarImp* copy(Space& home);
     //@}
 
   };

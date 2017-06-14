@@ -9,8 +9,8 @@
 #     Guido Tack, 2005
 #
 #  Last modified:
-#     $Date$ by $Author$
-#     $Revision$
+#     $Date: 2017-05-30 21:40:16 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+#     $Revision: 15814 $
 #
 #  This file is part of Gecode, the generic constraint
 #  development environment:
@@ -153,7 +153,7 @@ SUPPORTHDR0 = \
 	marked-pointer int-type auto-link \
 	thread thread/thread thread/windows thread/pthreads thread/none timer \
 	dynamic-queue bitset-base bitset bitset-offset \
-	hw-rnd
+	hw-rnd run-jobs ref-count
 
 SUPPORTSRC1	=  $(SUPPORTSRC0:%=gecode/support/%.cpp)
 SUPPORTHDR 	=  gecode/support.hh \
@@ -194,25 +194,32 @@ VARIMPHDR = \
 VARIMP = $(VARIMPHDR)
 
 KERNELSRC0 = \
-	archive core memory-manager branch region \
-	afc activity rnd exception trace-filter tracer
+	archive core exception gpi \
+	data/rnd \
+	branch/action branch/afc branch/chb branch/function \
+	memory/manager memory/region \
+	trace/recorder trace/filter trace/tracer trace/general
 
 KERNELHDR0 = \
-	archive array shared-array core exception \
-	macros memory-config memory-manager region modevent range-list \
-	propagator advisor view var \
-	branch-var branch-val branch-tiebreak \
-	brancher-view-sel brancher-merit \
-	brancher-val-sel brancher-val-commit brancher-view brancher-view-val \
-	brancher-val-sel-commit \
-	allocators print gpi \
-	afc activity rnd branch-traits \
-	trace-traits trace-filter tracer trace-recorder \
-	subscribed-propagators
+	archive core exception macros modevent gpi \
+	shared-object shared-space-data range-list \
+	view var \
+	memory/config memory/manager memory/region memory/allocators \
+	data/array data/rnd data/shared-array data/shared-data \
+	propagator/pattern propagator/advisor propagator/subscribed \
+	propagator/wait \
+	branch/var branch/val branch/tiebreak \
+	branch/traits branch/afc branch/action branch/chb \
+	branch/view-sel branch/merit \
+	branch/val-sel branch/val-commit branch/view branch/view-val \
+	branch/val-sel-commit branch/print branch/filter \
+	trace/traits trace/filter trace/tracer trace/recorder \
+	trace/general trace/print
+
 
 KERNELSRC 	= $(KERNELSRC0:%=gecode/kernel/%.cpp)
 KERNELHDR 	= \
-	gecode/kernel.hh gecode/kernel/wait.hh \
+	gecode/kernel.hh \
 	$(KERNELHDR0:%=gecode/kernel/%.hpp)
 KERNELOBJ	= $(KERNELSRC:%.cpp=%$(OBJSUFFIX))
 
@@ -234,7 +241,8 @@ export KERNELRES	=
 export KERNELRC		=
 endif
 
-KERNELBUILDDIRS = kernel
+KERNELBUILDDIRS = kernel \
+	kernel/data kernel/propagator kernel/branch kernel/memory kernel/trace
 
 ifeq "@enable_flatzinc@" "yes"
 EXTRA_HEADERS   = gecode/support/config.hpp gecode/flatzinc/parser.tab.hh
@@ -248,27 +256,22 @@ endif
 
 SEARCHSRC0 = \
 	stop options cutoff engine \
-	parallel/engine \
-	dfs parallel/dfs \
-	bab parallel/bab \
-	lds sequential/lds \
-	sequential/path parallel/path \
-	meta/rbs meta/nogoods meta/dead \
-	meta/sequential/pbs meta/parallel/pbs \
-	rbs pbs sebs exception
+	dfs bab lds \
+	seq/rbs seq/dead seq/pbs par/pbs \
+	rbs pbs sebs nogoods exception tracer
 SEARCHHDR0 = \
 	statistics.hpp stop.hpp options.hpp cutoff.hpp \
-	support.hh worker.hh exception.hpp \
-	engine.hpp base.hpp build.hpp traits.hpp sebs.hpp \
-	sequential/path.hh sequential/dfs.hh sequential/bab.hh \
-	sequential/lds.hh \
-	parallel/path.hh parallel/engine.hh \
-	parallel/dfs.hh parallel/bab.hh \
-	meta/rbs.hh meta/rbs.hpp meta/nogoods.hh meta/dead.hh \
-	meta/sequential/pbs.hh meta/parallel/pbs.hh \
-	meta/sequential/pbs.hpp meta/parallel/pbs.hpp \
+	support.hh worker.hh exception.hpp engine.hpp base.hpp \
+	nogoods.hh nogoods.hpp build.hpp traits.hpp sebs.hpp \
+	seq/path.hh seq/path.hpp seq/dfs.hh seq/dfs.hpp \
+	seq/bab.hh seq/bab.hpp seq/lds.hh seq/lds.hpp \
+	seq/rbs.hh seq/rbs.hpp seq/dead.hh \
+	seq/pbs.hh seq/pbs.hpp \
+	par/path.hh par/path.hpp par/engine.hh par/engine.hpp \
+	par/dfs.hh par/dfs.hpp par/bab.hh par/bab.hpp \
+	par/pbs.hh par/pbs.hpp \
 	dfs.hpp bab.hpp lds.hpp rbs.hpp pbs.hpp \
-	relax.hh
+	relax.hh tracer.hpp trace-recorder.hpp
 
 SEARCHSRC	= $(SEARCHSRC0:%=gecode/search/%.cpp)
 SEARCHHDR	= gecode/search.hh $(SEARCHHDR0:%=gecode/search/%)
@@ -300,10 +303,8 @@ export LINKSEARCH       =
 export SEARCHRES	=
 export SEARCHRC		=
 endif
-SEARCHBUILDDIRS = search \
-	search/sequential search/parallel \
-	search/meta \
-	search/meta/sequential search/meta/parallel
+SEARCHBUILDDIRS = search search/seq search/par
+
 
 #
 # INTEGER COMPONENTS
@@ -325,7 +326,7 @@ INTSRC0 = \
 	bin-packing/conflict-graph.cpp \
 	unary.cpp cumulative.cpp cumulatives.cpp \
 	circuit.cpp no-overlap.cpp nvalues.cpp \
-	member.cpp branch/activity.cpp \
+	member.cpp branch/action.cpp branch/chb.cpp \
 	arithmetic/mult.cpp  \
 	branch/view-sel.cpp branch/val-sel-commit.cpp \
 	branch/view-values.cpp \
@@ -383,8 +384,8 @@ INTHDR0 = \
 	distinct.hh dom.hh \
 	element.hh exception.hpp  gcc.hh linear.hh \
 	reify.hpp propagator.hpp extensional.hh rel.hh \
-	sorted.hh var-imp.hpp view.hpp ipl.hpp \
-	channel.hh channel/dom.hpp channel/val.hpp \
+	sorted.hh var-imp.hpp view.hpp ipl.hpp irt.hpp \
+	channel.hh channel.hpp channel/dom.hpp channel/val.hpp \
 	channel/base.hpp channel/link-single.hpp channel/link-multi.hpp \
 	sequence.hh sequence/int.hpp sequence/view.hpp \
 	sequence/set-op.hpp sequence/violations.hpp \
@@ -416,7 +417,7 @@ INTHDR0 = \
 	nvalues/int-lq.hpp nvalues/int-gq.hpp \
 	val-set.hh val-set.hpp \
 	member.hh member/prop.hpp member/re-prop.hpp \
-	branch/afc.hpp branch/activity.hpp \
+	branch/afc.hpp branch/action.hpp branch/chb.hpp \
 	ldsb.hh ldsb/brancher.hpp ldsb/sym-imp.hpp \
 	trace.hpp \
 	trace/bool-trace-view.hpp trace/int-trace-view.hpp \
@@ -464,8 +465,11 @@ INTBUILDDIRS	= \
 #
 
 FLOATSRC0 = \
-	var/float.cpp arithmetic.cpp array.cpp branch.cpp rel.cpp linear.cpp \
-	linear/post.cpp branch/activity.cpp rounding.cpp exec.cpp \
+	var/float.cpp var-imp/float.cpp \
+	arithmetic.cpp array.cpp branch.cpp rel.cpp linear.cpp \
+	linear/post.cpp bool.cpp channel.cpp \
+	transcendental.cpp trigonometric.cpp \
+	branch/action.cpp branch/chb.cpp rounding.cpp exec.cpp \
 	branch/val-sel-commit.cpp branch/view-sel.cpp dom.cpp \
 	relax.cpp \
 	trace.cpp trace/tracer.cpp \
@@ -477,13 +481,17 @@ FLOATHDR0 = \
 	view/scale.hpp view/print.hpp view/rel-test.hpp \
 	var-imp/float.hpp var-imp/delta.hpp \
 	var/float.hpp var/print.hpp linear.hh linear/nary.hpp \
-	arithmetic.hh arithmetic/sqr-sqrt-abs.hpp arithmetic/pow-nroot.hpp \
-	arithmetic/mult.hpp arithmetic/div.hpp arithmetic/min-max-channel.hpp \
+	arithmetic.hh arithmetic/sqr-sqrt.hpp arithmetic/pow-nroot.hpp \
+	arithmetic/mult.hpp arithmetic/div.hpp arithmetic/min-max.hpp \
+	arithmetic/abs.hpp \
+	channel.hh channel.hpp channel/channel.hpp \
 	transcendental.hh transcendental/exp-log.hpp trigonometric.hh \
 	trigonometric/sincos.hpp trigonometric/asinacos.hpp \
 	trigonometric/tanatan.hpp \
 	rel.hh rel/eq.hpp rel/lq-le.hpp rel/nq.hpp \
-	branch.hh branch/afc.hpp branch/activity.hpp branch/traits.hpp \
+	bool.hh bool/ite.hpp \
+	branch.hh branch/afc.hpp branch/action.hpp branch/chb.hpp \
+	branch/traits.hpp \
 	branch/var.hpp branch/val.hpp branch/assign.hpp \
 	branch/val-commit.hpp branch/val-sel.hpp branch/merit.hpp \
 	num.hpp val.hpp rounding.hpp nextafter.hpp \
@@ -523,7 +531,7 @@ FLOATBUILDDIRS	= \
 	float float/var float/var-imp float/view \
 	float/linear float/branch float/rel float/branch \
 	float/arithmetic float/transcendental float/trigonometric \
-	float/trace
+	float/trace float/channel
 
 #
 # SET COMPONENTS
@@ -539,27 +547,27 @@ SETSRC0 =								 \
 	rel-op/post-compl-cvc.cpp rel-op/post-nocompl-cvc.cpp \
 	rel-op-const-vvc.cpp rel-op-const-vcv.cpp rel-op-const-vcc.cpp \
 	rel-op-const-cvc.cpp rel-op-const-cvv.cpp \
-	int.cpp channel.cpp						 \
+	int.cpp channel.cpp bool.cpp \
 	element.cpp sequence.cpp			 \
 	distinct.cpp distinct/atmostOne.cpp				 \
 	precede.cpp \
 	sequence/seq.cpp sequence/seq-u.cpp array.cpp var-imp/set.cpp	 \
 	var-imp/integerset.cpp var/set.cpp \
-	exec.cpp branch/activity.cpp branch/view-sel.cpp \
+	exec.cpp branch/action.cpp branch/chb.cpp branch/view-sel.cpp \
 	branch/val-sel-commit.cpp  branch/ngl.cpp \
 	ldsb.cpp ldsb/sym-imp.cpp \
 	relax.cpp \
 	trace.cpp trace/tracer.cpp \
 	exception.cpp
 SETHDR0 =								     \
-	limits.hpp \
-	view.hpp exception.hpp int.hh element.hh var-imp.hpp                 \
+	limits.hpp                                                           \
+	view.hpp exception.hpp int.hh int.hpp element.hh var-imp.hpp         \
 	int/card.hpp     						     \
 	int/minmax.hpp int/weights.hpp                                       \
 	channel/sorted.hpp channel/int.hpp channel/bool.hpp channel/set.hpp  \
-	element/inter.hpp element/union.hpp             \
+	element/inter.hpp element/union.hpp                                  \
 	element/unionConst.hpp                                               \
-	element/disjoint.hpp array.hpp array-traits.hpp					     \
+	element/disjoint.hpp array.hpp array-traits.hpp		             \
 	var-imp/set.hpp var-imp/integerset.hpp	     			     \
 	var-imp/delta.hpp var-imp/iter.hpp 				     \
 	var/set.hpp var/print.hpp					     \
@@ -576,7 +584,8 @@ SETHDR0 =								     \
 	sequence/common.hpp convex/conv.hpp convex/hull.hpp convex.hh	     \
 	precede.hh precede/single.hpp \
 	rel-op.hh					     \
-	branch.hh branch/afc.hpp branch/activity.hpp branch/traits.hpp \
+	branch.hh branch/afc.hpp branch/action.hpp branch/chb.hpp \
+	branch/traits.hpp \
 	branch/var.hpp branch/val.hpp branch/assign.hpp \
 	branch/merit.hpp branch/val-commit.hpp branch/val-sel.hpp \
 	branch/ngl.hpp \
@@ -864,6 +873,7 @@ INTEXAMPLESRC0 =						\
 	bin-packing knights tsp perfect-square schurs-lemma     \
 	dominating-queens colored-matrix multi-bin-packing	\
 	qcp
+
 
 INTEXAMPLEHDR  = $(INTEXAMPLEHDR0:%=examples/%.hpp)
 INTEXAMPLESRC  = $(INTEXAMPLESRC0:%=examples/%.cpp)

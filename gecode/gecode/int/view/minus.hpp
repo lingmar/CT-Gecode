@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -167,42 +167,42 @@ namespace Gecode { namespace Int {
   template<class I>
   forceinline ModEvent
   MinusView::narrow_r(Space& home, I& i, bool) {
-    Region r(home);
+    Region r;
     Iter::Ranges::Minus mi(r,i);
     return x.narrow_r(home,mi,false);
   }
   template<class I>
   forceinline ModEvent
   MinusView::inter_r(Space& home, I& i, bool) {
-    Region r(home);
+    Region r;
     Iter::Ranges::Minus mi(r,i);
     return x.inter_r(home,mi,false);
   }
   template<class I>
   forceinline ModEvent
   MinusView::minus_r(Space& home, I& i, bool) {
-    Region r(home);
+    Region r;
     Iter::Ranges::Minus mi(r,i);
     return x.minus_r(home,mi,false);
   }
   template<class I>
   forceinline ModEvent
   MinusView::narrow_v(Space& home, I& i, bool) {
-    Region r(home);
+    Region r;
     Iter::Values::Minus mi(r,i);
     return x.narrow_v(home,mi,false);
   }
   template<class I>
   forceinline ModEvent
   MinusView::inter_v(Space& home, I& i, bool) {
-    Region r(home);
+    Region r;
     Iter::Values::Minus mi(r,i);
     return x.inter_v(home,mi,false);
   }
   template<class I>
   forceinline ModEvent
   MinusView::minus_v(Space& home, I& i, bool) {
-    Region r(home);
+    Region r;
     Iter::Values::Minus mi(r,i);
     return x.minus_v(home,mi,false);
   }

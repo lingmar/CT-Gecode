@@ -13,8 +13,8 @@
  *     Guido Tack, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,8 +51,8 @@ namespace Gecode { namespace Set { namespace Precede {
 
   template<class View>
   forceinline
-  Single<View>::Index::Index(Space& home, bool share, Index& a)
-    : Advisor(home,share,a), i(a.i) {}
+  Single<View>::Index::Index(Space& home, Index& a)
+    : Advisor(home,a), i(a.i) {}
 
 
   template<class View>
@@ -143,15 +143,15 @@ namespace Gecode { namespace Set { namespace Precede {
 
   template<class View>
   forceinline
-  Single<View>::Single(Space& home, bool share, Single& p)
-    : NaryPropagator<View,PC_SET_NONE>(home, share, p),
+  Single<View>::Single(Space& home, Single& p)
+    : NaryPropagator<View,PC_SET_NONE>(home, p),
       s(p.s), t(p.t),
       alpha(p.alpha), beta(p.beta), gamma(p.gamma) {
-    c.update(home, share, p.c);
+    c.update(home, p.c);
   }
   template<class View>
   Propagator*
-  Single<View>::copy(Space& home, bool share) {
+  Single<View>::copy(Space& home) {
     // Try to eliminate assigned views at the beginning
     if (alpha > 0) {
       int i = 0;
@@ -169,7 +169,7 @@ namespace Gecode { namespace Set { namespace Precede {
         i--;
       x.drop_lst(i);
     }
-    return new (home) Single<View>(home, share, *this);
+    return new (home) Single<View>(home, *this);
   }
 
 

@@ -7,8 +7,8 @@
  *     Christian Schulte, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -159,7 +159,7 @@ namespace Gecode {
   void
   LinIntExpr::post(Home home, IntRelType irt, IntPropLevel ipl) const {
     if (home.failed()) return;
-    Region r(home);
+    Region r;
     if (n->n_bool == 0) {
       // Only integer variables
       if (n->t==NT_ADD && n->l == NULL && n->r->t==NT_NONLIN) {
@@ -227,7 +227,7 @@ namespace Gecode {
   LinIntExpr::post(Home home, IntRelType irt, const BoolVar& b,
                 IntPropLevel ipl) const {
     if (home.failed()) return;
-    Region r(home);
+    Region r;
     if (n->n_bool == 0) {
       // Only integer variables
       if (n->t==NT_ADD && n->l==NULL && n->r->t==NT_NONLIN) {
@@ -284,7 +284,7 @@ namespace Gecode {
   IntVar
   LinIntExpr::post(Home home, IntPropLevel ipl) const {
     if (home.failed()) return IntVar(home,0,0);
-    Region r(home);
+    Region r;
     if (n->n_bool == 0) {
       // Only integer variables
       Int::Linear::Term<Int::IntView>* its =

@@ -7,8 +7,8 @@
  *     Patrick Pekczynski, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -46,9 +46,9 @@ namespace Gecode { namespace Int { namespace Sorted {
 
   template<class View, bool Perm>
   inline void
-  sort_sigma(Space& home, ViewArray<View>& x, ViewArray<View>& z) {
+  sort_sigma(ViewArray<View>& x, ViewArray<View>& z) {
     if (Perm) {
-      Region r(home);
+      Region r;
       ViewPair<View>* xz = r.alloc<ViewPair<View> >(x.size());
       for (int i=x.size(); i--; ) {
         xz[i].x=x[i]; xz[i].z=z[i];

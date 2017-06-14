@@ -7,8 +7,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-23 06:38:42 +0100 (Thu, 23 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15477 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -195,8 +195,6 @@ namespace Gecode { namespace Gist {
     QWidget* stw = new QWidget();
     QHBoxLayout* hbl = new QHBoxLayout();
     hbl->setContentsMargins(0,0,0,0);
-    wmpLabel = new QLabel("");
-    hbl->addWidget(wmpLabel);
     hbl->addWidget(new QLabel("Depth:"));
     depthLabel = new QLabel("0");
     hbl->addWidget(depthLabel);
@@ -276,10 +274,6 @@ namespace Gecode { namespace Gist {
     failedLabel->setNum(stats.failures);
     choicesLabel->setNum(stats.choices);
     openLabel->setNum(stats.undetermined);
-    if (stats.wmp)
-      wmpLabel->setText("WMP");
-    else
-      wmpLabel->setText("");
   }
 
   void

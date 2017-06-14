@@ -12,8 +12,8 @@
  *     Christian Schulte, 2009
  *     Guido Tack, 2009
  *
- *  Last modified: $Date$ by $Author$
- *  $Revision$
+ *  Last modified: $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *  $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constrain
  *  development environment:
@@ -132,7 +132,7 @@ namespace Gecode { namespace Int { namespace GCC {
     /// \name Cloning
     ///@{
     /// Update this view to be a clone of view \a x
-    void update(Space& home, bool share, CardConst& x);
+    void update(Space& home, CardConst& x);
     ///@}
 
     /// Return used IntView (cannot be used)
@@ -204,7 +204,7 @@ namespace Gecode { namespace Int { namespace GCC {
     /// \name Cloning
     ///@{
     /// Update this view to be a clone of view \a x
-    void update(Space& home, bool share, CardView& x);
+    void update(Space& home, CardView& x);
     ///@}
   };
 
@@ -280,7 +280,7 @@ namespace Gecode { namespace Int { namespace GCC {
   CardConst::reschedule(Space&, Propagator&, PropCond) {}
 
   forceinline void
-  CardConst::update(Space&, bool, CardConst& x) {
+  CardConst::update(Space&, CardConst& x) {
     _min=x._min; _max=x._max; _card=x._card; _counter=x._counter;
   }
 
@@ -368,8 +368,8 @@ namespace Gecode { namespace Int { namespace GCC {
   }
 
   forceinline void
-  CardView::update(Space& home, bool share, CardView& y) {
-    x.update(home,share,y.x);
+  CardView::update(Space& home, CardView& y) {
+    x.update(home,y.x);
     _card = y._card; _counter = y._counter;
   }
 

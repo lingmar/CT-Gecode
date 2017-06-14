@@ -7,8 +7,8 @@
  *     Guido Tack, 2014
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-03-23 14:08:43 +0100 (Thu, 23 Mar 2017) $ by $Author: schulte $
+ *     $Revision: 15613 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -109,7 +109,7 @@ constraint int_lin_eq([1, 1, 1, 1], [a[5], a[6], a[7], a[8]], 34);\n\
 constraint int_lin_eq([1, 1, 1, 1], [a[9], a[10], a[11], a[12]], 34);\n\
 constraint int_lin_eq([1, 1, 1, 1], [a[13], a[14], a[15], a[16]], 34);\n\
 solve satisfy;\n\
-", "a = array2d(1..4, 1..4, [4, 5, 11, 14, 9, 16, 2, 7, 6, 3, 13, 12, 15, 10, 8, 1]);\n\
+", "a = array2d(1..4, 1..4, [13, 2, 11, 8, 3, 16, 5, 10, 6, 9, 4, 15, 12, 7, 14, 1]);\n\
 ----------\n\
 ");
       }

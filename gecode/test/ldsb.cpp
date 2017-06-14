@@ -7,8 +7,8 @@
  *     Christopher Mears, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -148,12 +148,12 @@ namespace Test { namespace LDSB {
     OneArray(int n, int l, int u) : xs(*this,n,l,u) {
     }
     /// Constructor for cloning \a s
-    OneArray(bool share, OneArray& s) : Space(share,s) {
-      xs.update(*this,share,s.xs);
+    OneArray(OneArray& s) : Space(s) {
+      xs.update(*this,s.xs);
     }
     /// Copy during cloning
-    virtual Space* copy(bool share) {
-      return new OneArray(share,*this);
+    virtual Space* copy(void) {
+      return new OneArray(*this);
     }
     /// Return the solution as IntArgs
     IntArgs solution(void) {
@@ -176,12 +176,12 @@ namespace Test { namespace LDSB {
     OneArraySet(int n, int l, int u) : xs(*this,n, IntSet::empty, l,u) {
     }
     /// Constructor for cloning \a s
-    OneArraySet(bool share, OneArraySet& s) : Space(share,s) {
-      xs.update(*this,share,s.xs);
+    OneArraySet(OneArraySet& s) : Space(s) {
+      xs.update(*this,s.xs);
     }
     /// Copy during cloning
-    virtual Space* copy(bool share) {
-      return new OneArraySet(share,*this);
+    virtual Space* copy(void) {
+      return new OneArraySet(*this);
     }
     /// Return the solution as IntSetArgs
     IntSetArgs solution(void) {
@@ -1162,10 +1162,10 @@ namespace Test { namespace LDSB {
         branch(*this, xs, INT_VAR_NONE(), INT_VAL_MIN(), s);
       }
       // Search support.
-      Latin(bool share, Latin& s) : Space(share, s)
-      { xs.update(*this, share, s.xs); }
-      virtual Space* copy(bool share)
-      { return new Latin(share,*this); }
+      Latin(Latin& s) : Space(s)
+      { xs.update(*this, s.xs); }
+      virtual Space* copy(void)
+      { return new Latin(*this); }
       IntArgs solution(void) {
         IntArgs a(xs.size());
         for (int i = 0 ; i < a.size() ; ++i)
@@ -1598,8 +1598,8 @@ namespace Test { namespace LDSB {
     }
   };
 
-  /// %Test with activity
-  class Activity1 {
+  /// %Test with action
+  class Action1 {
   public:
     /// Number of variables
     static const int n = 4;
@@ -1613,7 +1613,7 @@ namespace Test { namespace LDSB {
       Symmetries s;
       s << VariableSymmetry(xs);
       s << ValueSymmetry(IntArgs::create(4,0));
-      branch(home, xs, INT_VAR_ACTIVITY_MIN(0.8), INT_VAL_MIN(), s);
+      branch(home, xs, INT_VAR_ACTION_MIN(0.8), INT_VAL_MIN(), s);
     }
     /// Compute list of expected solutions
     static std::vector<IntArgs> expectedSolutions(void) {
@@ -1657,7 +1657,7 @@ namespace Test { namespace LDSB {
 #ifdef GECODE_HAS_SET_VARS
   LDSB<ReflectSym1> reflectsym1("ReflectSym1");
   LDSB<ReflectSym2> reflectsym2("ReflectSym2");
-  LDSB<Activity1> activity1("Activity1");
+  LDSB<Action1> action1("Action1");
 
   LDSBSet<SetVarSym1> setvarsym1("SetVarSym1");
   LDSBSet<SetValSym1> setvalsym1("SetValSym1");

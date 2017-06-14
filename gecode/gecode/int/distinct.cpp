@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -49,7 +49,7 @@ namespace Gecode {
   void
   distinct(Home home, const IntVarArgs& x, IntPropLevel ipl) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::distinct");
     GECODE_POST;
     ViewArray<IntView> xv(home,x);
@@ -69,7 +69,7 @@ namespace Gecode {
   distinct(Home home, const IntArgs& c, const IntVarArgs& x,
            IntPropLevel ipl) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::distinct");
     if (c.size() != x.size())
       throw ArgumentSizeMismatch("Int::distinct");
@@ -101,7 +101,7 @@ namespace Gecode {
   distinct(Home home, const BoolVarArgs& b, const IntVarArgs& x,
            IntPropLevel ipl) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::distinct");
     if (b.size() != x.size())
       throw ArgumentSizeMismatch("Int::distinct");
@@ -158,7 +158,7 @@ namespace Gecode {
   distinct(Home home, const IntVarArgs& x, int c,
            IntPropLevel ipl) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::distinct");
     GECODE_POST;
 

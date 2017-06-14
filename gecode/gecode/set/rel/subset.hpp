@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 21:07:09 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15805 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,20 +51,21 @@ namespace Gecode { namespace Set { namespace Rel {
 
   template<class View0, class View1>
   forceinline
-  Subset<View0,View1>::Subset(Space& home, bool share, Subset& p)
+  Subset<View0,View1>::Subset(Space& home, Subset& p)
     : MixBinaryPropagator<View0,PC_SET_CGLB,
-                            View1,PC_SET_CLUB>(home,share,p) {}
+                            View1,PC_SET_CLUB>(home,p) {}
 
   template<class View0, class View1>
   ExecStatus Subset<View0,View1>::post(Home home, View0 x, View1 y) {
-    (void) new (home) Subset(home,x,y);
+    if (!same(x,y))
+      (void) new (home) Subset(home,x,y);
     return ES_OK;
   }
 
   template<class View0, class View1>
   Actor*
-  Subset<View0,View1>::copy(Space& home, bool share) {
-    return new (home) Subset(home,share,*this);
+  Subset<View0,View1>::copy(Space& home) {
+    return new (home) Subset(home,*this);
   }
 
   template<class View0, class View1>

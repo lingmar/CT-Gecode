@@ -7,8 +7,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -82,15 +82,14 @@ namespace Gecode { namespace Int { namespace Dom {
 
   template<class View, ReifyMode rm>
   forceinline
-  ReIntSet<View,rm>::ReIntSet(Space& home, bool share, ReIntSet& p)
-    : ReUnaryPropagator<View,PC_INT_DOM,BoolView>(home,share,p) {
-    is.update(home,share,p.is);
+  ReIntSet<View,rm>::ReIntSet(Space& home, ReIntSet& p)
+    : ReUnaryPropagator<View,PC_INT_DOM,BoolView>(home,p), is(p.is) {
   }
 
   template<class View, ReifyMode rm>
   Actor*
-  ReIntSet<View,rm>::copy(Space& home, bool share) {
-    return new (home) ReIntSet(home,share,*this);
+  ReIntSet<View,rm>::copy(Space& home) {
+    return new (home) ReIntSet(home,*this);
   }
 
   template<class View, ReifyMode rm>

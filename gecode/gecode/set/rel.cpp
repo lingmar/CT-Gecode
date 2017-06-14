@@ -10,8 +10,8 @@
  *     Guido Tack, 2004, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 21:07:09 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15805 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,7 +45,7 @@
 namespace Gecode { namespace Set {
 
   template<class View0, class View1>
-  void
+  forceinline void
   rel_post(Home home, View0 x0, SetRelType r, View1 x1) {
     using namespace Set::Rel;
     using namespace Set::RelOp;
@@ -95,7 +95,7 @@ namespace Gecode { namespace Set {
   }
 
   template<class View0, class View1, ReifyMode rm>
-  void
+  forceinline void
   rel_re(Home home, View0 x, SetRelType r, View1 y, BoolVar b) {
     using namespace Set::Rel;
     using namespace Set::RelOp;
@@ -126,10 +126,10 @@ namespace Gecode { namespace Set {
       }
       break;
     case SRT_SUB:
-      GECODE_ES_FAIL((ReSubset<View0,View1,rm>::post(home, x,y,b)));
+      GECODE_ES_FAIL((ReSubset<View0,View1,Gecode::Int::BoolView,rm>::post(home, x,y,b)));
       break;
     case SRT_SUP:
-      GECODE_ES_FAIL((ReSubset<View1,View0,rm>::post(home, y,x,b)));
+      GECODE_ES_FAIL((ReSubset<View1,View0,Gecode::Int::BoolView,rm>::post(home, y,x,b)));
       break;
     case SRT_DISJ:
       {
@@ -137,7 +137,8 @@ namespace Gecode { namespace Set {
         // ( y <= complement(x) ) <=> b
 
         ComplementView<View0> xc(x);
-        GECODE_ES_FAIL((ReSubset<View1,ComplementView<View0>,rm>
+        GECODE_ES_FAIL((ReSubset<View1,ComplementView<View0>,
+                        Gecode::Int::BoolView,rm>
                         ::post(home, y, xc, b)));
       }
       break;

@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -442,7 +442,7 @@ namespace Gecode { namespace Set {
 
   protected:
     /// Constructor for cloning \a x
-    SetVarImp(Space& home, bool share, SetVarImp& x);
+    SetVarImp(Space& home, SetVarImp& x);
   public:
     /// \name Constructors and initialization
     //@{
@@ -587,26 +587,29 @@ namespace Gecode { namespace Set {
      * not scheduled for execution (this must be used when creating
      * subscriptions during propagation).
      */
-    void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
-    /// Cancel subscription of propagator \a p with propagation condition \a pc
-    void cancel(Space& home, Propagator& p, PropCond pc);
+    GECODE_SET_EXPORT void subscribe(Space& home, Propagator& p, PropCond pc, bool schedule=true);
     /// Re-schedule propagator \a p with propagation condition \a pc
-    void reschedule(Space& home, Propagator& p, PropCond pc);
-    /// Subscribe advisor \a a to variable
-    void subscribe(Space& home, Advisor& a);
-    /// Cancel subscription of advisor \a a
-    void cancel(Space& home, Advisor& a);
+    GECODE_SET_EXPORT void reschedule(Space& home, Propagator& p, PropCond pc);
+    /** \brief Subscribe advisor \a a to variable
+     *
+     * The advisor \a a is only subscribed if \a assigned is false.
+     *
+     * If \a fail is true, the advisor \a a is also run when a variable
+     * operation triggers failure. This feature is undocumented.
+     *
+     */
+    GECODE_SET_EXPORT void subscribe(Space& home, Advisor& a, bool fail);
     //@}
 
   private:
     /// Return copy of not-yet copied variable
-    GECODE_SET_EXPORT SetVarImp* perform_copy(Space& home, bool share);
+    GECODE_SET_EXPORT SetVarImp* perform_copy(Space& home);
 
   public:
     /// \name Cloning
     //@{
     /// Return copy of this variable
-    SetVarImp* copy(Space& home, bool share);
+    SetVarImp* copy(Space& home);
     //@}
 
     /// \name Delta information for advisors

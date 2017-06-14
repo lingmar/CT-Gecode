@@ -11,8 +11,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -577,13 +577,13 @@ namespace Gecode {
 
   BoolVar
   BoolExpr::expr(Home home, IntPropLevel ipl) const {
-    Region r(home);
+    Region r;
     return NNF::nnf(r,n,false)->expr(home,ipl);
   }
 
   void
   BoolExpr::rel(Home home, IntPropLevel ipl) const {
-    Region r(home);
+    Region r;
     return NNF::nnf(r,n,false)->rel(home,ipl);
   }
 

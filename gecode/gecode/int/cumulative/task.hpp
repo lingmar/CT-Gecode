@@ -9,8 +9,8 @@
  *     Guido Tack, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -67,8 +67,8 @@ namespace Gecode { namespace Int { namespace Cumulative {
   }
 
   forceinline void
-  ManFixPTask::update(Space& home, bool share, ManFixPTask& t) {
-    Unary::ManFixPTask::update(home,share,t); _c=t._c;
+  ManFixPTask::update(Space& home, ManFixPTask& t) {
+    Unary::ManFixPTask::update(home,t); _c=t._c;
   }
 
   template<class Char, class Traits>
@@ -108,8 +108,8 @@ namespace Gecode { namespace Int { namespace Cumulative {
   }
 
   forceinline void
-  ManFixPSETask::update(Space& home, bool share, ManFixPSETask& t) {
-    Unary::ManFixPSETask::update(home,share,t); _c=t._c;
+  ManFixPSETask::update(Space& home, ManFixPSETask& t) {
+    Unary::ManFixPSETask::update(home,t); _c=t._c;
   }
 
   template<class Char, class Traits>
@@ -149,8 +149,8 @@ namespace Gecode { namespace Int { namespace Cumulative {
   }
 
   forceinline void
-  ManFlexTask::update(Space& home, bool share, ManFlexTask& t) {
-    Unary::ManFlexTask::update(home,share,t); _c=t._c;
+  ManFlexTask::update(Space& home, ManFlexTask& t) {
+    Unary::ManFlexTask::update(home,t); _c=t._c;
   }
 
   template<class Char, class Traits>

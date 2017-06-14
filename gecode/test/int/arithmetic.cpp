@@ -7,8 +7,8 @@
  *     Christian Schulte, 2005
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-22 03:37:18 +0100 (Wed, 22 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15468 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -796,7 +796,9 @@ namespace Test { namespace Int {
        ArgMaxShared(int n, bool tb)
          : Test("Arithmetic::ArgMax::Shared::"+str(tb)+"::"+str(n),n+1,0,n+1,
                 false),
-           tiebreak(tb)  {}
+           tiebreak(tb)  {
+         testfix=false;
+       }
        /// %Test whether \a x is solution
        virtual bool solution(const Assignment& x) const {
          int n=x.size()-1;
@@ -868,7 +870,9 @@ namespace Test { namespace Int {
        ArgMinShared(int n, bool tb)
          : Test("Arithmetic::ArgMin::Shared::"+str(tb)+"::"+str(n),n+1,0,n+1,
                 false),
-           tiebreak(tb) {}
+           tiebreak(tb) {
+         testfix=false;
+       }
        /// %Test whether \a x is solution
        virtual bool solution(const Assignment& x) const {
          int n=x.size()-1;

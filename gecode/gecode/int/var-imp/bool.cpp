@@ -7,8 +7,8 @@
  *     Christian Schulte, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-21 06:45:56 +0100 (Tue, 21 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15465 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -58,6 +58,24 @@ namespace Gecode { namespace Int {
     assert(zero());
     IntDelta d(1);
     return notify(home,ME_BOOL_VAL,d);
+  }
+
+  void
+  BoolVarImp::subscribe(Space& home, Propagator& p, PropCond,
+                        bool schedule) {
+    // Subscription can be used with integer propagation conditions,
+    // which must be remapped to the single Boolean propagation condition.
+    BoolVarImpBase::subscribe(home,p,PC_BOOL_VAL,assigned(),schedule);
+  }
+
+  void
+  BoolVarImp::reschedule(Space& home, Propagator& p, PropCond) {
+    BoolVarImpBase::reschedule(home,p,PC_BOOL_VAL,assigned());
+  }
+
+  void
+  BoolVarImp::subscribe(Space& home, Advisor& a, bool fail) {
+    BoolVarImpBase::subscribe(home,a,assigned(),fail);
   }
 
 }}

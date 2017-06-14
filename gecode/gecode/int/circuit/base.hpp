@@ -7,8 +7,8 @@
  *     Christian Schulte, 2007
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -47,10 +47,10 @@ namespace Gecode { namespace Int { namespace Circuit {
 
   template<class View, class Offset>
   forceinline
-  Base<View,Offset>::Base(Space& home, bool share, Base<View,Offset>& p)
-    : NaryPropagator<View,Int::PC_INT_DOM>(home,share,p), start(p.start) {
+  Base<View,Offset>::Base(Space& home, Base<View,Offset>& p)
+    : NaryPropagator<View,Int::PC_INT_DOM>(home,p), start(p.start) {
     o.update(p.o);
-    y.update(home,share,p.y);
+    y.update(home,p.y);
   }
 
   /// Information required for non-recursive checking for a single scc
@@ -89,7 +89,7 @@ namespace Gecode { namespace Int { namespace Circuit {
     }
 
     /// Information needed for checking scc's
-    Region r(home);
+    Region r;
     typedef typename Offset::ViewType OView;
     NodeInfo<OView>* si = r.alloc<NodeInfo<OView> >(n);
     unsigned int n_edges = 0;
@@ -242,7 +242,7 @@ namespace Gecode { namespace Int { namespace Circuit {
 
     int n=x.size();
 
-    Region r(home);
+    Region r;
 
     // The path starting at assigned x[i] ends at x[end[j]] which is
     // not assigned.

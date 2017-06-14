@@ -7,8 +7,8 @@
  *     Christian Schulte, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -48,13 +48,13 @@ namespace Gecode { namespace Int { namespace Channel {
 
   template<class Info, class Offset, PropCond pc>
   forceinline
-  Base<Info,Offset,pc>::Base(Space& home, bool share, Base<Info,Offset,pc>& p)
-    : Propagator(home,share,p), n(p.n), n_na(p.n_na),
+  Base<Info,Offset,pc>::Base(Space& home, Base<Info,Offset,pc>& p)
+    : Propagator(home,p), n(p.n), n_na(p.n_na),
       xy(home.alloc<Info>(2*n)) {
     ox.update(p.ox);
     oy.update(p.oy);
     for (int i=2*n; i--; )
-      xy[i].update(home,share,p.xy[i]);
+      xy[i].update(home,p.xy[i]);
   }
 
   template<class Info, class Offset, PropCond pc>

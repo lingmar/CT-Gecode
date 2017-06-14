@@ -7,8 +7,8 @@
  *     Christian Schulte, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-21 16:51:20 +0200 (Sun, 21 May 2017) $ by $Author: schulte $
+ *     $Revision: 15751 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -63,11 +63,6 @@ namespace Gecode { namespace Int { namespace Branch {
       e >> pm[i].pos;
       e >> pm[i].min;
     }
-  }
-
-  size_t
-  PosValuesChoice::size(void) const {
-    return sizeof(PosValuesChoice)+(n+1)*sizeof(PosMin);
   }
 
   PosValuesChoice::~PosValuesChoice(void) {

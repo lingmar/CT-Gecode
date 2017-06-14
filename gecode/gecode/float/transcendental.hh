@@ -7,8 +7,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -38,8 +38,6 @@
 #ifndef __GECODE_FLOAT_TRANSCENDENTAL_HH__
 #define __GECODE_FLOAT_TRANSCENDENTAL_HH__
 
-#ifdef GECODE_HAS_MPFR
-
 #include <gecode/float.hh>
 
 /**
@@ -64,12 +62,12 @@ namespace Gecode { namespace Float { namespace Transcendental {
     using MixBinaryPropagator<A,PC_FLOAT_BND,B,PC_FLOAT_BND>::x1;
 
     /// Constructor for cloning \a p
-    Exp(Space& home, bool share, Exp& p);
+    Exp(Space& home, Exp& p);
     /// Constructor for creation
     Exp(Home home, A x0, B x1);
   public:
     /// Create copy during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$e^{x_0} = x_1\f$
@@ -93,12 +91,12 @@ namespace Gecode { namespace Float { namespace Transcendental {
     FloatNum base;
 
     /// Constructor for cloning \a p
-    Pow(Space& home, bool share, Pow& p);
+    Pow(Space& home, Pow& p);
     /// Constructor for creation
     Pow(Home home, FloatNum base, A x0, B x1);
   public:
     /// Create copy during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$\mathit{base}^{x_0} = x_1\f$
@@ -108,7 +106,6 @@ namespace Gecode { namespace Float { namespace Transcendental {
 }}}
 
 #include <gecode/float/transcendental/exp-log.hpp>
-#endif
 
 #endif
 

@@ -11,8 +11,8 @@
  *     Christian Schulte, 2008
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -61,11 +61,9 @@ namespace Gecode { namespace Int { namespace Extensional {
 
   template<class View, bool subscribe>
   forceinline
-  Base<View,subscribe>::Base(Space& home, bool share, Base<View,subscribe>& p)
-    : Propagator(home,share,p), last_data(NULL) {
-    x.update(home, share, p.x);
-    tupleSet.update(home, share, p.tupleSet);
-
+  Base<View,subscribe>::Base(Space& home, Base<View,subscribe>& p)
+    : Propagator(home,p), tupleSet(p.tupleSet), last_data(NULL) {
+    x.update(home, p.x);
     init_last(home, p.last_data, p.ts()->tuple_data);
   }
 

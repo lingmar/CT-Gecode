@@ -9,8 +9,8 @@
  *     Guido Tack, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -50,7 +50,7 @@ namespace Gecode {
     int n = x.size();
     if (n != y.size())
       throw ArgumentSizeMismatch("Int::channel");
-    if (x.same(home) || y.same(home))
+    if (x.same() || y.same())
       throw ArgumentSame("Int::channel");
     Limits::check(xoff,"Int::channel");
     Limits::check(yoff,"Int::channel");
@@ -76,7 +76,7 @@ namespace Gecode {
           di[n+xoff].init(y0, n+xoff);
         }
         NoOffset<IntView> noff;
-        if (x.same(home,y)) {
+        if (x.same(y)) {
           GECODE_ES_FAIL((Dom<IntView,NoOffset<IntView>,true>
             ::post(home,n+xoff,di,noff,noff)));
         } else {
@@ -97,7 +97,7 @@ namespace Gecode {
           vi[n+xoff].init(y0, n+xoff);
         }
         NoOffset<IntView> noff;
-        if (x.same(home,y)) {
+        if (x.same(y)) {
           GECODE_ES_FAIL((Val<IntView,NoOffset<IntView>,true>
             ::post(home,n+xoff,vi,noff,noff)));
         } else {
@@ -115,7 +115,7 @@ namespace Gecode {
         }
         Offset ox(-xoff);
         Offset oy(-yoff);
-        if (x.same(home,y)) {
+        if (x.same(y)) {
           GECODE_ES_FAIL((Dom<IntView,Offset,true>
                           ::post(home,n,di,ox,oy)));
         } else {
@@ -131,7 +131,7 @@ namespace Gecode {
         }
         Offset ox(-xoff);
         Offset oy(-yoff);
-        if (x.same(home,y)) {
+        if (x.same(y)) {
           GECODE_ES_FAIL((Val<IntView,Offset,true>
                           ::post(home,n,vi,ox,oy)));
         } else {
@@ -159,7 +159,7 @@ namespace Gecode {
   channel(Home home, const BoolVarArgs& x, IntVar y, int o,
           IntPropLevel) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::channel");
     Limits::check(o,"Int::channel");
     GECODE_POST;

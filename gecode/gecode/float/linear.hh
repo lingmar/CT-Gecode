@@ -11,8 +11,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -68,7 +68,7 @@ namespace Gecode { namespace Float { namespace Linear {
     FloatVal c;
 
     /// Constructor for cloning \a p
-    Lin(Space& home, bool share, Lin<P,N,pc>& p);
+    Lin(Space& home, Lin<P,N,pc>& p);
     /// Constructor for creation
     Lin(Home home, ViewArray<P>& x, ViewArray<N>& y, FloatVal c);
   public:
@@ -114,12 +114,12 @@ namespace Gecode { namespace Float { namespace Linear {
     using Lin<P,N,PC_FLOAT_BND>::c;
 
     /// Constructor for cloning \a p
-    Eq(Space& home, bool share, Eq& p);
+    Eq(Space& home, Eq& p);
   public:
     /// Constructor for creation
     Eq(Home home, ViewArray<P>& x, ViewArray<N>& y, FloatVal c);
     /// Create copy during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$\sum_{i=0}^{|x|-1}x_i-\sum_{i=0}^{|y|-1}y_i=c\f$
@@ -144,12 +144,12 @@ namespace Gecode { namespace Float { namespace Linear {
     using Lin<P,N,PC_FLOAT_BND>::c;
 
     /// Constructor for cloning \a p
-    Lq(Space& home, bool share, Lq& p);
+    Lq(Space& home, Lq& p);
   public:
     /// Constructor for creation
     Lq(Home home, ViewArray<P>& x, ViewArray<N>& y, FloatVal c);
     /// Create copy during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$\sum_{i=0}^{|x|-1}x_i-\sum_{i=0}^{|y|-1}y_i\leq c\f$

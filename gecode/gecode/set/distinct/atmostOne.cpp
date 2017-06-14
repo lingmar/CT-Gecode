@@ -7,8 +7,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -54,13 +54,13 @@ namespace Gecode { namespace Set { namespace Distinct {
    */
 
   Actor*
-  AtmostOne::copy(Space& home, bool share) {
-    return new (home) AtmostOne(home,share,*this);
+  AtmostOne::copy(Space& home) {
+    return new (home) AtmostOne(home,*this);
   }
 
   ExecStatus
   AtmostOne::propagate(Space& home, const ModEventDelta&) {
-    Region r(home);
+    Region r;
     LubRanges<SetView>* lubs = r.alloc<LubRanges<SetView> >(x.size());
     for (int i = x.size(); i--; ) {
       lubs[i].init(x[i]);

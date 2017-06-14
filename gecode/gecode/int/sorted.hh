@@ -7,8 +7,8 @@
  *     Patrick Pekczynski, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -76,12 +76,12 @@ namespace Gecode { namespace Int { namespace Sorted {
     Sorted(Home home,
            ViewArray<View>& x, ViewArray<View>& y, ViewArray<View>& z);
     /// Constructor for cloning
-    Sorted(Space& home, bool share, Sorted<View,Perm>& p);
+    Sorted(Space& home, Sorted<View,Perm>& p);
   public:
     /// Delete propagator and return its size
     virtual size_t dispose(Space& home);
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function returning low linear
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function

@@ -12,8 +12,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -62,13 +62,13 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   forceinline
-  MinElement<View>::MinElement(Space& home, bool share, MinElement& p)
-    : MixBinaryPropagator<View,PC_SET_ANY,Gecode::Int::IntView,Gecode::Int::PC_INT_BND> (home, share, p) {}
+  MinElement<View>::MinElement(Space& home, MinElement& p)
+    : MixBinaryPropagator<View,PC_SET_ANY,Gecode::Int::IntView,Gecode::Int::PC_INT_BND> (home, p) {}
 
   template<class View>
   Actor*
-  MinElement<View>::copy(Space& home, bool share) {
-   return new (home) MinElement(home,share,*this);
+  MinElement<View>::copy(Space& home) {
+   return new (home) MinElement(home,*this);
   }
 
   template<class View>
@@ -98,12 +98,14 @@ namespace Gecode { namespace Set { namespace Int {
       unsigned int size = 0;
       int maxN = BndSet::MAX_OF_EMPTY;
       for (LubRanges<View> ubr(x0); ubr(); ++ubr, ++size) {}
-      Region r(home);
+      Region r;
       int* ub = r.alloc<int>(size*2);
-      int i=0;
-      for (LubRanges<View> ubr(x0); ubr(); ++ubr, ++i) {
-        ub[2*i]   = ubr.min();
-        ub[2*i+1] = ubr.max();
+      {
+        int i=0;
+        for (LubRanges<View> ubr(x0); ubr(); ++ubr, ++i) {
+          ub[2*i]   = ubr.min();
+          ub[2*i+1] = ubr.max();
+        }
       }
       unsigned int x0cm = x0.cardMin()-1;
       for (unsigned int i=size; i--;) {
@@ -147,15 +149,14 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   forceinline
-  NotMinElement<View>::NotMinElement(Space& home, bool share,
-                                     NotMinElement& p)
+  NotMinElement<View>::NotMinElement(Space& home, NotMinElement& p)
     : MixBinaryPropagator<View,PC_SET_ANY,
-      Gecode::Int::IntView,Gecode::Int::PC_INT_DOM> (home, share, p) {}
+      Gecode::Int::IntView,Gecode::Int::PC_INT_DOM> (home, p) {}
 
   template<class View>
   Actor*
-  NotMinElement<View>::copy(Space& home, bool share) {
-    return new (home) NotMinElement(home,share,*this);
+  NotMinElement<View>::copy(Space& home) {
+    return new (home) NotMinElement(home,*this);
   }
 
   template<class View>
@@ -225,7 +226,7 @@ namespace Gecode { namespace Set { namespace Int {
       int num_ranges = 0;
       for (LubRanges<View> ur(x0); ur(); ++ur, ++num_ranges) {}
       // create an array for storing min and max of each range
-      Region r(home);
+      Region r;
       int* _ur = r.alloc<int>(num_ranges*2);
       // now, we fill the array:
       int i = 0;
@@ -275,16 +276,15 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View, ReifyMode rm>
   forceinline
-  ReMinElement<View,rm>::ReMinElement(Space& home, bool share,
-                                      ReMinElement& p)
+  ReMinElement<View,rm>::ReMinElement(Space& home, ReMinElement& p)
     : Gecode::Int::ReMixBinaryPropagator<View,PC_SET_ANY,
       Gecode::Int::IntView,Gecode::Int::PC_INT_DOM,
-      Gecode::Int::BoolView> (home, share, p) {}
+      Gecode::Int::BoolView> (home, p) {}
 
   template<class View, ReifyMode rm>
   Actor*
-  ReMinElement<View,rm>::copy(Space& home, bool share) {
-   return new (home) ReMinElement(home,share,*this);
+  ReMinElement<View,rm>::copy(Space& home) {
+   return new (home) ReMinElement(home,*this);
   }
 
   template<class View, ReifyMode rm>
@@ -401,9 +401,9 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   forceinline
-  MaxElement<View>::MaxElement(Space& home, bool share, MaxElement& p)
+  MaxElement<View>::MaxElement(Space& home, MaxElement& p)
     : MixBinaryPropagator<View,PC_SET_ANY,
-      Gecode::Int::IntView,Gecode::Int::PC_INT_BND> (home, share, p) {}
+      Gecode::Int::IntView,Gecode::Int::PC_INT_BND> (home, p) {}
 
   template<class View>
   ExecStatus
@@ -416,8 +416,8 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   Actor*
-  MaxElement<View>::copy(Space& home, bool share) {
-    return new (home) MaxElement(home,share,*this);
+  MaxElement<View>::copy(Space& home) {
+    return new (home) MaxElement(home,*this);
   }
 
   template<class View>
@@ -450,10 +450,9 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   forceinline
-  NotMaxElement<View>::NotMaxElement(Space& home, bool share,
-                                     NotMaxElement& p)
+  NotMaxElement<View>::NotMaxElement(Space& home, NotMaxElement& p)
     : MixBinaryPropagator<View,PC_SET_ANY,
-      Gecode::Int::IntView,Gecode::Int::PC_INT_DOM> (home, share, p) {}
+      Gecode::Int::IntView,Gecode::Int::PC_INT_DOM> (home, p) {}
 
   template<class View>
   ExecStatus
@@ -464,8 +463,8 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View>
   Actor*
-  NotMaxElement<View>::copy(Space& home, bool share) {
-    return new (home) NotMaxElement(home,share,*this);
+  NotMaxElement<View>::copy(Space& home) {
+    return new (home) NotMaxElement(home,*this);
   }
 
   template<class View>
@@ -558,11 +557,10 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View, ReifyMode rm>
   forceinline
-  ReMaxElement<View,rm>::ReMaxElement(Space& home, bool share,
-                                      ReMaxElement& p)
+  ReMaxElement<View,rm>::ReMaxElement(Space& home, ReMaxElement& p)
     : Gecode::Int::ReMixBinaryPropagator<View,PC_SET_ANY,
       Gecode::Int::IntView,Gecode::Int::PC_INT_DOM,
-      Gecode::Int::BoolView> (home, share, p) {}
+      Gecode::Int::BoolView> (home, p) {}
 
   template<class View, ReifyMode rm>
   ExecStatus
@@ -575,8 +573,8 @@ namespace Gecode { namespace Set { namespace Int {
 
   template<class View, ReifyMode rm>
   Actor*
-  ReMaxElement<View,rm>::copy(Space& home, bool share) {
-    return new (home) ReMaxElement(home,share,*this);
+  ReMaxElement<View,rm>::copy(Space& home) {
+    return new (home) ReMaxElement(home,*this);
   }
 
   template<class View, ReifyMode rm>

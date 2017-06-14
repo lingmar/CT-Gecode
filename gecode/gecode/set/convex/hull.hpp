@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -53,8 +53,8 @@ namespace Gecode { namespace Set { namespace Convex {
     : BinaryPropagator<SetView, PC_SET_ANY>(home, x, y) {}
 
   forceinline
-  ConvexHull::ConvexHull(Space& home, bool share, ConvexHull& p)
-    : BinaryPropagator<SetView, PC_SET_ANY>(home, share, p) {}
+  ConvexHull::ConvexHull(Space& home, ConvexHull& p)
+    : BinaryPropagator<SetView, PC_SET_ANY>(home, p) {}
 
   forceinline ExecStatus
   ConvexHull::post(Home home, SetView x, SetView y) {

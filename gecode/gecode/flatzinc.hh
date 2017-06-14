@@ -11,8 +11,8 @@
  *     Gabriel Hjort Blindell, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-11 15:04:07 +0200 (Thu, 11 May 2017) $ by $Author: schulte $
+ *     $Revision: 15703 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -257,10 +257,6 @@ namespace Gecode { namespace FlatZinc {
       Gecode::Driver::BoolOption        _stat;       ///< Emit statistics
       Gecode::Driver::StringValueOption _output;     ///< Output file
       //@}
-
-      // 
-      Gecode::Driver::BoolOption          _table_prop;
-    
   public:
     /// Constructor
     FlatZincOptions(const char* s)
@@ -288,9 +284,8 @@ namespace Gecode { namespace FlatZinc {
       _step("-step","step distance for float optimization",0.0),
       _mode("-mode","how to execute script",Gecode::SM_SOLUTION),
       _stat("-s","emit statistics"),
-      _output("-o","file to send output to"),
-      _table_prop("-table_prop", "table propagator (0 = gecode version, 1 = compact table)") {
-      
+      _output("-o","file to send output to") {
+
       _mode.add(Gecode::SM_SOLUTION, "solution");
       _mode.add(Gecode::SM_STAT, "stat");
       _mode.add(Gecode::SM_GIST, "gist");
@@ -300,9 +295,6 @@ namespace Gecode { namespace FlatZinc {
       _restart.add(RM_LUBY,"luby");
       _restart.add(RM_GEOMETRIC,"geometric");
 
-      //_table_prop.add(0, "gecode table propagator");
-      //_table_prop.add(1, "compact table propagator");
-      
       add(_solutions); add(_threads); add(_c_d); add(_a_d);
       add(_allSolutions);
       add(_free);
@@ -314,7 +306,6 @@ namespace Gecode { namespace FlatZinc {
       add(_nogoods); add(_nogoods_limit);
       add(_mode); add(_stat);
       add(_output);
-      add(_table_prop);
     }
 
     void parse(int& argc, char* argv[]) {
@@ -324,8 +315,6 @@ namespace Gecode { namespace FlatZinc {
       }
       if (_stat.value())
         _mode.value(Gecode::SM_STAT);
-      if (_table_prop.value())
-        std::cout << "value of table_prop: " << _table_prop.value() << std::endl;
     }
 
     virtual void help(void) {
@@ -343,12 +332,7 @@ namespace Gecode { namespace FlatZinc {
     unsigned int a_d(void) const { return _a_d.value(); }
     unsigned int node(void) const { return _node.value(); }
     unsigned int fail(void) const { return _fail.value(); }
-    unsigned int time(void) const {
-      //unsigned int t = 300000;
-      //std::cout << "Manually set the time from " << _time.value() << " to " << t << std::endl;
-      //return t;
-      return _time.value();
-    }
+    unsigned int time(void) const { return _time.value(); }
     int seed(void) const { return _seed.value(); }
     double step(void) const { return _step.value(); }
     const char* output(void) const { return _output.value(); }
@@ -367,7 +351,6 @@ namespace Gecode { namespace FlatZinc {
     bool interrupt(void) const { return _interrupt.value(); }
 
     void allSolutions(bool b) { _allSolutions.value(b); }
-
   };
 
   class BranchInformation : public SharedHandle {
@@ -394,22 +377,9 @@ namespace Gecode { namespace FlatZinc {
 #endif
   };
 
- /**
-  * \brief A thread-safe random number generator
-  *
-  */
- class GECODE_FLATZINC_EXPORT FznRnd {
- protected:
-   /// The actual random number generator
-   Gecode::Support::RandomGenerator random;
-   /// A mutex for the random number generator
-   Gecode::Support::Mutex mutex;
- public:
-   /// Constructor
-   FznRnd(unsigned int s=1);
-   /// Returns a random integer from the interval [0..n)
-   unsigned int operator ()(unsigned int n);
- };
+  /// Uninitialized default random number generator
+  GECODE_FLATZINC_EXPORT
+  extern Rnd defrnd;
 
   /**
    * \brief A space that can be initialized with a %FlatZinc model
@@ -447,16 +417,13 @@ namespace Gecode { namespace FlatZinc {
     IntSharedArray _lnsInitialSolution;
 
     /// Random number generator
-    FznRnd* _random;
+    Rnd _random;
 
     /// Annotations on the solve item
     AST::Array* _solveAnnotations;
 
-    /// Table propagator
-    //bool _table_prop
-    
     /// Copy constructor
-    FlatZincSpace(bool share, FlatZincSpace&);
+    FlatZincSpace(FlatZincSpace&);
   private:
     /// Run the search engine
     template<template<class> class Engine>
@@ -511,7 +478,7 @@ namespace Gecode { namespace FlatZinc {
     /// Whether the introduced variables still need to be copied
     bool needAuxVars;
     /// Construct empty space
-    FlatZincSpace(FznRnd* random = NULL);
+    FlatZincSpace(Rnd& random = defrnd);
 
     /// Destructor
     ~FlatZincSpace(void);
@@ -598,7 +565,7 @@ namespace Gecode { namespace FlatZinc {
     /// Implement optimization
     virtual void constrain(const Space& s);
     /// Copy function
-    virtual Gecode::Space* copy(bool share);
+    virtual Gecode::Space* copy(void);
     /// Slave function for restarts
     virtual bool slave(const MetaInfo& mi);
 
@@ -660,7 +627,7 @@ namespace Gecode { namespace FlatZinc {
   GECODE_FLATZINC_EXPORT
   FlatZincSpace* parse(const std::string& fileName,
                        Printer& p, std::ostream& err = std::cerr,
-                       FlatZincSpace* fzs=NULL, FznRnd* rnd=NULL);
+                       FlatZincSpace* fzs=NULL, Rnd& rnd=defrnd);
 
   /**
    * \brief Parse FlatZinc from \a is into \a fzs and return it.
@@ -670,7 +637,7 @@ namespace Gecode { namespace FlatZinc {
   GECODE_FLATZINC_EXPORT
   FlatZincSpace* parse(std::istream& is,
                        Printer& p, std::ostream& err = std::cerr,
-                       FlatZincSpace* fzs=NULL, FznRnd* rnd=NULL);
+                       FlatZincSpace* fzs=NULL, Rnd& rnd=defrnd);
 
 }}
 

@@ -11,8 +11,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,8 +44,8 @@
 namespace Gecode { namespace Set { namespace Convex {
 
   Actor*
-  Convex::copy(Space& home, bool share) {
-    return new (home) Convex(home,share,*this);
+  Convex::copy(Space& home) {
+    return new (home) Convex(home,*this);
   }
 
   ExecStatus
@@ -75,7 +75,7 @@ namespace Gecode { namespace Set { namespace Convex {
 
     //I + III
 
-    Region r(home);
+    Region r;
     LubRanges<SetView> ubRangeIt(x0);
     Iter::Ranges::Cache ubRangeItC(r,ubRangeIt);
 

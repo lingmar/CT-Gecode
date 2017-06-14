@@ -7,8 +7,8 @@
  *     Patrick Pekczynski, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -55,12 +55,12 @@ namespace Gecode { namespace Int { namespace Sorted {
 
   template<class View>
   inline void
-  computesccs(Space& home, ViewArray<View>& x, ViewArray<View>& y,
+  computesccs(ViewArray<View>& x, ViewArray<View>& y,
               int phi[], SccComponent sinfo[], int scclist[]) {
 
     // number of sccs is bounded by xs (number of x-nodes)
     int xs = x.size();
-    Region r(home);
+    Region r;
     Support::StaticStack<int,Region> cs(r,xs);
 
     //select an y node from the graph

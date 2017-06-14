@@ -7,8 +7,8 @@
  *     Christian Schulte, 2008
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -66,7 +66,7 @@ namespace Gecode {
     /// Return degree (number of subscribed propagators and advisors)
     unsigned int degree(void) const;
     /// Return accumulated failure count
-    double afc(const Space& home) const;
+    double afc(void) const;
     //@}
 
     /// \name Domain tests
@@ -78,7 +78,7 @@ namespace Gecode {
     /// \name Cloning
     //@{
     /// Update this variable to be a clone of variable \a y
-    void update(Space& home, bool share, VarImpVar<VarImp>& y);
+    void update(Space& home, VarImpVar<VarImp>& y);
     //@}
 
     /// \name Variable comparison
@@ -115,8 +115,8 @@ namespace Gecode {
   }
   template<class VarImp>
   forceinline double
-  VarImpVar<VarImp>::afc(const Space& home) const {
-    return x->afc(home);
+  VarImpVar<VarImp>::afc(void) const {
+    return x->afc();
   }
   template<class VarImp>
   forceinline bool
@@ -125,8 +125,8 @@ namespace Gecode {
   }
   template<class VarImp>
   forceinline void
-  VarImpVar<VarImp>::update(Space& home, bool share, VarImpVar<VarImp>& y) {
-    x = y.x->copy(home,share);
+  VarImpVar<VarImp>::update(Space& home, VarImpVar<VarImp>& y) {
+    x = y.x->copy(home);
   }
   template<class VarImp>
   forceinline bool

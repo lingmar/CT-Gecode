@@ -13,8 +13,8 @@
  *     Guido Tack, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -64,7 +64,7 @@ namespace Gecode { namespace Int { namespace GCC {
   postSideConstraints(Home home, ViewArray<IntView>& x, ViewArray<Card>& k) {
     CardLess<Card> cl;
     Support::quicksort(&k[0], k.size(), cl);
-    Region r(home);
+    Region r;
 
     {
       int smin = 0;
@@ -139,9 +139,9 @@ namespace Gecode { namespace Int { namespace GCC {
    */
   template<class Card>
   inline bool
-  isDistinct(Home home, ViewArray<IntView>& x, ViewArray<Card>& k) {
+  isDistinct(ViewArray<IntView>& x, ViewArray<Card>& k) {
     if (Card::propagate) {
-      Region r(home);
+      Region r;
       ViewRanges<IntView>* xrange = r.alloc<ViewRanges<IntView> >(x.size());
       for (int i = x.size(); i--; ){
         ViewRanges<IntView> iter(x[i]);

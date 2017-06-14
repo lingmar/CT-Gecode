@@ -7,8 +7,8 @@
  *     Gregory Crosswhite, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -184,9 +184,9 @@ namespace Test {
   class TestSpace : public Gecode::Space {
   public:
     TestSpace(void) : Space() {}
-    TestSpace(bool share, TestSpace& s) : Space(share,s) {}
-    virtual Space* copy(bool share) {
-      return new TestSpace(share,*this);
+    TestSpace(TestSpace& s) : Space(s) {}
+    virtual Space* copy(void) {
+      return new TestSpace(*this);
     }
   };
 

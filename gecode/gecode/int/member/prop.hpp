@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -76,12 +76,12 @@ namespace Gecode { namespace Int { namespace Member {
     if (x.size() == 0)
       return ES_FAILED;
 
-    x.unique(home);
+    x.unique();
 
     if (x.size() == 1)
       return Rel::EqDom<View,View>::post(home,x[0],y);
 
-    if (x.same(home,y))
+    if (x.same(y))
       return ES_OK;
 
     // Eliminate assigned views and store them into the value set
@@ -107,15 +107,15 @@ namespace Gecode { namespace Int { namespace Member {
 
   template<class View>
   forceinline
-  Prop<View>::Prop(Space& home, bool share, Prop<View>& p)
-    : NaryOnePropagator<View,PC_INT_DOM>(home, share, p) {
-    vs.update(home, share, p.vs);
+  Prop<View>::Prop(Space& home, Prop<View>& p)
+    : NaryOnePropagator<View,PC_INT_DOM>(home, p) {
+    vs.update(home, p.vs);
   }
 
   template<class View>
   Propagator*
-  Prop<View>::copy(Space& home, bool share) {
-    return new (home) Prop<View>(home, share, *this);
+  Prop<View>::copy(Space& home) {
+    return new (home) Prop<View>(home, *this);
   }
 
   template<class View>
@@ -150,7 +150,7 @@ namespace Gecode { namespace Int { namespace Member {
     }
 
     // Constrain y to union of x and value set
-    Region r(home);
+    Region r;
 
     assert(x.size() > 0);
     ValSet::Ranges vsr(vs);

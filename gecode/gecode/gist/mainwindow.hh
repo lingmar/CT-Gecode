@@ -7,8 +7,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-02-23 06:38:42 +0100 (Thu, 23 Feb 2017) $ by $Author: schulte $
+ *     $Revision: 15477 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -66,8 +66,6 @@ namespace Gecode { namespace Gist {
     Support::Timer searchTimer;
     /// Status bar label for maximum depth indicator
     QLabel* depthLabel;
-    /// Status bar label for weakly monotonic propagator indicator
-    QLabel* wmpLabel;
     /// Status bar label for number of solutions
     QLabel* solvedLabel;
     /// Status bar label for number of failures

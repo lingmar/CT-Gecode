@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,7 +51,7 @@ namespace Gecode { namespace Int { namespace Distinct {
   template<class View>
   forceinline bool
   DomCtrl<View>::available(void) {
-    return g.initialized();
+    return g;
   }
 
   template<class View>
@@ -62,15 +62,15 @@ namespace Gecode { namespace Int { namespace Distinct {
 
   template<class View>
   ExecStatus
-  DomCtrl<View>::sync(Space& home) {
+  DomCtrl<View>::sync(void) {
     g.purge();
-    return g.sync(home) ? ES_OK : ES_FAILED;
+    return g.sync() ? ES_OK : ES_FAILED;
   }
 
   template<class View>
   ExecStatus
   DomCtrl<View>::propagate(Space& home, bool& assigned) {
-    if (!g.mark(home))
+    if (!g.mark())
       return ES_OK;
     return g.prune(home,assigned);
   }

@@ -10,8 +10,8 @@
  *     Stefano Gualandi
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-30 21:53:23 +0200 (Tue, 30 May 2017) $ by $Author: schulte $
+ *     $Revision: 15815 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -39,14 +39,18 @@
  */
 
 #include <gecode/search.hh>
-#include <gecode/search/sequential/lds.hh>
 #include <gecode/search/support.hh>
 
+#include <gecode/search/seq/lds.hh>
+
 namespace Gecode { namespace Search {
-    
-  Engine* 
-  lds(Space* s, const Options& o) {
-    return new Sequential::LDS(s,o);
+
+  Engine*
+  ldsengine(Space* s, const Options& o) {
+    if (o.tracer)
+      return new Seq::LDS<EdgeTraceRecorder>(s,o);
+    else
+      return new Seq::LDS<NoTraceRecorder>(s,o);
   }
 
 }}

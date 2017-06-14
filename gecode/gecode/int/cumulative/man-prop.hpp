@@ -9,8 +9,8 @@
  *     Guido Tack, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -48,10 +48,9 @@ namespace Gecode { namespace Int { namespace Cumulative {
 
   template<class ManTask, class Cap, class PL>
   forceinline
-  ManProp<ManTask,Cap,PL>::ManProp(Space& home, bool shared,
-                                   ManProp<ManTask,Cap,PL>& p)
-    : TaskProp<ManTask,PL>(home,shared,p) {
-    c.update(home,shared,p.c);
+  ManProp<ManTask,Cap,PL>::ManProp(Space& home, ManProp<ManTask,Cap,PL>& p)
+    : TaskProp<ManTask,PL>(home,p) {
+    c.update(home,p.c);
   }
 
   template<class ManTask, class Cap, class PL>
@@ -81,8 +80,8 @@ namespace Gecode { namespace Int { namespace Cumulative {
 
   template<class ManTask, class Cap, class PL>
   Actor*
-  ManProp<ManTask,Cap,PL>::copy(Space& home, bool share) {
-    return new (home) ManProp<ManTask,Cap,PL>(home,share,*this);
+  ManProp<ManTask,Cap,PL>::copy(Space& home) {
+    return new (home) ManProp<ManTask,Cap,PL>(home,*this);
   }
 
   template<class ManTask, class Cap, class PL>

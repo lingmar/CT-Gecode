@@ -9,8 +9,8 @@
  *     Mikael Lagerkvist, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -206,11 +206,11 @@ namespace Test { namespace Int {
          /// Constructor
          TestSpace(void) {}
          /// Constructor for cloning \a s
-         TestSpace(bool share, TestSpace& s)
-           : Gecode::Space(share,s) {}
+         TestSpace(TestSpace& s)
+           : Gecode::Space(s) {}
          /// Copy space during cloning
-         virtual Gecode::Space* copy(bool share) {
-           return new TestSpace(share,*this);
+         virtual Gecode::Space* copy(void) {
+           return new TestSpace(*this);
          }
        };
      public:

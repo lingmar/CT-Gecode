@@ -7,8 +7,8 @@
  *     Christian Schulte, 2002
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -224,15 +224,9 @@ namespace Gecode {
 
     /// \name Cloning
     //@{
-    /**
-     * \brief Update array to be a clone of array \a a
-     *
-     * If \a share is true, sharing is retained for all shared
-     * data structures. Otherwise, for each of them an independent
-     * copy is created.
-     */
-    void update(Space&, bool share, ViewArray<Int::Linear::NoView>& a) {
-      (void) share; (void) a;
+    /// Update array to be a clone of array \a a
+    void update(Space& home, ViewArray<Int::Linear::NoView>& a) {
+      (void) home; (void) a;
     }
     //@}
 

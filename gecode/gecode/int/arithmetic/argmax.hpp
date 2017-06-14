@@ -7,8 +7,8 @@
  *     Christian Schulte, 2015
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -60,15 +60,15 @@ namespace Gecode { namespace Int { namespace Arithmetic {
       assert(x[max].idx == y.val());
       if (tiebreak)
         for (int i=0; i<max; i++)
-          GECODE_ES_CHECK(Rel::Le<VA>::post(home,
-                                            x[i].view,x[max].view));
+          GECODE_ES_CHECK((Rel::Le<VA,VA>::post(home,
+                                                x[i].view,x[max].view)));
       else
         for (int i=0; i<max; i++)
-          GECODE_ES_CHECK(Rel::Lq<VA>::post(home,
-                                            x[i].view,x[max].view));
+          GECODE_ES_CHECK((Rel::Lq<VA,VA>::post(home,
+                                                x[i].view,x[max].view)));
       for (int i=max+1; i<x.size(); i++)
-        GECODE_ES_CHECK(Rel::Lq<VA>::post(home,
-                                          x[i].view,x[max].view));
+        GECODE_ES_CHECK((Rel::Lq<VA,VA>::post(home,
+                                              x[i].view,x[max].view)));
     } else {
       (void) new (home) ArgMax<VA,VB,tiebreak>(home,x,y);
     }
@@ -77,23 +77,21 @@ namespace Gecode { namespace Int { namespace Arithmetic {
 
   template<class VA, class VB, bool tiebreak>
   forceinline
-  ArgMax<VA,VB,tiebreak>::ArgMax(Space& home, bool share,
-                                        ArgMax<VA,VB,tiebreak>& p)
-    : Propagator(home,share,p) {
-    x.update(home,share,p.x);
-    y.update(home,share,p.y);
+  ArgMax<VA,VB,tiebreak>::ArgMax(Space& home, ArgMax<VA,VB,tiebreak>& p)
+    : Propagator(home,p) {
+    x.update(home,p.x);
+    y.update(home,p.y);
   }
 
   template<class VA, class VB, bool tiebreak>
   Actor*
-  ArgMax<VA,VB,tiebreak>::copy(Space& home, bool share) {
-    return new (home) ArgMax<VA,VB,tiebreak>(home,share,*this);
+  ArgMax<VA,VB,tiebreak>::copy(Space& home) {
+    return new (home) ArgMax<VA,VB,tiebreak>(home,*this);
   }
 
   template<class VA, class VB, bool tiebreak>
   PropCost
-  ArgMax<VA,VB,tiebreak>::cost(const Space&,
-                                      const ModEventDelta&) const {
+  ArgMax<VA,VB,tiebreak>::cost(const Space&, const ModEventDelta&) const {
     return PropCost::linear(PropCost::LO,x.size()+1);
   }
 
@@ -126,7 +124,7 @@ namespace Gecode { namespace Int { namespace Arithmetic {
 
     // Eliminate elements from x and y that are too small
     {
-      Region r(home);
+      Region r;
 
       // Values to delete from y
       int* d=r.alloc<int>(y.size());
@@ -185,15 +183,15 @@ namespace Gecode { namespace Int { namespace Arithmetic {
       assert(x[max].idx == y.val());
       if (tiebreak)
         for (int i=0; i<max; i++)
-          GECODE_ES_CHECK(Rel::Le<VA>::post(home(*this),
-                                            x[i].view,x[max].view));
+          GECODE_ES_CHECK((Rel::Le<VA,VA>::post(home(*this),
+                                                x[i].view,x[max].view)));
       else
         for (int i=0; i<max; i++)
-          GECODE_ES_CHECK(Rel::Lq<VA>::post(home(*this),
-                                            x[i].view,x[max].view));
+          GECODE_ES_CHECK((Rel::Lq<VA,VA>::post(home(*this),
+                                               x[i].view,x[max].view)));
       for (int i=max+1; i<x.size(); i++)
-        GECODE_ES_CHECK(Rel::Lq<VA>::post(home(*this),
-                                          x[i].view,x[max].view));
+        GECODE_ES_CHECK((Rel::Lq<VA,VA>::post(home(*this),
+                                              x[i].view,x[max].view)));
       return home.ES_SUBSUMED(*this);
     }
 

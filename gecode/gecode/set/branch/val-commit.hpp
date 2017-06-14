@@ -13,8 +13,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -44,11 +44,11 @@
 namespace Gecode { namespace Set { namespace Branch {
 
   forceinline
-  ValCommitInc::ValCommitInc(Space& home, const ValBranch& vb)
+  ValCommitInc::ValCommitInc(Space& home, const ValBranch<Var>& vb)
     : ValCommit<SetView,int>(home,vb) {}
   forceinline
-  ValCommitInc::ValCommitInc(Space& home, bool shared, ValCommitInc& vc)
-    : ValCommit<SetView,int>(home,shared,vc) {}
+  ValCommitInc::ValCommitInc(Space& home, ValCommitInc& vc)
+    : ValCommit<SetView,int>(home,vc) {}
   forceinline ModEvent
   ValCommitInc::commit(Space& home, unsigned int a, SetView x, int, int n) {
     return (a == 0) ? x.include(home,n) : x.exclude(home,n);
@@ -68,11 +68,11 @@ namespace Gecode { namespace Set { namespace Branch {
   }
 
   forceinline
-  ValCommitExc::ValCommitExc(Space& home, const ValBranch& vb)
+  ValCommitExc::ValCommitExc(Space& home, const ValBranch<Var>& vb)
     : ValCommit<SetView,int>(home,vb) {}
   forceinline
-  ValCommitExc::ValCommitExc(Space& home, bool shared, ValCommitExc& vc)
-    : ValCommit<SetView,int>(home,shared,vc) {}
+  ValCommitExc::ValCommitExc(Space& home, ValCommitExc& vc)
+    : ValCommit<SetView,int>(home,vc) {}
   forceinline ModEvent
   ValCommitExc::commit(Space& home, unsigned int a, SetView x, int, int n) {
     return (a == 0) ? x.exclude(home,n) : x.include(home,n);

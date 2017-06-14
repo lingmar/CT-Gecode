@@ -7,8 +7,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-21 16:51:20 +0200 (Sun, 21 May 2017) $ by $Author: schulte $
+ *     $Revision: 15751 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,8 +45,6 @@ namespace Gecode { namespace Gist {
   public:
     /// Initialize choice for brancher \a b
     StopChoice(const Brancher& b);
-    /// Report size occupied
-    virtual size_t size(void) const;
     /// Archive into \a e
     virtual void archive(Archive& e) const;
   };
@@ -59,7 +57,7 @@ namespace Gecode { namespace Gist {
     /// Construct brancher
     StopBrancher(Home home);
     /// Copy constructor
-    StopBrancher(Space& home, bool share, StopBrancher& b);
+    StopBrancher(Space& home, StopBrancher& b);
   public:
     /// Check status of brancher, return true if alternatives left
     virtual bool status(const Space&) const;
@@ -74,7 +72,7 @@ namespace Gecode { namespace Gist {
                        unsigned int,
                        std::ostream& o) const;
     /// Copy brancher
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Post brancher
     static void post(Home home);
     /// Delete brancher and return its size

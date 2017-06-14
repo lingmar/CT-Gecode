@@ -7,8 +7,8 @@
  *     Christopher Mears, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2013-05-13 07:50:41 +0200 (Mon, 13 May 2013) $ by $Author: mears $
+ *     $Revision: 13633 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:

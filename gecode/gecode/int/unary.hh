@@ -9,8 +9,8 @@
  *     Guido Tack, 2010
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -125,7 +125,7 @@ namespace Gecode { namespace Int { namespace Unary {
     /// \name Cloning
     //@{
     /// Update this task to be a clone of task \a t
-    void update(Space& home, bool share, ManFixPTask& t);
+    void update(Space& home, ManFixPTask& t);
     //@}
 
     /// \name Dependencies
@@ -209,7 +209,7 @@ namespace Gecode { namespace Int { namespace Unary {
     /// \name Cloning
     //@{
     /// Update this task to be a clone of task \a t
-    void update(Space& home, bool share, ManFixPSETask& t);
+    void update(Space& home, ManFixPSETask& t);
     //@}
 
   };
@@ -347,7 +347,7 @@ namespace Gecode { namespace Int { namespace Unary {
     /// \name Cloning
     //@{
     /// Update this task to be a clone of task \a t
-    void update(Space& home, bool share, ManFlexTask& t);
+    void update(Space& home, ManFlexTask& t);
     //@}
 
     /// \name Dependencies
@@ -753,7 +753,7 @@ namespace Gecode { namespace Int { namespace Unary {
 
   /// Check mandatory tasks \a t for overload
   template<class ManTask>
-  ExecStatus overload(Space& home, TaskArray<ManTask>& t);
+  ExecStatus overload(TaskArray<ManTask>& t);
   /// Check optional tasks \a t for overload
   template<class OptTask, class PL>
   ExecStatus overload(Space& home, Propagator& p, TaskArray<OptTask>& t);
@@ -798,10 +798,10 @@ namespace Gecode { namespace Int { namespace Unary {
     /// Constructor for creation
     ManProp(Home home, TaskArray<ManTask>& t);
     /// Constructor for cloning \a p
-    ManProp(Space& home, bool shared, ManProp& p);
+    ManProp(Space& home, ManProp& p);
   public:
     /// Perform copying during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator that schedules tasks on unary resource
@@ -821,10 +821,10 @@ namespace Gecode { namespace Int { namespace Unary {
     /// Constructor for creation
     OptProp(Home home, TaskArray<OptTask>& t);
     /// Constructor for cloning \a p
-    OptProp(Space& home, bool shared, OptProp& p);
+    OptProp(Space& home, OptProp& p);
   public:
     /// Perform copying during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator that schedules tasks on unary resource

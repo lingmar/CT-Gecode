@@ -7,8 +7,8 @@
  *     Christian Schulte, 2011
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -96,8 +96,8 @@ namespace Gecode { namespace Int { namespace NoOverlap {
   }
 
   forceinline void
-  FixDim::update(Space& home, bool share, FixDim& d) {
-    c.update(home,share,d.c);
+  FixDim::update(Space& home, FixDim& d) {
+    c.update(home,d.c);
     s = d.s;
   }
 
@@ -176,10 +176,10 @@ namespace Gecode { namespace Int { namespace NoOverlap {
 
 
   forceinline void
-  FlexDim::update(Space& home, bool share, FlexDim& d) {
-    c0.update(home,share,d.c0);
-    s.update(home,share,d.s);
-    c1.update(home,share,d.c1);
+  FlexDim::update(Space& home, FlexDim& d) {
+    c0.update(home,d.c0);
+    s.update(home,d.s);
+    c1.update(home,d.c1);
   }
 
   forceinline void

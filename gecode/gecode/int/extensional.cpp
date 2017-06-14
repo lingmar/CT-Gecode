@@ -9,8 +9,8 @@
  *     Christian Schulte, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,7 +45,7 @@ namespace Gecode {
   extensional(Home home, const IntVarArgs& x, DFA dfa,
               IntPropLevel) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::extensional");
     GECODE_POST;
     GECODE_ES_FAIL(Extensional::post_lgp(home,x,dfa));
@@ -55,7 +55,7 @@ namespace Gecode {
   extensional(Home home, const BoolVarArgs& x, DFA dfa,
               IntPropLevel) {
     using namespace Int;
-    if (x.same(home))
+    if (x.same())
       throw ArgumentSame("Int::extensional");
     GECODE_POST;
     GECODE_ES_FAIL(Extensional::post_lgp(home,x,dfa));
@@ -81,7 +81,7 @@ namespace Gecode {
     // Construct view array
     ViewArray<IntView> xv(home,x);
     if (ipl & IPL_MEMORY) {
-      if (x.same(home)) {
+      if (x.same()) {
         GECODE_ES_FAIL((Extensional::Basic<IntView,true>
                              ::post(home,xv,t)));
       } else {
@@ -114,7 +114,7 @@ namespace Gecode {
     // Construct view array
     ViewArray<BoolView> xv(home,x);
     if (ipl & IPL_MEMORY) {
-      if (x.same(home)) {
+      if (x.same()) {
         GECODE_ES_FAIL((Extensional::Basic<BoolView,true>
                              ::post(home,xv,t)));
       } else {

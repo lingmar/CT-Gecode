@@ -6,8 +6,8 @@
 %     Guido Tack, 2007
 %
 %  Last modified:
-%     $Date$ by $Author$
-%     $Revision$
+%     $Date: 2009-09-08 17:42:03 +0200 (Tue, 08 Sep 2009) $ by $Author: schulte $
+%     $Revision: 9689 $
 %
 %  This file is part of Gecode, the generic constraint
 %  development environment:

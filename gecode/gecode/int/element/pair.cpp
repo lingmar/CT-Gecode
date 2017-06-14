@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -40,8 +40,8 @@
 namespace Gecode { namespace Int { namespace Element {
 
   Actor*
-  Pair::copy(Space& home, bool share) {
-    return new (home) Pair(home,share,*this);
+  Pair::copy(Space& home) {
+    return new (home) Pair(home,*this);
   }
 
   /// Value iterator for pair of iterators
@@ -99,7 +99,7 @@ namespace Gecode { namespace Int { namespace Element {
 
   ExecStatus
   Pair::propagate(Space& home, const ModEventDelta&) {
-    Region r(home);
+    Region r;
 
     if (x0.assigned()) {
       // Bitset for supported div and mod values

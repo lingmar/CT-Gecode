@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,8 +45,8 @@ namespace Gecode { namespace Int { namespace ViewValGraph {
     : view(NULL), val(NULL), n_view(0), n_val(0), count(1U) {}
 
   template<class View>
-  forceinline bool
-  Graph<View>::initialized(void) const {
+  forceinline
+  Graph<View>::operator bool(void) const {
     return view != NULL;
   }
 
@@ -143,8 +143,8 @@ namespace Gecode { namespace Int { namespace ViewValGraph {
 
   template<class View>
   forceinline void
-  Graph<View>::scc(Space& home) {
-    Region r(home);
+  Graph<View>::scc(void) {
+    Region r;
 
     Support::StaticStack<Node<View>*,Region> scc(r,n_val+n_view);
     Support::StaticStack<Node<View>*,Region> visit(r,n_val+n_view);

@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -51,8 +51,8 @@ namespace Gecode { namespace Set { namespace Sequence {
    */
 
   Actor*
-  Seq::copy(Space& home, bool share) {
-    return new (home) Seq(home,share,*this);
+  Seq::copy(Space& home) {
+    return new (home) Seq(home,*this);
   }
 
   ExecStatus

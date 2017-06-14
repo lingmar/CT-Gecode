@@ -7,8 +7,8 @@
  *     Christian Schulte, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -81,7 +81,7 @@ namespace Gecode { namespace Int {
     /// \name Cloning
     //@{
     /// Update this task to be a clone of task \a t
-    void update(Space& home, bool share, ManToOptTask& t);
+    void update(Space& home, ManToOptTask& t);
     //@}
 
     /// \name Dependencies
@@ -214,7 +214,7 @@ namespace Gecode { namespace Int {
     /// \name Cloning
     //@{
     /// Update array to be a clone of array \a a
-    void update(Space&, bool share, TaskArray& a);
+    void update(Space&, TaskArray& a);
     //@}
 
   private:
@@ -432,7 +432,7 @@ namespace Gecode { namespace Int {
     /// Constructor for creation
     TaskProp(Home home, TaskArray<Task>& t);
     /// Constructor for cloning \a p
-    TaskProp(Space& home, bool shared, TaskProp<Task,PL>& p);
+    TaskProp(Space& home, TaskProp<Task,PL>& p);
   public:
     /// Cost function (defined as high linear)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;

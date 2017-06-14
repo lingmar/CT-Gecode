@@ -7,8 +7,8 @@
  *     Christian Schulte, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -48,7 +48,7 @@ namespace Gecode { namespace Int { namespace Distinct {
   ExecStatus
   Dom<View>::post(Home home, ViewArray<View>& x) {
     if (x.size() == 2)
-      return Rel::Nq<View>::post(home,x[0],x[1]);
+      return Rel::Nq<View,View>::post(home,x[0],x[1]);
     if (x.size() == 3)
       return TerDom<View>::post(home,x[0],x[1],x[2]);
     if (x.size() > 3) {
@@ -61,8 +61,8 @@ namespace Gecode { namespace Int { namespace Distinct {
 
   template<class View>
   forceinline
-  Dom<View>::Dom(Space& home, bool share, Dom<View>& p)
-    : NaryPropagator<View,PC_INT_DOM>(home,share,p) {}
+  Dom<View>::Dom(Space& home, Dom<View>& p)
+    : NaryPropagator<View,PC_INT_DOM>(home,p) {}
 
   template<class View>
   PropCost
@@ -75,8 +75,8 @@ namespace Gecode { namespace Int { namespace Distinct {
 
   template<class View>
   Actor*
-  Dom<View>::copy(Space& home, bool share) {
-    return new (home) Dom<View>(home,share,*this);
+  Dom<View>::copy(Space& home) {
+    return new (home) Dom<View>(home,*this);
   }
 
   template<class View>
@@ -101,12 +101,12 @@ namespace Gecode { namespace Int { namespace Distinct {
     }
 
     if (x.size() == 2)
-      GECODE_REWRITE(*this,Rel::Nq<View>::post(home(*this),x[0],x[1]));
+      GECODE_REWRITE(*this,(Rel::Nq<View,View>::post(home(*this),x[0],x[1])));
     if (x.size() == 3)
       GECODE_REWRITE(*this,TerDom<View>::post(home(*this),x[0],x[1],x[2]));
 
     if (dc.available()) {
-      GECODE_ES_CHECK(dc.sync(home));
+      GECODE_ES_CHECK(dc.sync());
     } else {
       GECODE_ES_CHECK(dc.init(home,x));
     }

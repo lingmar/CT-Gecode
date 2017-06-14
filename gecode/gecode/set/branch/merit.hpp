@@ -13,8 +13,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -45,11 +45,11 @@ namespace Gecode { namespace Set { namespace Branch {
 
   // Minimum merit
   forceinline
-  MeritMin::MeritMin(Space& home, const VarBranch& vb)
+  MeritMin::MeritMin(Space& home, const VarBranch<Var>& vb)
     : MeritBase<SetView,int>(home,vb) {}
   forceinline
-  MeritMin::MeritMin(Space& home, bool shared, MeritMin& m)
-    : MeritBase<SetView,int>(home,shared,m) {}
+  MeritMin::MeritMin(Space& home, MeritMin& m)
+    : MeritBase<SetView,int>(home,m) {}
   forceinline int
   MeritMin::operator ()(const Space&, SetView x, int) {
     UnknownRanges<SetView> u(x);
@@ -58,11 +58,11 @@ namespace Gecode { namespace Set { namespace Branch {
 
   // Maximum merit
   forceinline
-  MeritMax::MeritMax(Space& home, const VarBranch& vb)
+  MeritMax::MeritMax(Space& home, const VarBranch<Var>& vb)
     : MeritBase<SetView,int>(home,vb) {}
   forceinline
-  MeritMax::MeritMax(Space& home, bool shared, MeritMax& m)
-    : MeritBase<SetView,int>(home,shared,m) {}
+  MeritMax::MeritMax(Space& home, MeritMax& m)
+    : MeritBase<SetView,int>(home,m) {}
   forceinline int
   MeritMax::operator ()(const Space&, SetView x, int) {
     int max = Limits::max;
@@ -73,74 +73,89 @@ namespace Gecode { namespace Set { namespace Branch {
 
   // Size merit
   forceinline
-  MeritSize::MeritSize(Space& home, const VarBranch& vb)
+  MeritSize::MeritSize(Space& home, const VarBranch<Var>& vb)
     : MeritBase<SetView,unsigned int>(home,vb) {}
   forceinline
-  MeritSize::MeritSize(Space& home, bool shared, MeritSize& m)
-    : MeritBase<SetView,unsigned int>(home,shared,m) {}
+  MeritSize::MeritSize(Space& home, MeritSize& m)
+    : MeritBase<SetView,unsigned int>(home,m) {}
   forceinline unsigned int
   MeritSize::operator ()(const Space&, SetView x, int) {
     return x.unknownSize();
   }
 
-  // Size over degree merit
+  // Degree over size merit
   forceinline
-  MeritDegreeSize::MeritDegreeSize(Space& home, const VarBranch& vb)
+  MeritDegreeSize::MeritDegreeSize(Space& home, const VarBranch<Var>& vb)
     : MeritBase<SetView,double>(home,vb) {}
   forceinline
-  MeritDegreeSize::MeritDegreeSize(Space& home, bool shared,
-                                   MeritDegreeSize& m)
-    : MeritBase<SetView,double>(home,shared,m) {}
+  MeritDegreeSize::MeritDegreeSize(Space& home, MeritDegreeSize& m)
+    : MeritBase<SetView,double>(home,m) {}
   forceinline double
   MeritDegreeSize::operator ()(const Space&, SetView x, int) {
     return static_cast<double>(x.unknownSize()) /
       static_cast<double>(x.degree());
   }
 
-  // Size over AFC merit
+  // AFC over size merit
   forceinline
-  MeritAFCSize::MeritAFCSize(Space& home, const VarBranch& vb)
+  MeritAFCSize::MeritAFCSize(Space& home, const VarBranch<Var>& vb)
     : MeritBase<SetView,double>(home,vb), afc(vb.afc()) {}
   forceinline
-  MeritAFCSize::MeritAFCSize(Space& home, bool shared, MeritAFCSize& m)
-    : MeritBase<SetView,double>(home,shared,m) {
-    afc.update(home,shared,m.afc);
-  }
+  MeritAFCSize::MeritAFCSize(Space& home, MeritAFCSize& m)
+    : MeritBase<SetView,double>(home,m), afc(m.afc) {}
   forceinline double
-  MeritAFCSize::operator ()(const Space& home, SetView x, int) {
-    return static_cast<double>(x.unknownSize()) / x.afc(home);
+  MeritAFCSize::operator ()(const Space&, SetView x, int) {
+    return x.afc() / static_cast<double>(x.unknownSize());
   }
   forceinline bool
   MeritAFCSize::notice(void) const {
-    return true;
+    return false;
   }
   forceinline void
   MeritAFCSize::dispose(Space&) {
+    // Not really needed
     afc.~AFC();
   }
 
-  // Size over activity merit
+  // Action over size merit
   forceinline
-  MeritActivitySize::MeritActivitySize(Space& home,
-                                       const VarBranch& vb)
-    : MeritBase<SetView,double>(home,vb), activity(vb.activity()) {}
+  MeritActionSize::MeritActionSize(Space& home, const VarBranch<Var>& vb)
+    : MeritBase<SetView,double>(home,vb), action(vb.action()) {}
   forceinline
-  MeritActivitySize::MeritActivitySize(Space& home, bool shared,
-                                       MeritActivitySize& m)
-    : MeritBase<SetView,double>(home,shared,m) {
-    activity.update(home, shared, m.activity);
-  }
+  MeritActionSize::MeritActionSize(Space& home, MeritActionSize& m)
+    : MeritBase<SetView,double>(home,m), action(m.action) {}
   forceinline double
-  MeritActivitySize::operator ()(const Space&, SetView x, int i) {
-    return activity[i] / static_cast<double>(x.unknownSize());
+  MeritActionSize::operator ()(const Space&, SetView x, int i) {
+    return action[i] / static_cast<double>(x.unknownSize());
   }
   forceinline bool
-  MeritActivitySize::notice(void) const {
+  MeritActionSize::notice(void) const {
     return true;
   }
   forceinline void
-  MeritActivitySize::dispose(Space&) {
-    activity.~Activity();
+  MeritActionSize::dispose(Space&) {
+    action.~Action();
+  }
+
+
+  // CHB Q-score over size merit
+  forceinline
+  MeritCHBSize::MeritCHBSize(Space& home, const VarBranch<Var>& vb)
+    : MeritBase<SetView,double>(home,vb), chb(vb.chb()) {}
+  forceinline
+  MeritCHBSize::MeritCHBSize(Space& home, MeritCHBSize& m)
+    : MeritBase<SetView,double>(home,m), chb(m.chb) {}
+  forceinline double
+  MeritCHBSize::operator ()(const Space&, SetView x, int i) {
+    return chb[i] / static_cast<double>(x.unknownSize());
+  }
+  forceinline bool
+  MeritCHBSize::notice(void) const {
+    return true;
+  }
+  forceinline void
+  MeritCHBSize::dispose(Space&) {
+    chb.~CHB();
   }
 
 }}}

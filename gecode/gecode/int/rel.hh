@@ -13,8 +13,8 @@
  *     Gabor Szokoli, 2003
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -75,14 +75,14 @@ namespace Gecode { namespace Int { namespace Rel {
     using MixBinaryPropagator<View0,PC_INT_DOM,View1,PC_INT_DOM>::x1;
 
     /// Constructor for cloning \a p
-    EqDom(Space& home, bool share, EqDom<View0,View1>& p);
+    EqDom(Space& home, EqDom<View0,View1>& p);
   public:
     /// Constructor for posting
     EqDom(Home home, View0 x0, View1 x1);
     /// Constructor for rewriting \a p during cloning
-    EqDom(Space& home, bool share, Propagator& p, View0 x0, View1 x1);
+    EqDom(Space& home, Propagator& p, View0 x0, View1 x1);
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /**
      * \brief Cost function
      *
@@ -111,14 +111,14 @@ namespace Gecode { namespace Int { namespace Rel {
     using MixBinaryPropagator<View0,PC_INT_VAL,View1,PC_INT_VAL>::x1;
 
     /// Constructor for cloning \a p
-    EqVal(Space& home, bool share, EqVal<View0,View1>& p);
+    EqVal(Space& home, EqVal<View0,View1>& p);
   public:
     /// Constructor for posting
     EqVal(Home home, View0 x0, View1 x1);
     /// Constructor for rewriting \a p during cloning
-    EqVal(Space& home, bool share, Propagator& p, View0 x0, View1 x1);
+    EqVal(Space& home, Propagator& p, View0 x0, View1 x1);
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function: low unary.
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Perform propagation
@@ -141,14 +141,14 @@ namespace Gecode { namespace Int { namespace Rel {
     using MixBinaryPropagator<View0,PC_INT_BND,View1,PC_INT_BND>::x1;
 
     /// Constructor for cloning \a p
-    EqBnd(Space& home, bool share, EqBnd<View0,View1>& p);
+    EqBnd(Space& home, EqBnd<View0,View1>& p);
   public:
     /// Constructor for posting
     EqBnd(Home home, View0 x0, View1 x1);
     /// Constructor for rewriting \a p during cloning
-    EqBnd(Space& home, bool share, Propagator& p, View0 x0, View1 x1);
+    EqBnd(Space& home, Propagator& p, View0 x0, View1 x1);
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post bounds consistent propagator \f$ x_0 = x_1\f$
@@ -170,12 +170,12 @@ namespace Gecode { namespace Int { namespace Rel {
     using NaryPropagator<View,PC_INT_DOM>::x;
 
     /// Constructor for cloning \a p
-    NaryEqDom(Space& home, bool share, NaryEqDom<View>& p);
+    NaryEqDom(Space& home, NaryEqDom<View>& p);
     /// Constructor for posting
     NaryEqDom(Home home, ViewArray<View>&);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /**
      * \brief Cost function
      *
@@ -202,12 +202,12 @@ namespace Gecode { namespace Int { namespace Rel {
     using NaryPropagator<View,PC_INT_BND>::x;
 
     /// Constructor for cloning \a p
-    NaryEqBnd(Space& home, bool share, NaryEqBnd<View>& p);
+    NaryEqBnd(Space& home, NaryEqBnd<View>& p);
     /// Constructor for posting
     NaryEqBnd(Home home, ViewArray<View>&);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /**
      * \brief Cost function
      *
@@ -242,7 +242,7 @@ namespace Gecode { namespace Int { namespace Rel {
       /// Create index advisor
       Index(Space& home, Propagator& p, Council<Index>& c, int i);
       /// Clone index advisor \a a
-      Index(Space& home, bool share, Index& a);
+      Index(Space& home, Index& a);
     };
     /// The advisor council
     Council<Index> c;
@@ -292,12 +292,12 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Compact during cloning when more advisors than that are subsumed
     static const int n_threshold = 7;
     /// Constructor for cloning \a p
-    NaryLqLe(Space& home, bool share, NaryLqLe<View,o>& p);
+    NaryLqLe(Space& home, NaryLqLe<View,o>& p);
     /// Constructor for posting
     NaryLqLe(Home home, ViewArray<View>&);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function
@@ -325,10 +325,10 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Constructor for posting
     NaryNq(Home home, ViewArray<View>& x);
     /// Constructor for cloning \a p
-    NaryNq(Space& home, bool share, NaryNq<View>& p);
+    NaryNq(Space& home, NaryNq<View>& p);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Perform propagation
@@ -354,12 +354,12 @@ namespace Gecode { namespace Int { namespace Rel {
     using ReBinaryPropagator<View,PC_INT_DOM,CtrlView>::b;
 
     /// Constructor for cloning \a p
-    ReEqDom(Space& home, bool share, ReEqDom& p);
+    ReEqDom(Space& home, ReEqDom& p);
     /// Constructor for posting
     ReEqDom(Home home, View x0, View x1, CtrlView b);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post domain consistent propagator \f$ (x_0 = x_1)\Leftrightarrow b\f$
@@ -380,12 +380,12 @@ namespace Gecode { namespace Int { namespace Rel {
     using ReBinaryPropagator<View,PC_INT_BND,CtrlView>::b;
 
     /// Constructor for cloning \a p
-    ReEqBnd(Space& home, bool share, ReEqBnd& p);
+    ReEqBnd(Space& home, ReEqBnd& p);
     /// Constructor for posting
     ReEqBnd(Home home, View x0, View x1, CtrlView b);
   public:
     /// Copy propagator during cloning
-    virtual Actor*     copy(Space& home, bool share);
+    virtual Actor*     copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post bounds consistent propagator \f$ (x_0 = x_1)\Leftrightarrow b\f$
@@ -407,12 +407,12 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Integer constant to check
     int c;
     /// Constructor for cloning \a p
-    ReEqDomInt(Space& home, bool share, ReEqDomInt& p);
+    ReEqDomInt(Space& home, ReEqDomInt& p);
     /// Constructor for posting
     ReEqDomInt(Home home, View x, int c, CtrlView b);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post domain consistent propagator \f$ (x = c)\Leftrightarrow b\f$
@@ -434,12 +434,12 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Integer constant to check
     int c;
     /// Constructor for cloning \a p
-    ReEqBndInt(Space& home, bool share, ReEqBndInt& p);
+    ReEqBndInt(Space& home, ReEqBndInt& p);
     /// Constructor for posting
     ReEqBndInt(Home home, View x, int c, CtrlView b);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post bounds consistent propagator \f$ (x = c)\Leftrightarrow b\f$
@@ -460,25 +460,25 @@ namespace Gecode { namespace Int { namespace Rel {
    * Requires \code #include <gecode/int/rel.hh> \endcode
    * \ingroup FuncIntProp
    */
-  template<class View>
-  class Nq : public BinaryPropagator<View,PC_INT_VAL> {
+  template<class V0, class V1>
+  class Nq : public MixBinaryPropagator<V0,PC_INT_VAL,V1,PC_INT_VAL> {
   protected:
-    using BinaryPropagator<View,PC_INT_VAL>::x0;
-    using BinaryPropagator<View,PC_INT_VAL>::x1;
+    using MixBinaryPropagator<V0,PC_INT_VAL,V1,PC_INT_VAL>::x0;
+    using MixBinaryPropagator<V0,PC_INT_VAL,V1,PC_INT_VAL>::x1;
 
     /// Constructor for cloning \a p
-    Nq(Space& home, bool share, Nq<View>& p);
+    Nq(Space& home, Nq<V0,V1>& p);
     /// Constructor for posting
-    Nq(Home home, View x0, View x1);
+    Nq(Home home, V0 x0, V1 x1);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as low unary)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator \f$x_0\neq x_1\f$
-    static  ExecStatus post(Home home, View x0, View x1);
+    static  ExecStatus post(Home home, V0 x0, V1 x1);
   };
 
   /*
@@ -493,23 +493,24 @@ namespace Gecode { namespace Int { namespace Rel {
    * \ingroup FuncIntProp
    */
 
-  template<class View>
-  class Lq : public BinaryPropagator<View,PC_INT_BND> {
+  template<class V0, class V1>
+  class Lq : public MixBinaryPropagator<V0,PC_INT_BND,V1,PC_INT_BND> {
   protected:
-    using BinaryPropagator<View,PC_INT_BND>::x0;
-    using BinaryPropagator<View,PC_INT_BND>::x1;
-
+    using MixBinaryPropagator<V0,PC_INT_BND,V1,PC_INT_BND>::x0;
+    using MixBinaryPropagator<V0,PC_INT_BND,V1,PC_INT_BND>::x1;
+    /// Whether views refer to same variable
+    static bool same(V0 x0, V1 x1);
     /// Constructor for cloning \a p
-    Lq(Space& home, bool share, Lq& p);
+    Lq(Space& home, Lq& p);
     /// Constructor for posting
-    Lq(Home home, View x0, View x1);
+    Lq(Home home, V0 x0, V1 x1);
   public:
     /// Copy propagator during cloning
-    virtual Actor*     copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator \f$x_0 \leq x_1\f$
-    static  ExecStatus post(Home home, View x0, View x1);
+    static  ExecStatus post(Home home, V0 x0, V1 x1);
   };
 
   /**
@@ -518,23 +519,24 @@ namespace Gecode { namespace Int { namespace Rel {
    * Requires \code #include <gecode/int/rel.hh> \endcode
    * \ingroup FuncIntProp
    */
-  template<class View>
-  class Le : public BinaryPropagator<View,PC_INT_BND> {
+  template<class V0, class V1>
+  class Le : public MixBinaryPropagator<V0,PC_INT_BND,V1,PC_INT_BND> {
   protected:
-    using BinaryPropagator<View,PC_INT_BND>::x0;
-    using BinaryPropagator<View,PC_INT_BND>::x1;
-
+    using MixBinaryPropagator<V0,PC_INT_BND,V1,PC_INT_BND>::x0;
+    using MixBinaryPropagator<V0,PC_INT_BND,V1,PC_INT_BND>::x1;
+    /// Whether views refer to same variable
+    static bool same(V0 x0, V1 x1);
     /// Constructor for cloning \a p
-    Le(Space& home, bool share, Le& p);
+    Le(Space& home, Le& p);
     /// Constructor for posting
-    Le(Home home, View x0, View x1);
+    Le(Home home, V0 x0, V1 x1);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator \f$x_0 \le x_1\f$
-    static  ExecStatus post(Home home, View x0, View x1);
+    static  ExecStatus post(Home home, V0 x0, V1 x1);
   };
 
 
@@ -558,12 +560,12 @@ namespace Gecode { namespace Int { namespace Rel {
     using ReBinaryPropagator<View,PC_INT_BND,CtrlView>::b;
 
     /// Constructor for cloning \a p
-    ReLq(Space& home, bool share, ReLq& p);
+    ReLq(Space& home, ReLq& p);
     /// Constructor for posting
     ReLq(Home home, View x0, View x1, CtrlView b);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$ (x_0 \leq x_1)\Leftrightarrow b\f$
@@ -586,12 +588,12 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Integer constant to check
     int c;
     /// Constructor for cloning \a p
-    ReLqInt(Space& home, bool share, ReLqInt& p);
+    ReLqInt(Space& home, ReLqInt& p);
     /// Constructor for posting
     ReLqInt(Home home, View x, int c, CtrlView b);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for \f$ (x \leq c)\Leftrightarrow b\f$
@@ -625,20 +627,21 @@ namespace Gecode { namespace Int { namespace Rel {
    * Requires \code #include <gecode/int/rel.hh> \endcode
    * \ingroup FuncIntProp
    */
-  template<class View>
+  template<class VX, class VY>
   class LexLqLe : public Propagator {
   protected:
     /// View arrays
-    ViewArray<View> x, y;
+    ViewArray<VX> x;
+    ViewArray<VY> y;
     /// Determines whether propagator is strict or not
     bool strict;
     /// Constructor for cloning \a p
-    LexLqLe(Space& home, bool share, LexLqLe<View>& p);
+    LexLqLe(Space& home, LexLqLe<VX,VY>& p);
     /// Constructor for posting
-    LexLqLe(Home home, ViewArray<View>& x, ViewArray<View>& y, bool strict);
+    LexLqLe(Home home, ViewArray<VX>& x, ViewArray<VY>& y, bool strict);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function (defined as low linear)
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function
@@ -646,7 +649,7 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator for lexical order between \a x and \a y
-    static ExecStatus post(Home home, ViewArray<View>& x, ViewArray<View>& y,
+    static ExecStatus post(Home home, ViewArray<VX>& x, ViewArray<VY>& y,
                            bool strict);
     /// Delete propagator and return its size
     virtual size_t dispose(Space& home);
@@ -658,23 +661,31 @@ namespace Gecode { namespace Int { namespace Rel {
    * Requires \code #include <gecode/int/rel.hh> \endcode
    * \ingroup FuncIntProp
    */
-  template<class View>
+  template<class VX, class VY>
   class LexNq : public Propagator {
   protected:
-    /// Views currently subscribed to
-    View x0, y0, x1, y1;
+    /// View currently subscribed to
+    VX x0;
+    /// View currently subscribed to
+    VY y0;
+    /// View currently subscribed to
+    VX x1;
+    /// View currently subscribed to
+    VY y1;
     /// Views not yet subscribed to
-    ViewArray<View> x, y;
+    ViewArray<VX> x;
+    /// Views not yet subscribed to
+    ViewArray<VY> y;
     /// Update subscription
     ExecStatus resubscribe(Space& home,
-                           RelTest rt, View& x0, View& y0, View x1, View y1);
+                           RelTest rt, VX& x0, VY& y0, VX x1, VY y1);
     /// Constructor for posting
-    LexNq(Home home, ViewArray<View>& x, ViewArray<View>& y);
+    LexNq(Home home, ViewArray<VX>& x, ViewArray<VY>& y);
     /// Constructor for cloning \a p
-    LexNq(Space& home, bool share, LexNq<View>& p);
+    LexNq(Space& home, LexNq<VX,VY>& p);
   public:
     /// Copy propagator during cloning
-    virtual Actor* copy(Space& home, bool share);
+    virtual Actor* copy(Space& home);
     /// Cost function
     virtual PropCost cost(const Space& home, const ModEventDelta& med) const;
     /// Schedule function
@@ -682,7 +693,7 @@ namespace Gecode { namespace Int { namespace Rel {
     /// Perform propagation
     virtual ExecStatus propagate(Space& home, const ModEventDelta& med);
     /// Post propagator \f$ x\neq y\f$
-    static  ExecStatus post(Home home, ViewArray<View>& x, ViewArray<View>& y);
+    static  ExecStatus post(Home home, ViewArray<VX>& x, ViewArray<VY>& y);
     /// Delete propagator and return its size
     virtual size_t dispose(Space& home);
   };

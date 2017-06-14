@@ -7,8 +7,8 @@
  *     Vincent Barichard, 2012
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -155,7 +155,7 @@ namespace Gecode {
   void
   LinFloatExpr::post(Home home, FloatRelType frt) const {
     if (home.failed()) return;
-    Region r(home);
+    Region r;
     if (n->t==NT_ADD && n->l == NULL && n->r->t==NT_NONLIN) {
       n->r->sum.ne->post(home,frt,-n->c);
     } else if (n->t==NT_SUB && n->r->t==NT_NONLIN && n->l==NULL) {
@@ -186,7 +186,7 @@ namespace Gecode {
   void
   LinFloatExpr::post(Home home, FloatRelType frt, const BoolVar& b) const {
     if (home.failed()) return;
-    Region r(home);
+    Region r;
     if (n->t==NT_ADD && n->l==NULL && n->r->t==NT_NONLIN) {
       n->r->sum.ne->post(home,frt,-n->c,b);
     } else if (n->t==NT_SUB && n->l==NULL && n->r->t==NT_NONLIN) {
@@ -210,7 +210,7 @@ namespace Gecode {
   FloatVar
   LinFloatExpr::post(Home home) const {
     if (home.failed()) return FloatVar(home,0,0);
-    Region r(home);
+    Region r;
     Float::Linear::Term* fts =
       r.alloc<Float::Linear::Term>(n->n_float+1);
     FloatVal c = n->fill(home,fts);

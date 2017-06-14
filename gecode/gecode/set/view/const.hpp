@@ -7,8 +7,8 @@
  *     Guido Tack, 2004
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -218,8 +218,8 @@ namespace Gecode { namespace Set {
   }
 
   forceinline void
-  ConstSetView::update(Space& home, bool share, ConstSetView& p) {
-    ConstView<SetView>::update(home,share,p);
+  ConstSetView::update(Space& home, ConstSetView& p) {
+    ConstView<SetView>::update(home,p);
     // dispose old ranges
     if (size > 0)
       home.free<int>(ranges, 2);

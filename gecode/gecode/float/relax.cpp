@@ -7,8 +7,8 @@
  *     Christian Schulte, 2016
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2016-10-25 12:52:26 +0200 (Tue, 25 Oct 2016) $ by $Author: schulte $
+ *     $Revision: 15233 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -57,7 +57,7 @@ namespace Gecode { namespace Float {
 
 namespace Gecode {
 
-  void 
+  void
   relax(Home home, const FloatVarArgs& x, const FloatVarArgs& sx,
         Rnd r, double p) {
     if (x.size() != sx.size())

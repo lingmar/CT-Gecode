@@ -7,8 +7,8 @@
  *     Christian Schulte, 2002
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -43,20 +43,10 @@ namespace Gecode {
   abs(Home home, IntVar x0, IntVar x1, IntPropLevel ipl) {
     using namespace Int;
     GECODE_POST;
-    switch (vbd(ipl)) {
-    case IPL_VAL:
-      GECODE_ES_FAIL((Arithmetic::AbsBnd<IntView,PC_INT_VAL>
-                      ::post(home,x0,x1)));
-      break;
-    case IPL_BND:
-    case IPL_DEF:
-      GECODE_ES_FAIL((Arithmetic::AbsBnd<IntView,PC_INT_BND>
-                      ::post(home,x0,x1)));
-      break;
-    case IPL_DOM:
+    if (vbd(ipl) == IPL_DOM) {
       GECODE_ES_FAIL(Arithmetic::AbsDom<IntView>::post(home,x0,x1));
-      break;
-    default: GECODE_NEVER;
+    } else {
+      GECODE_ES_FAIL(Arithmetic::AbsBnd<IntView>::post(home,x0,x1));
     }
   }
 
@@ -126,7 +116,7 @@ namespace Gecode {
     using namespace Int;
     if (x.size() == 0)
       throw TooFewArguments("Int::argmax");
-    if (x.same(home,y))
+    if (x.same(y))
       throw ArgumentSame("Int::argmax");
     GECODE_POST;
     // Constrain y properly
@@ -153,7 +143,7 @@ namespace Gecode {
     Limits::nonnegative(o,"Int::argmax");
     if (x.size() == 0)
       throw TooFewArguments("Int::argmax");
-    if (x.same(home,y))
+    if (x.same(y))
       throw ArgumentSame("Int::argmax");
     GECODE_POST;
     // Constrain y properly
@@ -179,7 +169,7 @@ namespace Gecode {
     using namespace Int;
     if (x.size() == 0)
       throw TooFewArguments("Int::argmin");
-    if (x.same(home,y))
+    if (x.same(y))
       throw ArgumentSame("Int::argmin");
     GECODE_POST;
     // Constrain y properly
@@ -206,7 +196,7 @@ namespace Gecode {
     Limits::nonnegative(o,"Int::argmin");
     if (x.size() == 0)
       throw TooFewArguments("Int::argmin");
-    if (x.same(home,y))
+    if (x.same(y))
       throw ArgumentSame("Int::argmin");
     GECODE_POST;
     // Constrain y properly
@@ -257,7 +247,7 @@ namespace Gecode {
     GECODE_ME_FAIL(x0v.gq(home,min));
     GECODE_ME_FAIL(x0v.lq(home,max));
     t[2].a=-1; t[2].x=x0;
-    Linear::post(home,t,3,IRT_EQ,0);
+    Linear::post(home,t,3,IRT_EQ,0,IPL_BND);
     if (home.failed()) return;
     IntView x1v(x1);
     GECODE_ES_FAIL(

@@ -11,8 +11,8 @@
  *     Mikael Lagerkvist, 2009
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-10 14:58:42 +0200 (Wed, 10 May 2017) $ by $Author: schulte $
+ *     $Revision: 15697 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -43,13 +43,6 @@
 #include <gecode/kernel.hh>
 #include <gecode/int.hh>
 #include <gecode/minimodel.hh>
-
-#include "../../../src/compact-table.cpp"
-
-#define GECODE_REGULAR "gecode-regular"
-#define GECODE_TUPLESET_MEM "gecode-tupleset-mem"
-#define GECODE_TUPLESET_SPEED "gecode-tupleset-speed"
-#define COMPACT_TABLE "compact-table"
 
 #ifdef GECODE_HAS_SET_VARS
 #include <gecode/set.hh>
@@ -83,40 +76,13 @@ namespace Gecode { namespace FlatZinc {
 
   namespace {
 
-    inline IntRelType
-    swap(IntRelType irt) {
-      switch (irt) {
-      case IRT_LQ: return IRT_GQ;
-      case IRT_LE: return IRT_GR;
-      case IRT_GQ: return IRT_LQ;
-      case IRT_GR: return IRT_LE;
-      default:     return irt;
-      }
-    }
-
-    inline IntRelType
-    neg(IntRelType irt) {
-      switch (irt) {
-      case IRT_EQ: return IRT_NQ;
-      case IRT_NQ: return IRT_EQ;
-      case IRT_LQ: return IRT_GR;
-      case IRT_LE: return IRT_GQ;
-      case IRT_GQ: return IRT_LE;
-      case IRT_GR:
-      default:
-        assert(irt == IRT_GR);
-      }
-      return IRT_LQ;
-    }
-
-
-
     void p_distinct(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
       IntVarArgs va = s.arg2intvarargs(ce[0]);
       IntPropLevel ipl = s.ann2ipl(ann);
       unshare(s, va);
       distinct(s, va, ipl == IPL_DEF ? IPL_BND : ipl);
     }
+
     void p_distinctOffset(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
       IntVarArgs va = s.arg2intvarargs(ce[1]);
       unshare(s, va);
@@ -943,7 +909,7 @@ namespace Gecode { namespace FlatZinc {
       IntArgs cover = s.arg2intargs(ce[1]);
       IntVarArgs iv1 = s.arg2intvarargs(ce[2]);
 
-      Region re(s);
+      Region re;
       IntSet cover_s(cover);
       IntSetRanges cover_r(cover_s);
       IntVarRanges* iv0_ri = re.alloc<IntVarRanges>(iv0.size());
@@ -994,7 +960,7 @@ namespace Gecode { namespace FlatZinc {
         y[i] = IntSet(lbound[i],ubound[i]);
 
       IntSet cover_s(cover);
-      Region re(s);
+      Region re;
       IntVarRanges* xrs = re.alloc<IntVarRanges>(x.size());
       for (int i=x.size(); i--;)
         xrs[i].init(x[i]);
@@ -1060,7 +1026,7 @@ namespace Gecode { namespace FlatZinc {
         }
       }
 
-      Region re(s);
+      Region re;
       DFA::Transition* t = re.alloc<DFA::Transition>(noOfTrans+1);
       noOfTrans = 0;
       for (int i=1; i<=q; i++) {
@@ -1147,73 +1113,26 @@ namespace Gecode { namespace FlatZinc {
       BoolVarArgs x = s.arg2boolvarargs(ce[0]);
       rel(s,x,IRT_GQ,s.ann2ipl(ann));
     }
-    
+
     void
     p_table_int(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
-      //char* buf;
-      //buf[120938102938] = 'a';
-
       IntVarArgs x = s.arg2intvarargs(ce[0]);
       IntArgs tuples = s.arg2intargs(ce[1]);
       int noOfVars   = x.size();
       int noOfTuples = tuples.size() == 0 ? 0 : (tuples.size()/noOfVars);
-
-      //printf("ntuples=%d\n", noOfTuples);
-      
-      char* prop = getenv("TABLE_PROPAGATOR");
-               
-      if (prop != NULL && strcmp(prop, GECODE_REGULAR) == 0) {
-        printf("REGULAR\n");
-        
-        // Build regular expression
-        REG expression;
-        for (int i = 0; i<noOfTuples; i++) {
-          REG r;
-          for (int j = 0; j<x.size(); j++) {
-            r += REG(tuples[i*noOfVars+j]);
-          }
-          expression |= r;
+      TupleSet ts;
+      for (int i=0; i<noOfTuples; i++) {
+        IntArgs t(noOfVars);
+        for (int j=0; j<x.size(); j++) {
+          t[j] = tuples[i*noOfVars+j];
         }
-
-        DFA dfa(expression);
-        extensional(s,x,dfa);
-        
-      } else if (prop != NULL &&
-                 (strcmp(prop, GECODE_TUPLESET_MEM) == 0 ||
-                  strcmp(prop, COMPACT_TABLE) == 0 ||
-                  strcmp(prop, GECODE_TUPLESET_SPEED) == 0)) {
-        TupleSet ts;
-        for (int i=0; i<noOfTuples; i++) {
-          IntArgs t(noOfVars);
-          for (int j=0; j<x.size(); j++) {
-            t[j] = tuples[i*noOfVars+j];
-          }
-          ts.add(t);
-        }
-        ts.finalize();
-
-        if (strcmp(prop, COMPACT_TABLE) == 0) {
-          printf("COMPACT_TABLE\n");
-          extensional2(s,x,ts);
-        } else if (strcmp(prop, GECODE_TUPLESET_MEM) == 0){
-          printf("GECODE_TUPLESET_MEM\n");
-          extensional(s,x,ts,IPL_MEMORY);
-        } else {
-          printf("GECODE_TUPLESET_SPEED\n");
-          extensional(s,x,ts,IPL_SPEED);
-        }
-      } else {
-        printf("WARN: TABLE_PROPAGATOR not properly set, found: %s\n",prop);
-        printf("Legal values are: %s, %s, %s, %s\n",
-               GECODE_REGULAR,GECODE_TUPLESET_MEM,GECODE_TUPLESET_SPEED,COMPACT_TABLE);
-        GECODE_NEVER;
+        ts.add(t);
       }
+      ts.finalize();
+      extensional(s,x,ts,s.ann2ipl(ann));
     }
-    
     void
     p_table_bool(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
-      // De-activate for benchmarks
-      GECODE_NEVER;
       BoolVarArgs x = s.arg2boolvarargs(ce[0]);
       IntArgs tuples = s.arg2boolargs(ce[1]);
       int noOfVars   = x.size();
@@ -1227,12 +1146,7 @@ namespace Gecode { namespace FlatZinc {
         ts.add(t);
       }
       ts.finalize();
-      char* prop = getenv("TABLE_PROPAGATOR");
-      if (prop != NULL && strcmp(prop, "compact-table")) {
-        extensional2(s,x,ts);
-      } else {
-        extensional(s,x,ts,s.ann2ipl(ann));
-      }
+      extensional(s,x,ts,s.ann2ipl(ann));
     }
 
     void p_cumulative_opt(FlatZincSpace& s, const ConExpr& ce,
@@ -1606,8 +1520,8 @@ namespace Gecode { namespace FlatZinc {
         registry().add("at_least_int", &p_at_least);
         registry().add("at_most_int", &p_at_most);
         registry().add("gecode_bin_packing_load", &p_bin_packing_load);
-        registry().add("global_cardinality", &p_global_cardinality);
-        registry().add("global_cardinality_closed",
+        registry().add("gecode_global_cardinality", &p_global_cardinality);
+        registry().add("gecode_global_cardinality_closed",
           &p_global_cardinality_closed);
         registry().add("global_cardinality_low_up",
           &p_global_cardinality_low_up);
@@ -1618,15 +1532,15 @@ namespace Gecode { namespace FlatZinc {
         registry().add("gecode_minimum_arg_int", &p_minimum_arg);
         registry().add("gecode_maximum_arg_int", &p_maximum_arg);
         registry().add("array_int_maximum", &p_maximum);
-        registry().add("regular", &p_regular);
+        registry().add("gecode_regular", &p_regular);
         registry().add("sort", &p_sort);
         registry().add("inverse_offsets", &p_inverse_offsets);
         registry().add("increasing_int", &p_increasing_int);
         registry().add("increasing_bool", &p_increasing_bool);
         registry().add("decreasing_int", &p_decreasing_int);
         registry().add("decreasing_bool", &p_decreasing_bool);
-        registry().add("table_int", &p_table_int);
-        registry().add("table_bool", &p_table_bool);
+        registry().add("gecode_table_int", &p_table_int);
+        registry().add("gecode_table_bool", &p_table_bool);
         registry().add("cumulatives", &p_cumulatives);
         registry().add("gecode_among_seq_int", &p_among_seq_int);
         registry().add("gecode_among_seq_bool", &p_among_seq_bool);

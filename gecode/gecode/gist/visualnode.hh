@@ -7,8 +7,8 @@
  *     Guido Tack, 2006
  *
  *  Last modified:
- *     $Date$ by $Author$
- *     $Revision$
+ *     $Date: 2017-05-29 16:54:22 +0200 (Mon, 29 May 2017) $ by $Author: schulte $
+ *     $Revision: 15804 $
  *
  *  This file is part of Gecode, the generic constraint
  *  development environment:
@@ -208,7 +208,7 @@ namespace Gecode { namespace Gist {
     /// Set the shape of this node
     void setShape(Shape* s);
     /// Compute the shape according to the shapes of the children
-    void computeShape(const NodeAllocator& na, VisualNode* root);
+    void computeShape(const NodeAllocator& na);
     /// Return the bounding box
     BoundingBox getBoundingBox(void);
     /// Signal that the status has changed
