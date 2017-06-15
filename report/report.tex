@@ -16,6 +16,16 @@
    pgfplots.colorbrewer,
  }
 \pgfplotsset{compat=newest}
+\pgfplotsset{cycle list/Dark2-8}
+%\pgfplotsset{cycle list/Accent-3}
+\pgfplotsset{cycle list/Pastel1-3}
+\pgfplotsset{cycle list/RdYlGn-3}
+\pgfplotsset{cycle list/Accent-8}
+\pgfplotsset{cycle list/Spectral-3}
+\pgfplotsset{cycle list/Paired-3}
+\pgfplotsset{cycle list/RdYlGn-9}
+\pgfplotsset{cycle list/Reds-4}
+\pgfplotsset{cycle list/PRGn-4}
 \usepackage{cwpuzzle}
 %\usepackage{algpseudocode}
 
@@ -803,7 +813,7 @@ Both steps rely heavily on bit-wise operations on \T{currTable} and
 \subsection{Reversible Sparse Bit-Sets}
 \label{bg:sbs}
 % Beskriv idén
-Reversible sparse bit-sets, first described in~\cite{\CTpaper} 
+Reversible sparse bit-sets, first described in~\cite{\CTpaper},
 is a sparse-set data structure~\cite{Briggs93anefficient,Schaus13sparse-setsfor}
 that is a main data structure in the CT algorithm in~\cite{\CTpaper}.
 The data structure stores a set of
@@ -826,13 +836,14 @@ even when the set of values is sparse; hence the name.
 % in \T{index}. Also, it has a temporary mask (array of ints)
 % that is used to modify \T{words}.
 
-Some CP solvers use a mechanism called \emph{trailing}
+Some CP solvers, OR-tools is among them,
+use a mechanism called \emph{trailing}
 to perform backtracking
 (as previously discussed, Gecode uses copying instead),
 where the main idea is to store a stack of operations that can
-be undone upon backtrack. This is true for the CP solver OR-tools,
-in which reversible sparse bit-sets are reversed to a previous state
-upon backtrack in CT. 
+be undone upon backtrack.
+For such a CP solver, reversing a reversible sparse-bit set
+to a previous state during backtracking is very efficient.
 
 % In the following sections, a data structure that is 
 % like a reversible sparse bit-sets except that it is not reversible
@@ -854,7 +865,7 @@ bits set to~$0$.
 
 Parts of the pseudo code and its description in this section are very
 similar to the corresponding content in~\cite{\CTpaper}, as the algorithms
-are based on this paper.
+are based on that paper.
 
 % When we refer to a two-dimensional array~$m$,~$m[i][*]$ denotes
 % row~$i$ and~$m[*][j]$ column~$j$, seeing~$m$ as a matrix.
@@ -1614,7 +1625,7 @@ and also that a significant amount of time is spent in \FilterDomains().
 \Todo{Profiling.}
 
 \paragraph{Using delta information.} In the version CT($\Delta$), which uses
-the set of values~$\Delta_x$ that has been removed since last time the current
+the set of values~$\Delta_x$ that has been removed since last time, the current
 implementation uses the incremental update if~$|\Delta_x| < |s(x)|$. 
 It is possible that the optimal approach would be to generalise this condition
 to~$|\Delta_x| < k \cdot |s(x)|$, where~$k \in \mathbb{R}$ is some suitable constant;
@@ -1667,14 +1678,17 @@ this is something that remains to be investigated.
 \section{Evaluation}
 \label{evaluation}
 
-This section presents the evaluation of the implementation of the CT propagator
-presented in \Chapref{sec:implementation}. 
+We now present the evaluation of the implementation of the CT propagator,
+in which the performance of difference versions of CT is compared,
+and the winning variant is comapred against the existing propagators for
+the \Table~constraint in Gecode, as well as with the propagator for the
+\Constraint{Regular}~constraint.
 
-\label{evaluation:setup}
-
-The benchmarks consist of $30$~groups 
-with a total of~$1507$ CSP instances, involving \Table~constraints only,
-that were used in the
+The benchmarks consist $1507$ CSP instances, divided into~$30$ groups,
+involving \Table~constraints only.
+The groups of benchmarks and their characteristics are presented in
+Table~\ref{tab:benchmarks}. 
+This set of benchmarks was also used in the
 experiments in~\cite{\CTpaper}.
 These instances were chosen because
 they contain a large variety of instances,
@@ -1683,15 +1697,7 @@ to evaluate CT in OR-tools
 suggests that they are also appropriate for evaluating CT
 in the context of Gecode. 
 
-The fact that the instances contain \Table~constraints only is not an
-issue, because since all the propagators are domain consistent, they will
-perform the same amount of propagation at each node in the search tree,
-and therefore it is only the difference
-in runtime that is interesting to measure. Consequently, if the intances would contain
-other constraints than \Table, then a less amount of the total runtime would be spent
-in the propagators that are measured, which would give a weaker performance difference.
-
-\begin{table}[h]%\small
+\begin{table}[t]%\small
   \caption{Groups of benchmarks and their characteristics.}
   \label{tab:benchmarks}
   
@@ -1705,47 +1711,55 @@ in the propagators that are measured, which would give a weaker performance diff
   \end{sideways}
 \end{table}
 
-\clearpage
+The fact that the instances contain \Table~constraints only is not an
+issue, it is rather an advantage: if other constraints than~\Table~
+were present, then a less amount of the total runtime would be spent
+in the propagators that are compared, which would give a weaker performance
+difference.
+Note however that if the involved propagators would not have had
+the same consistency -- they are all domain constistent --
+then other constraints would have been
+desired, because then it would be interesting to compare
+not only the runtimes, but also the sizes of the search trees
+in presence of other constraints.
 
-The models used in~\cite{\CTpaper} were originally written in XCSP2.1,
-an XML format used for expressing CSP models. The models were compiled
-to MiniZinc~\cite{MiniZinc} using the compiler in~\Todo{[cite to compiler]}.
+All the benchmark models were originally written in 
+an XML format called 
+XCSP2.1~\cite{DBLP:journals/corr/abs-0902-2362}, and before being used
+in this project they were translated
+to a modelling language called MiniZinc~\cite{MiniZinc} 
+using a tool for translating XCSP2.1 models
+into MiniZinc~\cite{xcsp2mzn}.
 Of the~$1621$ instances that were used in~\cite{\CTpaper},
-only~$1507$ could be used due to parse errors in the compilation process.
-The groups of benchmarks and their characteristics are presented in Table~\ref{tab:benchmarks}.
+only~$1507$ could be used due to parse errors in the translation process.
 The experiments were run
 under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
 Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
 were accessed via shared servers.
 
-The performance of different versions of CT was compared, and the winning
-version was compared against the existing propagators for
-the \Table~constraint in Gecode, as well as with the propagator for the
-\Constraint{Regular}~constraint.
-
 A timeout of~$1000$ seconds was used throughout the experiments.
 Instances that i) could be solved within $1$~s for all propagators, or
 ii) caused a memory-out for at least one of the propagators,
 were filtered out from the results.
-Instances that timed out were not filtered out from the results.
 
 \subsection{Comparing Different Versions of CT}
 \label{sec:compare}
+
+In this section the comparison of difference versions of CT
+presented and discussed.
 
 \subsubsection{Evaluation Setup}
 Four versions of CT were compared on a subset of the groups of benchmarks
 listed in Table~\ref{tab:benchmarks}, the groups were chosen so 
 that different characteristics in Table~\ref{tab:benchmarks} were captured.
-A timeout of 1000 seconds was
-used and each instance was run once for each version.
-\Todo{Todo: run them several times and compute the median.}
 The versions and their denotations are:
 
 \begin{description}
   \item[CT] Basic version.
   \item[CT($\Delta$)] CT using $\Delta_x$, the set
     of values that have been removed from $\Dom{x}$
-    since last execution, as described in~\Algoref{algo:updateTableDelta}.
+    since the previous invocation of the propagator,
+    as described in~\Algoref{algo:updateTableDelta}.
   \item[CT($T$)] CT that explicitly stores the initial valid table~$T$ as
     a field and
     fixes the domains of the variables to the last valid tuple, as described
@@ -1759,20 +1773,22 @@ The versions and their denotations are:
 The plots from the experiments are presented in Appendix~\ref{app:compare-ct}.
 
 \subsubsection{Discussion}
-%\Todo{CT($\Delta$) outperforms the other variants.}
 The results indicate that CT($\Delta$) outperforms the other variants.
-The performances of CT and CT($T$) are similar, and CT($B$) is overall
-slower than the other variants. On \emph{AIM-50}, which only contains instances
+Moreover, the second best variant is the basic version (CT), and one
+cannot say which one of CT($T$) and CT($B$) is best; sometimes the first
+performs better than the second and sometimes the second performs better
+than the first.
+On \emph{AIM-50}, which only contains instances
 with $0/1$ variables, the performance of CT, CT($\Delta$), and CT($B$) is
-the same, which is expected because they collapse to the same variant
+similar, which is expected because they collapse to the same variant
 for domains of size~$2$.
 
 \subsection{Comparing CT against Existing Propagators}
 
 Gecode provides an \Constraint{Extensional} constraint, which
-comes with three different propagators: one where the extension
-is given as a DFA, one non-incremental memory-efficient one where
-the extension is given as a tuple set, and one incremental
+comes with three propagators: one where the extension
+is given as a DFA, a non-incremental memory-efficient one where
+the extension is given as a tuple set, and an incremental
 time-efficient one where the extension is also given as a tuple set:
 
 \begin{description}
@@ -1848,10 +1864,12 @@ has the following fields, where a \emph{literal} is a $\langle x,n
   $\bot$ after the last such tuple has been processed.
 \item $S[\langle x,n \rangle]$ is a set of encountered supports
   (tuples) for $\langle x,n \rangle$.  Initialised to $\emptyset$.
-\item $W_S$ is a stack of literals, whose support data needs restoring.
+\item $W_S$ is a stack of literals, ``S'' standing for ``support'',
+  whose support data needs restoring.
   Initially empty.
-\item $W_R$ is a stack of literals no longer supported, and
-  whose domain therefore needs updating and whose support data need clearing.
+\item $W_R$ is a stack of literals, ``R'' standing for ``remove'', 
+  that are longer supported, and whose domain therefore needs updating
+  and whose support data need clearing.
   Initially empty.
 \end{itemize}
 
@@ -1860,7 +1878,8 @@ tuple set propagator. When the propagator is being posted,
 \FindSupport($\Tuple{x,n}$) 
 is called for every literal~$\Tuple{x,n}$.
 Lines $6-8$ are executed in an advisor, and they call~\RemoveSupport($\Tuple{x,n}$)
-for every literal $\Tuple{x,n}$ that has been removed since last time.
+for every literal $\Tuple{x,n}$ that has been removed since the previous invocation
+of the propagator.
 The rest of the algorithm removes all the literals in~$W_R$ and calls
 \FindSupport($\Tuple{x,n}$) for all literals~$\Tuple{x,n}$ in~$W_S$ whose
 support data needs restoring.
@@ -1877,7 +1896,7 @@ support data needs restoring.
       \ENDFOREACH
     \ENDFOREACH
   \ELSE[executed in an advisor]
-    \FOREACH{$\langle x,n \rangle$ that has been removed since the last invocation}
+    \FOREACH{$\langle x,n \rangle$ that has been removed since the previous invocation}
       \FOREACH{$t \in S[\langle x,n \rangle]$}
         \STATE $\RemoveSupport(t,\langle x,n \rangle)$
       \ENDFOREACH
@@ -1924,7 +1943,7 @@ to the set of encountered valid tuples for the literals associated with the tupl
 \end{algorithm}
 
 \Algoref{algo:removesupport} clears the support data for a tuple~$\ell$ that has
-become invalid, by removing~$l$ from the set of valid tuples for each variable.
+become invalid, by removing~$\ell$ from the set of valid tuples for each variable.
 The associated literals are also added to~$W_S$, because support data for them
 need to be restored.
  
@@ -1954,7 +1973,7 @@ listed in Table~\ref{tab:benchmarks}. The propagators are
 denoted:
 
 \begin{description}
-  \item[CT] The compact-table propagator, version CT($\Delta$).
+  \item[CT] Compact-table propagator, version CT($\Delta$).
   \item[DFA] Layered graph (DFA) propagator, based on~\cite{Pesant:seqs}.
   \item[B] Basic positive tuple set propagator, based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
   \item[I] Incremental positive tuple set propagator.
@@ -1976,7 +1995,7 @@ and CT, B, and I ran out of memory on~$36$ of them.
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}%[scale=0.9]
+  \begin{tikzpicture}[every mark/.append style={mark size=4pt}]%[scale=0.9]
     \input{total-run.tex}
   \end{tikzpicture}
   \caption{Percentage of instances solved as a funcion of time for the DFA, B, I, and CT 
@@ -1986,15 +2005,16 @@ and CT, B, and I ran out of memory on~$36$ of them.
 
 The plots from each individual group of benchmarks are presented 
 in Appendix~\ref{app:compare-gecode},
-except for the groups \emph{MDD 07} and \emph{MDD 09}, where all instances
-either timed out or caused a memory-out.
+except for the groups \emph{BDD Small}, where DFA ran out of memory on all instances,
+and \emph{MDD 07} and \emph{MDD 09}, 
+where all propagators timed out on all instances.
 
 \subsubsection{Discussion}
 
 \paragraph{Runtime.}
 CT performs either as well as or better than all other propagators,
 on all groups except \emph{AIM 200}, where CT was slightly slower than B and DFA
-on two instances, and on \emph{BDD Small} and \emph{BDD Large} where CT was slightly
+on two instances, and on \emph{BDD Large} where CT was slightly
 slower than B and I on the small instances. At best, CT is about a factor 10 faster
 than the other algorithms on some groups.
 CT could solve as many instances as, or more, than all other propagators,
@@ -2035,7 +2055,7 @@ is discussed:
       some have large performance gains (see \emph{MDD 05}, \emph{BDD Large}).
       The same is true for the groups with larger domain sizes; some have
       modest performance gains (see \emph{Nonograms}, \emph{Kakuro *}),
-      while some have larger performance gain (see \emph{Rands JC*}, \emph{Crosswords *}).
+      while some have larger performance gains (see \emph{Rands JC*}, \emph{Crosswords *}).
 \end{description}
 
 \paragraph{Memory usage.}
@@ -2103,17 +2123,18 @@ improvements and flaws:
 % % This appendix presents the source code for the implementation
 % % described in \Chapref{sec:implementation}.
 % \newpage
+\newpage
 \appendix
 \section{Plots from Comparison of Different Versions of CT}
 \label{app:compare-ct}
 % the \\ insures the section title is centered below the phrase: AppendixA
 
-Each plot shows the number of instances solved as a function
+Each plot shows the percentage of instances solved as a function
 of timeout limit in milliseconds. The measured time is the total
-runtime, including parsing of the FlatZinc file and the posting of
+runtime, including parsing the model and the posting
 the propagators.
 
-\clearpage
+\vspace{2cm}
 
 \begin{figure}[H]
   \begin{minipage}[b][8cm][s]{0.45\textwidth}
@@ -2137,8 +2158,7 @@ the propagators.
     \vspace{\baselineskip}
   \end{minipage}\qquad
 \end{figure}
-
-\begin{figure}
+\begin{figure}[H]
   \begin{minipage}[b][8cm][s]{0.45\textwidth}
     \centering
     \vfill
@@ -2166,7 +2186,7 @@ the propagators.
   \begin{minipage}[b][8cm][s]{0.45\textwidth}
     \centering
     \vfill
-    \begin{tikzpicture}[scale=0.8]
+    \begin{tikzpicture}[scale=0.9]
       \input{TSP_Quat_20-compare.tex}
     \end{tikzpicture}
     \vfill
@@ -2176,7 +2196,7 @@ the propagators.
   \begin{minipage}[b][8cm][s]{0.45\textwidth}
     \centering
     \vfill
-    \begin{tikzpicture}[scale=0.8]
+    \begin{tikzpicture}[scale=0.9]
       \input{geom-compare.tex}
     \end{tikzpicture}
     \vfill
@@ -2186,7 +2206,7 @@ the propagators.
   \begin{minipage}[b][8cm][s]{0.45\textwidth}
     \centering
     \vfill
-    \begin{tikzpicture}[scale=0.8]
+    \begin{tikzpicture}[scale=0.9]
       \input{Crosswords_lexVg-compare.tex}
     \end{tikzpicture}
     \vfill
@@ -2196,7 +2216,7 @@ the propagators.
     \begin{minipage}[b][8cm][s]{0.45\textwidth}
     \centering
     \vfill
-    \begin{tikzpicture}[scale=0.8]
+    \begin{tikzpicture}[scale=0.9]
       \input{aim-50-pos-compare.tex}
     \end{tikzpicture}
     \vfill
@@ -2223,10 +2243,8 @@ For the second plot, the measurements were made on one random instance within th
 that the runtime was at least~$10$ s for all algorithms (the accuracy of the profiling is assumed
 to be too low for runtimes below~$10$ s).
 For the groups of benchmarks where all instances were solved within~$10$ s for at least one algorithm,
-only the memory usage is reported for these groups.
+only the memory usage is reported.
 % Also, for \emph{BDD Large} and \emph{BDD Small}, no data from 
-
-\clearpage
 
 \input{graphs-tuples.tex}
 
