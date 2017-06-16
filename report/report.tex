@@ -594,7 +594,7 @@ where we let~$store$ be the set of all stores.
     for any stores~$s_1$ and~$s_2$.
     This property is not a strict obligation, though it is desirable:
     it follows the intuition that more input information (stronger input store)
-    should give a stronger conclusion (stronger output store).
+    gives a stronger conclusion (stronger output store).
     
   \item A propagator is correct for the constraint it implements.
     A propagator~$p$
@@ -650,7 +650,7 @@ The concept \emph{consistency} gives a measure of how strong
 the propagation of a propagator is.
 The following defines three commonly used consistencies:
 \textbf{range consistency}, \textbf{bounds consistency},
-and \textbf{domain consistency}, based on~\cite{\CTpaper,Bessiere06}.
+and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
 
 \begin{definition}
   \textbf{Range consistency.} 
@@ -1824,60 +1824,61 @@ time-efficient one where the extension is also given as a tuple set:
   \item[B -- Basic positive tuple set propagator]
     This is based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
 
-    \Todo{Add pseudocode for B}.
+     The propagator state has the following fields:
 
-%      The propagator state has the following fields:
+     \begin{itemize}
+     \item array of variables: $X$
+     \item tuple set: $T$
+     \item $L[\langle x,n \rangle]$ is the latest seen tuple where position
+       $x$ has value $n$.  Initialised to the first such tuple, and set to
+       $\bot$ after the last such tuple has been processed.
+     \end{itemize}
 
-%      \begin{itemize}
-%      \item array of variables: $X$
-%      \item tuple set: $T$
-%      \item $L[\langle x,n \rangle]$ is the latest seen tuple where position
-%        $x$ has value $n$.  Initialized to the first such tuple, and set to
-%        $\bot$ after the last such tuple has been processed.
-%      \end{itemize}
-
-%      \Algoref{algo:basic} shows the basic tuple set propagator algorithm.
-%      Each time the propagator is envoked, for each variable we initialise
-%      $S[x]$ to~$\bot$, where~$S$ is a temporary array. The loop in lines
-%      $3$ to~$17$ will then find a support for each value in the domain of
-%      each variable. If there are no supports left for a variable, the
-%      propagator will return \textbf{false} in line~$15$, which means failure.
-%      Otherwise, the domain of the variable is set to the set of values that
-%      still are supported.
-
-%      \begin{algorithm}
-%        \label{algo:basic}
-%        \caption{Basic positive tuple set propagator.}
-%        \begin{algorithmic}[1]
-%          \PROCEDURE $\Extensional() : \bool$
-%          \FOREACH{$x \in X$}
-%          \STATE $S[x] \gets \bot$
-%          \ENDFOREACH
-%          \FOREACH{$x \in X$}
-%          \STATE $N \gets \emptyset$  
-%          \FOREACH{$n \in D(x)$}
-%          \IF{$S[x] = \bot$}
-%          \STATE $\ell \gets L[\langle x,n \rangle]$
-%          \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in D(y)$}
-%          \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
-%          \ENDWHILE
-%          \IF{$\ell\neq\bot$}
-%          \STATE $N \gets N \cup \{ n \}$
-%          \FOREACH{$y \in X$ where $y > x$}
-%          \STATE $S[y] \gets \ell[y]$
-%          \ENDFOREACH
-%          \ENDIF
-%          \ENDIF        
-%          \ENDFOREACH
-%          \STATE $D(x) \gets D(x) \setminus N$
-%          \IF{$D(x) = \emptyset$}
-%          \RETURN \FALSE
-%          \ENDIF
-%          \ENDFOREACH
-%          \RETURN \TRUE
-%        \end{algorithmic}
-%      \end{algorithm}
-% \clearpage
+     \Algoref{algo:basic} shows the basic tuple set propagator algorithm.
+     $S[x]$ signals whether or not a support has been found for the variable~$x$,
+     and is initialised to~$\bot$ for each variable in lines~$1$ and~$2$.
+     The loop in lines
+     $3-17$ will then try to find a support for each variable-value pair.
+     The values that no longer have a support are collected to
+     the set~$N$, whose values are removed from the domain of~$x$ in line~$15$.
+     If a variable has a domain wipe-out, 
+     then the empty store is returned in line~$17$, otherwise the resulting store
+     is returned in line~$18$.
+     
+     \begin{algorithm}
+       \caption{Basic positive tuple set propagator.}
+       \label{algo:basic}
+       \begin{algorithmic}[1]
+         \PROCEDURE $\Extensional(s:~\text{store}) :~\text{store}$
+           \FOREACH{$x \in X$}
+             \STATE $S[x] \gets \bot$
+           \ENDFOREACH
+           \FOREACH{$x \in X$}
+             \STATE $N \gets \emptyset$  
+             \FOREACH{$n \in \Dom{x}$}
+               \IF{$S[x] = \bot$}
+                 \STATE $\ell \gets L[\langle x,n \rangle]$
+                 \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in \Dom{y}$}
+                   \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
+                 \ENDWHILE
+                 \IF{$\ell = \bot$}
+                   \STATE $N \gets N \cup \{ n \}$
+                 \ELSE
+                   \FOREACH{$y \in X$ where $y > x$}
+                     \STATE $S[y] \gets \ell[y]$
+                   \ENDFOREACH
+                 \ENDIF
+               \ENDIF        
+             \ENDFOREACH
+             \STATE $s \leftarrow s[x \mapsto \Dom{x} \setminus \Set{N}]$
+             \IF{$\Dom{x} = \emptyset$}
+               \RETURN $\emptyset$
+             \ENDIF
+           \ENDFOREACH
+           \RETURN $s$
+       \end{algorithmic}
+     \end{algorithm}
+\clearpage
 
   \item[I -- Incremental positive tuple set propagator]
     This is based on explicit support maintenance.  The propagator state
@@ -1916,10 +1917,10 @@ support data needs restoring.
 \caption{Incremental positive tuple set propagator.}
 \label{algo:incremental}
 \begin{algorithmic}[1]
-  \PROCEDURE $\Extensional() : \bool$
+  \PROCEDURE $\Extensional(s:~\text{store}) : \text{store}$
   \IF[executed in a constructor]{the propagator is being posted}
     \FOREACH{$x \in X$}
-      \FOREACH{$n \in D(x)$}
+      \FOREACH{$n \in \Dom{x}$}
         \STATE $\FindSupport(\langle x,n \rangle)$
       \ENDFOREACH
     \ENDFOREACH
@@ -1932,18 +1933,18 @@ support data needs restoring.
   \ENDIF
   \WHILE[executed in the propagator proper]{$W_R\neq\emptyset \lor W_S\neq\emptyset$}
     \FOREACH{$\langle x,n \rangle \in W_R$}
-      \STATE $D(x) \gets D(x) \setminus \{ n \}$
-      \IF{$D(x)$ was wiped out}
-        \RETURN \FALSE
+      \STATE $s \leftarrow s[x \mapsto \Dom{x} \setminus \Set{n}]$
+      \IF{$\Dom{x} = \emptyset$}
+        \RETURN $\emptyset$
       \ENDIF
     \ENDFOREACH
     \STATE $W_R \gets \emptyset$
-    \FOREACH{$\langle x,n \rangle \in W_S$ where $n \in D(x)$}
+    \FOREACH{$\langle x,n \rangle \in W_S$ where $n \in \Dom{x}$}
       \STATE $\FindSupport(\langle x,n \rangle)$
     \ENDFOREACH
     \STATE $W_S \gets \emptyset$
   \ENDWHILE
-  \RETURN \TRUE
+  \RETURN $s$
 \end{algorithmic}
 \end{algorithm}
 
@@ -1957,7 +1958,7 @@ to the set of encountered valid tuples for the literals associated with the tupl
 \begin{algorithmic}[1]
   \PROCEDURE $\FindSupport(\langle x,n \rangle)$
   \STATE $\ell \gets L[\langle x,n \rangle]$
-  \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in D(y)$}
+  \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in \Dom{y}$}
     \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
   \ENDWHILE
   \IF{$\ell=\bot$}
@@ -2014,8 +2015,8 @@ having filtered out instances that were either solved in less than~$1$~s for all
 propagators, or that caused a memory-out for at least one propagator.
 Figure~\ref{fig:total}~shows the percentage of instances solved as a function
 of timeout limit in ms for these~$661$ instances. Within the timeout of~$1000$ s,
-CT could solve the highest number of instances ($76$~\%), followed by B ($70$~\%),
-I ($69$~\%), and DFA ($69$~\%).
+CT could solve the highest number of instances ($75$~\%), followed by B ($70$~\%),
+DFA ($70$~\%), and I ($68$~\%).
 
 Among the~$846$ instances that were filtered out, $207$~were filtered out
 because of memory-outs. Among these~$207$ instances, DFA ran out of memory on all of them,
@@ -2088,7 +2089,8 @@ is discussed:
 
 \paragraph{Memory usage.}
 It can be seen that CT, B, and I has about the same maximum memory usage 
-while DFA consistently has a higher maximum memory usage.
+while DFA consistently has a higher maximum memory usage. This complies with
+the fact that DFA ran out of memory on the highest number of instances.
   
 \paragraph{Profiling.}
 It can be seen that the distribution of how the time is spent between propagation, advisors
@@ -2276,7 +2278,7 @@ only the memory usage is reported.
 
 \input{graphs-tuples.tex}
 
-
+ 
 % \section{Profiling}
 
 % \input{aim-100-1-6-unsat-3_pos-profile.tex}
