@@ -2,7 +2,7 @@
 
 \documentclass[a4paper,11pt]{article}
 \usepackage{float}
-\usepackage{subfig}
+%\usepackage{subfig}
 \usepackage{fullpage}
 \usepackage{booktabs}
 \usepackage{tikz}
@@ -28,6 +28,16 @@
 \pgfplotsset{cycle list/PRGn-4}
 \usepackage{cwpuzzle}
 %\usepackage{algpseudocode}
+
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{multirow}
+%\usepackage{subfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usetikzlibrary{tikzmark}
+
 
 \usepackage{astra}
 %\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
@@ -903,14 +913,13 @@ The rest of this section describes its fields and methods in detail.
 \subsubsection{Fields}
 \label{sbs:fields}
 
-\Todo{Todo: Add examples.}
-
 \Linesref{line:sbsfield:start}{line:sbsfield:end} of~\Algoref{algo:sparse} show the fields
 of the class~\SparseBitSet~and their types. Here follows a more detailed description of them:
 
 \begin{itemize}
   \item \Words~is an array storing a permutation of~$p$ 64-bit 
-    words:~$\Set{w_0, w_1, \dots, w_{p-1}}$.
+    words:~$\Set{w_0, w_1, \dots, w_{p-1}}$, each word~$w_i$ 
+    representing~$64$ elements in the set.
     Initially, $\Words[i] = w_i$~for all~$i$.
     The array~$\Words$ defines the current
     value of the bit-set:
@@ -925,7 +934,6 @@ of the class~\SparseBitSet~and their types. Here follows a more detailed descrip
     so that all the non-zero words are
     located at indices less than or equal to \Limit, and all the words that
     consist of only zeros are located at positions strictly greater than~\Limit.
-    \Todo{Example.}
 
   \item \Index~is an array that manages the indices of the words in~\Words,
     making it possible to perform operations on non-zero words only.
@@ -1006,6 +1014,26 @@ We now describe the methods in the class~\SparseBitSet~in~\Algoref{algo:sparse}.
     the index of the word if the intersection is non-empty. If the
     intersection is empty for all words, then~$-1$ is returned.
 \end{itemize}
+
+Figure~\ref{fig:example} shows an example of applying operations to a 
+\bitset~assuming it consisted of $4$-bit ints instead of~$64$-bit ints.
+We assume that initially the set contains the range~$0..17$, so~$p = 5$
+(we need~$5$ $4$-bit ints for~$18$ bits). In (a), \Words~and \Index~are
+still in their initial state, and \Mask~has some bits set to~$0$ and some
+set to~$1$. In (b), we see the result of applying intersectWithMask() with
+the mask from (a). In the operation, all the bits in words~$w_0$
+and~$w_2$ are set to~$0$, and~$w_0$ is swapped with~$w_3$ and $w_2$
+is swapped with~$w_4$.
+Between (a) and (c), clearMask() is assumed to have been called,
+so that the words up to \Limit~are cleared in~\Mask.
+In (c), the bit-set \T{b} is added to \Mask.
+Finally, (d) shows the result of applying intersectWithMask() with
+the mask in (c), and we see that all bits in~$w_3$ are set to~$0$,
+and~$w_3$ is swapped with~$w_4$. In (d), the elements that are present
+are~$5$ and $6$ (in~$w_1$), and~$17$ (in~$w_4$).
+
+
+\input{example.tex}
 
 \subsection{The Compact-Table Algorithm}
 \label{sec:ct}
@@ -2247,6 +2275,7 @@ only the memory usage is reported.
 % Also, for \emph{BDD Large} and \emph{BDD Small}, no data from 
 
 \input{graphs-tuples.tex}
+
 
 % \section{Profiling}
 
