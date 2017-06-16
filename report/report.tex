@@ -228,8 +228,6 @@ are satisfied. Additionally, in some cases the solution should not only
 satisfy the set of constraints for the
 problem, but also maximise or minimise some given function on the variables.
 
-
-%A constraint solver (CP solver) is a software that solves constraint problems.
 A solution to a constraint problem is found by generating a search
 tree, branching on partitions of the possible values for the variables. 
 At each node in the search tree, conflicting values are filtered out
@@ -252,7 +250,8 @@ known algorithms in terms of runtime.
 
 A constraint programming solver (CP solver) is a software that solves constraint problems.
 \emph{Gecode}~\cite{Gecode} is a popular CP solver written in the C++ programming language
-that combines state-of-the-art performance with modularity and extensibility.
+that combines state-of-the-art performance with modularity and extensibility,
+using copying during branching.
 Presently, Gecode has two existing propagators for~\Table,
 but to the best of my knowledge there have been no attempts to implement
 CT in Gecode before this project, and thus its performance in Gecode was unknown.
@@ -262,15 +261,6 @@ the \Table~constraint.
 The results of the evaluation indicate that CT outperforms
 the existing propagation algorithms in Gecode for \Table,
 which suggests that CT should be included in the solver.
-
-% In Constraint Programming (CP), every constraint is associated with a propagator
-% algorithm. The propagator algorithm filters out impossible values for the variables
-% related to the constraint. For the \Table~constraint, several propagator
-% algorithms are known. In 2016, a new propagator algorithm for the \Table
-% constraint was published~\cite{\CTpaper}, called Compact-Table (CT).
-% Preliminary results indicate that CT outperforms the previously known algorithms.
-% There has been no attempt to implement CT in the constraint solver Gecode~\cite{Gecode}, 
-% and consequently its performance in Gecode is unknown.
 
 \subsection{Goal}
 \label{intro:goal}
@@ -290,8 +280,8 @@ while simultaneously serving as a description of the outline:
 
   \item The algorithms presented in the paper that is the starting point of this 
     project~\cite{DBLP:conf/cp/DemeulenaereHLP16} 
-    have been modified to suit the target CP solver Gecode, and are presented and explained in 
-    \Secref{sec:algorithms}.
+    have for the first time been optimised for a copying CP solver such as Gecode,
+    this is described in~\Secref{sec:algorithms}.
 
   \item Several versions of the CT algorithm have been implemented in Gecode, and
     the implementation is discussed in \Secref{sec:implementation}.
@@ -898,8 +888,8 @@ These differences reflect the fact that \bitset~is a data structure customised
 for a copy-based solver such as Gecode, in contrast to reversible sparse bit-sets
 that are more suited for a trail-based solver such as OR-tools.
 
-\Algoref{algo:sparse} shows pseudo code for the class~$\SparseBitSet$ -- a class
-representing {\bitset}s.
+\Algoref{algo:sparse} shows pseudo code for the class~$\SparseBitSet$
+implementing {\bitset}s.
 The rest of this section describes its fields and methods in detail.
 
 \begin{algorithm}[H]
@@ -1019,7 +1009,7 @@ Figure~\ref{fig:example} shows an example of applying operations to a
 \bitset~assuming it consisted of $4$-bit ints instead of~$64$-bit ints.
 We assume that initially the set contains the range~$0..17$, so~$p = 5$
 (we need~$5$ $4$-bit ints for~$18$ bits). In (a), \Words~and \Index~are
-still in their initial state, and \Mask~has some bits set to~$0$ and some
+still in their initial state, and \Mask~has some bits set to~$0$ and others
 set to~$1$. In (b), we see the result of applying intersectWithMask() with
 the mask from (a). In the operation, all the bits in words~$w_0$
 and~$w_2$ are set to~$0$, and~$w_0$ is swapped with~$w_3$ and $w_2$
@@ -1531,9 +1521,6 @@ proving~\Thmref{thm:prop} is trivial.
 \section{Implementation}
 \label{sec:implementation}
 
-\Todo{Todo: Describe more clearly what modifications were made to the algoritms
-  to suit the target solver.}
-
 Now the implementation of the CT algorithm presented in 
 \Secref{sec:algorithms} will be described.
 This section reveals some important implementation details
@@ -1558,9 +1545,6 @@ the tuple set is maintained as a field.
 
 The implementation uses C++ templates to support both integer and boolean domains.
 
-%The propagator has all the fields that are described there:~$\Supports$
-
-% Indexering
 \paragraph{Indexing \Residues~and \Supports.}
 For a given variable-value pair~$(x,a)$, its corresponding entry~\Supports[$x,a$]
 and \Residues[$x,a$]~must be found, which requires a mapping
@@ -1591,22 +1575,8 @@ is at least~$2 \cdot \text{size}$.
 The quantities~$S$ and~$H$ are equal when~$R = \frac{4}{3} \approx 1.33$.
 Because the hash table might have collisions, this strategy does not always
 take constant time. Therefore the value~$3$ was chosen, as a trade-off between
-speed and memory. The optimal threshold value should be found by further
+speed and memory usage. The optimal threshold value should be found by further
 experiments.
-
-% OR-tools kod
-% Incremental
-% Noll-ord
-% \paragraph{Copying only the non-zero words in \CurrTable.}
-% \Todo{Work in progress: compactifying CT so that only non-zero words are kept
-%   in \CurrTable, reducing the cloning-overhead.}
-% Some effort was spent on redesigning the sparse bit-set to only keep the
-% non-zero words to save memory and minimise copying by placing
-% all the zero-words at the end of the array. However, the swapping of
-% the words introduces problems with \Residues. If the current
-% index of a word is not the same as the original index of the word, the
-% information saved in~\Residues~is not correct. No simple solution to
-% this problem could be found, and the idea was abandoned.
 
 \paragraph{Advisors.} The implementation uses advisors that decide whether
 the propagator needs to be executed or not. The advisors execute \UpdateTable($x$)
@@ -1623,11 +1593,11 @@ This means that when that variable is assigned, the memory used for storing
 information about that variable can be freed.
 
 \paragraph{OR-tools.} The implementation of CT in OR-tools was studied and
-a some notable observations were made.
+some notable observations were made.
 The implementation in OR-tools uses two versions of CT, one for small tables 
 ($\leq 64$ tuples) that only use one word for~$\CurrTable$ instead of an array.
 Though this is a
-promising idea, this variant was not implemented due to time constraints.
+promising idea, this variant was not implemented due to time limitations.
 Another implementation detail is that during propagation, the implementation
 in OR-tools first reasons on the bounds of the domains of the variables,
 enforcing bounds consistency,
@@ -1637,20 +1607,46 @@ expensive. This candidate optimisation was implemented,
 and the variant is denoted by CT($B$) in the
 evaluation of different variant of CT (\Secref{evaluation}).
 
-\paragraph{Memory usage.} Since \Supports~consists of static data (only
-computed once), this array is allocated in a memory area that is shared
+\paragraph{Memory usage and copying.} 
+Since Gecode is a copy-based solver, the state of the propagator is copied
+during branching.
+The array \Supports~consists of static data (only
+computed once), so this array is allocated in a memory area that is shared
 among nodes in the search tree, which means that it does not need to be
-copied when branching, in constrast to the rest of the data structures,
-which are allocated in a memory space that is specific to the current node.
+copied when branching, in constrast to the rest of the data structures
+that are allocated in a memory area specific to the current node,
+because they change dynamically and therefore need to be copied.
+
+For the \bitset, only the words up to \Limit~inclusive are copied for~\Words~and 
+\Index, since these are the only words that correspond to non-zero words.
+Moreover, the lines~$31$ and~$33$ in intersectWithMask() in
+\Algoref{algo:sparse} are not executed, because the words that consist
+of only zeros do not need to be saved.
+
+Furthermore, not all entries in \Residues~need to be copied, because entries
+corresponding to assigned variables or removed values will not be used
+again. However, iterating over a domain of a variable is computationally
+expensive, while finding the minimum and maximum value of the domain is cheap, so
+in the current implementation all entries corresponding to
+values in the range~$[\text{min}(\Dom{x}),\text{max}(\Dom{x})]$ for unassigned
+variables are copied.
 
 \paragraph{Profiling.} Profiling tools were used to locate the parts of
-the propagator where most of the time is spent. Some optimisations could
+the implementation where most of the time is spent. Some optimisations could
 be performed based on this information. Specifically, a speed-up could be
-achieved by decreasing the number of memory accesses in some of the
-methods in \SparseBitSet. The profiling shows that the bottleneck 
-in the implementation are the bit-wise operations in \SparseBitSet,
-and also that a significant amount of time is spent in \FilterDomains().
-\Todo{Profiling.}
+achieved by decreasing the number of memory accesses in parts of the code
+that is executed very often, by moving out memory accesses from loops.
+The profiling shows that most of the execution time is spent in
+bit-wise operations.
+This suggests that further optimisations could be acheived
+by investigating methods to parallelise the bit-wise operations,
+for example by exploring whether
+it would be possible to use~$128$-bit operations, which
+some computer architectures support. Moreover, it is probable that
+the execution speed could be increased if the number of memory accesses
+could be decreased further, by revising the implementation of the
+data structures and try to decrease the levels of indirection, 
+because following pointers is costly.
 
 \paragraph{Using delta information.} In the version CT($\Delta$), which uses
 the set of values~$\Delta_x$ that has been removed since last time, the current
@@ -1756,8 +1752,8 @@ an XML format called
 XCSP2.1~\cite{DBLP:journals/corr/abs-0902-2362}, and before being used
 in this project they were translated
 to a modelling language called MiniZinc~\cite{MiniZinc} 
-using a tool for translating XCSP2.1 models
-into MiniZinc~\cite{xcsp2mzn}.
+using a tool~\cite{xcsp2mzn} for translating XCSP2.1 models
+into MiniZinc.
 Of the~$1621$ instances that were used in~\cite{\CTpaper},
 only~$1507$ could be used due to parse errors in the translation process.
 The experiments were run
