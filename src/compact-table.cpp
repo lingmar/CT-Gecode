@@ -20,7 +20,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 2
+#define HASHH_THRESHOLD 3
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -156,8 +156,6 @@ public:
     offset(0),
     supports(s0,nsupports,offset,type,x0)
   {
-    //printf("Initialising advisor %d\n", index);
-    //cout << x0 << endl;
     // Initialise residues
     switch (type) {
     case ARRAYY: {
@@ -196,13 +194,9 @@ public:
     : ViewAdvisor<View>(home,a),
     supports(a.supports)
   {
-    //printf("Copy advisor %d\n", a.index);
-    //cout << a.view() << endl;
     View x = a.view();
     if (!x.assigned()) {
       index = a.index;
-      // Update shared handle
-      //supports.update(home,a.supports);
       // Copy residues
       const int min_row = supports.row(x.min()) - a.offset;
       const int max_row = supports.row(x.max()) - a.offset;
@@ -216,7 +210,6 @@ public:
     
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
-    //printf("Dispose %d\n", index);
     (void) supports.~Supports();
     (void) ViewAdvisor<View>::dispose(home,c);
   }
@@ -371,19 +364,6 @@ private:
     unsigned int bit_index = words.getword(0).next();
     return index[0] * words.get_bpb() + bit_index;
   }
-  /// Clea// r \a set bits in words
-  // forceinline void
-  // clearall(unsigned int sz) {
-  //   int start_bit = 0;
-  //   int complete_words = sz / BitSet::get_bpb();
-  //   if (complete_words > 0) {
-  //     start_bit = complete_words * BitSet::get_bpb() + 1;
-  //     words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
-  //   }
-  //   for (unsigned int i = start_bit; i < sz; i++) {
-  //     words.set(i);
-  //   }
-  // }
   // Debugging only
   int nset() {
     int count = 0;
@@ -424,12 +404,10 @@ public:
       arity(x0.size()),
       unassigned(x0.size())
   {
-    //printf("*** Constructor ***\n");
     // Initialise supports and post advisors
     int nsupports = init_supports(home, t0, x0);
     
     if (nsupports <= 0) {
-      //printf("home.fail()\n");
       home.fail();
       return;
     } 
@@ -562,7 +540,6 @@ public:
       max_dom_size(p.max_dom_size),
       limit(p.limit)
   {
-    //printf("Copy propagator\n");
     // Update advisors
     c.update(home,p.c);
 #ifdef FIX
@@ -602,7 +579,6 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
-    //printf("propagate\n");
     status = PROPAGATING;
     if (is_empty())
       return ES_FAILED;
@@ -730,15 +706,9 @@ public:
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
 
-    //printf("advise %d\n", a.index);
-    
     // Do not fail a disabled propagator
-    if (is_empty()) {
-      //printf("Degree = %d\n", a.view().degree());
-      //printf("Failed = %d\n", home.failed());
-      //printf("Disabled = %d\n", disabled());
-      return disabled() ? ES_NOFIX : ES_FAILED;//return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
-    }
+    if (is_empty())
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;//return disabled() ? ES_NOFIX : ES_FAILED;//
 
     assert(limit >= 0);
     assert(nzerowords());
@@ -747,7 +717,6 @@ public:
     // and dispose if assigned
     if (status == PROPAGATING) {
       if (x.assigned()) {
-        //printf("Disabled = %d\n", disabled());
         return ES_FIX;//home.ES_FIX_DISPOSE(c,a);
       }
       return ES_FIX;
@@ -765,7 +734,6 @@ public:
     } else { // Delta information available -- let's compare the size of
              // the domain with the size of delta to decide whether or not
              // to do reset-based or incremental update
-       //printf("DELTA\n");
        int min_rm = x.min(d);
        int max_rm = x.max(d);
        int min_row = a.supports.row(min_rm);
@@ -801,7 +769,7 @@ public:
            }
          }
       
-       } else { // Domain size smaller than delta, incremental update
+       } else { // Domain size smaller than delta, reset-based update
          reset_based_update(a,home);
        }
      } 
@@ -828,8 +796,6 @@ public:
     // Schedule propagator and dispose if assigned
     if (a.view().assigned()) {
       unassigned--;
-      //      printf("View assigned, disposing advisor %d\n", a.index);
-      //cout << a.view() << endl;
       return ES_NOFIX;//return home.ES_NOFIX_DISPOSE(c,a);
     }
     return ES_NOFIX;
@@ -1087,7 +1053,6 @@ public:
   // Dispose propagator and return its size
   forceinline virtual size_t
   dispose(Space& home) {
-    //printf("Dispose propagator\n");
     home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
 #ifdef FIX

@@ -201,7 +201,6 @@ public:
   forceinline virtual int
   row(int val) {
     return index_table.get(val);
-    //return 0;
   }
   
 };
