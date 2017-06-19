@@ -136,17 +136,10 @@ public:
     Supports(const Supports& s)
       : SharedHandle(s) {
     }
-    /// [] operator
     forceinline const BitSet&
     operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
-    }
-    /// () operator returns the actual row
-    forceinline const BitSet&
-    operator ()(unsigned int i) {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->info->get_supports_raw(i);
     }
     /// Initialise from parameters
     forceinline
@@ -294,7 +287,16 @@ private:
     for (int i = limit+1; i--; )
       index[i] = i;
     // Set the set nr of bits in words
-    clearall(s);
+    int start_bit = 0;
+    int complete_words = s / BitSet::get_bpb();
+    if (complete_words > 0) {
+      start_bit = complete_words * BitSet::get_bpb() + 1;
+      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
+    }
+    for (unsigned int i = start_bit; i < s; i++) {
+      words.set(i);
+    }
+
     assert(nzerowords());
     assert(limit >= 0);
     assert(nset() == s);
@@ -391,19 +393,6 @@ private:
     // Bit index is word_index*bpb + bit_index
     unsigned int bit_index = words.getword(0).next();
     return index[0] * words.get_bpb() + bit_index;
-  }
-  /// Clear \a set bits in words
-  forceinline void
-  clearall(unsigned int sz) {
-    int start_bit = 0;
-    int complete_words = sz / BitSet::get_bpb();
-    if (complete_words > 0) {
-      start_bit = complete_words * BitSet::get_bpb() + 1;
-      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
-    }
-    for (unsigned int i = start_bit; i < sz; i++) {
-      words.set(i);
-    }
   }
   // Debugging only
   int nset() {
@@ -654,8 +643,8 @@ public:
       // Intersect with validTuples directly
       int row_min = a.supports.row(a.view().min());
       int row_max = a.supports.row(a.view().max());
-      intersect_with_mask_sparse_two(a.supports(row_min),
-                                     a.supports(row_max));
+      intersect_with_mask_sparse_two(a.supports[row_min],
+                                     a.supports[row_max]);
       break;
     }
     default:
@@ -676,7 +665,7 @@ public:
         row = a.supports.row(cur);
         while (cur <= max) {
           assert(a.view().in(cur));
-          add_to_mask(a.supports(row),mask);
+          add_to_mask(a.supports[row],mask);
           ++cur;
           ++row;
         }
@@ -690,7 +679,7 @@ public:
       assert(row >= 0);
       // Find the support entries for the first two values,
       // to initialise the mask from
-      const BitSet& first = a.supports(row);
+      const BitSet& first = a.supports[row];
       if (cur < max) { // First range has more than one value
         ++cur;
         ++row;
@@ -705,14 +694,14 @@ public:
         assert(a.view().in(cur));
       }  
       // Initailise mask
-      init_mask(first,a.supports(row),mask);
+      init_mask(first,a.supports[row],mask);
 
       // Flush the first range to start on a fresh range later
       ++cur;
       ++row;
       while (cur <= max) {
         assert(a.view().in(cur));
-        add_to_mask(a.supports(row),mask);
+        add_to_mask(a.supports[row],mask);
         ++cur;
         ++row;
       }      
@@ -726,7 +715,7 @@ public:
       
         while (cur <= max) {
           assert(a.view().in(cur));
-          add_to_mask(a.supports(row),mask);
+          add_to_mask(a.supports[row],mask);
           ++cur;
           ++row;
         }
@@ -764,7 +753,8 @@ public:
 
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      intersect_with_mask_sparse_one(a.supports[x.val()]);
+      int row = a.supports.row(x.val());
+      intersect_with_mask_sparse_one(a.supports[row]);
       //reset_based_update(a,home);
     }
 #ifdef DELTA
@@ -773,45 +763,45 @@ public:
     } else { // Delta information available -- let's compare the size of
              // the domain with the size of delta to decide whether or not
              // to do reset-based or incremental update
-      int min_rm = x.min(d);
-      int max_rm = x.max(d);
-      int min_row = a.supports.row(min_rm);
-      int max_row = a.supports.row(max_rm);
-      // Push min_row and max_row to closest corresponding tabulated values.
-      // This happens if min_rm or max_rm were not in the domain of x
-      // when the advisor was posted. Those values need not be considered since
-      // we were at fixpoint when the advisor was posted.
-      while (min_row == -1) // -1 means value is not tabulated
-        min_row = a.supports.row(++min_rm);
-      while (max_row == -1)
-        max_row = a.supports.row(--max_rm);
-      assert(max_row >= min_row);
-
-      if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
-        for (int i = min_row; i <= max_row; i+=2) { // Nand supports two and two
-          if (i != max_row) {                 // At least two values left
-            assert(i + 1 <= max_row);
-            const BitSet& s1 = a.supports(i);
-            const BitSet& s2 = a.supports(i+1);
-            if (!s1.empty() && !s2.empty()) { // Both non-empty
-              nand_with_mask_two(s1,s2);
-            } else if (!s1.empty()) {         // s1 non-empty, s2 empty
-              nand_with_mask_one(s1);
-            } else if (!s2.empty()) {         // s2 non-empty, s1 empty
-              nand_with_mask_one(s2);
-            }
-          } else {                            // Last value
-            assert(static_cast<unsigned int>(max_row - min_row + 1) % 2 == 1);
-            const BitSet& s = a.supports(i);
-            if (!s.empty()) 
-              nand_with_mask_one(s);
-          }
-        }
-      
-      } else { // Domain size smaller than delta, incremental update
-        reset_based_update(a,home);
-      }
-    } 
+       int min_rm = x.min(d);
+       int max_rm = x.max(d);
+       int min_row = a.supports.row(min_rm);
+       int max_row = a.supports.row(max_rm);
+       // Push min_row and max_row to closest corresponding tabulated values.
+       // This happens if min_rm or max_rm were not in the domain of x
+       // when the advisor was posted. Those values need not be considered since
+       // we were at fixpoint when the advisor was posted.
+       while (min_row == -1) // -1 means value is not tabulated
+	 min_row = a.supports.row(++min_rm);
+       while (max_row == -1)
+	 max_row = a.supports.row(--max_rm);
+       assert(max_row >= min_row);
+       
+       if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
+	 for (int i = min_row; i <= max_row; i+=2) { // Nand supports two and two
+	   if (i != max_row) {                 // At least two values left
+	     assert(i + 1 <= max_row);
+	     const BitSet& s1 = a.supports[i];
+	     const BitSet& s2 = a.supports[i+1];
+	     if (!s1.empty() && !s2.empty()) { // Both non-empty
+	       nand_with_mask_two(s1,s2);
+	     } else if (!s1.empty()) {         // s1 non-empty, s2 empty
+	       nand_with_mask_one(s1);
+	     } else if (!s2.empty()) {         // s2 non-empty, s1 empty
+	       nand_with_mask_one(s2);
+	     }
+	   } else {                            // Last value
+	     assert(static_cast<unsigned int>(max_row - min_row + 1) % 2 == 1);
+	     const BitSet& s = a.supports[i];
+	     if (!s.empty()) 
+	       nand_with_mask_one(s);
+	   }
+	 }
+	 
+       } else { // Domain size smaller than delta, incremental update
+	 reset_based_update(a,home);
+       }
+     } 
 #else
     else {
       reset_based_update(a,home);
@@ -1053,7 +1043,7 @@ public:
   forceinline bool
   supported(CTAdvisor<View>& a, int row, unsigned int offset) {
     int r = static_cast<int>(a.residues[row - offset]);
-    const BitSet& support_row = a.supports(row);
+    const BitSet& support_row = a.supports[row];
 
     if (r == 0)
       return !BitSet::a(words,r,support_row,index[r]).none();
@@ -1076,6 +1066,7 @@ public:
 #ifdef FIX
   forceinline ExecStatus
   fixDomains(Space& home) {
+    printf("fix");
     // Only one valid tuple left, so we can fix all vars to that tuple
     unsigned int tuple_index = index_of_fixed();
     TupleSet::Tuple t = tupleSet[tuple_index];

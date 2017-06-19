@@ -48,15 +48,8 @@ public:
     nvals = n;
     supports = heap.alloc<BitSet>(nvals);
   }
-  /// Abstract functions
   forceinline virtual const BitSet&
-  get_supports(int val) {
-    assert(row(val) >= 0);
-    return supports[row(val)];
-  }
-  
-  forceinline virtual const BitSet&
-  get_supports_raw(int row) {
+  get_supports(int row) {
     assert(row >= 0);
     return supports[row];
   }
