@@ -20,7 +20,7 @@
  * Defined as domain-width / domain-size for each variable
  * (0->always hash, infinity->never hash)
  */
-#define HASHH_THRESHOLD 3
+#define HASHH_THRESHOLD 2
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -52,25 +52,6 @@ public:
       IndexType type;
       /// Info object
       InfoBase* info;
-      /// Default constructor (yields empty set)
-      SupportsI(void) {}
-      /// Copy \a s
-      SupportsI(const SupportsI& s) 
-        : type(s.type) {
-        switch (type) {
-        case ARRAYY: {
-          info = new InfoArray(*((InfoArray *const)s.info));
-          break;
-        }
-        case HASHH: {
-          info = new InfoHash(*((InfoHash *const)s .info));
-          break;
-        }
-        default:
-          break;
-        }
-      }
-      
       /// Initialise from parameters
       forceinline void
       init(const BitSet* s,
@@ -95,11 +76,6 @@ public:
           break;
         }
         
-      }
-      /// Copy function
-      forceinline virtual Object*
-      copy(void) const {
-        return new SupportsI(*this);
       }
       /// Desctructor
       forceinline virtual
@@ -136,17 +112,10 @@ public:
     Supports(const Supports& s)
       : SharedHandle(s) {
     }
-    /// [] operator
     forceinline const BitSet&
     operator [](unsigned int i) {
       const SupportsI* si = static_cast<SupportsI*>(object());
       return si->info->get_supports(i);
-    }
-    /// () operator returns the actual row
-    forceinline const BitSet&
-    operator ()(unsigned int i) {
-      const SupportsI* si = static_cast<SupportsI*>(object());
-      return si->info->get_supports_raw(i);
     }
     /// Initialise from parameters
     forceinline
@@ -156,11 +125,6 @@ public:
       
       static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,type,x);
-    }
-    /// Update function
-    forceinline void
-    update(Space& home, bool share, SharedHandle& sh) {
-      SharedHandle::update(home,share,sh);
     }
     /// Get the index for a value
     forceinline int
@@ -192,6 +156,8 @@ public:
     offset(0),
     supports(s0,nsupports,offset,type,x0)
   {
+    //printf("Initialising advisor %d\n", index);
+    //cout << x0 << endl;
     // Initialise residues
     switch (type) {
     case ARRAYY: {
@@ -203,7 +169,7 @@ public:
       break;
     }
     case HASHH: {
-      // Pack the residues tight        
+      // Pack the residues tight
       int nvals = x0.size();
       residues = home.alloc<unsigned int>(nvals);
       int count = 0;
@@ -226,14 +192,17 @@ public:
 
   /// Copy constructor
   forceinline
-  CTAdvisor(Space& home, bool share, CTAdvisor<View>& a)
-    : ViewAdvisor<View>(home,share,a)
+  CTAdvisor(Space& home, CTAdvisor<View>& a)
+    : ViewAdvisor<View>(home,a),
+    supports(a.supports)
   {
+    //printf("Copy advisor %d\n", a.index);
+    //cout << a.view() << endl;
     View x = a.view();
     if (!x.assigned()) {
       index = a.index;
       // Update shared handle
-      supports.update(home,share,a.supports);
+      //supports.update(home,a.supports);
       // Copy residues
       const int min_row = supports.row(x.min()) - a.offset;
       const int max_row = supports.row(x.max()) - a.offset;
@@ -247,6 +216,7 @@ public:
     
   forceinline void
   dispose(Space& home, Council<CTAdvisor<View> >& c) {
+    //printf("Dispose %d\n", index);
     (void) supports.~Supports();
     (void) ViewAdvisor<View>::dispose(home,c);
   }
@@ -293,8 +263,17 @@ private:
     index = home.alloc<int>(nwords);
     for (int i = limit+1; i--; )
       index[i] = i;
-    // Set the set nr of bits in words
-    clearall(s);
+    // Set the first s nr of bits in words
+    int start_bit = 0;
+    int complete_words = s / BitSet::get_bpb();
+    if (complete_words > 0) {
+      start_bit = complete_words * BitSet::get_bpb() + 1;
+      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
+    }
+    for (unsigned int i = start_bit; i < s; i++) {
+      words.set(i);
+    }
+
     assert(nzerowords());
     assert(limit >= 0);
     assert(nset() == s);
@@ -392,19 +371,19 @@ private:
     unsigned int bit_index = words.getword(0).next();
     return index[0] * words.get_bpb() + bit_index;
   }
-  /// Clear \a set bits in words
-  forceinline void
-  clearall(unsigned int sz) {
-    int start_bit = 0;
-    int complete_words = sz / BitSet::get_bpb();
-    if (complete_words > 0) {
-      start_bit = complete_words * BitSet::get_bpb() + 1;
-      words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
-    }
-    for (unsigned int i = start_bit; i < sz; i++) {
-      words.set(i);
-    }
-  }
+  /// Clea// r \a set bits in words
+  // forceinline void
+  // clearall(unsigned int sz) {
+  //   int start_bit = 0;
+  //   int complete_words = sz / BitSet::get_bpb();
+  //   if (complete_words > 0) {
+  //     start_bit = complete_words * BitSet::get_bpb() + 1;
+  //     words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
+  //   }
+  //   for (unsigned int i = start_bit; i < sz; i++) {
+  //     words.set(i);
+  //   }
+  // }
   // Debugging only
   int nset() {
     int count = 0;
@@ -445,10 +424,12 @@ public:
       arity(x0.size()),
       unassigned(x0.size())
   {
+    //printf("*** Constructor ***\n");
     // Initialise supports and post advisors
     int nsupports = init_supports(home, t0, x0);
     
     if (nsupports <= 0) {
+      //printf("home.fail()\n");
       home.fail();
       return;
     } 
@@ -474,7 +455,7 @@ public:
         max_dom_size = x[i].size();
     }
 
-    Region r(home);
+    Region r;
 #ifdef FIX
     // Temporary array to create tupleset
     int* tuple = r.alloc<int>(x.size());
@@ -572,8 +553,8 @@ public:
 
   // Copy constructor during cloning
   forceinline
-  CompactTable(Space& home, bool share, CompactTable& p)
-    : Propagator(home,share,p),
+  CompactTable(Space& home, CompactTable& p)
+    : Propagator(home,p),
       status(NOT_PROPAGATING),
       touched_var(-1),
       arity(p.arity),
@@ -581,8 +562,9 @@ public:
       max_dom_size(p.max_dom_size),
       limit(p.limit)
   {
+    //printf("Copy propagator\n");
     // Update advisors
-    c.update(home,share,p.c);
+    c.update(home,p.c);
 #ifdef FIX
     tupleSet.update(home,share,p.tupleSet);
 #endif // FIX
@@ -596,9 +578,9 @@ public:
   }
 
   // Create copy during cloning
-  forceinline virtual Propagator*
-  copy(Space& home, bool share) {
-    return new (home) CompactTable(home,share,*this);
+  forceinline virtual Actor*
+  copy(Space& home) {
+    return new (home) CompactTable(home,*this);
   }
     
   // Return cost
@@ -620,6 +602,7 @@ public:
   // Perform propagation
   forceinline virtual ExecStatus
   propagate(Space& home, const ModEventDelta&) {
+    //printf("propagate\n");
     status = PROPAGATING;
     if (is_empty())
       return ES_FAILED;
@@ -654,13 +637,13 @@ public:
       // Intersect with validTuples directly
       int row_min = a.supports.row(a.view().min());
       int row_max = a.supports.row(a.view().max());
-      intersect_with_mask_sparse_two(a.supports(row_min),
-                                     a.supports(row_max));
+      intersect_with_mask_sparse_two(a.supports[row_min],
+                                     a.supports[row_max]);
       break;
     }
     default:
       // Collect all tuples to be kept in a temporary mask
-      Region r(home);
+      Region r;
       BitSet mask;
       mask.allocate(r,words.size());
 
@@ -676,7 +659,7 @@ public:
         row = a.supports.row(cur);
         while (cur <= max) {
           assert(a.view().in(cur));
-          add_to_mask(a.supports(row),mask);
+          add_to_mask(a.supports[row],mask);
           ++cur;
           ++row;
         }
@@ -690,7 +673,7 @@ public:
       assert(row >= 0);
       // Find the support entries for the first two values,
       // to initialise the mask from
-      const BitSet& first = a.supports(row);
+      const BitSet& first = a.supports[row];
       if (cur < max) { // First range has more than one value
         ++cur;
         ++row;
@@ -705,14 +688,14 @@ public:
         assert(a.view().in(cur));
       }  
       // Initailise mask
-      init_mask(first,a.supports(row),mask);
+      init_mask(first,a.supports[row],mask);
 
       // Flush the first range to start on a fresh range later
       ++cur;
       ++row;
       while (cur <= max) {
         assert(a.view().in(cur));
-        add_to_mask(a.supports(row),mask);
+        add_to_mask(a.supports[row],mask);
         ++cur;
         ++row;
       }      
@@ -726,7 +709,7 @@ public:
       
         while (cur <= max) {
           assert(a.view().in(cur));
-          add_to_mask(a.supports(row),mask);
+          add_to_mask(a.supports[row],mask);
           ++cur;
           ++row;
         }
@@ -747,9 +730,15 @@ public:
     CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
 
+    //printf("advise %d\n", a.index);
+    
     // Do not fail a disabled propagator
-    if (is_empty())
-      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+    if (is_empty()) {
+      //printf("Degree = %d\n", a.view().degree());
+      //printf("Failed = %d\n", home.failed());
+      //printf("Disabled = %d\n", disabled());
+      return disabled() ? ES_NOFIX : ES_FAILED;//return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+    }
 
     assert(limit >= 0);
     assert(nzerowords());
@@ -757,14 +746,17 @@ public:
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
-      if (x.assigned())
-        return home.ES_FIX_DISPOSE(c,a);
+      if (x.assigned()) {
+        //printf("Disabled = %d\n", disabled());
+        return ES_FIX;//home.ES_FIX_DISPOSE(c,a);
+      }
       return ES_FIX;
     }
 
     ModEvent me = View::modevent(d);
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
-      intersect_with_mask_sparse_one(a.supports[x.val()]);
+      int row = a.supports.row(x.val());
+      intersect_with_mask_sparse_one(a.supports[row]);
       //reset_based_update(a,home);
     }
 #ifdef DELTA
@@ -773,45 +765,46 @@ public:
     } else { // Delta information available -- let's compare the size of
              // the domain with the size of delta to decide whether or not
              // to do reset-based or incremental update
-      int min_rm = x.min(d);
-      int max_rm = x.max(d);
-      int min_row = a.supports.row(min_rm);
-      int max_row = a.supports.row(max_rm);
-      // Push min_row and max_row to closest corresponding tabulated values.
-      // This happens if min_rm or max_rm were not in the domain of x
-      // when the advisor was posted. Those values need not be considered since
-      // we were at fixpoint when the advisor was posted.
-      while (min_row == -1) // -1 means value is not tabulated
-        min_row = a.supports.row(++min_rm);
-      while (max_row == -1)
-        max_row = a.supports.row(--max_rm);
-      assert(max_row >= min_row);
+       //printf("DELTA\n");
+       int min_rm = x.min(d);
+       int max_rm = x.max(d);
+       int min_row = a.supports.row(min_rm);
+       int max_row = a.supports.row(max_rm);
+       // Push min_row and max_row to closest corresponding tabulated values.
+       // This happens if min_rm or max_rm were not in the domain of x
+       // when the advisor was posted. Those values need not be considered since
+       // we were at fixpoint when the advisor was posted.
+       while (min_row == -1) // -1 means value is not tabulated
+         min_row = a.supports.row(++min_rm);
+       while (max_row == -1)
+         max_row = a.supports.row(--max_rm);
+       assert(max_row >= min_row);
 
-      if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
-        for (int i = min_row; i <= max_row; i+=2) { // Nand supports two and two
-          if (i != max_row) {                 // At least two values left
-            assert(i + 1 <= max_row);
-            const BitSet& s1 = a.supports(i);
-            const BitSet& s2 = a.supports(i+1);
-            if (!s1.empty() && !s2.empty()) { // Both non-empty
-              nand_with_mask_two(s1,s2);
-            } else if (!s1.empty()) {         // s1 non-empty, s2 empty
-              nand_with_mask_one(s1);
-            } else if (!s2.empty()) {         // s2 non-empty, s1 empty
-              nand_with_mask_one(s2);
-            }
-          } else {                            // Last value
-            assert(static_cast<unsigned int>(max_row - min_row + 1) % 2 == 1);
-            const BitSet& s = a.supports(i);
-            if (!s.empty()) 
-              nand_with_mask_one(s);
-          }
-        }
+       if (static_cast<unsigned int>(max_row - min_row + 1) <= x.size()) { // Delta is smaller 
+         for (int i = min_row; i <= max_row; i+=2) { // Nand supports two and two
+           if (i != max_row) {                 // At least two values left
+             assert(i + 1 <= max_row);
+             const BitSet& s1 = a.supports[i];
+             const BitSet& s2 = a.supports[i+1];
+             if (!s1.empty() && !s2.empty()) { // Both non-empty
+               nand_with_mask_two(s1,s2);
+             } else if (!s1.empty()) {         // s1 non-empty, s2 empty
+               nand_with_mask_one(s1);
+             } else if (!s2.empty()) {         // s2 non-empty, s1 empty
+               nand_with_mask_one(s2);
+             }
+           } else {                            // Last value
+             assert(static_cast<unsigned int>(max_row - min_row + 1) % 2 == 1);
+             const BitSet& s = a.supports[i];
+             if (!s.empty()) 
+               nand_with_mask_one(s);
+           }
+         }
       
-      } else { // Domain size smaller than delta, incremental update
-        reset_based_update(a,home);
-      }
-    } 
+       } else { // Domain size smaller than delta, incremental update
+         reset_based_update(a,home);
+       }
+     } 
 #else
     else {
       reset_based_update(a,home);
@@ -820,7 +813,7 @@ public:
 
     // Do not fail a disabled propagator
     if (is_empty())
-      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+      return disabled() ? ES_NOFIX : ES_FAILED;//return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
     
     assert(nset() > 0);
     assert(limit >= 0);
@@ -835,7 +828,9 @@ public:
     // Schedule propagator and dispose if assigned
     if (a.view().assigned()) {
       unassigned--;
-      return home.ES_NOFIX_DISPOSE(c,a);
+      //      printf("View assigned, disposing advisor %d\n", a.index);
+      //cout << a.view() << endl;
+      return ES_NOFIX;//return home.ES_NOFIX_DISPOSE(c,a);
     }
     return ES_NOFIX;
   }
@@ -849,7 +844,7 @@ public:
     // Count the number of scanned unassigned variables
     unsigned int count_unassigned = unassigned;
     // Array to collect values to remove
-    Region r(home);
+    Region r;
     int* nq = r.alloc<int>(max_dom_size);
     int* nq_start = nq; 
     
@@ -1053,7 +1048,7 @@ public:
   forceinline bool
   supported(CTAdvisor<View>& a, int row, unsigned int offset) {
     int r = static_cast<int>(a.residues[row - offset]);
-    const BitSet& support_row = a.supports(row);
+    const BitSet& support_row = a.supports[row];
 
     if (r == 0)
       return !BitSet::a(words,r,support_row,index[r]).none();
@@ -1092,6 +1087,7 @@ public:
   // Dispose propagator and return its size
   forceinline virtual size_t
   dispose(Space& home) {
+    //printf("Dispose propagator\n");
     home.ignore(*this,AP_DISPOSE);
     c.dispose(home);
 #ifdef FIX
