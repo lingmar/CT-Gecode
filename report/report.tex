@@ -38,7 +38,9 @@
 \usepackage{subcaption}
 \usetikzlibrary{tikzmark}
 
+\usepackage{lipsum}
 
+\usepackage[T1]{fontenc}
 \usepackage{astra}
 %\usepackage{etoolbox}\AtBeginEnvironment{algorithmic}{\small‌​}
 %\usepackage{algorithm2e}
@@ -203,6 +205,89 @@
 
 \maketitle
 
+\begin{abstract}
+  Within constraint programming, which is a programming paradigm for solving 
+  combinatorial (optimisation) problems,
+  relations among variables are expressed using constraints --
+  one such useful constraint is \Table, which
+  expresses the possible combinations that the variables can take
+  as a set of tuples. All constraints have a propagation algorithm, whose purpose
+  is to implement the reasoning for a particular constraint, and Gecode~\cite{Gecode},
+  which is an open source constraint programming
+  solver written in C++ with state-of-the-art performance, presently has two propagation 
+  algorithms for the \Table~constraint, and one for a closely related constraint
+  called~\Regular.
+  In this bachelor dissertation, a new propagation algorithm for 
+  \Table~constraints, called 
+  compact-table, first proposed in~\cite{\CTpaper}, is for the first time
+  designed and optimised for, and implemented and evaluated in Gecode.
+  The implementation is evaluated on a large variety of benchmarks, and the
+  results indicate that compact-table outperforms the existing propagators
+  for~\Table~in Gecode, as well as the propagator for the~\Regular~constraint.
+  These results suggest that compact-table should be included in Gecode.
+\end{abstract}
+
+\newpage
+
+\renewcommand{\abstractname}{Acknowledgements}
+\begin{abstract}
+  I wish to express my gratitude towards the following people, and state their
+  indispensable contributions to this work, in a particular order:
+  
+  % Pappa
+  % - Blixtsnabb feedback
+  % - Tålmodig
+  % - Engagerad
+  % Tvåfaldig guldmedaljör i engegemang och snabbhet i feedback
+  My supervisor Mats Carlsson, without whom I would -- in several respects --
+  never have conducted this work, and who, 
+  if supervising were an olympic sport, would be at least a
+  twofold gold medalist in dedication and feedback loop speed,
+  and will probably have a weekend free from work any year soon.
+  
+  % Pierre
+  % - inspirerande lärare
+  % - höga krav -> blir bättre (hög tanke om studenter, nöjer sig inte
+  %   med halvdåligt, inte tappat hoppet om studenter)
+  % Pierre Flener, reviewer of this work
+  Pierre Flener, reviewer of this work, who has so far kept me busy for 
+  at least $533.33$ hours, or~$20$ credits,
+  with inspiring lectures and assignments, during which
+  I achieved a large amount of the prerequisite for this work, 
+  including Oxford English grammar rules and what to say and what not
+  to say about NP-completeness in a bar (serving chocolate milk), and who
+  seems to believe more in student's potentials than they do themselves.
+
+  % Christian
+  % - Utvecklat Gecode
+  % - Gett mig vägledning, tips och råd när jag fastnat
+  Christian Schulte, who gave me useful pieces of advise in an early stage
+  of the work and who has kindly answered my questions and helped me with
+  issues throughout the process.
+
+  % Johan
+  % - Intressanta diskussioner
+  % - Profilerat och optimerat
+  % - Läst min rapport
+  % - Bra på C++
+  Johan {\"O}fverstedt, with whom I have had many interesting discussions, and who
+  increased my skills of profiling and optimising C++ code, and provided useful
+  comments this report and some much-needed encouragements.
+
+  % Albin
+  % - Gett feedback på min rapport
+  % - Sagt till mig när jag ska gå hem
+  Albin Stjerna, who has carefully read every character of this report not only
+  once but~$n$ times, where~$n$ is an integer larger than~$3$, 
+  and whose reminders of when to stop working increased the quality
+  of this work by a factor~$q$, and my well-being with a factor~$w$, where~$q$
+  and~$w$ are constants larger than~$1$. 
+  More experiments are needed to determine these values with a larger accuracy.
+
+\end{abstract}
+
+\newpage
+
 \tableofcontents
 
 \newpage
@@ -245,7 +330,7 @@ encode any kind of constraint and is thus very powerful.
 The design of propagation algorithms for \Table~is an active research field,
 and several algorithms are known. In 2016, a new propagation algorithm for the
 \Table~constraint was published~\cite{\CTpaper}, called Compact-Table (CT).
-The results published in the named paper indicate that CT outperforms all previously
+The results in~\cite{\CTpaper} indicate that CT outperforms all previously
 known algorithms in terms of runtime.
 
 A constraint programming solver (CP solver) is a software that solves constraint problems.
@@ -280,7 +365,7 @@ while simultaneously serving as a description of the outline:
 
   \item The algorithms presented in the paper that is the starting point of this 
     project~\cite{DBLP:conf/cp/DemeulenaereHLP16} 
-    have for the first time been optimised for a copying CP solver such as Gecode,
+    have for the first time been optimised for a copying CP solver such as Gecode;
     this is described in~\Secref{sec:algorithms}.
 
   \item Several versions of the CT algorithm have been implemented in Gecode, and
@@ -292,7 +377,7 @@ while simultaneously serving as a description of the outline:
 
   \item The conclusion of the project is that the results indicate
     that CT outperforms the existing propagation algorithms of Gecode, which
-    suggests that CT should be included in Gecode; this is discussed
+    suggests that CT should be included in the solver; this is discussed
     in \Secref{conclusions}.
 
   \item Several possible improvements and known flaws have been detected in the current
@@ -308,8 +393,8 @@ while simultaneously serving as a description of the outline:
 
 This section provides a background that is relevant for the
 following sections. It is divided into five parts: \Secref{bg:cp}
-introduces Constraint Programming. \Secref{bg:propagation} discusses
-the concepts propagation and propagators in detail.
+introduces constraint programming. \Secref{bg:propagation} discusses
+the concepts propagation and propagators.
 \Secref{bg:gecode} gives an overview
 of Gecode, a constraint programming solver.
 \Secref{bg:table} introduces the~\Table~constraint.
@@ -456,9 +541,9 @@ among variables.
   is $(\max(\Dom{v_i}) - \min(\Dom{v_i}) + 1)$.
   \begin{itemize}
     \item   A \emph{constraint}~$c$ on~$V$ is a relation, 
-      denoted by~$rel(c)$. The associated variables~$V$ are denoted~$\mathit{vars}(c)$,
+      denoted by~$\mathit{rel}(c)$. The associated variables~$V$ are denoted~$\mathit{vars}(c)$,
       and we call~$|\mathit{vars}(c)|$ the \emph{arity} of~$c$. The relation
-      $rel(c)$ contains the set of~$n$-tuples that are allowed
+      $\mathit{rel}(c)$ contains the set of~$n$-tuples that are allowed
       for~$V$, and we call those~$n$-tuples \emph{solutions} to the constraint~$c$.
     \item   For an~$n$-tuple~$\tau$~%= \Tuple{a_1,\ldots,a_n}$
       associated with~$V$, we
@@ -470,12 +555,12 @@ among variables.
     \item For a constraint~$c$ on $V$, the~$n$-tuple~$\tau$ is 
       a \emph{support} on~$c$ if and only
       if~$\tau$ is valid for~$V$ and~$\tau$ is a solution to~$c$, that is,
-      $\tau$ is a member of~$rel(c)$.
-    \item For an~$n$-ary constraint~$c$, involving a variable~$x$ such that
-      the value~$a \in \Dom{x}$, the~$n$-tuple~$\tau$ is a 
-      \emph{support for}~$(x,a)$ on~$c$ if and only if~$\tau$ is a support on~$c$
-      and~$\tau[x] = a$.
-      If such a tuple~$\tau$ exists,~$(x,a)$ is said to have a support on~$c$.
+      $\tau$ is a member of~$\mathit{rel}(c)$.
+    \item For an~$n$-ary constraint~$c$, involving a variable~$v$ such that
+      the value~$a \in \Dom{v}$, the~$n$-tuple~$\tau$ is a 
+      \emph{support for}~$(v,a)$ on~$c$ if and only if~$\tau$ is a support on~$c$
+      and~$\tau[v] = a$.
+      If such a tuple~$\tau$ exists,~$(v,a)$ is said to have a support on~$c$.
     \end{itemize}
 \end{definition}
 
@@ -517,10 +602,10 @@ A current mapping of domains to variables is called a~\emph{store}:
     \item   A variable~$v_i \in V$ is \emph{fixed}, or \emph{assigned},
       by a store~$s$ if and only if~$|s(v_i)| = 1$. 
     
-    \item Let~$c$ be an $m$-ary constraint on a subsequence of~$V$,
+    \item Let~$c$ be an $m$-ary constraint on a subsequence~$V_m$ of~$V$,
       where~$m \leq n$.
       A store~$s$ is an \emph{assignment store} for~$c$ if all variables
-      in~$V$ are fixed by~$s$.
+      in~$V_m$ are fixed by~$s$.
       A store $s$ is a \emph{solution store} 
       to~$c$ if and only if~$s$ is an assignment store for~$c$ such that
       the~$m$-tuple that the values of the variables form is a solution
@@ -629,8 +714,8 @@ as required by the honest property.
 
 So why not stay on the safe side and always signal Possibly not at fixpoint?
 The reason is that the CP solver can benefit from the information
-in the status message: if a propagator~$p$ is at fixpoint, there is no point to
-execute~$p$ again until the domain of at least one of the variables changes.
+in the status message: if a propagator~$p$ is at fixpoint, then there is no point
+to execute~$p$ again until the domain of at least one of the variables changes.
 If~$p$ is subsumed by a store~$s$, then there is no point to execute~$p$
 ever again along the current path in the search tree, because all the following
 stores will be stronger than~$s$. Thus, detecting fixpoints and subsumption
@@ -745,7 +830,7 @@ set of tuples:
   (positive\footnote{There are also negative table constraints that list the
     forbidden tuples instead of the allowed tuples.})
   \emph{table constraint c} is a
-  constraint such that~$rel(c)$ is defined explicitly by listing all the
+  constraint such that~$\mathit{rel}(c)$ is defined explicitly by listing all the
   tuples that are solutions to~$c$.
 \end{definition}
 
@@ -760,7 +845,7 @@ typically have a certain structure
 that is difficult to take advantage of if the constraint is represented
 extensionally~\cite{SchulteCarlsson:FDsys}.
 
-As an example of use case, the~\Table constraint has proved to be useful for
+As an example of use case, the~\Table~constraint has proved to be useful for
 pre-solving sub-problems in constraint models~\cite{Dekker:MSc}.
 
 In Gecode, the \Table~constraint and another constraint 
@@ -777,8 +862,8 @@ and one that is more incremental and more efficient in terms of execution time.
 % Komplexitet? Kolla artikeln om negativa table-villkor
 % O(r*d*t) per table constraint along a branch in the search tree (artikeln om bakgrund)
 The compact-table (CT) algorithm is a domain-consistent propagation algorithm
-that implements the \Table~constraint. It was first implemented in
-OR-tools (Google Optimization Tools), a CP solver, 
+that implements the \Table~constraint. It was first implemented in the CP solver
+OR-tools (Google Optimization Tools),
 where it outperforms all previously
 known algorithms, and was first described in~\cite{\CTpaper}.
 Before this project, no attempts to implement CT in Gecode were made
@@ -790,9 +875,9 @@ Compact-table relies on bit-wise operations using a new
 data structure
 called \emph{reversible sparse bit-set} (see \Secref{bg:sbs}).
 The propagator maintains a reversible sparse bit-set object, \texttt{currTable},
-which stores which tuples from the input table that are currently valid.
+that stores which tuples from the input table that are currently valid.
 Also, for each variable-value pair, a bit-set mask is computed and stored in an 
-array \texttt{supports}:
+array \texttt{supports};
 each bit-set mask stores which of the tuples that are supports for the
 corresponding variable-value pair.
 
@@ -842,7 +927,7 @@ to perform backtracking
 (as previously discussed, Gecode uses copying instead),
 where the main idea is to store a stack of operations that can
 be undone upon backtrack.
-For such a CP solver, reversing a reversible sparse-bit set
+For such a trail-based solver, reversing a reversible sparse-bit set
 to a previous state during backtracking is very efficient.
 
 % In the following sections, a data structure that is 
@@ -865,7 +950,7 @@ bits set to~$0$.
 
 Parts of the pseudo code and its description in this section are very
 similar to the corresponding content in~\cite{\CTpaper}, as the algorithms
-are based on that paper.
+are based on this paper.
 
 % When we refer to a two-dimensional array~$m$,~$m[i][*]$ denotes
 % row~$i$ and~$m[*][j]$ column~$j$, seeing~$m$ as a matrix.
@@ -878,10 +963,10 @@ in the CT algorithm implemented within this project. {\Bitset}s are similar to
 reversible sparse bit-sets described in \Secref{bg:sbs},
 the differences are:
 \begin{itemize}
-  \item {\Bitset}s are not reversible, that is they cannot be restored to a previous
+  \item {\Bitset}s are not reversible, that is, they cannot be restored to a previous
     state.
-  \item {\Bitset}s have a denser representation of the bits than reversible sparse
-    bit-sets have -- the non-zero words are compressed to lay contigously in memory.
+  \item {\Bitset}s have a denser representation of the active bits than reversible sparse
+    bit-sets have -- the non-zero words are compressed to lay contiguously in memory.
 \end{itemize}
 
 These differences reflect the fact that \bitset~is a data structure customised
@@ -958,7 +1043,7 @@ We now describe the methods in the class~\SparseBitSet~in~\Algoref{algo:sparse}.
 
 \begin{itemize}
   \item initSparseBitSet() in~\linesref{line:initsbs:start}{line:initsbs:end}
-    initialises a \bitset-object-object. It takes 
+    initialises a \bitset-object. It takes 
     the number of elements (bits) as an argument and initialises the fields
     described in~\Secref{sbs:fields} in a straightforward way.
 
@@ -1012,9 +1097,9 @@ We assume that initially the set contains the range~$0..17$, so~$p = 5$
 still in their initial state, and \Mask~has some bits set to~$0$ and others
 set to~$1$. In (b), we see the result of applying intersectWithMask() with
 the mask from (a). In the operation, all the bits in words~$w_0$
-and~$w_2$ are set to~$0$, and~$w_0$ is swapped with~$w_3$ and $w_2$
+and~$w_2$ are set to~$0$, and~$w_0$ is swapped with~$w_3$, and $w_2$
 is swapped with~$w_4$.
-Between (a) and (c), clearMask() is assumed to have been called,
+Between (b) and (c), clearMask() is assumed to have been called,
 so that the words up to \Limit~are cleared in~\Mask.
 In (c), the bit-set \T{b} is added to \Mask.
 Finally, (d) shows the result of applying intersectWithMask() with
@@ -1115,7 +1200,7 @@ Lemma~\ref{lemma:honest}.
 In the implementation of the algorithm,
 \InitialiseCT() is executed in the constructor of the
 object, \UpdateTable() is executed in the advisors, and \FilterDomains() is
-executed when the proapagator is invoked for propagation; this happens after
+executed when the propagator is invoked for propagation; this happens after
 the advisors have been executed.
 
 \input{ct-functional.tex}
@@ -1162,10 +1247,9 @@ This is used for indexing the tuples in~$\Supports$ (we only index the tuples
 that are valid supports).
 If~$t$ is a valid support, then
 all elements in~$\Supports$ corresponding to~$t$ are set to~$1$ in
-line \ref{line:init:10}. We also take the opportunity to store the word index
+line~\ref{line:init:10}. We also take the opportunity to store the word index
 of the found support in~$\Residues[x,t[x]]$
 in line~\ref{line:init:11}. 
-
 Line~\ref{line:init:12} increases the counter.
 
 \Linesref{line:init:13}{line:init:wipeout} remove values that are not supported
@@ -1263,7 +1347,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
     \linesref{line:filterDom:3}{line:filterDom:7} for~$\Vars \setminus \Set{x}$.
 
   \item For~$\Residues$, we can make sure that $\Residues[x,a]$ is not just
-    any index in \Words~where a support for~$(x,a)$ was found the last time
+    \emph{any} index in \Words~where a support for~$(x,a)$ was found the last time
     it was sought, but the \emph{highest} such index.
     This means that $\Residues[x,a]$
     will be an \emph{upper bound} on the indices that contain supports
@@ -1275,7 +1359,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
     executing the loop in intersectIndex() from highest index to lowest
     index instead of the other way around. 
     The benefit of this invariant is that we sometimes can decrease the 
-    number of iterations in intersectIndex():
+    number of iterations in intersectIndex();
     more specifically, when reaching line 5 in \FilterDomains(), it follows
     from the introduced invariant that there is no support 
     for~$(x,a)$ at indices greater or equal to~$\Residues[x,a]$,
@@ -1339,7 +1423,7 @@ a condition that can be checked in constant time.
 This is implemented in~\Algoref{algo:one}, which returns
 the bit index of the set bit if there is exactly one set bit, else $-1$.
 The method indexOfFixed() is added to the class \SparseBitSet~and assumes access to
-builtin~\textsc{MSB}~which returns the index of the most significant bit of a given int.
+built-in~\textsc{MSB}~which returns the index of the most significant bit of a given int.
 
 \begin{algorithm}[t]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
@@ -1475,7 +1559,7 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   $s$ is a solution store. 
 
   First, assume that~$s$ is not a solution store. That means that the tuple
-  $\tau = \Tuple{s(x_1),\ldots,s(x_n)}~\notin~rel(c)$.
+  $\tau = \Tuple{s(x_1),\ldots,s(x_n)}~\notin~\mathit{rel}(c)$.
  
   There are two cases: either
   it is the first time $CT$ is applied or it has been applied before.
@@ -1499,7 +1583,7 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:honest}]
-  Since $CT$ is idempotent, that is always returns a fixpoint,
+  Since $CT$ is idempotent, that is, always returns a fixpoint,
   trivially it will never be the case that
   $CT$ signals fixpoint without having computed a fixpoint, thus~$CT$ is
   fixpoint honest.
@@ -1594,7 +1678,7 @@ information about that variable can be freed.
 
 \paragraph{OR-tools.} The implementation of CT in OR-tools was studied and
 some notable observations were made.
-The implementation in OR-tools uses two versions of CT, one for small tables 
+This implementation uses two versions of CT, one for small tables 
 ($\leq 64$ tuples) that only use one word for~$\CurrTable$ instead of an array.
 Though this is a
 promising idea, this variant was not implemented due to time limitations.
@@ -1613,7 +1697,7 @@ during branching.
 The array \Supports~consists of static data (only
 computed once), so this array is allocated in a memory area that is shared
 among nodes in the search tree, which means that it does not need to be
-copied when branching, in constrast to the rest of the data structures
+copied when branching, in contrast to the rest of the data structures
 that are allocated in a memory area specific to the current node,
 because they change dynamically and therefore need to be copied.
 
@@ -1638,7 +1722,7 @@ achieved by decreasing the number of memory accesses in parts of the code
 that is executed very often, by moving out memory accesses from loops.
 The profiling shows that most of the execution time is spent in
 bit-wise operations.
-This suggests that further optimisations could be acheived
+This suggests that further optimisations could be achieved
 by investigating methods to parallelise the bit-wise operations,
 for example by exploring whether
 it would be possible to use~$128$-bit operations, which
@@ -1685,7 +1769,7 @@ this is something that remains to be investigated.
 % when using an iterator for a view, the view cannot be modified (or, in C++ lingua: modifying the variable invalidates the iterator).
 
 % The motivation to iterate over range sequences rather than individual values is efficiency:
-% as there are typically less ranges than indvidual values, iteration over ranges can be more efficient.
+% as there are typically less ranges than individual values, iteration over ranges can be more efficient.
 
 % Sharing of domain and iterators (argument false in inter_v)
 
@@ -1704,7 +1788,7 @@ this is something that remains to be investigated.
 
 We now present the evaluation of the implementation of the CT propagator,
 in which the performance of difference versions of CT is compared,
-and the winning variant is comapred against the existing propagators for
+and the winning variant is compared against the existing propagators for
 the \Table~constraint in Gecode, as well as with the propagator for the
 \Constraint{Regular}~constraint.
 
@@ -1741,7 +1825,7 @@ were present, then a less amount of the total runtime would be spent
 in the propagators that are compared, which would give a weaker performance
 difference.
 Note however that if the involved propagators would not have had
-the same consistency -- they are all domain constistent --
+the same consistency -- they are all domain consistent --
 then other constraints would have been
 desired, because then it would be interesting to compare
 not only the runtimes, but also the sizes of the search trees
@@ -1798,10 +1882,10 @@ The plots from the experiments are presented in Appendix~\ref{app:compare-ct}.
 
 \subsubsection{Discussion}
 The results indicate that CT($\Delta$) outperforms the other variants.
-Moreover, the second best variant is the basic version (CT), and one
-cannot say which one of CT($T$) and CT($B$) is best; sometimes the first
-performs better than the second and sometimes the second performs better
-than the first.
+Moreover, the second best variant seems to be the basic version (CT),
+while it is hard to say which one of CT($T$) and CT($B$) is best;
+sometimes the first performs better than the second and sometimes 
+the second performs better than the first.
 On \emph{AIM-50}, which only contains instances
 with $0/1$ variables, the performance of CT, CT($\Delta$), and CT($B$) is
 similar, which is expected because they collapse to the same variant
@@ -1830,7 +1914,7 @@ time-efficient one where the extension is also given as a tuple set:
        $\bot$ after the last such tuple has been processed.
      \end{itemize}
 
-     \Algoref{algo:basic} shows the basic tuple set propagator algorithm.
+     \Algoref{algo:basic} shows the basic tuple set propagation algorithm.
      $S[x]$ signals whether or not a support has been found for the variable~$x$,
      and is initialised to~$\bot$ for each variable in lines~$1$ and~$2$.
      The loop in lines
@@ -2023,7 +2107,7 @@ and CT, B, and I all ran out of memory on~$36$ of them.
   \begin{tikzpicture}[every mark/.append style={mark size=4pt}]%[scale=0.9]
     \input{total-run.tex}
   \end{tikzpicture}
-  \caption{Percentage of instances solved as a funcion of time for the DFA, B, I, and CT 
+  \caption{Percentage of instances solved as a function of time for the DFA, B, I, and CT 
     propagators.}
   \label{fig:total}
 \end{figure}
@@ -2072,7 +2156,7 @@ is discussed:
       \emph{TSP *}). 
       However, the groups with low arities also have small tables, while the groups
       with larger arities tend to have larger tables, which makes it hard to
-      tell whether it is the arity or the table size that impact the performance gain.
+      tell whether it is the arity or the table size that impacts the performance gain.
       
     \item[Domain size] It is hard to draw any conclusions of whether the domain size affects
       the performance gain of CT. Among the groups with small domain sizes, some
@@ -2084,7 +2168,7 @@ is discussed:
 \end{description}
 
 \paragraph{Memory usage.}
-It can be seen that CT, B, and I has about the same maximum memory usage 
+It can be seen that CT, B, and I have about the same maximum memory usage 
 while DFA consistently has a higher maximum memory usage. This complies with
 the fact that DFA ran out of memory on the highest number of instances.
   
@@ -2095,7 +2179,7 @@ and copying varies between different propagators and different groups of benchma
 \section{Conclusions and Future Work}
 \label{conclusions}
 
-In this bachelor thesis project, a new propagator algorithm for the~\Table~constraint,
+In this bachelor thesis project, a new propagation algorithm for the~\Table~constraint,
 called Compact-Table (CT), was implemented in the constraint solver Gecode, and its performance
 was evaluated compared to the existing propagators for~\Table~in Gecode, as well
 as the propagator for the \Constraint{Regular} constraint.
@@ -2261,7 +2345,7 @@ Each benchmark group has one figure, and each figure contains two plots:
 the first plot shows for each propagator the percentage of solved instances within that group
 as a function of timeout limit in milliseconds.
 The second plot shows the maximum memory usage, as well as how the execution time is 
-distriubted between propagation,
+distributed between propagation,
 advisors, and copying.
 For the first plot, measurements from all instances that took at least $1$~second to solve for all
 propagators, and that did not cause a memory-out for any of the propagators, are included.
