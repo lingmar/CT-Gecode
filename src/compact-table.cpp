@@ -131,6 +131,7 @@ public:
     row(int val) {
       return static_cast<SupportsI*>(object())->info->row(val);
     }
+
   };
   /// Index of the view the advisor is assigned to
   int index;
@@ -604,7 +605,7 @@ public:
   }
 
   forceinline void
-  reset_based_update(CTAdvisor<View> a, Space& home) {
+  reset_based_update(CTAdvisor<View>& a, Space& home) {
     assert(nzerowords());
     assert(limit >= 0);
     assert(a.view().size() >= 2);
@@ -703,12 +704,12 @@ public:
   
   forceinline virtual ExecStatus
   advise(Space& home, Advisor& a0, const Delta& d) {
-    CTAdvisor<View> a = static_cast<CTAdvisor<View>&>(a0);
+    CTAdvisor<View>& a = static_cast<CTAdvisor<View>&>(a0);
     View x = a.view();
-
+      
     // Do not fail a disabled propagator
     if (is_empty())
-      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;//return disabled() ? ES_NOFIX : ES_FAILED;//
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
 
     assert(limit >= 0);
     assert(nzerowords());
@@ -716,9 +717,8 @@ public:
     // Do not schedule if propagator is performing propagation,
     // and dispose if assigned
     if (status == PROPAGATING) {
-      if (x.assigned()) {
-        return ES_FIX;//home.ES_FIX_DISPOSE(c,a);
-      }
+      if (x.assigned())
+        return home.ES_FIX_DISPOSE(c,a);
       return ES_FIX;
     }
 
@@ -726,7 +726,6 @@ public:
     if (me == ME_INT_VAL) { // Variable is assigned -- intersect with its value
       int row = a.supports.row(x.val());
       intersect_with_mask_sparse_one(a.supports[row]);
-      //reset_based_update(a,home);
     }
 #ifdef DELTA
      else if (x.any(d)){ // No delta information -- do incremental update
@@ -781,7 +780,7 @@ public:
 
     // Do not fail a disabled propagator
     if (is_empty())
-      return disabled() ? ES_NOFIX : ES_FAILED;//return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
+      return disabled() ? home.ES_NOFIX_DISPOSE(c,a) : ES_FAILED;
     
     assert(nset() > 0);
     assert(limit >= 0);
@@ -796,7 +795,7 @@ public:
     // Schedule propagator and dispose if assigned
     if (a.view().assigned()) {
       unassigned--;
-      return ES_NOFIX;//return home.ES_NOFIX_DISPOSE(c,a);
+      return home.ES_NOFIX_DISPOSE(c,a);
     }
     return ES_NOFIX;
   }
@@ -819,7 +818,7 @@ public:
     for (Advisors<CTAdvisor<View> > a0(c);
          a0() && count_unassigned; // End if only assigned variables left
          ++a0) {
-      CTAdvisor<View> a = a0.advisor();
+      CTAdvisor<View>& a = a0.advisor();
       View v = a.view();
       int i = a.index;
       
@@ -1041,7 +1040,7 @@ public:
     unsigned int tuple_index = index_of_fixed();
     TupleSet::Tuple t = tupleSet[tuple_index];
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-      CTAdvisor<View> a = a0.advisor();
+      CTAdvisor<View>& a = a0.advisor();
       View v = a.view();
       if (!v.assigned())
         GECODE_ME_CHECK(v.eq(home,t[a.index]));
@@ -1078,7 +1077,7 @@ public:
   bool unassignedCorrect() {
     int count_unassigned = 0;
     for (Advisors<CTAdvisor<View> > a0(c); a0(); ++a0) {
-      CTAdvisor<View> a = a0.advisor();
+      CTAdvisor<View>& a = a0.advisor();
       count_unassigned += !a.view().assigned();
     }
 
