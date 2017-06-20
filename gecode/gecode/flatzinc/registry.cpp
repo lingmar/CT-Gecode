@@ -52,6 +52,14 @@
 #endif
 #include <gecode/flatzinc.hh>
 
+//#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp"
+#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact.hh"
+
+#define GECODE_REGULAR "gecode-regular"
+#define GECODE_TUPLESET_MEM "gecode-tupleset-mem"
+#define GECODE_TUPLESET_SPEED "gecode-tupleset-speed"
+#define COMPACT_TABLE "compact-table"
+
 namespace Gecode { namespace FlatZinc {
 
   Registry& registry(void) {
@@ -1114,23 +1122,84 @@ namespace Gecode { namespace FlatZinc {
       rel(s,x,IRT_GQ,s.ann2ipl(ann));
     }
 
-    void
+        void
     p_table_int(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
+
       IntVarArgs x = s.arg2intvarargs(ce[0]);
       IntArgs tuples = s.arg2intargs(ce[1]);
       int noOfVars   = x.size();
       int noOfTuples = tuples.size() == 0 ? 0 : (tuples.size()/noOfVars);
-      TupleSet ts;
-      for (int i=0; i<noOfTuples; i++) {
-        IntArgs t(noOfVars);
-        for (int j=0; j<x.size(); j++) {
-          t[j] = tuples[i*noOfVars+j];
+
+      //printf("ntuples=%d\n", noOfTuples);
+
+      char* prop = getenv("TABLE_PROPAGATOR");
+
+      if (prop != NULL && strcmp(prop, GECODE_REGULAR) == 0) {
+        printf("REGULAR\n");
+
+        // Build regular expression
+        REG expression;
+        for (int i = 0; i<noOfTuples; i++) {
+          REG r;
+          for (int j = 0; j<x.size(); j++) {
+            r += REG(tuples[i*noOfVars+j]);
+          }
+          expression |= r;
         }
-        ts.add(t);
+
+        DFA dfa(expression);
+        extensional(s,x,dfa);
+
+      } else if (prop != NULL &&
+                 (strcmp(prop, GECODE_TUPLESET_MEM) == 0 ||
+                  strcmp(prop, COMPACT_TABLE) == 0 ||
+                  strcmp(prop, GECODE_TUPLESET_SPEED) == 0)) {
+        TupleSet ts;
+        for (int i=0; i<noOfTuples; i++) {
+          IntArgs t(noOfVars);
+          for (int j=0; j<x.size(); j++) {
+            t[j] = tuples[i*noOfVars+j];
+          }
+          ts.add(t);
+        }
+        ts.finalize();
+
+        if (strcmp(prop, COMPACT_TABLE) == 0) {
+          printf("COMPACT_TABLE\n");
+          extensional2(s,x,ts);
+        } else if (strcmp(prop, GECODE_TUPLESET_MEM) == 0){
+          printf("GECODE_TUPLESET_MEM\n");
+          extensional(s,x,ts,IPL_MEMORY);
+        } else {
+          printf("GECODE_TUPLESET_SPEED\n");
+          extensional(s,x,ts,IPL_SPEED);
+        }
+      } else {
+        printf("WARN: TABLE_PROPAGATOR not properly set, found: %s\n",prop);
+        printf("Legal values are: %s, %s, %s, %s\n",
+               GECODE_REGULAR,GECODE_TUPLESET_MEM,GECODE_TUPLESET_SPEED,COMPACT_TABLE);
+        GECODE_NEVER;
       }
-      ts.finalize();
-      extensional(s,x,ts,s.ann2ipl(ann));
     }
+
+    // void
+    // p_table_int(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
+    //   IntVarArgs x = s.arg2intvarargs(ce[0]);
+    //   IntArgs tuples = s.arg2intargs(ce[1]);
+    //   int noOfVars   = x.size();
+    //   int noOfTuples = tuples.size() == 0 ? 0 : (tuples.size()/noOfVars);
+    //   TupleSet ts;
+    //   for (int i=0; i<noOfTuples; i++) {
+    //     IntArgs t(noOfVars);
+    //     for (int j=0; j<x.size(); j++) {
+    //       t[j] = tuples[i*noOfVars+j];
+    //     }
+    //     ts.add(t);
+    //   }
+    //   ts.finalize();
+    //   extensional(s,x,ts,s.ann2ipl(ann));
+    //   //extensional2(s,x,ts,s.ann2ipl(ann));
+    // }
     void
     p_table_bool(FlatZincSpace& s, const ConExpr& ce, AST::Node* ann) {
       BoolVarArgs x = s.arg2boolvarargs(ce[0]);

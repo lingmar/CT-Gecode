@@ -41,6 +41,10 @@
 
 #include <gecode/minimodel.hh>
 #include <climits>
+//#include <gecode/int/compact.cpp>
+
+//#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp"
+#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact.hh"
 
 namespace Test { namespace Int {
 
@@ -417,7 +421,8 @@ namespace Test { namespace Int {
          t.add(t5);
          t.finalize();
 
-         extensional(home, x, t, ipl);
+         //extensional(home, x, t, ipl);
+         extensional2(home, x, t);
        }
      };
 
@@ -467,7 +472,8 @@ namespace Test { namespace Int {
        /// Post constraint on \a x
        virtual void post(Gecode::Space& home, Gecode::IntVarArray& x) {
          using namespace Gecode;
-         extensional(home, x, t, ipl);
+         //extensional2(home, x, t, ipl);
+         extensional2(home, x, t);
        }
      };
 
@@ -512,7 +518,8 @@ namespace Test { namespace Int {
          BoolVarArgs y(x.size());
          for (int i = x.size(); i--; )
            y[i] = channel(home, x[i]);
-         extensional(home, y, t, ipl);
+         //extensional(home, y, t, ipl);
+         extensional2(home, y, t);
        }
      };
 
@@ -545,14 +552,14 @@ namespace Test { namespace Int {
      RegOpt ro6(static_cast<int>(USHRT_MAX-1));
      RegOpt ro7(static_cast<int>(USHRT_MAX));
 
-     TupleSetA tsam(Gecode::IPL_MEMORY);
+     //TupleSetA tsam(Gecode::IPL_MEMORY);
      TupleSetA tsas(Gecode::IPL_SPEED);
 
      TupleSetB tsbm(Gecode::IPL_MEMORY);
-     TupleSetB tsbs(Gecode::IPL_SPEED);
+     //TupleSetB tsbs(Gecode::IPL_SPEED);
 
      TupleSetBool tsboolm(Gecode::IPL_MEMORY, 0.3);
-     TupleSetBool tsbools(Gecode::IPL_SPEED, 0.3);
+     //TupleSetBool tsbools(Gecode::IPL_SPEED, 0.3);
      //@}
 
    }
@@ -560,4 +567,3 @@ namespace Test { namespace Int {
 
 
 // STATISTICS: test-int
-
