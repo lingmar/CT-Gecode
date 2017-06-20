@@ -43,6 +43,418 @@
 #define HASHH_THRESHOLD 3
 
 namespace Gecode { namespace Int { namespace Extensional {
+
+      /*
+       * Bit-set
+       *
+       */
+      template<class View>
+      forceinline
+      CompactTable<View>::BitSet::
+      BitSet(void) {
+        sz = 0;
+      }
+
+      template<class View>
+      template<class A>
+      forceinline
+      CompactTable<View>::BitSet::
+      BitSet(A& a,unsigned int sz,bool setbits)
+        : BitSetBase(a,sz,setbits) {
+        // Clear bit sz (set in RawBitSetBase)
+        Gecode::Support::RawBitSetBase::clear(sz);
+      }
+
+      template<class View>
+      template<class A>
+      forceinline
+      CompactTable<View>::BitSet::
+      BitSet(A& a, const BitSet& bs)
+        : BitSetBase(a,bs) {
+        // Clear bit sz
+        Gecode::Support::RawBitSetBase::clear(sz);
+      }
+
+      template<class View>
+      template<class A>
+      forceinline
+      CompactTable<View>::BitSet::
+      BitSet(A& a, unsigned int sz, const BitSet& bs)
+        : BitSetBase(a,sz) {
+        assert(sz <= bs.sz);
+        for (unsigned int i = Gecode::Support::BitSetData::data(sz+1); i--; )
+          data[i] = bs.data[i];
+        // Clear bit sz
+        Gecode::Support::RawBitSetBase::clear(sz);
+      }
+
+      template<class View>
+      template<class A>
+      forceinline void
+      CompactTable<View>::BitSet::
+      allocate(A& a, unsigned int sz0) {
+        RawBitSetBase::allocate(a,sz0);
+        sz = sz0;
+      }
+
+      template<class View>
+      forceinline bool
+      CompactTable<View>::BitSet::
+      empty() const {
+        return sz == 0;
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      copy(unsigned int sz0, const BitSet& bs) {
+        Gecode::Support::RawBitSetBase::copy(sz0,bs);
+      }
+
+      template<class View>
+      forceinline bool
+      CompactTable<View>::BitSet::
+      same(Gecode::Support::BitSetData d, unsigned int i) const {
+        assert(i < Support::BitSetData::data(sz));
+        return data[i].Gecode::Support::BitSetData::same(d);
+      }
+
+      template<class View>
+      template<class A>
+      forceinline void
+      CompactTable<View>::BitSet::
+      dispose(A& a) {
+        RawBitSetBase::dispose(a,sz);
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      o(const BitSet& a, unsigned int i) {
+        assert(i < Support::BitSetData::data(sz));
+        assert(i < Support::BitSetData::data(a.sz));
+        data[i].o(a.data[i]);
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      a(const BitSet& a, unsigned int i) {
+        assert(i < Support::BitSetData::data(sz));
+        assert(i < Support::BitSetData::data(a.sz));
+        data[i].a(a.data[i]);
+      }
+
+      template<class View>
+      forceinline Gecode::Support::BitSetData
+      CompactTable<View>::BitSet::
+      o(const BitSet& a, const BitSet& b, unsigned int i) {
+        assert(i < Support::BitSetData::data(a.sz));
+        assert(i < Support::BitSetData::data(b.sz));
+        return Gecode::Support::BitSetData::o(a.data[i], b.data[i]);
+      }
+
+      template<class View>
+      forceinline Gecode::Support::BitSetData
+      CompactTable<View>::BitSet::
+      a(const BitSet& a, const BitSet& b, unsigned int i) {
+        assert(i < Support::BitSetData::data(a.sz));
+        assert(i < Support::BitSetData::data(b.sz));
+        return Gecode::Support::BitSetData::a(a.data[i], b.data[i]);;
+      }
+
+      template<class View>
+      forceinline Gecode::Support::BitSetData
+      CompactTable<View>::BitSet::
+      a(const BitSet& a, unsigned int i,
+        const BitSet& b, unsigned int j) {
+        assert(i < Support::BitSetData::data(a.sz));
+        assert(j < Support::BitSetData::data(b.sz));
+        return Gecode::Support::BitSetData::a(a.data[i], b.data[j]);;
+      }
+
+
+      template<class View>
+      forceinline Gecode::Support::BitSetData
+      CompactTable<View>::BitSet::
+      getword(unsigned int i) const {
+        assert(i < Support::BitSetData::data(sz));
+        return data[i];
+      }
+
+      template<class View>
+      forceinline int
+      CompactTable<View>::BitSet::
+      get_bpb() {
+        return bpb;
+      }
+
+      template<class View>
+      template<class A>
+      forceinline void
+      CompactTable<View>::BitSet::
+      init(A& a, unsigned int s, bool setbits) {
+        assert(sz == 0);
+        RawBitSetBase::init(a,s,setbits);
+        sz=s;
+        // Clear sentinel bit
+        Gecode::Support::RawBitSetBase::clear(sz);
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      init_from_bs(BitSet& m, const BitSet& a, const BitSet& b,
+                   const int* map, unsigned int map_last) {
+        Gecode::Support::BitSetData* a_data = a.data;
+        Gecode::Support::BitSetData* b_data = b.data;
+        Gecode::Support::BitSetData* m_data = m.data;
+        assert(map_last < Support::BitSetData::data(m.sz));
+        for (int i = 0; i <= map_last; i++) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(a.sz));
+          assert(offset < Support::BitSetData::data(b.sz));
+          m_data[i] = Support::BitSetData::o(a_data[offset],b_data[offset]);
+        }
+      }
+
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      or_by_map(BitSet& a, const BitSet& b,
+                const int* map, unsigned int map_last) {
+        Gecode::Support::BitSetData* a_data = a.data;
+        Gecode::Support::BitSetData* b_data = b.data;
+        assert(map_last < Support::BitSetData::data(a.sz));
+        for (int i = 0; i <= map_last; i++) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b.sz));
+          a_data[i].o(b_data[offset]);
+        }
+      }
+
+      template<class View>
+      forceinline int
+      CompactTable<View>::BitSet::
+      intersect_index_by_map(const BitSet& a, const BitSet& b,
+                             const int* map, unsigned int map_last) {
+        using namespace Gecode::Support;
+        BitSetData* a_data = a.data;
+        BitSetData* b_data = b.data;
+        assert(map_last < Support::BitSetData::data(a.sz));
+        for (int i = map_last; i >= 0; i--) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b.sz));
+          if (!BitSetData::a(a_data[i],b_data[offset]).none())
+            return i;
+        }
+        return -1;
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      intersect_by_map(BitSet& a, const BitSet& b,
+                       int* map, int* map_last) {
+        using namespace Gecode::Support;
+        BitSetData* a_data = a.data;
+        BitSetData* b_data = b.data;
+        assert(*map_last >= 0);
+        assert(*map_last < Support::BitSetData::data(a.sz));
+        assert(*map_last < Support::BitSetData::data(b.sz));
+        int local_map_last = *map_last;
+        assert(!a_data[local_map_last].none());
+        for (int i = local_map_last; i >= 0; i--) {
+          assert(!a_data[i].none());
+          assert(!a_data[local_map_last].none());
+          BitSetData w = BitSetData::a(a_data[i],b_data[i]);
+          if (!w.same(a_data[i])) {
+            a_data[i] = w;
+            if (w.none()) {
+              assert(a_data[i].none());
+              assert(i == local_map_last || !a_data[local_map_last].none());
+              a_data[i] = a_data[local_map_last];
+              a_data[local_map_last] = w;
+              map[i] = map[local_map_last];
+              local_map_last--;
+            }
+          }
+          assert(i == local_map_last + 1 || !a_data[i].none());
+        }
+        *map_last = local_map_last;
+      }
+
+      /// Intersect \a with mask \a b with words described by \a map
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      intersect_by_map_sparse(BitSet& a, const BitSet& b,
+                              int* map, int* map_last) {
+        using namespace Gecode::Support;
+        BitSetData* a_data = a.data;
+        BitSetData* b_data = b.data;
+        assert(*map_last >= 0);
+        assert(*map_last < Support::BitSetData::data(a.sz));
+        int local_map_last = *map_last;
+        for (int i = local_map_last; i >= 0; i--) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b.sz));
+          BitSetData w = BitSetData::a(a_data[i],b_data[offset]);
+          if (!w.same(a_data[i])) {
+            a_data[i] = w;
+            if (w.none()) {
+              assert(a_data[i].none());
+              assert(i == local_map_last || !a_data[local_map_last].none());
+              a_data[i] = a_data[local_map_last];
+              a_data[local_map_last] = w;
+              map[i] = map[local_map_last];
+              local_map_last--;
+            }
+          }
+          assert(i == local_map_last + 1 || !a_data[i].none());
+        }
+        *map_last = local_map_last;
+      }
+
+      /// Intersect \a with mask \a b with words described by \a map
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      intersect_by_map_sparse_two(BitSet& a, const BitSet& b1,
+                                  const BitSet& b2, int* map,
+                                  int* map_last) {
+        using namespace Gecode::Support;
+        BitSetData* a_data = a.data;
+        BitSetData* b1_data = b1.data;
+        BitSetData* b2_data = b2.data;
+        assert(*map_last >= 0);
+        assert(*map_last < Support::BitSetData::data(a.sz));
+        int local_map_last = *map_last;
+        for (int i = local_map_last; i >= 0; i--) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b1.sz));
+          assert(offset < Support::BitSetData::data(b2.sz));
+          BitSetData w = BitSetData::a(a_data[i],
+                                       BitSetData::o(b1_data[offset],b2_data[offset]));
+          if (!w.same(a_data[i])) {
+            a_data[i] = w;
+            if (w.none()) {
+              assert(a_data[i].none());
+              assert(i == local_map_last || !a_data[local_map_last].none());
+              a_data[i] = a_data[local_map_last];
+              a_data[local_map_last] = w;
+              map[i] = map[local_map_last];
+              local_map_last--;
+            }
+          }
+          assert(i == local_map_last + 1 || !a_data[i].none());
+        }
+        *map_last = local_map_last;
+      }
+
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      nand_by_map_one(BitSet& a, const BitSet& b,
+                      int* map, int* map_last) {
+        using namespace Gecode::Support;
+        BitSetData* a_data = a.data;
+        BitSetData* b_data = b.data;
+        int local_map_last = *map_last;
+        assert(local_map_last < Support::BitSetData::data(a.sz));
+        for (int i = local_map_last; i >= 0; i--) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b.sz));
+          BitSetData flipped = BitSetData::reverse(b_data[offset]);
+          BitSetData w = BitSetData::a(a_data[i],flipped);
+          if (!w.same(a_data[i])) {
+            a_data[i] = w;
+            if (w.none()) {
+              assert(a_data[i].none());
+              assert(i == local_map_last || !a_data[local_map_last].none());
+              a_data[i] = a_data[local_map_last];
+              a_data[local_map_last] = w;
+              map[i] = map[local_map_last];
+              local_map_last--;
+            }
+          }
+          assert(i == local_map_last + 1 || !a_data[i].none());
+        }
+        *map_last = local_map_last;
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      nand_by_map_two(BitSet& a,
+                      const BitSet& b1, const BitSet& b2,
+                      int* map, int* map_last) {
+        using namespace Gecode::Support;
+        BitSetData* a_data = a.data;
+        BitSetData* b1_data = b1.data;
+        BitSetData* b2_data = b2.data;
+        int local_map_last = *map_last;
+        assert(local_map_last < Support::BitSetData::data(a.sz));
+        for (int i = local_map_last; i >= 0; i--) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b1.sz));
+          assert(offset < Support::BitSetData::data(b2.sz));
+          BitSetData flipped = BitSetData::reverse(BitSetData::o(b1_data[offset],
+                                                                 b2_data[offset]));
+          BitSetData w = BitSetData::a(a_data[i],flipped);
+          if (!w.same(a_data[i])) {
+            a_data[i] = w;
+            if (w.none()) {
+              assert(a_data[i].none());
+              assert(i == local_map_last || !a_data[local_map_last].none());
+              a_data[i] = a_data[local_map_last];
+              a_data[local_map_last] = w;
+              map[i] = map[local_map_last];
+              local_map_last--;
+            }
+          }
+          assert(i == local_map_last + 1 || !a_data[i].none());
+        }
+        *map_last = local_map_last;
+      }
+
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      clear_to_limit(BitSet& b, unsigned int limit) {
+        using namespace Gecode::Support;
+        assert(limit < Support::BitSetData::data(b.sz));
+        BitSetData* b_data = b.data;
+        for (int i = 0; i <= limit; i++) {
+          b_data[i].init(false);
+        }
+      }
+
+      template<class View>
+      forceinline void
+      CompactTable<View>::BitSet::
+      flip_by_map(BitSet& b, const int* map, unsigned int map_last) {
+        using namespace Gecode::Support;
+        BitSetData* b_data = b.data;
+        for (int i = 0; i <= map_last; i++) {
+          int offset = map[i];
+          assert(offset < Support::BitSetData::data(b.sz));
+          BitSetData new_word = BitSetData::reverse(b_data[offset]);
+          b_data[offset] = new_word;
+        }
+      }
+
+      template<class View>
+      forceinline unsigned int
+      CompactTable<View>::BitSet::
+      size() const {
+        return sz;
+      }
+
+
       /*
        * Advisor
        *
@@ -148,7 +560,7 @@ namespace Gecode { namespace Int { namespace Extensional {
       }
 
       template<class View>
-      forceinline const BitSet&
+      forceinline const typename CompactTable<View>::BitSet&
       CompactTable<View>::CTAdvisor::Supports::
       operator [](unsigned int i) {
         const SupportsI* si = static_cast<SupportsI*>(object());
@@ -216,7 +628,7 @@ namespace Gecode { namespace Int { namespace Extensional {
       }
 
       template<class View>
-      forceinline const BitSet&
+      forceinline const typename CompactTable<View>::BitSet&
       CompactTable<View>::CTAdvisor::Supports::SupportsI::InfoBase::
       get_supports(int i) {
         assert(i >= 0);
@@ -412,7 +824,8 @@ namespace Gecode { namespace Int { namespace Extensional {
         index = home.alloc<int>(limit + 1);
         for (int i = limit+1; i--; )
           index[i] = p.index[i];
-        unsigned int nbits = (limit + 1) * BitSet::get_bpb();
+        unsigned int nbits = (limit + 1) * CompactTable<View>::BitSet::
+get_bpb();
         words.allocate(home, nbits);
         words.copy(nbits, p.words);
         assert(limit <= Support::BitSetData::data(words.size()) - 1);
@@ -541,7 +954,8 @@ namespace Gecode { namespace Int { namespace Extensional {
         }
 
         int support_cnt = 0;
-        int bpb = BitSet::get_bpb(); // Bits per base (word) in bitsets
+        int bpb = CompactTable<View>::BitSet::
+get_bpb(); // Bits per base (word) in bitsets
 
         // Look for supports and set correct bits in supports
         for (int i = 0; i < t.tuples(); i++) {
@@ -622,9 +1036,11 @@ namespace Gecode { namespace Int { namespace Extensional {
           index[i] = i;
         // Set the first s nr of bits in words
         int start_bit = 0;
-        int complete_words = s / BitSet::get_bpb();
+        int complete_words = s / CompactTable<View>::BitSet::
+get_bpb();
         if (complete_words > 0) {
-          start_bit = complete_words * BitSet::get_bpb() + 1;
+          start_bit = complete_words * CompactTable<View>::BitSet::
+get_bpb() + 1;
           words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
         }
         for (unsigned int i = start_bit; i < s; i++) {
@@ -756,7 +1172,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       clear_mask(BitSet& mask) {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::clear_to_limit(mask, static_cast<unsigned int>(limit));
+        CompactTable<View>::BitSet::
+clear_to_limit(mask, static_cast<unsigned int>(limit));
       }
 
       template<class View>
@@ -765,7 +1182,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       add_to_mask(const BitSet& b, BitSet& mask) const {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::or_by_map(mask, b, index, static_cast<unsigned int>(limit));
+        CompactTable<View>::BitSet::
+or_by_map(mask, b, index, static_cast<unsigned int>(limit));
       }
 
       template<class View>
@@ -774,7 +1192,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       intersect_with_mask_compressed(const BitSet& mask) {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::intersect_by_map(words,mask,index,&limit);
+        CompactTable<View>::BitSet::
+intersect_by_map(words,mask,index,&limit);
       }
 
       template<class View>
@@ -783,7 +1202,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       intersect_with_mask_sparse_one(const BitSet& mask) {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::intersect_by_map_sparse(words,mask,index,&limit);
+        CompactTable<View>::BitSet::
+intersect_by_map_sparse(words,mask,index,&limit);
       }
 
       template<class View>
@@ -792,7 +1212,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       intersect_with_mask_sparse_two(const BitSet& a, const BitSet& b) {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::intersect_by_map_sparse_two(words,a,b,index,&limit);
+        CompactTable<View>::BitSet::
+intersect_by_map_sparse_two(words,a,b,index,&limit);
       }
 
       template<class View>
@@ -803,7 +1224,8 @@ namespace Gecode { namespace Int { namespace Extensional {
         assert(max_index >= 0);
         assert(max_index <= limit);
         assert(not_failed());
-        return BitSet::intersect_index_by_map(words,b,index,
+        return CompactTable<View>::BitSet::
+intersect_index_by_map(words,b,index,
                                               static_cast<unsigned int>(max_index));
       }
 
@@ -813,7 +1235,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       nand_with_mask_one(const BitSet& b) {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::nand_by_map_one(words,b,index,&limit);
+        CompactTable<View>::BitSet::
+nand_by_map_one(words,b,index,&limit);
       }
 
       template<class View>
@@ -822,7 +1245,8 @@ namespace Gecode { namespace Int { namespace Extensional {
       nand_with_mask_two(const BitSet& a, const BitSet& b) {
         assert(limit >= 0);
         assert(not_failed());
-        BitSet::nand_by_map_two(words,a,b,index,&limit);
+        CompactTable<View>::BitSet::
+nand_by_map_two(words,a,b,index,&limit);
       }
 
       template<class View>
@@ -969,11 +1393,13 @@ namespace Gecode { namespace Int { namespace Extensional {
         const BitSet& support_row = a.supports[row];
 
         if (r == 0)
-          return !BitSet::a(words,r,support_row,index[r]).none();
+          return !CompactTable<View>::BitSet::
+a(words,r,support_row,index[r]).none();
 
         if (r > limit)
           r = intersect_index(support_row, limit);
-        else if (!BitSet::a(words,r,support_row,index[r]).none())
+        else if (!CompactTable<View>::BitSet::
+a(words,r,support_row,index[r]).none())
           return true;
         else
           r = intersect_index(support_row, r-1);
@@ -999,9 +1425,12 @@ namespace Gecode { namespace Int { namespace Extensional {
 
         int count = 0;
         for (int i = 0; i <= limit; i++) {
-          for (int j = 0; j < BitSet::get_bpb(); j++) {
-            count += words.get(i*BitSet::get_bpb() + j);
-            if (i*BitSet::get_bpb() + j == words.size() - 1) {
+          for (int j = 0; j < CompactTable<View>::BitSet::
+get_bpb(); j++) {
+            count += words.get(i*CompactTable<View>::BitSet::
+get_bpb() + j);
+            if (i*CompactTable<View>::BitSet::
+get_bpb() + j == words.size() - 1) {
               break;
             }
           }

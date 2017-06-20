@@ -40,7 +40,7 @@
 
 #include <gecode/int.hh>
 
-#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/bitset.hpp"
+//#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/bitset.hpp"
 
 /**
  * \namespace Gecode::Int::Extensional
@@ -65,6 +65,92 @@ namespace Gecode { namespace Int { namespace Extensional {
        */
       template<class View>
       class CompactTable : public Propagator {
+      private:
+        class BitSet : public Gecode::Support::BitSetBase {
+        private:
+          /// Copy constructor (disabled)
+          BitSet(const BitSet&);
+        public:
+          /// Default constructor (yields empty set)
+          BitSet(void);
+          /// Initialize for \a sz bits and allocator \a a
+          template<class A>
+          BitSet(A& a, unsigned int sz, bool setbits=false);
+          /// Copy from bitset \a bs with allocator \a a
+          template<class A>
+          BitSet(A& a, const BitSet& bs);
+          /// Copy from \a sz bits from bitset \a bs with allocator \a a
+          template<class A>
+          BitSet(A& a, unsigned int sz, const BitSet& bs);
+          /// Initialise for \a sz bits with allocator \a a
+          template<class A>
+          void init(A& a, unsigned int sz, bool setbits=false);
+          /// Allocate for \a sz bits and allocator \a a (after default constructor)
+          template<class A>
+          void allocate(A& a, unsigned int sz);
+          /// Empty set
+          bool empty() const;
+          /// Perform "or" with \a a of word index \a i
+          void o(const BitSet& a, unsigned int i);
+          /// Perform "and" with \a a of word index \a
+          void a(const BitSet& a, unsigned int i);
+          /// Perform "and" with ith word of a and jth word of b
+          static Gecode::Support::BitSetData a(const BitSet& a, unsigned int i,
+                                               const BitSet& b, unsigned int j);
+          /// Return "or" of \a a and \a b of word index \a i
+          static Gecode::Support::BitSetData o(const BitSet& a, const BitSet& b,
+                                               unsigned int i);
+          /// Return "and" of \a a and \a b of word index \a i
+          static Gecode::Support::BitSetData a(const BitSet& a, const BitSet& b,
+                                               unsigned int i);
+          /// Get word \a i
+          Gecode::Support::BitSetData getword(unsigned int i) const;
+          /// Check if bit set has \a d on word index \a i
+          bool same(Gecode::Support::BitSetData d, unsigned int i) const;
+          /// Get number of bits per base
+          static int get_bpb();
+          /// Copy \a sz bits from \a bs
+          void copy(unsigned int sz, const BitSet& bs);
+          /// Return number of bits
+          unsigned int size() const;
+          /// Dispose memory for bit set
+          template<class A>
+          void dispose(A& a);
+          /// Perform "or" with \a a and \a b with mapping \a map
+          static void or_by_map(BitSet& a, const BitSet& b,
+                                const int* map, unsigned int map_last);
+          /// Store the "or" of \a a and \a b in \a m
+          static void init_from_bs(BitSet& m, const BitSet& a, const BitSet& b,
+                                   const int* map, unsigned int map_last);
+          /// Return index of non-empty intersecting word with \a a and \a b,
+          /// or -1 if none exists
+          static int intersect_index_by_map(const BitSet& a, const BitSet& b,
+                                            const int* map, unsigned int map_last);
+          /// Intersect \a with \a b with words described by \a map
+          static void intersect_by_map(BitSet& a, const BitSet& b,
+                                       int* map, int* map_last);
+          /// Intersect \a a with \a b with words described by \a map
+          static void intersect_by_map_sparse(BitSet& a, const BitSet& b,
+                                              int* map, int* map_last);
+          /// Intersect \a a with \a b with words described by \a map
+          static void intersect_by_map_sparse_two(BitSet& a, const BitSet& m1,
+                                                  const BitSet& m2, int* map,
+                                                  int* map_last);
+          /// Nand \a with mask \b with words described by \a map
+          static void nand_by_map_one(BitSet& a, const BitSet& b,
+                                      int* map, int* map_last);
+          /// Nand \a a with the or of /a b1 and /a b2, described by \a map
+          static void nand_by_map_two(BitSet& a,
+                                      const BitSet& b1, const BitSet& b2,
+                                      int* map, int* map_last);
+          /// Clear the words in \a b that occur in \a map
+          static void clear_to_limit(BitSet& b, unsigned int limit);
+          /// Clear the words in \a b that occur in \a map
+          static void flip_by_map(BitSet& b, const int* map, unsigned int map_last);
+        };
+
+        typedef CompactTable<View>::BitSet BitSet;
+
       protected:
         enum Status {NOT_PROPAGATING,PROPAGATING};
         /// Number of unassigned variables
