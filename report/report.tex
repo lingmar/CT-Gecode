@@ -50,11 +50,16 @@
 %\usepackage{amsthm}
 \usepackage{amsthm}
 
+\theoremstyle{definition}
+
+
 \newtheorem{definition}{Definition}
 %\newtheorem{proof}{Proof}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
+
+\newcommand{\Definition}[1]{\paragraph{{Definition.}~{{\emph{#1}}}}}
 
 \newcommand{\CT}[0]{CT~}
 
@@ -90,7 +95,7 @@
 
 \newcommand{\Dom}[1]{\text{dom}({#1})}
 \newcommand{\Dominit}[1]{\underline{\text{dom}}(#1)}
-
+\newcommand{\Relation}[1]{\text{rel}({#1})}
 
 %\newcommand{\Ceiling}[1]{\left\lceil#1\right\rceil}
 %\newcommand{\Floor}[1]{\left\lfloor#1\right\rfloor}
@@ -119,9 +124,9 @@
 
 % Pseduo code
 \newcommand{\ForEach}[1]{\textbf{foreach } {#1} \textbf{ do }}
-\newcommand{\ForEachTo}[3]{\textbf{foreach } {#1} \textbf{ from } {#2} 
+\newcommand{\ForEachTo}[3]{\textbf{foreach } {#1} \textbf{ from } {#2}
   \textbf{ to } {#3} \textbf{ do }}
-\newcommand{\ForEachDownTo}[3]{\textbf{foreach } {#1} \textbf{ from } {#2} 
+\newcommand{\ForEachDownTo}[3]{\textbf{foreach } {#1} \textbf{ from } {#2}
   \textbf{ downto } {#3} \textbf{ do }}
 \newcommand{\Break}{\textbf{break~}}
 \newcommand{\While}[1]{\textbf{while~} {#1} \textbf{~do~}}
@@ -154,14 +159,14 @@
 \def\FAIL{\textbf{FAIL}}
 \def\bool{\mathit{bool}}
 \def\StatusMessage{\mathit{StatusMessage}}
-\def\FindSupport{\textsc{FindSupport}}
-\def\RemoveSupport{\textsc{RemoveSupport}}
+\def\FindSupport{\textsc{Find\-Support}}
+\def\RemoveSupport{\textsc{Remove\-Support}}
 \def\Extensional{\textsc{Extensional}}
-\def\CompactTable{\textsc{CompactTable}}
-\def\UpdateTable{\textsc{UpdateTable}}
-\def\FilterDomains{\textsc{FilterDomains}}
-\def\FixDomains{\textsc{FixDomains}}
-\def\InitialiseCT{\textsc{InitialiseCT}}
+\def\CompactTable{\textsc{Compact\-Table}}
+\def\UpdateTable{\textsc{Update\-Table}}
+\def\FilterDomains{\textsc{Filter\-Domains}}
+\def\FixDomains{\textsc{Fix\-Domains}}
+\def\InitialiseCT{\textsc{Initialise\-CT}}
 \def\IndexOfFixed{\mathit{index\_of\_fixed}}
 
 
@@ -206,19 +211,19 @@
 \maketitle
 
 \begin{abstract}
-  Within constraint programming, which is a programming paradigm for solving 
+  In constraint programming, which is a programming paradigm for solving
   combinatorial (optimisation) problems,
-  relations among variables are expressed using constraints --
+  relations among variables are expressed using constraints ---
   one such useful constraint is \Table, which
   expresses the possible combinations that the variables can take
   as a set of tuples. All constraints have a propagation algorithm, whose purpose
-  is to implement the reasoning for a particular constraint, and Gecode~\cite{Gecode},
-  which is an open source constraint programming
-  solver written in C++ with state-of-the-art performance, presently has two propagation 
+  is to implement the reasoning for a particular constraint. Gecode~\cite{Gecode},
+  which is an open-source constraint-programming
+  solver written in C++ with state-of-the-art performance, currently has two propagation
   algorithms for the \Table~constraint, and one for a closely related constraint
   called~\Regular.
-  In this bachelor dissertation, a new propagation algorithm for 
-  \Table~constraints, called 
+  In this bachelor dissertation, a new propagation algorithm for
+  the \Table~constraint, called
   compact-table, first proposed in~\cite{\CTpaper}, is for the first time
   designed and optimised for, and implemented and evaluated in Gecode.
   The implementation is evaluated on a large variety of benchmarks, and the
@@ -232,36 +237,36 @@
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
   I wish to express my gratitude towards the following people, and state their
-  indispensable contributions to this work, in a particular order:
-  
+  indispensable contributions to this work:
+
   % Pappa
   % - Blixtsnabb feedback
   % - Tålmodig
   % - Engagerad
   % Tvåfaldig guldmedaljör i engegemang och snabbhet i feedback
-  My supervisor Mats Carlsson, without whom I would -- in several respects --
-  never have conducted this work, and who, 
+  My supervisor Mats Carlsson, without whom I would --- in several respects ---
+  never have conducted this work, and who,
   if supervising were an olympic sport, would be at least a
   twofold gold medalist in dedication and feedback loop speed,
   and will probably have a weekend free from work any year soon.
-  
+
   % Pierre
   % - inspirerande lärare
   % - höga krav -> blir bättre (hög tanke om studenter, nöjer sig inte
   %   med halvdåligt, inte tappat hoppet om studenter)
   % Pierre Flener, reviewer of this work
-  Pierre Flener, reviewer of this work, who has so far kept me busy for 
+  Pierre Flener, reviewer of this work, who has so far kept me busy for
   at least $533.33$ hours, or~$20$ credits,
   with inspiring lectures and assignments, during which
-  I achieved a large amount of the prerequisite for this work, 
+  I achieved a large amount of the prerequisite for this work,
   including Oxford English grammar rules and what to say and what not
   to say about NP-completeness in a bar (serving chocolate milk), and who
-  seems to believe more in student's potentials than they do themselves.
+  seems to believe more in students' potentials than they do themselves.
 
   % Christian
   % - Utvecklat Gecode
   % - Gett mig vägledning, tips och råd när jag fastnat
-  Christian Schulte, who gave me useful pieces of advise in an early stage
+  Christian Schulte, who gave me useful pieces of advice in an early stage
   of the work and who has kindly answered my questions and helped me with
   issues throughout the process.
 
@@ -272,16 +277,16 @@
   % - Bra på C++
   Johan {\"O}fverstedt, with whom I have had many interesting discussions, and who
   increased my skills of profiling and optimising C++ code, and provided useful
-  comments this report and some much-needed encouragements.
+  comments on this report and some much-needed encouragement.
 
   % Albin
   % - Gett feedback på min rapport
   % - Sagt till mig när jag ska gå hem
   Albin Stjerna, who has carefully read every character of this report not only
-  once but~$n$ times, where~$n$ is an integer larger than~$3$, 
+  once but~$n$ times, where~$n$ is an integer larger than~$3$,
   and whose reminders of when to stop working increased the quality
   of this work by a factor~$q$, and my well-being with a factor~$w$, where~$q$
-  and~$w$ are constants larger than~$1$. 
+  and~$w$ are constants larger than~$1$.
   More experiments are needed to determine these values with a larger accuracy.
 
 \end{abstract}
@@ -305,7 +310,7 @@ is a programming paradigm that is used for solving
 combinatorial problems. Within the paradigm, a problem is
 modelled as a set of \emph{constraints} on a
 set of \emph{variables} that each can take on a number of
-possible values. The possible values of 
+possible values. The possible values of
 a variable form what is called the \emph{domain} of the variable.
 A \emph{solution} to a constraint problem consists of a complete assignment
 of values to variables, so that all the constraints of the problem
@@ -314,7 +319,7 @@ satisfy the set of constraints for the
 problem, but also maximise or minimise some given function on the variables.
 
 A solution to a constraint problem is found by generating a search
-tree, branching on partitions of the possible values for the variables. 
+tree, branching on partitions of the possible values for the variables.
 At each node in the search tree, conflicting values are filtered out
 from the domains of the variables in a process called~\emph{propagation},
 effectively reducing the size of the search tree.
@@ -326,7 +331,7 @@ values from the domains that are in conflict with the constraint.
 The \Table~constraint expresses the possible combinations of values
 that the associated variables can take as a set of tuples.
 Assuming finite domains, the \Table~constraint can theoretically
-encode any kind of constraint and is thus very powerful. 
+encode any kind of constraint and is thus very powerful.
 The design of propagation algorithms for \Table~is an active research field,
 and several algorithms are known. In 2016, a new propagation algorithm for the
 \Table~constraint was published~\cite{\CTpaper}, called Compact-Table (CT).
@@ -363,8 +368,8 @@ while simultaneously serving as a description of the outline:
   \item The preliminaries that are relevant for the rest of the dissertation
     are covered in \Secref{bg}.
 
-  \item The algorithms presented in the paper that is the starting point of this 
-    project~\cite{DBLP:conf/cp/DemeulenaereHLP16} 
+  \item The algorithms presented in the paper that is the starting point of this
+    project~\cite{DBLP:conf/cp/DemeulenaereHLP16}
     have for the first time been optimised for a copying CP solver such as Gecode;
     this is described in~\Secref{sec:algorithms}.
 
@@ -381,9 +386,9 @@ while simultaneously serving as a description of the outline:
     in \Secref{conclusions}.
 
   \item Several possible improvements and known flaws have been detected in the current
-    implementation that need to be fixed for the code to reach production 
+    implementation that need to be fixed for the code to reach production
     quality; these are listed in \Secref{conclusions}.
-        
+
 \end{itemize}
 
 \section{Background}
@@ -398,9 +403,9 @@ the concepts propagation and propagators.
 \Secref{bg:gecode} gives an overview
 of Gecode, a constraint programming solver.
 \Secref{bg:table} introduces the~\Table~constraint.
-\Secref{bg:ct} describes the main concepts of the 
+\Secref{bg:ct} describes the main concepts of the
 Compact-Table (CT) propagation algorithm.
-Finally, \Secref{bg:sbs} 
+Finally, \Secref{bg:sbs}
 describes the main idea of reversible sparse bit-sets,
 a data structure that is used in the CT algorithm.
 
@@ -411,7 +416,7 @@ is a programming paradigm that is used for solving
 combinatorial problems. Within the paradigm, a problem is
 modelled as a set of \emph{constraints} on a
 set of \emph{variables} that each can take on a number of
-possible values. The possible values of 
+possible values. The possible values of
 a variable form what is called the \emph{domain} of the variable.
 A \emph{solution} to a constraint problem consists of a complete assignment
 of values to variables, so that all the constraints of the problem
@@ -423,7 +428,7 @@ A constraint programming solver (CP solver) is a software that
 takes constraint problems expressed in some modelling language as input,
 tries to solve them, and outputs the results to the user of the software.
 The process of solving a problem consists of generating a search tree by branching
-on partitions of the possible values for the variables. 
+on partitions of the possible values for the variables.
 At each node in the search tree,
 the solver removes impossible values from the domains of variables.
 This filtering process is called \emph{propagation}. Each constraint is
@@ -431,15 +436,15 @@ associated with at least one propagation algorithm, whose purpose is to detect
 and remove values from the domains of the variables
 that cannot participate in a solution because assigning them to
 the variables would violate the constraint,
-effectively shrinking the domain sizes and thus 
+effectively shrinking the domain sizes and thus
 pruning the search tree.
 When sufficient\footnote{Here ``sufficient'' might either mean that no more
   propagation can be made, or that more propagation is possible,
-  but the solver has decided that it is more efficient to branch to a new node instead of 
+  but the solver has decided that it is more efficient to branch to a new node instead of
   performing more propagation at the current node.}
 propagation has been performed and a solution is still not found,
 the solver must \emph{branch} the search tree, following some heuristic,
-which typically involves selecting a variable and partitioning its domain 
+which typically involves selecting a variable and partitioning its domain
 into a number of subsets, creating as many branches as subsets.
 Each subset is associated with one branch, along which the domain
 of the variable is restricted to that subset.
@@ -463,11 +468,11 @@ the concepts can be illustrated with logical puzzles. One such
 puzzle is Kakuro, somewhat similar to the popular puzzle Sudoku,
 a kind of mathematical crossword where the ``words'' consist
 of numbers instead of letters, see Figure~\ref{fig:kakuro}.
-The game board consists of 
-blank white cells (some boards also have black cells framing the white cells)
+The game board consists of
+blank white cells (some boards also have black cells)
 forming rows and columns, called \emph{entries}.
 Each entry has a \emph{clue}, a prefilled number indicating the sum of that entry.
-The objective is to put digits from 1 to 9 inclusive into each white cell such 
+The objective is to put digits from 1 to 9 inclusive into each white cell such
 that for each entry,
 the sum of all the digits in the entry is equal to the clue of that entry,
 and such that each digit appears at most once in each entry.
@@ -475,7 +480,7 @@ and such that each digit appears at most once in each entry.
 \begin{figure}
   \centering
   \begin{minipage}{.45\textwidth}
-    
+
     \begin{Kakuro}{6}{6}
       |  -   |<:9>  |<:26> |  -   |<:19> |<:5>  |  -   |.
       |<16:> |  7   |  9   |<4:9> |  3   |  1   |  -   |.
@@ -498,7 +503,7 @@ and such that each digit appears at most once in each entry.
       |<4:>  |  3   |  1   |<15:> |  7   |  8   |  -   |.
     \end{Kakuro}
   \end{minipage}
-  \caption{A Kakuro puzzle~\protect\footnotemark (left) and its solution (right).}
+  \caption{A Kakuro puzzle\protect\footnotemark (left) and its solution (right).}
   \label{fig:kakuro}
 \end{figure}
 
@@ -515,13 +520,13 @@ explicitly list all the possible combinations
 of values that the variables in that entry can take.
 For example, consider an entry of size 2 with clue 4. The only
 possible combinations of values are $\Tuple{1,3}$ and $\Tuple{3,1}$, since
-these are the only tuples of $2$ distinct digits whose sums are 
-equal to~$4$. This way of listing the possible combinations of 
-values for the variables is in essence the 
-\Table~constraint -- the constraint that is
+these are the only tuples of $2$ distinct digits whose sums are
+equal to~$4$. This way of listing the possible combinations of
+values for the variables is in essence the
+\Table~constraint --- the constraint that is
 addressed in this thesis.
 
-\smallskip 
+\smallskip
 
 After gaining some intuition of CP, here follow some formal definitions, based on
 \cite{Apt:constraintsBook,SchulteCarlsson:FDsys,Gecode:MPG}.%, \cite{Apt:constraintsBook}, and \cite{Gecode:MPG}.
@@ -531,36 +536,39 @@ among variables.
 
 \begin{definition}
   \label{def:constraint}
-  \textbf{Constraint.} Consider a finite sequence of~$n$ 
+  \textbf{Constraints.}
+  Consider a finite sequence of~$n$
   variables~$V = v_1,\ldots,v_n$, and a corresponding sequence of
   finite \emph{domains}~$D = D_1,\ldots,D_n$ ranging over integers,
-  which are possible values for the
-  respective variable. 
-  For a variable~$v_i \in V$, its domain~$D_i$ is denoted 
+  which are possible values for the respective variable.
+  For a variable~$v_i \in V$, its domain~$D_i$ is denoted
   by~$\Dom{v_i}$, its \emph{domain size} is~$|\Dom{v_i}|$ and its \emph{domain width}
   is $(\max(\Dom{v_i}) - \min(\Dom{v_i}) + 1)$.
   \begin{itemize}
-    \item   A \emph{constraint}~$c$ on~$V$ is a relation, 
-      denoted by~$\mathit{rel}(c)$. The associated variables~$V$ are denoted~$\mathit{vars}(c)$,
-      and we call~$|\mathit{vars}(c)|$ the \emph{arity} of~$c$. The relation
-      $\mathit{rel}(c)$ contains the set of~$n$-tuples that are allowed
-      for~$V$, and we call those~$n$-tuples \emph{solutions} to the constraint~$c$.
-    \item   For an~$n$-tuple~$\tau$~%= \Tuple{a_1,\ldots,a_n}$
-      associated with~$V$, we
-      denote the~$i$th value of~$\tau$ by~$\tau[i]$ or~$\tau[v_i]$. The 
-      tuple~$\tau$ is \emph{valid} for~$V$
+  \item   A \emph{constraint}~$c$ on a subsequence of~$V$
+    is a relation,
+    denoted by~$\Relation{c}$. The associated variables are
+    denoted by~$\Variables{c}$,
+    and the \emph{arity} of~$c$ is~$\Cardinality{\Variables{c}}$.
+    If the arity of~$c$ is~$r$, then the relation
+    $\Relation{c}$ contains the set of $r$-tuples that are allowed
+    for~$\Variables{c}$, and we call those $r$-tuples
+    \emph{solutions} to the constraint~$c$.
+
+    \item Let~$\tau$ be an~$r$-tuple of values associated with an
+      $r$-ary constraint~$c$ on a subsequence of~$V$.
+      We denote the value corresponding
+      to a variable~$v$ by~$\tau[v]$. The tuple~$\tau$ is \emph{valid}
+      for~$\Variables{c}$
       if and only if each value of~$\tau$ is in the domain of the corresponding
-      variable: $\forall i \in 1 \ldots n, \tau[i] \in \Dom{v_i}$, or equivalently,
-      $\tau \in D_1 \times \dots \times D_n$.
-    \item For a constraint~$c$ on $V$, the~$n$-tuple~$\tau$ is 
-      a \emph{support} on~$c$ if and only
-      if~$\tau$ is valid for~$V$ and~$\tau$ is a solution to~$c$, that is,
-      $\tau$ is a member of~$\mathit{rel}(c)$.
-    \item For an~$n$-ary constraint~$c$, involving a variable~$v$ such that
-      the value~$a \in \Dom{v}$, the~$n$-tuple~$\tau$ is a 
-      \emph{support for}~$(v,a)$ on~$c$ if and only if~$\tau$ is a support on~$c$
-      and~$\tau[v] = a$.
-      If such a tuple~$\tau$ exists,~$(v,a)$ is said to have a support on~$c$.
+      variable: $\forall v \in \Variables{c}: \tau[v] \in \Dom{v}$.
+      The tuple~$\tau$ is a \emph{support on}~$c$ if and only if~$\tau$
+      is valid for~$\Variables{c}$ and~$\tau$ is a solution to~$c$, that is,
+      $\tau$ is a member of~$\Relation{c}$.
+      For a variable~$v \in \Variables{c}$ such that the the value~$a \in \Dom{v}$,
+      the tuple~$\tau$ is a \emph{support for}~$(v,a)$ on~$c$
+      if and only if~$\tau$ is a support on~$c$ and~$\tau[v] = a$. If such a tuple
+      $\tau$ exists, then~$(v,a)$ is said to hava a support on~$c$.
     \end{itemize}
 \end{definition}
 
@@ -572,15 +580,15 @@ are considered.
 After defining constraints, we define \emph{constraint satisfaction problems}:
 
 \begin{definition}
-  \textbf{CSP.} A constraint satisfaction problem (CSP) is a 
+  \textbf{CSP.} A constraint satisfaction problem (CSP) is a
   triple~$\left<V,D,C\right>$, where:
   $V = v_1, \ldots, v_n$ is a finite sequence of variables,
   ~$D = D_1, \ldots, D_n$ is a finite sequence of domains for the respective variables,
-  and~$C = \Set{c_1, \ldots, c_m}$ is a finite set of constraints, 
+  and~$C = \Set{c_1, \ldots, c_m}$ is a finite set of constraints,
   each on a subsequence of~$V$.
 \end{definition}
 
-During the search for a solution to a CSP, the domains of the variables will vary: 
+During the search for a solution to a CSP, the domains of the variables will vary:
 along a path in the search tree, the domains shrink
 until they are assigned a value (a solution node) or until the domain
 of a variable becomes empty (a failed node).
@@ -591,36 +599,37 @@ had in that node, so that the search continues from an equivalent state.
 A current mapping of domains to variables is called a~\emph{store}:
 
 \begin{definition}
-  \textbf{Stores.} A \emph{store}~$s$ is a function, mapping a finite set of
-  variables~$V = v_1, \ldots, v_n$ to a finite set of domains. We denote the domain of
+  \textbf{Stores.} A \emph{store}~$s$ is a function, mapping a finite sequence of
+  variables~$V = v_1, \ldots, v_n$ to a finite sequence of domains. We denote the domain of
   a variable~$v_i$ under~$s$ by~$s(v_i)$.% or~$\Dom{v_i}$.
   \begin{itemize}
     \item A store~$s$ is \emph{failed} if and only if~$s(v_i) = \emptyset$ for some~$v_i \in V$.
-      A variable~$v_i$ such that~$s(v_i) = \emptyset$ is said to have 
+      A variable~$v_i$ such that~$s(v_i) = \emptyset$ is said to have
       a \emph{domain wipe-out} under~$s$.
-    
-    \item   A variable~$v_i \in V$ is \emph{fixed}, or \emph{assigned},
-      by a store~$s$ if and only if~$|s(v_i)| = 1$. 
-    
-    \item Let~$c$ be an $m$-ary constraint on a subsequence~$V_m$ of~$V$,
-      where~$m \leq n$.
-      A store~$s$ is an \emph{assignment store} for~$c$ if all variables
-      in~$V_m$ are fixed by~$s$.
-      A store $s$ is a \emph{solution store} 
-      to~$c$ if and only if~$s$ is an assignment store for~$c$ such that
-      the~$m$-tuple that the values of the variables form is a solution
-      to~$c$:
-      $\forall i \in \Set{1,\ldots,m}, s(v_i) = \Set{a_i}$,
-      and~$\left<a_1,\ldots,a_m\right>$ is a solution to~$c$.
 
-    \item A store~$s_1$ is \emph{stronger} than a store~$s_2$, 
-      written~$s_1 \preceq s_2$, if and only if~$s_1(v_i) \subseteq s_2(v_i)$ 
+    \item   A variable~$v_i \in V$ is \emph{fixed}, or \emph{assigned},
+      by a store~$s$ if and only if~$|s(v_i)| = 1$.
+
+    \item Let~$c$ be an $r$-ary constraint on a subsequence~$V_r$ of~$V$,
+      and assume without loss of generality that~$V_r$
+      contains the first~$r$ variables of~$V$.
+      A store~$s$ is an \emph{assignment store} for~$c$ if all variables
+      in~$V_r$ are fixed by~$s$.
+      A store $s$ is a \emph{solution store}
+      to~$c$ if and only if~$s$ is an assignment store for~$c$ such that
+      the~$r$-tuple that the values of the variables form is a solution
+      to~$c$:
+      $\forall i \in \Set{1,\ldots,r}: s(v_i) = \Set{a_i}$,
+      and~$\left<a_1,\ldots,a_r\right>$ is a solution to~$c$.
+
+    \item A store~$s_1$ is \emph{stronger} than a store~$s_2$,
+      written~$s_1 \preceq s_2$, if and only if~$s_1(v_i) \subseteq s_2(v_i)$
       for all~$v_i \in V$.
-    
-    \item A store~$s_1$ is \emph{strictly stronger} than a store~$s_2$, 
+
+    \item A store~$s_1$ is \emph{strictly stronger} than a store~$s_2$,
       written~$s_1 \prec s_2$, if and only if~$s_1$ is stronger than~$s_2$
-      and~$s_1(v_i) \subset s_2(v_i)$ for some~$v_i \in V$. 
-      
+      and~$s_1(v_i) \subset s_2(v_i)$ for some~$v_i \in V$.
+
   \end{itemize}
 
 \end{definition}
@@ -629,10 +638,10 @@ A current mapping of domains to variables is called a~\emph{store}:
 \label{bg:propagation}
 
 Constraint propagation is the process of removing values from the domains
-of the variables in a CSP that cannot participate in a solution store to the 
+of the variables in a CSP that cannot participate in a solution store to the
 problem, because assigning them to the variables would violate the constraint.
-In a CP solver, each constraint that the solver implements is 
-associated with 
+In a CP solver, each constraint that the solver implements is
+associated with
 one or more propagation algorithms (propagators) whose task is to remove
 values that are in conflict with the respective constraint.
 
@@ -646,14 +655,13 @@ where we let~$store$ be the set of all stores.
   \begin{equation*}
     p: store \to store
   \end{equation*}
-
-  In a CP solver, a propagator is implemented as a function that also returns 
+  In a CP solver, a propagator is implemented as a function that also returns
   a \emph{status message}.
   The possible status messages are \emph{Fail}, \emph{Subsumed},
-  \emph{Fixpoint}, and \emph{Possibly not at fixpoint}. 
-  A propagator~$p$ is at \emph{fixpoint} on a store~$s$ if and only if applying 
+  \emph{Fixpoint}, and \emph{Possibly not at fixpoint}.
+  A propagator~$p$ is at \emph{fixpoint} on a store~$s$ if and only if applying
   $p$ to~$s$ gives no further propagation:~$p(s) = s$.
-  If a propagator~$p$ always returns a fixpoint, that is, 
+  If a propagator~$p$ always returns a fixpoint, that is,
   if~$p(s) = p(p(s))$ for all stores~$s$, then $p$ is \emph{idempotent}.
   A propagator is \emph{subsumed} by a store~$s$ if and only if
   all stronger stores are fixpoints:~$\forall s'\preceq s, \ p(s')=s'$.
@@ -670,7 +678,7 @@ where we let~$store$ be the set of all stores.
     This property is not a strict obligation, though it is desirable:
     it follows the intuition that more input information (stronger input store)
     gives a stronger conclusion (stronger output store).
-    
+
   \item A propagator is correct for the constraint it implements.
     A propagator~$p$
     is \emph{correct} for a constraint~$c$ if and only if it does not
@@ -683,13 +691,13 @@ where we let~$store$ be the set of all stores.
     implements; if~$s$ is a solution store, then it must signal \emph{Subsumed},
     otherwise it must signal \emph{Fail}.
 
-  \item A propagator must be \emph{honest}: it must be 
-    fixpoint honest and subsumption honest. 
-    A propagator~$p$ is \emph{fixpoint honest} if and only if it does not signal 
+  \item A propagator must be \emph{honest}: it must be
+    fixpoint honest and subsumption honest.
+    A propagator~$p$ is \emph{fixpoint honest} if and only if it does not signal
     \emph{Fixpoint} when it does not return a fixpoint, and it is
     \emph{subsumption honest} if and only if it does
     not signal \emph{Subsumed} when it is not subsumed by the input store.
-    
+
 \end{itemize}
 
 \end{definition}
@@ -704,13 +712,13 @@ because it fulfils all the other obligations: it is a decreasing and monotonic f
 (because it never removes values).
 
 Also note that the honest property does \emph{not} mean that a
-propagator is \emph{obliged} to signal Fixpoint or Subsumed
-if it has computed a fixpoint or is subsumed, only that it must not 
+propagator is \emph{obliged} to signal \emph{Fixpoint} or \emph{Subsumed}
+if it has computed a fixpoint or is subsumed, only that it must not
 claim fixpoint or subsumption if that is not the case.
-Thus, it is always safe 
-for a propagator to signal Possibly not at fixpoint, except for
-assignment stores where it must signal either Fail or Subsumed
-as required by the honest property. 
+Thus, it is always safe
+for a propagator to signal \emph{Possibly not at fixpoint}, except for
+assignment stores where it must signal either \emph{Fail} or \emph{Subsumed}
+as required by the honest property.
 
 So why not stay on the safe side and always signal Possibly not at fixpoint?
 The reason is that the CP solver can benefit from the information
@@ -728,23 +736,23 @@ The following defines three commonly used consistencies:
 and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
 
 \begin{definition}
-  \textbf{Range consistency.} 
-  Given an integer variable~$v$, its \emph{range} is the closed 
+  \textbf{Range consistency.}
+  Given an integer variable~$v$, its \emph{range} is the closed
   interval~$[\text{min}(\Dom{v}),\text{max}(\Dom{v})]$.
   A constraint~$c$ is \emph{range consistent} on a store~$s$
   if and only if for all variables that are fixed under~$s$,
   there exist values in the ranges of all the other variables
-  in~$\mathit{vars}(c)$ such that the values form a solution to~$c$.
+  in~$\Variables{c}$ such that the values form a solution to~$c$.
 \end{definition}
 
 \begin{definition}
-  \textbf{Bounds consistency.} A constraint~$c$ is \emph{bounds consistent} on a store~$s$ 
-  if and only if there exists at least one support for the lower bound 
+  \textbf{Bounds consistency.} A constraint~$c$ is \emph{bounds consistent} on a store~$s$
+  if and only if there exists at least one support for the lower bound
   and for the upper bound of each variable associated
-  with~$c$: $\forall v \in \mathit{vars}(c)$,~$(v,\text{min}(\Dom{v}))$
-  and~$(v,\text{max}(\Dom{v}))$ 
+  with~$c$: $\forall v \in \Variables{c}$,~$(v,\text{min}(\Dom{v}))$
+  and~$(v,\text{max}(\Dom{v}))$
   have a support on~$c$.
-  % A propagator~$p$ is bounds consistent, iff~$c$ is bounds consistent 
+  % A propagator~$p$ is bounds consistent, iff~$c$ is bounds consistent
   % consistent on $p(s)$ for all stores~$s$ such that~$p(s)$ is not a failed store.
 \end{definition}
 
@@ -752,12 +760,12 @@ and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
   \textbf{Domain consistency.} A constraint~$c$ is \emph{domain consistent}
   on a store~$s$  if and only if there exists at least one support for all
   values of each variable associated with~$c$:
-  $\forall v \in \mathit{vars}(c), \forall a \in \Dom{v}$,~$(v,a)$ 
+  $\forall v \in \Variables{c}, \forall a \in \Dom{v}$:~$(v,a)$
   has a support on~$c$.
 \end{definition}
 
 % We say that a consistency~$\ell_1$ is \emph{weaker} than another
-% consistency~$\ell_2$, if given any constraint~$c$ and store~$s$, 
+% consistency~$\ell_2$, if given any constraint~$c$ and store~$s$,
 % the~$c$ has consistency~$l_1$
 % on a store~$s$ implies that~$c$ also has consistency~$l_2$ on~$s$.
 
@@ -766,11 +774,11 @@ and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
 
 A propagator~$p$ is said to have a certain consistency
 if after applying~$p$ to any input store~$s$, the resulting store~$p(s)$
-always has that consistency. 
+always has that consistency.
 Enforcing domain consistency might remove more values from the domains of the variables
-compared to when enforcing range- or bounds consistency, but might be more costly.
+compared to enforcing range- or bounds consistency, but might be more costly.
 
-The propagator that is concerned in this project is domain consistent.
+The propagator that is discussed in this project is domain consistent.
 
 \subsection{Gecode}
 \label{bg:gecode}
@@ -789,14 +797,14 @@ which complies with a given interface.
 A propagator can store any data structures as instance members,
 for saving state information between executions.
 
-One such data structure is called \emph{advisors}, 
-which can inform propagators about variable
+One such data structure is called \emph{advisors},
+which can inform propagators about variable domain
 modifications.
 The purpose of an advisor is, as its name suggests, to advise
-the propagator of whether it needs to be executed or not. 
-Whenever the domain of a variable changes, the advisor is executed.
+the propagator of whether it needs to be executed or not.
+Whenever the domain of a variable changes, its associated advisor is executed.
 Once running, it can signal fixpoint, subsumption or failure if it detects
-such a state. 
+such a state.
 
 Advisors enable \emph{incrementality}: they can ensure
 that the propagator does not need to scan all the variables to see
@@ -805,7 +813,7 @@ data structures to avoid scanning all variables and/or all domains
 of the variables in each execution are said to be \emph{incremental}.
 
 Search in Gecode is copy-based. Before making a decision in the search tree, the
-current node is copied, so that the search can restart from a previous 
+current node is copied, so that the search can restart from a previous
 state in case the decision fails, or in case more solutions are sought.
 This implies some concerns regarding the memory usage for the stored data structures
 of a propagator, since allocating memory and copying large data structures
@@ -830,12 +838,12 @@ set of tuples:
   (positive\footnote{There are also negative table constraints that list the
     forbidden tuples instead of the allowed tuples.})
   \emph{table constraint c} is a
-  constraint such that~$\mathit{rel}(c)$ is defined explicitly by listing all the
+  constraint such that~$\Relation{c}$ is defined explicitly by listing all the
   tuples that are solutions to~$c$.
 \end{definition}
 
 Theoretically, any constraint could be expressed using the~\Table~constraint,
-simply by listing all the allowed assignments for its variables, 
+simply by listing all the allowed assignments for its variables,
 making the~\Table~constraint very powerful. However,
 it is typically too memory consuming to represent a constraint in this way,
 because the number of possible combinations of values might be exponential in the
@@ -848,8 +856,8 @@ extensionally~\cite{SchulteCarlsson:FDsys}.
 As an example of use case, the~\Table~constraint has proved to be useful for
 pre-solving sub-problems in constraint models~\cite{Dekker:MSc}.
 
-In Gecode, the \Table~constraint and another constraint 
-called~\Constraint{Regular}, which constraints a sequence of variables
+In Gecode, the \Table~constraint and another constraint
+called~\Constraint{Regular}, which constrains a sequence of variables
 to form a word of a regular language, are both called~\Extensional.
 Gecode provides one propagator for~\Regular, based on~\cite{Pesant:seqs},
 and two propagators for~\Table; one which is based
@@ -871,14 +879,14 @@ to the best of my knowledge,
 and consequently how it would perform in that framework
 was an open question.
 
-Compact-table relies on bit-wise operations using a new 
+Compact-table relies on bit-wise operations using a new
 data structure
 called \emph{reversible sparse bit-set} (see \Secref{bg:sbs}).
 The propagator maintains a reversible sparse bit-set object, \texttt{currTable},
-that stores which tuples from the input table that are currently valid.
-Also, for each variable-value pair, a bit-set mask is computed and stored in an 
+that stores the indices of the currently valid tuples from the input table.
+Also, for each variable-value pair, a bit-set mask is computed and stored in an
 array \texttt{supports};
-each bit-set mask stores which of the tuples that are supports for the
+each bit-set mask stores the indices of the tuple that are supports for the
 corresponding variable-value pair.
 
 Propagation consists of two steps:
@@ -903,12 +911,12 @@ is a sparse-set data structure~\cite{Briggs93anefficient,Schaus13sparse-setsfor}
 that is a main data structure in the CT algorithm in~\cite{\CTpaper}.
 The data structure stores a set of
 integers from the range~$0 \ldots n-1$, where~$n$ is a given number.
-Initially, all elements from this range are present, and 
-the set can only become sparser -- there are operations for
+Initially, all elements from this range are present, and
+the set can only become sparser --- there are operations for
 removing values but not for adding values.
 Operations are performed only on non-zero words in the bit-set,
 which makes it efficient to perform bit-wise operations
-with other bit-sets (such as intersecting and unioning),
+with other bit-sets (such as intersection and union),
 even when the set of values is sparse; hence the name.
 
 % From hereon, we call \emph{int} the datastructure
@@ -921,16 +929,18 @@ even when the set of values is sparse; hence the name.
 % in \T{index}. Also, it has a temporary mask (array of ints)
 % that is used to modify \T{words}.
 
-Some CP solvers, OR-tools is among them,
+Some CP solvers, among them OR-tools,
 use a mechanism called \emph{trailing}
 to perform backtracking
 (as previously discussed, Gecode uses copying instead),
 where the main idea is to store a stack of operations that can
 be undone upon backtrack.
-For such a trail-based solver, reversing a reversible sparse-bit set
-to a previous state during backtracking is very efficient.
+For such CP solvers, every word of a reversible sparse bit-set must
+be reversible, and so every time a word is modified, a trail entry
+may have to be pushed, so that the word can be reset to its previous
+contents upon backtracking.
 
-% In the following sections, a data structure that is 
+% In the following sections, a data structure that is
 % like a reversible sparse bit-sets except that it is not reversible
 % will be called a sparse bit-set.
 
@@ -941,7 +951,7 @@ to a previous state during backtracking is very efficient.
 
 This section presents the algorithms that are used in the implementation of the
 CT propagator within this project.
-In the following, we call \emph{int} the data structure that represent
+In the following, we call \emph{int} the data structure that represents
 integers. For an array~$a$ we let~$a[0]$ denote the first element
 (thus indexing starts from~$0$), and
 $a$.length() the number of cells.
@@ -957,19 +967,18 @@ are based on this paper.
 
 \subsection{{\BitSet}s}
 \label{sec:sbs}
-This section describes a new data structure called 
+This section describes a new data structure called
 \bitset~that is a main data structure
 in the CT algorithm implemented within this project. {\Bitset}s are similar to
-reversible sparse bit-sets described in \Secref{bg:sbs},
+reversible sparse bit-sets described in \Secref{bg:sbs};
 the differences are:
 \begin{itemize}
   \item {\Bitset}s are not reversible, that is, they cannot be restored to a previous
     state.
   \item {\Bitset}s have a denser representation of the active bits than reversible sparse
-    bit-sets have -- the non-zero words are compressed to lay contiguously in memory.
+    bit-sets have --- the non-zero words form a contiguous memory block.
 \end{itemize}
-
-These differences reflect the fact that \bitset~is a data structure customised
+These differences reflect the fact that a \bitset~is a data structure customised
 for a copy-based solver such as Gecode, in contrast to reversible sparse bit-sets
 that are more suited for a trail-based solver such as OR-tools.
 
@@ -992,32 +1001,33 @@ The rest of this section describes its fields and methods in detail.
 of the class~\SparseBitSet~and their types. Here follows a more detailed description of them:
 
 \begin{itemize}
-  \item \Words~is an array storing a permutation of~$p$ 64-bit 
-    words:~$\Set{w_0, w_1, \dots, w_{p-1}}$, each word~$w_i$ 
+  \item \Words~is an array storing a permutation of~$p$ 64-bit
+    words:~$\Set{w_0, w_1, \dots, w_{p-1}}$, each word~$w_i$
     representing~$64$ elements in the set.
     Initially, $\Words[i] = w_i$~for all~$i$.
     The array~$\Words$ defines the current
     value of the bit-set:
-    the~$i$th bit of word $w_j$ is 1 if and only if 
+    the~$i$th bit of word $w_j$ is 1 if and only if
     the~$\left((j-1) \cdot 64 + i\right)$th element of
-    the set is present. 
-    Upon initalisation, all words in the array 
+    the set is present.
+    Upon initialisation, all words in the array
     have all their bits set to~$1$,
-    except the last word, which may have a suffix of bits set to~$0$. 
-    
-    When performing operations on~\Words, the words are continoulsly re-ordered
+    except the last word, which may have a suffix of bits set to~$0$.
+
+    When performing operations on~\Words, the words are continuously re-ordered
     so that all the non-zero words are
-    located at indices less than or equal to \Limit, and all the words that
-    consist of only zeros are located at positions strictly greater than~\Limit.
+    located at indices less than or equal to \Limit~(see below),
+    and all the words that consist of only zeros are located at positions
+    strictly greater than~\Limit.
 
   \item \Index~is an array that manages the indices of the words in~\Words,
     making it possible to perform operations on non-zero words only.
     For each word in \Words, \Index~maps its \emph{current} index to its
     \emph{original} index:~$\Words[i] = w_{\Index[i]}$ for all~$i$.
-    
+
   \item \Limit~is the index of~\Index~and~\Words~corresponding
     to the last non-zero word in~\Words.
-    Thus it is one smaller than the number of non-zero words in~\Words.
+    Thus it is one less than the number of non-zero words in~\Words.
 
   \item \Mask~is a local temporary array that is used to modify the bits in~\Words.
 
@@ -1043,8 +1053,8 @@ We now describe the methods in the class~\SparseBitSet~in~\Algoref{algo:sparse}.
 
 \begin{itemize}
   \item initSparseBitSet() in~\linesref{line:initsbs:start}{line:initsbs:end}
-    initialises a \bitset-object. It takes 
-    the number of elements (bits) as an argument and initialises the fields
+    initialises a \bitset-object. It takes
+    the number of elements ($\mathit{nbits}$) as an argument and initialises the fields
     described in~\Secref{sbs:fields} in a straightforward way.
 
   \item isEmpty() in lines~\ref{line:isEmpty:1}--\ref{line:isEmpty:2} checks
@@ -1052,13 +1062,13 @@ We now describe the methods in the class~\SparseBitSet~in~\Algoref{algo:sparse}.
     set to~$-1$, that means that all words are zero-words and the bit-set
     is empty.
 
-  \item clearMask() in lines~\ref{line:reverse:1}--\ref{line:clearMask:4}
+  \item clearMask() in lines~\ref{line:clearMask:1}--\ref{line:clearMask:4}
     clears the temporary mask. This means setting to~$0$ all words of~$\Mask$
     corresponding to non-zero words of~\Words.
-    
-  \item flipMask() in lines~\ref{line:clearMask:1}--\ref{line:reverse:4}
+
+  \item flipMask() in lines~\ref{line:reverse:1}--\ref{line:reverse:4}
     flips the bits in the temporary mask.
-  
+
   \item addToMask() in~\linesref{line:addToMask:1}{line:addToMask:4} applies
     word-by-word logical bit-wise
     \emph{or} operations with a given bit-set (array of $64$-bit int).
@@ -1068,30 +1078,30 @@ We now describe the methods in the class~\SparseBitSet~in~\Algoref{algo:sparse}.
   \item intersectWithMask() in~\linesref{line:intersect:1}{line:intersect:9}
     considers each non-zero word of~\Words~in turn
     and replaces it by its intersection with the corresponding word of~\Mask.
-    In case the resulting new word is~$0$, 
+    In case the resulting new word is~$0$,
     the word and its index are swapped with the last non-zero word and
     the index of the last non-zero word, respectively, and~\Limit~is decreased
     by one.
-        
+
     In~\Secref{sec:implementation} we will see that the implementation
     can actually skip lines 31 and 33 because it is unnecessary
-    to save information about the zero words in a copy-based solver such 
+    to save information about the zero words in a copy-based solver such
     as Gecode.
     We keep these
-    lines here though, as the class invariant~\Eqref{eq:invariant} 
+    lines here though, as the class invariant~\Eqref{eq:invariant}
     would not hold otherwise.
-    
+
   \item intersectIndex() in~\linesref{line:interIdx:1}{line:interIdx:7}
     checks whether the intersection of~\Words~and a given bit-set
     (array of $64$-bit int) is empty or not. For all non-zero words in~\Words,
-    we perform a logical bit-wise \emph{and} operation 
+    we perform a logical bit-wise \emph{and} operation
     in line~\ref{line:interIdx:5} and return
     the index of the word if the intersection is non-empty. If the
     intersection is empty for all words, then~$-1$ is returned.
 \end{itemize}
 
-Figure~\ref{fig:example} shows an example of applying operations to a 
-\bitset~assuming it consisted of $4$-bit ints instead of~$64$-bit ints.
+Figure~\ref{fig:example} shows an example of applying operations to a
+\bitset~assuming it consists of $4$-bit ints instead of~$64$-bit ints.
 We assume that initially the set contains the range~$0..17$, so~$p = 5$
 (we need~$5$ $4$-bit ints for~$18$ bits). In (a), \Words~and \Index~are
 still in their initial state, and \Mask~has some bits set to~$0$ and others
@@ -1123,11 +1133,11 @@ obligations.
 
 When posting the propagator, the inputs are an initial table;
 a set of tuples $T_0 = \Tuple{\tau_0, \tau_1, \ldots, \tau_{p_0-1}}$ of
-length~$p_0$, and the sequence of variables $\mathit{vars}(c)$; 
+length~$p_0$, and the sequence of variables $\Variables{c}$;
 the variables that are associated with~$c$.
 In what follows, we call the \emph{initial valid table}
 for~$c$ the subset~$T \subseteq T_0$ of size~$p \leq p_0$ where all
-tuples are initially valid for~$\mathit{vars}(c)$.
+tuples are initially valid for~$\Variables{c}$.
 For a variable~$x$, we distinguish between its \emph{initial domain}
 ~$\Dominit{x}$ and its \emph{current domain} $\Dom{x}$.
 In an abuse of notation, we denote~$x \in s$ for a variable
@@ -1138,16 +1148,17 @@ to the set~$A$.
 The propagator state has the following fields:
 
 \begin{itemize}
-  
-  \item $\CurrTable$, a $\SparseBitSet$ object representing the current valid
-    supports for~$c$. If the initial valid table for~$c$
-    is $\Tuple{\tau_0, \tau_1, \ldots, \tau_{p-1}}$,
-    then~$\CurrTable$ is a 
-    $\SparseBitSet$ object of initial size~$p$, such that value~$i$
-    is contained (is set to~$1$) if and only if the~$i$th tuple is valid:
-    
+  \begin{sloppypar}
+      \item $\CurrTable$, a $\SparseBitSet$ object representing the current valid
+        supports for~$c$. If the initial valid table for~$c$
+        is $\Tuple{\tau_0, \tau_1, \ldots, \tau_{p-1}}$,
+        then~$\CurrTable$ is a
+        $\SparseBitSet$ object of initial size~$p$, such that value~$i$
+        is contained (is set to~$1$) if and only if the~$i$th tuple is valid:
+  \end{sloppypar}
+
     \begin{equation} \label{eq:currtable}
-      i \in \CurrTable \ \Leftrightarrow \ \forall x \in \mathit{vars}(c): \tau_i[x] \in \Dom{x}
+      i \in \CurrTable \ \Leftrightarrow \ \forall x \in \Variables{c}: \tau_i[x] \in \Dom{x}
     \end{equation}
 
   \item $\Supports$, a static array of bit-sets representing
@@ -1156,27 +1167,29 @@ The propagator state has the following fields:
     %where~$x \in vars(c) \land a \in \Dom{x}$.
     %It is a static array of words~$\Supports[x,a]$, seen as bit-sets.
     The bit-set~$\Supports[x,a]$ is such that
-    the bit at position~$i$ is set to~$1$ if and only if the 
+    the bit at position~$i$ is set to~$1$ if and only if the
     tuple~$\tau_i$ in the initial valid table of~$c$ is initially a support for~$(x,a)$:
 
     \begin{alignat}{1}
-      \forall x \in \mathit{vars}(c): \ \forall a \in \Dominit{x}:& \\
+      \forall x \in \Variables{c}: \ \forall a \in \Dominit{x}:& \\
       \Supports[x,a][i] = 1 &\quad \Leftrightarrow \\
       (\tau_i[x] = a \quad \land \quad
-      \forall y \in \mathit{vars}(c): \ &\tau_i[y] \in \Dominit{y})
+      \forall y \in \Variables{c}: \ &\tau_i[y] \in \Dominit{y})
     \end{alignat}
 
     $\Supports$ is computed once during the initialisation of CT and then
     remains unchanged.
-    
-  \item $\Residues$, an array of ints such that for each variable-value pair~$(x,a)$,
-    we have that~$\Residues[x,a]$ denotes the index
-    of the word in~$\CurrTable$
-    where a support was found for~$(x,a)$ the last time it was sought.
-    % Additionally, $\Residues[x,a]$~is the \emph{highest} index in~$\Words$
-    % where a support for~$(x,a)$ can be found, if such an index exists.
 
-  \item $\Vars$, an array of variables that represent~$\mathit{vars}(c)$.
+    \begin{sloppypar}
+        \item $\Residues$, an array of ints such that for each variable-value pair~$(x,a)$,
+          we have that~$\Residues[x,a]$ denotes the index
+          of the word in~$\CurrTable$
+          where a support was found for~$(x,a)$ the last time it was sought.
+          % Additionally, $\Residues[x,a]$~is the \emph{highest} index in~$\Words$
+          % where a support for~$(x,a)$ can be found, if such an index exists.
+    \end{sloppypar}
+
+  \item $\Vars$, an array of variables that represent~$\Variables{c}$.
 
 \end{itemize}
 
@@ -1194,7 +1207,7 @@ CT is subsumed if there is at most one unassigned variable
 left, otherwise CT is at fixpoint.
 The condition for fixpoint is correct because CT is idempotent,
 which is shown in the proof of Lemma~\ref{lemma:idempotent}.
-Why the condition for subsumption is correct is shown in the proof of 
+Why the condition for subsumption is correct is shown in the proof of
 Lemma~\ref{lemma:honest}.
 
 In the implementation of the algorithm,
@@ -1209,9 +1222,9 @@ the advisors have been executed.
 
 The procedure \InitialiseCT() is described in
 \Algoref{algo:initialise-CT}. The procedure takes the
-input store~$s$, the 
-initial table~$T_0$, and the sequence of associated 
-variables~$\mathit{vars}(c)$ as arguments.
+input store~$s$, the
+initial table~$T_0$, and the sequence of associated
+variables~$\Variables{c}$ as arguments.
 
 \begin{algorithm}[t]
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
@@ -1225,7 +1238,7 @@ variables~$\mathit{vars}(c)$ as arguments.
   propagation to limit the domain sizes of the variables,
   which in turn will limit the sizes of the data structures.
   These lines remove from the domain of each variable~$x$ all
-  values that are either greater 
+  values that are either greater
   than the largest element or smaller than the smallest element in the
   initial table. If a variable has a domain wipe-out,
   then the empty store is returned.
@@ -1241,7 +1254,7 @@ bit-set being the number of tuples in~$T_0$.
 
 \Linesref{line:init:6}{line:init:7} set the correct bits to~$1$ in~$\Supports$.
 For each tuple~$t$, we check if~$t$ is a valid support for~$c$. Recall that~$t$ is
-a valid support for~$c$ if and only if~$t[x] \in \Dom{x}$ for all~$x \in \mathit{vars}(c)$.
+a valid support for~$c$ if and only if~$t[x] \in \Dom{x}$ for all~$x \in \Variables{c}$.
 We keep a counter,~$\mathit{nsupports}$, for the number of valid supports for~$c$.
 This is used for indexing the tuples in~$\Supports$ (we only index the tuples
 that are valid supports).
@@ -1249,12 +1262,12 @@ If~$t$ is a valid support, then
 all elements in~$\Supports$ corresponding to~$t$ are set to~$1$ in
 line~\ref{line:init:10}. We also take the opportunity to store the word index
 of the found support in~$\Residues[x,t[x]]$
-in line~\ref{line:init:11}. 
+in line~\ref{line:init:11}.
 Line~\ref{line:init:12} increases the counter.
 
 \Linesref{line:init:13}{line:init:wipeout} remove values that are not supported
-by any tuple in the initial valid table. The procedure returns in case a variable
-has a domain wipe-out.
+by any tuple in the initial valid table. The procedure returns the empty store
+in case a variable has a domain wipe-out.
 
 \Lineref{line:init:15} initialises~$\CurrTable$ as a~$\SparseBitSet$ object with
 $\mathit{nsupports}$ bits, initially with all bits set to~$1$ since~$\mathit{nsupports}$
@@ -1266,7 +1279,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   \begin{algorithmic}[1]  % comment [1] away to drop the line numbers
     \input{updateTable.tex}
   \end{algorithmic}
-  \caption{Updating the current table. This procedure is called for 
+  \caption{Updating the current table. This procedure is called for
     each variable whose domain is modified since the last invocation.}
   \label{algo:updateTable}
 \end{algorithm}
@@ -1284,18 +1297,20 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   are set to~$0$ in the bit-set.
   % \Lineref{line:updateTable:8} checks whether the current table is empty,
   % in which case we return~$Failed$ in line~\ref{line:updateTable:9}
-  % because there are no valid tuples left. 
+  % because there are no valid tuples left.
 
   The algorithm is assumed to be run in a CP solver that that runs \UpdateTable()
-  for each variable~$x \in \mathit{vars}(c)$ whose domain has changed since the
+  for each variable~$x \in \Variables{c}$ whose domain has changed since the
   last invocation.
-  
+
   \bigskip
 
-  After the current table has been updated, inconsistent values must be removed
-  from the domains of the variables.   
-  It follows from the definition of the bit-sets~$\CurrTable$ and~$\Supports[x,a]$
-  that~$(x,a)$ has a valid support if and only if 
+  \begin{sloppypar}
+      After the current table has been updated, inconsistent values must be removed
+      from the domains of the variables.
+      It follows from the definition of the bit-sets~$\CurrTable$ and~$\Supports[x,a]$
+      that~$(x,a)$ has a valid support if and only if
+    \end{sloppypar}
 
   \begin{equation}
     \label{eq:validcond}
@@ -1317,7 +1332,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
 
   % \Lineref{line:filterDom:1} initialises a counter for the number of unassigned
   % variables.
-  
+
   We note that it is only necessary to
   consider a variable~$x \in \Vars$ that is not assigned,
   because we will never filter out values from the domain of an assigned variable.
@@ -1325,11 +1340,11 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
   causing a wipe-out for~$x$. Then, by the definition in formula~\eqref{eq:currtable},
   \CurrTable~must be empty,
   which it will never be upon invocation of \FilterDomains(), because then
-  \CompactTable() would have reported failure before \FilterDomains() is called. 
+  \CompactTable() would have reported failure before \FilterDomains() is called.
 
   In \linesref{line:filterDom:res1}{line:filterDom:res2} we check if the
-  word at the cached index~$\mathit{r}$ still contains a support for~$(x,a)$. 
-  If it does not, then we search in line~\ref{line:filterDom:4} for 
+  word at the cached index~$\mathit{r}$ still contains a support for~$(x,a)$.
+  If it does not, then we search in line~\ref{line:filterDom:4} for
   an index in~$\CurrTable$ where a valid support for the variable-value
   pair~$(x,a)$ is found, thereby checking the condition~\eqref{eq:validcond}.
   If such an index exists, then we cache it in~$\Residues[x,a]$, and
@@ -1340,7 +1355,7 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
 \begin{itemize}
   \item If~$x$ is the only variable
     that has been modified since the last invocation of~\CompactTable(),
-    then it is not necessary to attempt to filter out values from 
+    then it is not necessary to attempt to filter out values from
     the domain of~$x$, because every value of~$x$ will have a
     support in~$\CurrTable$.
     Hence, in \Algoref{algo:filterDomains}, we only execute
@@ -1351,31 +1366,31 @@ otherwise we would have returned at line~\ref{line:init:wipeout}.
     it was sought, but the \emph{highest} such index.
     This means that $\Residues[x,a]$
     will be an \emph{upper bound} on the indices that contain supports
-    for~$(x,a)$, because a word~$w_i$ residing at an index~$j$ in 
+    for~$(x,a)$, because a word~$w_i$ residing at an index~$j$ in
     \Words~can only move to an index smaller than~$j$.
-    This property holds upon initalisation, since
+    This property holds upon initialisation, since
     $\Residues[x,a]$ will be set to the latest found index of a support for~$(x,a)$
-    in line~$21$ in \InitialiseCT(). The invariant can be maintained by 
+    in line~$21$ in \InitialiseCT(). The invariant can be maintained by
     executing the loop in intersectIndex() from highest index to lowest
-    index instead of the other way around. 
-    The benefit of this invariant is that we sometimes can decrease the 
+    index instead of the other way around.
+    The benefit of this invariant is that we sometimes can decrease the
     number of iterations in intersectIndex();
     more specifically, when reaching line 5 in \FilterDomains(), it follows
-    from the introduced invariant that there is no support 
-    for~$(x,a)$ at indices greater or equal to~$\Residues[x,a]$,
+    from the introduced invariant that there is no support
+    for~$(x,a)$ at indices greater than or equal to~$\Residues[x,a]$;
     thus we can start the iteration in intersectIndex()
     at index~$\text{min}(\Limit,\Residues[x,a]-1)$.
     By letting intersectIndex() take an extra argument that defines the loop
     limit, this value can be passed to the method in line 5 in \FilterDomains().
-    
-\end{itemize} 
+
+\end{itemize}
 
 \paragraph{Variants.}
 The following lists some variants of the CT algorithm.
-\newline 
+\newline
 
 \begin{description}
-  \item[CT($\Delta$)] \emph{-- Using delta information in} \UpdateTable().
+  \item[CT($\Delta$)] \emph{--- Using delta information in} \UpdateTable().
 For a variable~$x$, the set~$\Delta_x$ contains the values that were removed from~$x$
 since the last invocation of the propagator.
 If the CP solver provides information about $\Delta_x$, then
@@ -1384,7 +1399,7 @@ shows a variant of~\UpdateTable() that uses delta information.
 If~$\Cardinality{\Delta_x}$ is smaller than~$\Cardinality{\Dom{x}}$,
 then we accumulate to the temporary mask
 the set of invalidated tuples, and then flip the bits in the temporary mask before
-intersecting it with~$\CurrTable$, else we use the same approach as 
+intersecting it with~$\CurrTable$, else we use the same approach as
 in~\Algoref{algo:updateTable}.
 \newline
 
@@ -1396,11 +1411,11 @@ in~\Algoref{algo:updateTable}.
   \label{algo:updateTableDelta}
 \end{algorithm}
 
-\item[CT($T$)]\emph{-- Fixing the domains when only one valid tuple left.} 
+\item[CT($T$)]\emph{--- Fixing the domains when only one valid tuple left.}
 If there is only one valid tuple left after all calls to \UpdateTable() are finished,
 then the domains of the variables can be fixed to the values for that tuple directly.
 \Algoref{algo:propagateFix} shows an alternative to lines 10--11 in~\Algoref{algo:CT}.
-This assumes that the propagator maintains an extra field~$T$ -- a list
+This assumes that the propagator maintains an extra field~$T$ --- a list
 of tuples representing the initial valid table for~$c$.
 
 \begin{algorithm}[t]
@@ -1450,15 +1465,15 @@ built-in~\textsc{MSB}~which returns the index of the most significant bit of a g
 
 \subsubsection{Proof of properties for CT}
 \label{sec:proof}
-% TODO: konsekvent typsnitt på funktionsnamn
-% TODO: initCT->initialiseCT
 
+\begin{sloppypar}
 We now prove that the CT propagator is indeed a well-defined propagator
 implementing the~\Table~constraint. We formulate the following theorem, which
 we will prove by a number of lemmas.
+\end{sloppypar}
 
 \begin{theorem} \label{thm:prop}
-  CT is an idempotent, domain-consistent propagator implementing 
+  CT is an idempotent, domain-consistent propagator implementing
   the~\Table~constraint, fulfilling the properties in~\Defref{def:prop}.
 \end{theorem}
 
@@ -1480,8 +1495,8 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   removes all values from the domains that are no longer supported.
   If \CurrTable~is not modified, then all values still have a support because
   all tuples that were valid in the previous invocation are still valid.
-  
-  So, in both cases every variable-value pair~$(x,a)$ has a support,
+
+  So, in both cases, every variable-value pair~$(x,a)$ has a support,
   which shows that CT is domain consistent.
 \end{proof}
 
@@ -1516,14 +1531,14 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   fixpoint for any input store~$s$, that is, $CT(CT(s)) = CT(s)$ for any
   store~$s$.
 
-  Suppose $CT(CT(s)) \neq CT(s)$ for a store~$s$. 
+  Suppose $CT(CT(s)) \neq CT(s)$ for a store~$s$.
   Since CT is monotonic
   and decreasing, we must have $CT(CT(s)) \prec CT(s)$, that is $CT$
   must prune at least one value~$a$ from the domain of a variable~$x$
-  from the store~$CT(s)$. 
-  Now, by \Eqref{eq:validcond}, there must exist at least one 
+  from the store~$CT(s)$.
+  Now, by \Eqref{eq:validcond}, there must exist at least one
   tuple~$\tau_i$
-  that is a support for~$(x,a)$ under the store $CT(s)$: 
+  that is a support for~$(x,a)$ under the store $CT(s)$:
   $\exists i: i \in \CurrTable \ \land \ \tau_i[x] = a$.
   After \UpdateTable() is performed on~$CT(s)$, we still have
   ~$i \in \CurrTable$, because~$\tau_i$ is still valid in~$CT(s)$.
@@ -1544,7 +1559,7 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \begin{proof}[Proof of \Lemmaref{lemma:correct}]
   $CT$ does not remove values that participate in tuples that are supports
   on a \Table~constraint~$c$,
-  since \FilterDomains() and \InitialiseCT() only remove values that 
+  since \FilterDomains() and \InitialiseCT() only remove values that
   have no supports on~$c$. Thus,~$CT$ is correct for \Table.
 \end{proof}
 
@@ -1552,15 +1567,16 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   CT is checking.
 \end{lemma}
 
+\begin{sloppypar}
 \begin{proof}[Proof of \Lemmaref{lemma:checking}]
   For an input store~$s$ that is an assignment store for~$c$,
   we shall show that $CT$
   signals failure if $s$ is not a solution store, and signals subsumption if
-  $s$ is a solution store. 
+  $s$ is a solution store.
 
   First, assume that~$s$ is not a solution store. That means that the tuple
-  $\tau = \Tuple{s(x_1),\ldots,s(x_n)}~\notin~\mathit{rel}(c)$.
- 
+  $\tau = \Tuple{s(x_1),\ldots,s(x_n)}~\notin~\Relation{c}$.
+
   There are two cases: either
   it is the first time $CT$ is applied or it has been applied before.
   If it is the first time, then \InitialiseCT() is called.
@@ -1572,11 +1588,12 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   If it is not the first time that $CT$ is called, then~\CurrTable~will be empty
   after all calls to~\UpdateTable() have finished, because there are no
   valid tuples left, which results in failure in line~$9$ in \Algoref{algo:CT}.
-  
-  Now assume that~$s$ is a solution store. 
+
+  Now assume that~$s$ is a solution store.
   $CT$ signals subsumption in line~$13$ in \Algoref{algo:CT} because all
   variables are assigned and \CurrTable~is not empty.
 \end{proof}
+\end{sloppypar}
 
 \begin{lemma}\label{lemma:honest}
   CT is honest.
@@ -1587,12 +1604,12 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   trivially it will never be the case that
   $CT$ signals fixpoint without having computed a fixpoint, thus~$CT$ is
   fixpoint honest.
-  
-  It remains to show that $CT$ is subsumption honest. 
+
+  It remains to show that $CT$ is subsumption honest.
   $CT$ signals subsumption on input store~$s$ if there is at most one
   unassigned variable~$x$ in~\FilterDomains(). After this point, no values will
   ever be pruned from~$x$ by~$CT$, because there will always be a support for
-  $(x,a)$ for each value~$a \in dom(x)$. Hence,~$CT$ is indeed subsumed by~$s$
+  $(x,a)$ for each value~$a \in \Dom{x}$. Hence,~$CT$ is indeed subsumed by~$s$
   when it signals subsumption, so~$CT$ is subsumption honest.~\end{proof}
 
 After proving Lemmas~\ref{lemma:domain-consistent}--\ref{lemma:honest},
@@ -1605,11 +1622,14 @@ proving~\Thmref{thm:prop} is trivial.
 \section{Implementation}
 \label{sec:implementation}
 
-Now the implementation of the CT algorithm presented in 
+Now the implementation of the CT algorithm presented in
 \Secref{sec:algorithms} will be described.
 This section reveals some important implementation details
 that the pseudo code conceals, and documents the design decisions made during
 the implementation.
+
+The implementation is available on a public repository,
+following this URL:~\url{https://github.com/lingmar/CT-Gecode}.
 
 The implementation was done in C++ in the context of the latest version of Gecode,
 at the time of writing Gecode~$5.0$, and following the coding conventions of
@@ -1629,7 +1649,8 @@ the tuple set is maintained as a field.
 
 The implementation uses C++ templates to support both integer and boolean domains.
 
-\paragraph{Indexing \Residues~and \Supports.}
+\begin{sloppypar}
+  \paragraph{Indexing \Residues~and \Supports.}
 For a given variable-value pair~$(x,a)$, its corresponding entry~\Supports[$x,a$]
 and \Residues[$x,a$]~must be found, which requires a mapping
 $\Tuple{variable,value} \to int$ for indexing \Supports~and \Residues.
@@ -1648,19 +1669,20 @@ otherwise.
 The threshold value was chosen by reasoning about the memory usage and speed
 of the different strategies.
 Let a memory unit be the size of an int, and assume that a pointer is twice
-the size of an int. The sparse-array 
+the size of an int. The sparse-array
 strategy consumes $S = (\text{width} + 2 \cdot \text{width})$ memory units,
 because \Residues~is an array of ints and \Supports~is an array of pointers
 (we neglect the ``$+1$'' from the int that saves the initial minimum value).
 The hash-table strategy consumes at least
 $H = (2 \cdot \text{size} + \text{size} + 2 \cdot \text{size})$
-memory units, because the size of the hash table 
+memory units, because the size of the hash table
 is at least~$2 \cdot \text{size}$.
 The quantities~$S$ and~$H$ are equal when~$R = \frac{4}{3} \approx 1.33$.
 Because the hash table might have collisions, this strategy does not always
 take constant time. Therefore the value~$3$ was chosen, as a trade-off between
 speed and memory usage. The optimal threshold value should be found by further
 experiments.
+\end{sloppypar}
 
 \paragraph{Advisors.} The implementation uses advisors that decide whether
 the propagator needs to be executed or not. The advisors execute \UpdateTable($x$)
@@ -1672,13 +1694,13 @@ to scan all the variables to determine which ones have been modified since the l
 invocation of the propagator, and execute~\UpdateTable() on those,
 which would be time consuming.
 Second, the advisors can store the data structures that belong to its
-variable (e.g. the associated entries of \Supports and \Residues).
+variable (e.g. the associated entries of \Supports~and \Residues).
 This means that when that variable is assigned, the memory used for storing
 information about that variable can be freed.
 
 \paragraph{OR-tools.} The implementation of CT in OR-tools was studied and
 some notable observations were made.
-This implementation uses two versions of CT, one for small tables 
+This implementation uses two versions of CT, one for small tables
 ($\leq 64$ tuples) that only use one word for~$\CurrTable$ instead of an array.
 Though this is a
 promising idea, this variant was not implemented due to time limitations.
@@ -1687,21 +1709,22 @@ in OR-tools first reasons on the bounds of the domains of the variables,
 enforcing bounds consistency,
 before enforcing domain consistency. The reason for this is that
 iterating over domains is
-expensive. This candidate optimisation was implemented, 
+expensive. This candidate optimisation was implemented,
 and the variant is denoted by CT($B$) in the
 evaluation of different variant of CT (\Secref{evaluation}).
 
-\paragraph{Memory usage and copying.} 
+\begin{sloppypar}
+\paragraph{Memory usage and copying.}
 Since Gecode is a copy-based solver, the state of the propagator is copied
 during branching.
 The array \Supports~consists of static data (only
 computed once), so this array is allocated in a memory area that is shared
 among nodes in the search tree, which means that it does not need to be
-copied when branching, in contrast to the rest of the data structures
-that are allocated in a memory area specific to the current node,
+copied when branching, in contrast to the rest of the data structures,
+which are allocated in a memory area specific to the current node,
 because they change dynamically and therefore need to be copied.
 
-For the \bitset, only the words up to \Limit~inclusive are copied for~\Words~and 
+For the \bitset, only the words up to \Limit~inclusive are copied for~\Words~and
 \Index, since these are the only words that correspond to non-zero words.
 Moreover, the lines~$31$ and~$33$ in intersectWithMask() in
 \Algoref{algo:sparse} are not executed, because the words that consist
@@ -1714,6 +1737,7 @@ expensive, while finding the minimum and maximum value of the domain is cheap, s
 in the current implementation all entries corresponding to
 values in the range~$[\text{min}(\Dom{x}),\text{max}(\Dom{x})]$ for unassigned
 variables are copied.
+\end{sloppypar}
 
 \paragraph{Profiling.} Profiling tools were used to locate the parts of
 the implementation where most of the time is spent. Some optimisations could
@@ -1729,12 +1753,12 @@ it would be possible to use~$128$-bit operations, which
 some computer architectures support. Moreover, it is probable that
 the execution speed could be increased if the number of memory accesses
 could be decreased further, by revising the implementation of the
-data structures and try to decrease the levels of indirection, 
+data structures and trying to decrease the levels of indirection,
 because following pointers is costly.
 
 \paragraph{Using delta information.} In the version CT($\Delta$), which uses
-the set of values~$\Delta_x$ that has been removed since last time, the current
-implementation uses the incremental update if~$|\Delta_x| < |s(x)|$. 
+the set of values~$\Delta_x$ that has been removed since the previous invocation,
+the current implementation uses the incremental update if~$|\Delta_x| < |s(x)|$.
 It is possible that the optimal approach would be to generalise this condition
 to~$|\Delta_x| < k \cdot |s(x)|$, where~$k \in \mathbb{R}$ is some suitable constant;
 this is something that remains to be investigated.
@@ -1757,7 +1781,7 @@ this is something that remains to be investigated.
 % and maintains supports information for that variable. The arrays $\Supports$
 % and~$\Residues$ described in~\Secref{sec:ct} is thus split up in parts,
 % one part per variable:
-% call them~$\Supports_x$ and~$\Residues_x$. 
+% call them~$\Supports_x$ and~$\Residues_x$.
 % How the indexing in~$\Supports_x$ and~$\Residues_x$ is done depends on how sparse
 % the initial domain of~$x$ is. If the domain is sparse, a hash table is used
 
@@ -1787,15 +1811,15 @@ this is something that remains to be investigated.
 \label{evaluation}
 
 We now present the evaluation of the implementation of the CT propagator,
-in which the performance of difference versions of CT is compared,
+in which the performance of different versions of CT is compared,
 and the winning variant is compared against the existing propagators for
 the \Table~constraint in Gecode, as well as with the propagator for the
 \Constraint{Regular}~constraint.
 
-The benchmarks consist $1507$ CSP instances, divided into~$30$ groups,
+The benchmarks consist of $1507$ CSP instances, divided into~$30$ groups,
 involving \Table~constraints only.
 The groups of benchmarks and their characteristics are presented in
-Table~\ref{tab:benchmarks}. 
+Table~\ref{tab:benchmarks}.
 This set of benchmarks was also used in the
 experiments in~\cite{\CTpaper}.
 These instances were chosen because
@@ -1803,43 +1827,44 @@ they contain a large variety of instances,
 and the fact that they were used in~\cite{\CTpaper}
 to evaluate CT in OR-tools
 suggests that they are also appropriate for evaluating CT
-in the context of Gecode. 
+in the context of Gecode.
 
 \begin{table}[t]%\small
   \caption{Groups of benchmarks and their characteristics.}
   \label{tab:benchmarks}
-  
+
   \begin{sideways}
     \centering
     \begin{tabular}{lcccc}  % right alignment --> decimal point alignment
       name & number of instances & arity & table size & variable domains \\
       \midrule
-      \input{benchmarks.tex} 
+      \input{benchmarks.tex}
     \end{tabular}
   \end{sideways}
 \end{table}
 
 The fact that the instances contain \Table~constraints only is not an
 issue, it is rather an advantage: if other constraints than~\Table~
-were present, then a less amount of the total runtime would be spent
+were present, then a smaller amount of the total runtime would be spent
 in the propagators that are compared, which would give a weaker performance
 difference.
 Note however that if the involved propagators would not have had
-the same consistency -- they are all domain consistent --
+the same consistency --- they are all domain consistent ---
 then other constraints would have been
 desired, because then it would be interesting to compare
 not only the runtimes, but also the sizes of the search trees
-in presence of other constraints.
+in the presence of other constraints.
 
-All the benchmark models were originally written in 
-an XML format called 
+All the benchmark instances were originally written in
+an XML format called
 XCSP2.1~\cite{DBLP:journals/corr/abs-0902-2362}, and before being used
 in this project they were translated
-to a modelling language called MiniZinc~\cite{MiniZinc} 
-using a tool~\cite{xcsp2mzn} for translating XCSP2.1 models
+into a modelling language called MiniZinc~\cite{MiniZinc}
+using a tool~\cite{xcsp2mzn} for translating XCSP2.1 instances
 into MiniZinc.
-Of the~$1621$ instances that were used in~\cite{\CTpaper},
+Out of the~$1621$ instances that were used in~\cite{\CTpaper},
 only~$1507$ could be used due to parse errors in the translation process.
+
 The experiments were run
 under Gecode 5.0 on 16-core machines with Linux Ubuntu 14.04.5 (64 bit),
 Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
@@ -1858,7 +1883,7 @@ presented and discussed.
 
 \subsubsection{Evaluation Setup}
 Four versions of CT were compared on a subset of the groups of benchmarks
-listed in Table~\ref{tab:benchmarks}, the groups were chosen so 
+listed in Table~\ref{tab:benchmarks}. The groups were chosen so
 that different characteristics in Table~\ref{tab:benchmarks} were captured.
 The versions and their denotations are:
 
@@ -1884,7 +1909,7 @@ The plots from the experiments are presented in Appendix~\ref{app:compare-ct}.
 The results indicate that CT($\Delta$) outperforms the other variants.
 Moreover, the second best variant seems to be the basic version (CT),
 while it is hard to say which one of CT($T$) and CT($B$) is best;
-sometimes the first performs better than the second and sometimes 
+sometimes the first performs better than the second and sometimes
 the second performs better than the first.
 On \emph{AIM-50}, which only contains instances
 with $0/1$ variables, the performance of CT, CT($\Delta$), and CT($B$) is
@@ -1895,13 +1920,14 @@ for domains of size~$2$.
 
 Gecode provides an \Constraint{Extensional} constraint, which
 comes with three propagators: one where the extension
-is given as a DFA, a non-incremental memory-efficient one where
+is given as a DFA (deterministic finite automaton),
+a non-incremental memory-efficient one where
 the extension is given as a tuple set, and an incremental
 time-efficient one where the extension is also given as a tuple set:
 
 \begin{description}
   \item[DFA] This is based on~\cite{Pesant:seqs}.
-  \item[B -- Basic positive tuple set propagator]
+  \item[B --- Basic positive tuple set propagator]
     This is based on~\cite{DBLP:journals/ai/BessiereRYZ05}.
 
      The propagator state has the following fields:
@@ -1909,7 +1935,7 @@ time-efficient one where the extension is also given as a tuple set:
      \begin{itemize}
      \item array of variables: $X$
      \item tuple set: $T$
-     \item $L[\langle x,n \rangle]$ is the latest seen tuple where position
+     \item $L[x,n]$ is the latest seen tuple where position
        $x$ has value $n$.  Initialised to the first such tuple, and set to
        $\bot$ after the last such tuple has been processed.
      \end{itemize}
@@ -1918,13 +1944,13 @@ time-efficient one where the extension is also given as a tuple set:
      $S[x]$ signals whether or not a support has been found for the variable~$x$,
      and is initialised to~$\bot$ for each variable in lines~$1$ and~$2$.
      The loop in lines
-     $3-17$ will then try to find a support for each variable-value pair.
-     The values that no longer have a support are collected to
+     $3$--$17$ will then try to find a support for each variable-value pair.
+     The values that no longer have a support are collected in
      the set~$N$, whose values are removed from the domain of~$x$ in line~$15$.
-     If a variable has a domain wipe-out, 
+     If a variable has a domain wipe-out,
      then the empty store is returned in line~$17$, otherwise the resulting store
      is returned in line~$18$.
-     
+
      \begin{algorithm}
        \caption{Basic positive tuple set propagator.}
        \label{algo:basic}
@@ -1934,12 +1960,12 @@ time-efficient one where the extension is also given as a tuple set:
              \STATE $S[x] \gets \bot$
            \ENDFOREACH
            \FOREACH{$x \in X$}
-             \STATE $N \gets \emptyset$  
+             \STATE $N \gets \emptyset$
              \FOREACH{$n \in \Dom{x}$}
                \IF{$S[x] = \bot$}
-                 \STATE $\ell \gets L[\langle x,n \rangle]$
+                 \STATE $\ell \gets L[x,n]$
                  \WHILE{$\ell\neq\bot \land \exists y \in X : \ell[y] \not\in \Dom{y}$}
-                   \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
+                   \STATE $\ell \gets L[x,n] \gets$ next tuple for $\langle x,n \rangle$
                  \ENDWHILE
                  \IF{$\ell = \bot$}
                    \STATE $N \gets N \cup \{ n \}$
@@ -1948,7 +1974,7 @@ time-efficient one where the extension is also given as a tuple set:
                      \STATE $S[y] \gets \ell[y]$
                    \ENDFOREACH
                  \ENDIF
-               \ENDIF        
+               \ENDIF
              \ENDFOREACH
              \STATE $s \leftarrow s[x \mapsto \Dom{x} \setminus \Set{N}]$
              \IF{$\Dom{x} = \emptyset$}
@@ -1960,7 +1986,7 @@ time-efficient one where the extension is also given as a tuple set:
      \end{algorithm}
 \clearpage
 
-  \item[I -- Incremental positive tuple set propagator]
+  \item[I --- Incremental positive tuple set propagator]
     This is based on explicit support maintenance.  The propagator state
 has the following fields, where a \emph{literal} is a $\langle x,n
 \rangle$ pair:
@@ -1973,10 +1999,10 @@ has the following fields, where a \emph{literal} is a $\langle x,n
   $\bot$ after the last such tuple has been processed.
 \item $S[\langle x,n \rangle]$ is a set of encountered supports
   (tuples) for $\langle x,n \rangle$.  Initialised to $\emptyset$.
-\item $W_S$ is a stack of literals, ``S'' standing for ``support'',
+\item $W_\text{S}$ is a stack of literals, ``S'' standing for ``support'',
   whose support data needs restoring.
   Initially empty.
-\item $W_R$ is a stack of literals, ``R'' standing for ``remove'', 
+\item $W_\text{R}$ is a stack of literals, ``R'' standing for ``remove'',
   that are longer supported, and whose domain therefore needs updating
   and whose support data need clearing.
   Initially empty.
@@ -1984,13 +2010,13 @@ has the following fields, where a \emph{literal} is a $\langle x,n
 
 \Algoref{algo:incremental} shows the algorithm for the incremental
 tuple set propagator. When the propagator is being posted,
-\FindSupport($\Tuple{x,n}$) 
+\FindSupport($\Tuple{x,n}$)
 is called for every literal~$\Tuple{x,n}$.
-Lines $6-8$ are executed in an advisor, and they call~\RemoveSupport($\Tuple{x,n}$)
+Lines $6$--$8$ are executed in an advisor, and they call~\RemoveSupport($\Tuple{x,n}$)
 for every literal $\Tuple{x,n}$ that has been removed since the previous invocation
 of the propagator.
-The rest of the algorithm removes all the literals in~$W_R$ and calls
-\FindSupport($\Tuple{x,n}$) for all literals~$\Tuple{x,n}$ in~$W_S$ whose
+The rest of the algorithm removes all the literals in~$W_\text{R}$ and calls
+\FindSupport($\Tuple{x,n}$) for all literals~$\Tuple{x,n}$ in~$W_\text{S}$ whose
 support data needs restoring.
 
 \begin{algorithm}[H]
@@ -2011,25 +2037,25 @@ support data needs restoring.
       \ENDFOREACH
     \ENDFOREACH
   \ENDIF
-  \WHILE[executed in the propagator proper]{$W_R\neq\emptyset \lor W_S\neq\emptyset$}
-    \FOREACH{$\langle x,n \rangle \in W_R$}
+  \WHILE[executed in the propagator proper]{$W_\text{R}\neq\emptyset \lor W_\text{S}\neq\emptyset$}
+    \FOREACH{$\langle x,n \rangle \in W_\text{R}$}
       \STATE $s \leftarrow s[x \mapsto \Dom{x} \setminus \Set{n}]$
       \IF{$\Dom{x} = \emptyset$}
         \RETURN $\emptyset$
       \ENDIF
     \ENDFOREACH
-    \STATE $W_R \gets \emptyset$
-    \FOREACH{$\langle x,n \rangle \in W_S$ where $n \in \Dom{x}$}
+    \STATE $W_\text{R} \gets \emptyset$
+    \FOREACH{$\langle x,n \rangle \in W_\text{S}$ where $n \in \Dom{x}$}
       \STATE $\FindSupport(\langle x,n \rangle)$
     \ENDFOREACH
-    \STATE $W_S \gets \emptyset$
+    \STATE $W_\text{S} \gets \emptyset$
   \ENDWHILE
   \RETURN $s$
 \end{algorithmic}
 \end{algorithm}
 
 \Algoref{algo:findsupport} finds a tuple that supports a given literal~$\Tuple{x,n}$.
-If no such tuple exists, then the literal is added to~$W_R$, else the tuple is added
+If no such tuple exists, then the literal is added to~$W_\text{R}$, else the tuple is added
 to the set of encountered valid tuples for the literals associated with the tuple.
 
 \begin{algorithm}[H]
@@ -2042,7 +2068,7 @@ to the set of encountered valid tuples for the literals associated with the tupl
     \STATE $\ell \gets L[\langle x,n \rangle] \gets$ next tuple for $\langle x,n \rangle$
   \ENDWHILE
   \IF{$\ell=\bot$}
-    \STATE $W_R \gets W_R \cup \{ \langle x,n \rangle\}$
+    \STATE $W_\text{R} \gets W_\text{R} \cup \{ \langle x,n \rangle\}$
   \ELSE
     \FOREACH{$y \in X$}
       \STATE $S[\langle y,\ell[y] \rangle] \gets S[\langle y,\ell[y] \rangle] \cup \{ \ell \}$
@@ -2053,9 +2079,9 @@ to the set of encountered valid tuples for the literals associated with the tupl
 
 \Algoref{algo:removesupport} clears the support data for a tuple~$\ell$ that has
 become invalid, by removing~$\ell$ from the set of valid tuples for each variable.
-The associated literals are also added to~$W_S$, because support data for them
+The associated literals are also added to~$W_\text{S}$, because support data for them
 need to be restored.
- 
+
 \begin{algorithm}
 \caption{Clear support data for unsupported literal $\langle x,n
   \rangle$.  Note: $n$ is actually not used here.}
@@ -2065,7 +2091,7 @@ need to be restored.
   \FOREACH{$y \in X$}
     \STATE $S[\langle y,\ell[y] \rangle] \gets S[\langle y,\ell[y] \rangle] \setminus \{ \ell \}$
     \IF{$y \neq x \land S[\langle y,\ell[y] \rangle] = \emptyset$}
-      \STATE $W_S \gets W_S \cup \{ \langle y,\ell[y] \rangle \}$
+      \STATE $W_\text{S} \gets W_\text{S} \cup \{ \langle y,\ell[y] \rangle \}$
     \ENDIF
   \ENDFOREACH
 \end{algorithmic}
@@ -2100,22 +2126,22 @@ DFA ($70$~\%), and I ($68$~\%).
 
 Among the~$852$ instances that were filtered out, $212$~were filtered out
 because of memory-outs. Among these~$212$ instances, DFA ran out of memory on all of them,
-and CT, B, and I all ran out of memory on~$36$ of them.
+and CT, B, and I all ran out of memory on the same~$36$ of them.
 
 \begin{figure}
   \centering
   \begin{tikzpicture}[every mark/.append style={mark size=4pt}]%[scale=0.9]
     \input{total-run.tex}
   \end{tikzpicture}
-  \caption{Percentage of instances solved as a function of time for the DFA, B, I, and CT 
+  \caption{Percentage of instances solved as a function of time for the DFA, B, I, and CT
     propagators.}
   \label{fig:total}
 \end{figure}
 
-The plots from each individual group of benchmarks are presented 
+The plots from each individual group of benchmarks are presented
 in Appendix~\ref{app:compare-gecode},
 except for the groups \emph{BDD Small}, where DFA ran out of memory on all instances,
-and \emph{MDD 07} and \emph{MDD 09}, 
+and \emph{MDD 07} and \emph{MDD 09},
 where all propagators timed out on all instances.
 
 \subsubsection{Discussion}
@@ -2126,54 +2152,55 @@ on all groups except \emph{AIM 200}, where CT was slightly slower than B and DFA
 on two instances, and on \emph{BDD Large} where CT was slightly
 slower than B and I on the small instances. At best, CT is about a factor 10 faster
 than the other algorithms on some groups.
-CT could solve as many instances as, or more, than all other propagators,
-on all groups except \emph{Pigeons Plus} where DFA could solve one more instance.
+CT could solve as many instances as, or more than, all other propagators,
+on all groups except \emph{Pigeons Plus}, where DFA could solve one more instance.
 
-Another notable observation is that B seems to outperform I, even though I is said to
-be more efficient than B in terms of execution speed.
+Another notable observation is that B seems to outperform I, even though I is claimed
+(in p.~$73$ in~\cite{Gecode:MPG}) to be more efficient than B in terms of execution speed.
 
 On the various groups the performance gain from CT varies, which might depend
 on the characteristics for the different groups of benchmarks. Here the impact
-of \emph{table size}, \emph{arity} and \emph{domain size} on runtime performance
+of \emph{table size}, \emph{arity}, and \emph{domain size} on runtime performance
 is discussed:
 
 \begin{description}
   \item[Table size] The increase
     of performance for CT compared to the other propagators
-    is larger on the groups that contain 
+    is larger on the groups that contain
     instances with large table sizes only (see \emph{A5}, \emph{A10},
-    \emph{K5}, \emph{MDD 05}, and \emph{Rands JC*}), than on the groups
+    \emph{K5}, \emph{MDD 05}, and \emph{Rands JC*}) than on the groups
     that contain only small tables (see \emph{AIM-*}, \emph{Dubois}, and \emph{Geom}).
-    
+
     The property shows particularly well on the four \emph{Rands JC*} groups, where
     arity and domain size are constant while the table size increases from
     $2500$ to~$10000$ in steps of~$2500$. On these groups, the performance gain
     seems to increase with an increasing table size.
 
-    \item[Arity] Many groups where CT shows little or none performance gain have
+    \item[Arity] Many groups where CT shows little or no performance gain have
       constraints with low arities (see \emph{AIM-*}, \emph{Dubois}, \emph{Geom},
-      \emph{Langford *}), though there are exceptions to this (see \emph{Pigeons Plus},
-      \emph{TSP *}). 
+      and \emph{Langford *}), though there are exceptions to this (see \emph{Pigeons Plus}
+      and \emph{TSP *}).
       However, the groups with low arities also have small tables, while the groups
       with larger arities tend to have larger tables, which makes it hard to
       tell whether it is the arity or the table size that impacts the performance gain.
-      
-    \item[Domain size] It is hard to draw any conclusions of whether the domain size affects
+
+    \item[Domain size] It is hard to draw any conclusion of whether the domain size affects
       the performance gain of CT. Among the groups with small domain sizes, some
-      have little or no performance gains (see \emph{AIM-*}, \emph{Dubois}) and
-      some have large performance gains (see \emph{MDD 05}, \emph{BDD Large}).
+      have little or no performance gains (see \emph{AIM-*} and \emph{Dubois}) and
+      some have large performance gains (see \emph{MDD 05} and \emph{BDD Large}).
       The same is true for the groups with larger domain sizes; some have
-      modest performance gains (see \emph{Nonograms}, \emph{Kakuro *}),
-      while some have larger performance gains (see \emph{Rands JC*}, \emph{Crosswords *}).
+      modest performance gains (see \emph{Nonograms} and \emph{Kakuro *}),
+      while some have larger performance gains (see \emph{Rands JC*}
+      and \emph{Crosswords *}).
 \end{description}
 
 \paragraph{Memory usage.}
-It can be seen that CT, B, and I have about the same maximum memory usage 
-while DFA consistently has a higher maximum memory usage. This complies with
+It can be seen that CT, B, and I have about the same maximum memory usage
+while DFA consistently has a higher maximum memory usage. This is consistent with
 the fact that DFA ran out of memory on the highest number of instances.
-  
+
 \paragraph{Profiling.}
-It can be seen that the distribution of how the time is spent between propagation, advisors
+It can be seen that the distribution of how the time is spent between propagation, advisors,
 and copying varies between different propagators and different groups of benchmarks.
 % Benchmarks: performance beroende på antalet variabler. 2-ställiga, 3-ställiga, ..., n-ställiga
 \section{Conclusions and Future Work}
@@ -2193,7 +2220,7 @@ are a few things that need to be revised. The following lists some known
 improvements and flaws:
 
 \begin{itemize}
-    
+
   \item Some memory allocations in the initialisation of the propagator
     depend on the domain widths rather
     than the domain sizes of the variables. This is unsustainable
@@ -2209,9 +2236,9 @@ improvements and flaws:
   \item In the variant using delta information, the current implementation
     uses the incremental update if~$|\Delta_x| < |s(x)|$. It is possible
     that this condition can be generalised to~$|\Delta_x| < k \cdot |s(x)|$,
-    for some suitable~$k \in \mathbb{R}$; this is something that remains 
+    for some suitable~$k \in \mathbb{R}$; this is something that remains
     to be investigated.
-    
+
   \item For \Table~constraints involving a small number (at most $64$)
     tuples, the implementation could be simplified, which would save
     memory and possibly increase execution speed.
@@ -2333,7 +2360,7 @@ the propagators.
     \caption{\textbf{AIM 50}.}
     \vspace{\baselineskip}
   \end{minipage} \qquad
-  
+
 \end{figure}
 
 \clearpage
@@ -2344,7 +2371,7 @@ the propagators.
 Each benchmark group has one figure, and each figure contains two plots:
 the first plot shows for each propagator the percentage of solved instances within that group
 as a function of timeout limit in milliseconds.
-The second plot shows the maximum memory usage, as well as how the execution time is 
+The second plot shows the maximum memory usage, as well as how the execution time is
 distributed between propagation,
 advisors, and copying.
 For the first plot, measurements from all instances that took at least $1$~second to solve for all
@@ -2354,11 +2381,10 @@ that the runtime was at least~$10$ s for all algorithms (the accuracy of the pro
 to be too low for runtimes below~$10$ s).
 For the groups of benchmarks where all instances were solved within~$10$ s for at least one algorithm,
 only the memory usage is reported.
-% Also, for \emph{BDD Large} and \emph{BDD Small}, no data from 
 
 \input{graphs-tuples.tex}
 
- 
+
 % \section{Profiling}
 
 % \input{aim-100-1-6-unsat-3_pos-profile.tex}
@@ -2385,7 +2411,7 @@ only the memory usage is reported.
 \end{document}
 
 %%% Local Variables:
-%%% mode: 
+%%% mode:
 %%% TeX-master: t
 %%% End:
 
@@ -2405,3 +2431,13 @@ only the memory usage is reported.
 % https://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
 % http://stackoverflow.com/questions/37918951/what-is-a-minimal-hash-function-for-a-pair-of-ints-that-has-low-chance-of-collis
 
+
+%  LocalWords:  bg cp gecode sbs modelling LeCompte th ary CSP pre eq
+%  LocalWords:  currTable algo initSparseBitSet initialises nbits MSB
+%  LocalWords:  isEmpty clearMask flipMask addToMask intersectIndex
+%  LocalWords:  intersectWithMask ints nsupports updateTable thm XCSP
+%  LocalWords:  filterDomains currtable validcond updateTableDelta JC
+%  LocalWords:  propagateFix indexOfFixed generalise lcccc runtimes
+%  LocalWords:  MiniZinc Xeon DFA findsupport removesupport BDD MDD
+%  LocalWords:  Rands Dubois Langford Nonograms generalised astra
+%  LocalWords:  generalisations mybib Quat
