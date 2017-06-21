@@ -204,24 +204,6 @@ namespace Gecode { namespace Int { namespace Extensional {
       template<class View>
       forceinline void
       CompactTable<View>::BitSet::
-      init_from_bs(BitSet& m, const BitSet& a, const BitSet& b,
-                   const int* map, unsigned int map_last) {
-        Gecode::Support::BitSetData* a_data = a.data;
-        Gecode::Support::BitSetData* b_data = b.data;
-        Gecode::Support::BitSetData* m_data = m.data;
-        assert(map_last < Support::BitSetData::data(m.sz));
-        for (int i = 0; i <= map_last; i++) {
-          int offset = map[i];
-          assert(offset < Support::BitSetData::data(a.sz));
-          assert(offset < Support::BitSetData::data(b.sz));
-          m_data[i] = Support::BitSetData::o(a_data[offset],b_data[offset]);
-        }
-      }
-
-
-      template<class View>
-      forceinline void
-      CompactTable<View>::BitSet::
       or_by_map(BitSet& a, const BitSet& b,
                 const int* map, unsigned int map_last) {
         Gecode::Support::BitSetData* a_data = a.data;
@@ -285,7 +267,6 @@ namespace Gecode { namespace Int { namespace Extensional {
         *map_last = local_map_last;
       }
 
-      /// Intersect \a with mask \a b with words described by \a map
       template<class View>
       forceinline void
       CompactTable<View>::BitSet::
@@ -317,7 +298,6 @@ namespace Gecode { namespace Int { namespace Extensional {
         *map_last = local_map_last;
       }
 
-      /// Intersect \a with mask \a b with words described by \a map
       template<class View>
       forceinline void
       CompactTable<View>::BitSet::
@@ -825,7 +805,7 @@ namespace Gecode { namespace Int { namespace Extensional {
         for (int i = limit+1; i--; )
           index[i] = p.index[i];
         unsigned int nbits = (limit + 1) * CompactTable<View>::BitSet::
-get_bpb();
+          get_bpb();
         words.allocate(home, nbits);
         words.copy(nbits, p.words);
         assert(limit <= Support::BitSetData::data(words.size()) - 1);
@@ -955,7 +935,7 @@ get_bpb();
 
         int support_cnt = 0;
         int bpb = CompactTable<View>::BitSet::
-get_bpb(); // Bits per base (word) in bitsets
+          get_bpb(); // Bits per base (word) in bitsets
 
         // Look for supports and set correct bits in supports
         for (int i = 0; i < t.tuples(); i++) {
@@ -1037,10 +1017,10 @@ get_bpb(); // Bits per base (word) in bitsets
         // Set the first s nr of bits in words
         int start_bit = 0;
         int complete_words = s / CompactTable<View>::BitSet::
-get_bpb();
+          get_bpb();
         if (complete_words > 0) {
           start_bit = complete_words * CompactTable<View>::BitSet::
-get_bpb() + 1;
+            get_bpb() + 1;
           words.Gecode::Support::RawBitSetBase::clearall(start_bit - 1,true);
         }
         for (unsigned int i = start_bit; i < s; i++) {
@@ -1173,7 +1153,7 @@ get_bpb() + 1;
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-clear_to_limit(mask, static_cast<unsigned int>(limit));
+          clear_to_limit(mask, static_cast<unsigned int>(limit));
       }
 
       template<class View>
@@ -1183,7 +1163,7 @@ clear_to_limit(mask, static_cast<unsigned int>(limit));
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-or_by_map(mask, b, index, static_cast<unsigned int>(limit));
+          or_by_map(mask, b, index, static_cast<unsigned int>(limit));
       }
 
       template<class View>
@@ -1193,7 +1173,7 @@ or_by_map(mask, b, index, static_cast<unsigned int>(limit));
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-intersect_by_map(words,mask,index,&limit);
+          intersect_by_map(words,mask,index,&limit);
       }
 
       template<class View>
@@ -1203,7 +1183,7 @@ intersect_by_map(words,mask,index,&limit);
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-intersect_by_map_sparse(words,mask,index,&limit);
+          intersect_by_map_sparse(words,mask,index,&limit);
       }
 
       template<class View>
@@ -1213,7 +1193,7 @@ intersect_by_map_sparse(words,mask,index,&limit);
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-intersect_by_map_sparse_two(words,a,b,index,&limit);
+          intersect_by_map_sparse_two(words,a,b,index,&limit);
       }
 
       template<class View>
@@ -1225,8 +1205,8 @@ intersect_by_map_sparse_two(words,a,b,index,&limit);
         assert(max_index <= limit);
         assert(not_failed());
         return CompactTable<View>::BitSet::
-intersect_index_by_map(words,b,index,
-                                              static_cast<unsigned int>(max_index));
+          intersect_index_by_map(words,b,index,
+                                 static_cast<unsigned int>(max_index));
       }
 
       template<class View>
@@ -1236,7 +1216,7 @@ intersect_index_by_map(words,b,index,
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-nand_by_map_one(words,b,index,&limit);
+          nand_by_map_one(words,b,index,&limit);
       }
 
       template<class View>
@@ -1246,7 +1226,7 @@ nand_by_map_one(words,b,index,&limit);
         assert(limit >= 0);
         assert(not_failed());
         CompactTable<View>::BitSet::
-nand_by_map_two(words,a,b,index,&limit);
+          nand_by_map_two(words,a,b,index,&limit);
       }
 
       template<class View>

@@ -40,8 +40,6 @@
 
 #include <gecode/int.hh>
 
-//#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/bitset.hpp"
-
 /**
  * \namespace Gecode::Int::Extensional
  * \brief %Extensional propagators
@@ -119,9 +117,6 @@ namespace Gecode { namespace Int { namespace Extensional {
           /// Perform "or" with \a a and \a b with mapping \a map
           static void or_by_map(BitSet& a, const BitSet& b,
                                 const int* map, unsigned int map_last);
-          /// Store the "or" of \a a and \a b in \a m
-          static void init_from_bs(BitSet& m, const BitSet& a, const BitSet& b,
-                                   const int* map, unsigned int map_last);
           /// Return index of non-empty intersecting word with \a a and \a b,
           /// or -1 if none exists
           static int intersect_index_by_map(const BitSet& a, const BitSet& b,
@@ -143,9 +138,9 @@ namespace Gecode { namespace Int { namespace Extensional {
           static void nand_by_map_two(BitSet& a,
                                       const BitSet& b1, const BitSet& b2,
                                       int* map, int* map_last);
-          /// Clear the words in \a b that occur in \a map
+          /// Clear the words up to \a limit in \a b
           static void clear_to_limit(BitSet& b, unsigned int limit);
-          /// Clear the words in \a b that occur in \a map
+          /// Flip the words in \a b that occur in \a map
           static void flip_by_map(BitSet& b, const int* map, unsigned int map_last);
         };
 
@@ -325,13 +320,10 @@ namespace Gecode { namespace Int { namespace Extensional {
             Supports(const Supports& s);
             //@}
 
-            /// \name Indexing
-            //@{
             /// Get index for value \a val
             int row(int val);
             /// Get support entry for index \a i
             const BitSet& operator [](unsigned int i);
-            //@}
 
           };
           /// Position of view
@@ -369,8 +361,7 @@ namespace Gecode { namespace Int { namespace Extensional {
       };
     }}}
 
-//#include <gecode/int/extensional/compact.hpp>
-#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact.hpp"
-#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact.cpp"
+#include "compact.hpp"
+#include "compact.cpp"
 
 #endif
