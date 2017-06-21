@@ -568,7 +568,7 @@ among variables.
       For a variable~$v \in \Variables{c}$ such that the the value~$a \in \Dom{v}$,
       the tuple~$\tau$ is a \emph{support for}~$(v,a)$ on~$c$
       if and only if~$\tau$ is a support on~$c$ and~$\tau[v] = a$. If such a tuple
-      $\tau$ exists, then~$(v,a)$ is said to hava a support on~$c$.
+      $\tau$ exists, then~$(v,a)$ is said to have a support on~$c$.
     \end{itemize}
 \end{definition}
 
@@ -1871,9 +1871,13 @@ Intel Xeon Core of~2.27~GHz, with~25~GB RAM and 8 MB L3 cache. The machines
 were accessed via shared servers.
 
 A timeout of~$1000$ seconds was used throughout the experiments.
-Instances that i) could be solved within $1$~s for all propagators, or
-ii) caused a memory-out for at least one of the propagators,
-were filtered out from the results.
+An instance was filtered out if it i) could be solved
+within $1$~s for all propagators (as there is too much
+measurements noise on easier instances),
+or ii) caused a memory-out for at least one of the propagators
+(as the memory limit varies between different hardware and
+software platforms).
+
 
 \subsection{Comparing Different Versions of CT}
 \label{sec:compare}
@@ -2268,7 +2272,7 @@ improvements and flaws:
 
 Each plot shows the percentage of instances solved as a function
 of timeout limit in milliseconds. The measured time is the total
-runtime, including parsing the model and the posting
+runtime, including parsing the model file and the posting
 the propagators.
 
 \vspace{2cm}
@@ -2340,6 +2344,8 @@ the propagators.
     \caption{\textbf{Geom}.}
     \vspace{\baselineskip}
   \end{minipage}\qquad
+\end{figure}
+\begin{figure}
   \begin{minipage}[b][8cm][s]{0.45\textwidth}
     \centering
     \vfill
