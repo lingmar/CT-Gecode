@@ -444,61 +444,16 @@ namespace Gecode { namespace Int { namespace Extensional {
       forceinline
       CompactTable<View>::CTAdvisor::
       CTAdvisor(Space& home, Propagator& p, Council<CTAdvisor>& c,
-                View x0, int i, BitSet* s0, unsigned int* res, int nsupports,
+                View x0, int i, BitSet* s0, int nsupports,
                 int offset, IndexType type)
-        : ViewAdvisor<View>(home,p,c,x0), index(i), offset(0),
-        supports(s0,nsupports,offset,type,x0)
-      {
-        // Initialise residues
-        switch (type) {
-        case ARRAYY: {
-          // Sparse array
-          int nvals = x0.max() - x0.min() + 1;
-          residues = home.alloc<unsigned int>(nvals);
-          for (unsigned int i = 0; i < nvals; i++)
-            residues[i] = res[i + offset];
-          break;
-        }
-        case HASHH: {
-          // Pack the residues tight
-          int nvals = x0.size();
-          residues = home.alloc<unsigned int>(nvals);
-          int count = 0;
-          int diff = x0.min();
-
-          Int::ViewValues<View> it(x0);
-          while (it()) {
-            residues[count] = res[it.val() + offset - diff];
-            ++count;
-            ++it;
-          }
-          break;
-        }
-        default:
-          GECODE_NEVER;
-          break;
-        }
-      }
+        : ViewAdvisor<View>(home,p,c,x0), index(i),
+        supports(s0,nsupports,offset,type,x0) {}
 
       template<class View>
       forceinline
       CompactTable<View>::CTAdvisor::
       CTAdvisor(Space& home, CTAdvisor& a)
-        : ViewAdvisor<View>(home,a), supports(a.supports)
-      {
-        View x = a.view();
-        if (!x.assigned()) {
-          index = a.index;
-          // Copy residues
-          const int min_row = supports.row(x.min()) - a.offset;
-          const int max_row = supports.row(x.max()) - a.offset;
-          offset = a.offset + min_row;
-          residues = home.alloc<unsigned int>(x.width());
-          int cnt = 0;
-          for (int i = min_row; i <= max_row; i++)
-            residues[cnt++] = a.residues[i];
-        }
-      }
+        : ViewAdvisor<View>(home,a), supports(a.supports), index(a.index) {}
 
       template<class View>
       forceinline void
@@ -923,7 +878,6 @@ namespace Gecode { namespace Int { namespace Extensional {
         Region r;
         // Allocate temporary supports and residues
         BitSet* supports = r.alloc<BitSet>(domsum);
-        unsigned int* residues = r.alloc<unsigned int>(domsum);
 
         // Save initial minimum value and widths for indexing supports and residues
         int* min_vals = r.alloc<int>(x.size());
@@ -956,8 +910,6 @@ namespace Gecode { namespace Int { namespace Extensional {
                 supports[row].init(r,t.tuples(),false);
 
               supports[row].set(support_cnt);
-              // Save the index in words where a support is found for the value
-              residues[row] = support_cnt / bpb;
             }
             support_cnt++;
           }
@@ -994,7 +946,6 @@ namespace Gecode { namespace Int { namespace Extensional {
 
             (void) new (home) CTAdvisor(home,*this,c,x[i],i,
                                         supports,
-                                        residues,
                                         support_cnt,
                                         offset[i] + diff,
                                         type);
@@ -1068,11 +1019,10 @@ namespace Gecode { namespace Int { namespace Extensional {
           case 2: { // Consider min and max values
             const int min_val = v.min();
             const int max_val = v.max();
-            const unsigned int offset = a.offset;
 
             // Fix to max_val if min_val not supported
             const int row_min = a.supports.row(min_val);
-            if (!supported(a,row_min,offset)) {
+            if (!supported(a,row_min)) {
               GECODE_ME_CHECK(v.eq(home,max_val));
               --unassigned;
               break;
@@ -1080,7 +1030,7 @@ namespace Gecode { namespace Int { namespace Extensional {
 
             // Fix to min_val if max_val not supported
             const int row_max = a.supports.row(max_val);
-            if (!supported(a,row_max,offset)) {
+            if (!supported(a,row_max)) {
               GECODE_ME_CHECK(v.eq(home,min_val));
               --unassigned;
               break;
@@ -1090,7 +1040,6 @@ namespace Gecode { namespace Int { namespace Extensional {
             count_unassigned--;
             break;
           } default:
-            unsigned int offset = a.offset;
             Int::ViewRanges<View> rngs(v);
             int cur, max, row;
             int last_support;
@@ -1101,7 +1050,7 @@ namespace Gecode { namespace Int { namespace Extensional {
               row = a.supports.row(cur);
               while (cur <= max) {
                 assert(v.in(cur));
-                if (!supported(a,row,offset))
+                if (!supported(a,row))
                   *(nq++) = cur;
                 else
                   last_support = cur;
@@ -1368,28 +1317,9 @@ namespace Gecode { namespace Int { namespace Extensional {
       template<class View>
       forceinline bool
       CompactTable<View>::
-      supported(CTAdvisor& a, int row, unsigned int offset) {
-        int r = static_cast<int>(a.residues[row - offset]);
-        const BitSet& support_row = a.supports[row];
-
-        if (r == 0)
-          return !CompactTable<View>::BitSet::
-a(words,r,support_row,index[r]).none();
-
-        if (r > limit)
-          r = intersect_index(support_row, limit);
-        else if (!CompactTable<View>::BitSet::
-a(words,r,support_row,index[r]).none())
-          return true;
-        else
-          r = intersect_index(support_row, r-1);
-
-        if (r != -1) {
-          assert(r >= 0);
-          a.residues[row - offset] = static_cast<unsigned int>(r);
-          return true;
-        }
-        return false;
+      supported(CTAdvisor& a, int row) {
+        int r = intersect_index(a.supports[row], limit);
+        return r >= 0;
       }
 
       template<class View>

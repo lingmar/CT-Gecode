@@ -212,8 +212,6 @@ namespace Gecode { namespace Int { namespace Extensional {
         /// Advisor for updating current table
         class CTAdvisor : public Gecode::ViewAdvisor<View> {
         public:
-          /// Offset from initial minimum value for view
-          int offset;
           /// Class for storing support information
           class Supports : public SharedHandle {
           protected:
@@ -330,14 +328,12 @@ namespace Gecode { namespace Int { namespace Extensional {
           int index;
           /// Support information for view
           Supports supports;
-          /// Word indices for the last found support for each value
-          unsigned int* residues;
 
           /// \name Constructors
           //@{
           /// Initialise from parameters
           CTAdvisor(Space& home, Propagator& p, Council<CTAdvisor>& c,
-                    View x0, int i, BitSet* s0, unsigned int* res,
+                    View x0, int i, BitSet* s0,
                     int nsupports, int offset, IndexType type);
           /// Clone advisor \a a
           CTAdvisor(Space& home, CTAdvisor& a);
@@ -355,7 +351,7 @@ namespace Gecode { namespace Int { namespace Extensional {
         /// Perform reset-based update
         void reset_based_update(CTAdvisor a, Space& home);
         /// Check for support for variable with support entry in \a row
-        bool supported(CTAdvisor& a, int row, unsigned int offset);
+        bool supported(CTAdvisor& a, int row);
         /// Check that the propagator is not in a failed state
         bool not_failed(void) const;
       };
