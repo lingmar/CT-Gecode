@@ -1,13 +1,13 @@
-        \PROCEDURE \FilterDomains($s$) : store     \label{line:filterDom:0}
-        % \Func{filterDomains}{} 
+        \PROCEDURE \FilterDomains($s$ : store) : store     \label{line:filterDom:0}
+        % \Func{filterDomains}{}
     %  \STATE $\localvar{count\_unassigned} \leftarrow 0$ \label{line:filterDom:1}
       \FOREACH{$x \in \Vars \text{~such that~} |s(x)| > 1$} \label{line:filterDom:2}
             \FOREACH{$a \in s(x)$} \label{line:filterDom:3}
-              \STATE $\localvar{index} \leftarrow \Residues[x,a]$ \label{line:filterDom:res1}
-              \IF{$\CurrTable[index] \ \& \ \Supports[x,a][index] = 0$} \label{line:filterDom:res2} %\COMMENT{bit-wise and}
-                  \STATE $\localvar{index} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
-                  \IF{$\localvar{index~} \neq -1$} \label{line:filterDom:5}
-                        \STATE $\Residues[x,a] \leftarrow \localvar{index}$ \label{line:filterDom:6}
+              \STATE $\localvar{r} \leftarrow \Residues[x,a]$ \label{line:filterDom:res1}
+              \IF{$\Words[r] \ \& \ \Supports[x,a][\Index[r]] = 0$} \label{line:filterDom:res2} %\COMMENT{bit-wise and}
+                  \STATE $\localvar{r} \leftarrow \CurrTable$.intersectIndex($\Supports[x,a]$) \label{line:filterDom:4}
+                  \IF{$\localvar{r~} \neq -1$} \label{line:filterDom:5}
+                        \STATE $\Residues[x,a] \leftarrow \localvar{r}$ \label{line:filterDom:6}
                   \ELSE
                         \STATE $s \leftarrow s[x \mapsto s(x) \setminus \Set{a}]$ \label{line:filterDom:7}
                   \ENDIF
@@ -16,7 +16,7 @@
              % \IF{$|\Dom{x}| > 1$} \label{line:filterDom:8}
              %     \STATE $\localvar{count\_unassigned} \leftarrow \localvar{count\_unassigned} + 1$\label{line:filterDom:9}
              % \ENDIF
-      
+
       \ENDFOREACH
       \RETURN{$s$}
       % \IF{$\localvar{count\_unassigned} \leq 1$} \label{line:filterDom:10}
@@ -24,4 +24,3 @@
       % \ELSE
       %   \RETURN{$Fixpoint$} \label{line:filterDom:12}
       % \ENDIF
-

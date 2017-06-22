@@ -14,7 +14,7 @@
         \RETURN $\Tuple{\FAIL,\emptyset}$
       \ENDIF
     \ENDFOREACH
-      \IF{\CurrTable~has changed since last invocation}
+      \IF[executed during propagation]{\CurrTable~has changed since last invocation}
          \STATE $s \leftarrow \FilterDomains(s)$
       \ENDIF
   \ENDIF

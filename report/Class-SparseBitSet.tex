@@ -1,16 +1,16 @@
-    \STATE $\Class$ SparseBitSet
+    \STATE $\Class$ CompressedSparseBitSet
     \item[]
-      \STATE $\Words$: array of long \COMMENT{$\Words.\function{length}() = p$} \label{line:sbsfield:start}
+      \STATE $\Words$: array of $64$-bit int \COMMENT{$\Words.\function{length}() = p$} \label{line:sbsfield:start}
       \STATE $\Index$: array of int \COMMENT{$\Index.\function{length}() = p$}
       \STATE $\Limit$: int 
-      \STATE $\Mask$: array of long \COMMENT{$\Mask.\function{length}() = p$} \label{line:sbsfield:end}
+      \STATE $\Mask$: array of $64$-bit int \COMMENT{$\Mask.\function{length}() = p$} \label{line:sbsfield:end}
 
     \item[]
     \Func{initSparseBitSet}{$\localvar{nbits}$: int} \label{line:initsbs:start}
       \STATE $\localvar{p} \gets \Ceiling{\frac{\localvar{nbits}}{64}}$
-      \STATE $\Words \gets \text{~array of long of length~} \localvar{p} \text{, first~} 
+      \STATE $\Words \gets \text{~array of $64$-bit int of length~} \localvar{p} \text{, first~} 
       \localvar{nbits} \text{~set to 1}$
-      \STATE $\Mask \gets \text{~array of long of length} \localvar{p} \text{, all bits set to~}0$
+      \STATE $\Mask \gets \text{~array of $64$-bit int of length~} \localvar{p} \text{, all bits set to~}0$
       \STATE $\Index \gets [0, \ldots, \localvar{p} - 1]$
       \STATE $\Limit \gets \localvar{p-1}$ \label{line:initsbs:end}
       \Endfunc
@@ -36,7 +36,7 @@
       \Endfunc
 
     \item[]
-      \Func{addToMask}{$\localvar{m}$: array of long} \label{line:addToMask:1}
+      \Func{addToMask}{$\localvar{m}$: array of $64$-bit int} \label{line:addToMask:1}
       \For{i}{0}{\Limit} \label{line:addToMask:2}
       \STATE $\localvar{offset} \gets \Index[i]$ \label{line:addToMask:3}
       \STATE $\texttt{mask}[\localvar{i}] \gets \texttt{mask}[\localvar{i}] \ | \ 
@@ -64,7 +64,7 @@
       \Endfunc
 
     \item[]
-      \FuncRet{intersectIndex}{$\localvar{m}$: array of long}{int} \label{line:interIdx:1}
+      \FuncRet{intersectIndex}{$\localvar{m}$: array of $64$-bit int}{int} \label{line:interIdx:1}
       \For{i}{0}{\Limit} \label{line:interIdx:2}
         \STATE $\Offset \gets \Index[i]$ \label{line:interIdx:4}
         \IF{$\Words[\localvar{i}] \ \& \ m[\Offset] \neq 0^{64}$} \label{line:interIdx:5}

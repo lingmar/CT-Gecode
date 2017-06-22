@@ -461,4 +461,3 @@ namespace Gecode { namespace Int { namespace Extensional {
 }}}
 
 // STATISTICS: int-prop
-

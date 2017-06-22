@@ -534,9 +534,8 @@ After gaining some intuition of CP, here follow some formal definitions, based o
 We start by defining \emph{constraints}, which are relations
 among variables.
 
-\begin{definition}
+\begin{definition}[\textbf{Constraints}]
   \label{def:constraint}
-  \textbf{Constraints.}
   Consider a finite sequence of~$n$
   variables~$V = v_1,\ldots,v_n$, and a corresponding sequence of
   finite \emph{domains}~$D = D_1,\ldots,D_n$ ranging over integers,
@@ -579,8 +578,8 @@ are considered.
 
 After defining constraints, we define \emph{constraint satisfaction problems}:
 
-\begin{definition}
-  \textbf{CSP.} A constraint satisfaction problem (CSP) is a
+\begin{definition}[\textbf{CSP}]
+   A constraint satisfaction problem (CSP) is a
   triple~$\left<V,D,C\right>$, where:
   $V = v_1, \ldots, v_n$ is a finite sequence of variables,
   ~$D = D_1, \ldots, D_n$ is a finite sequence of domains for the respective variables,
@@ -598,8 +597,8 @@ and the domains of the variables are restored to the domains that the variables
 had in that node, so that the search continues from an equivalent state.
 A current mapping of domains to variables is called a~\emph{store}:
 
-\begin{definition}
-  \textbf{Stores.} A \emph{store}~$s$ is a function, mapping a finite sequence of
+\begin{definition}[\textbf{Stores}]
+  A \emph{store}~$s$ is a function, mapping a finite sequence of
   variables~$V = v_1, \ldots, v_n$ to a finite sequence of domains. We denote the domain of
   a variable~$v_i$ under~$s$ by~$s(v_i)$.% or~$\Dom{v_i}$.
   \begin{itemize}
@@ -650,8 +649,8 @@ they must have. The following is a definition of propagators and the obligations
 that they must meet, taken from \cite{SchulteCarlsson:FDsys} and \cite{Gecode:MPG},
 where we let~$store$ be the set of all stores.
 
-\begin{definition} \label{def:prop}
-  \textbf{Propagators.} A \emph{propagator}~$p$ is a function mapping stores to stores:
+\begin{definition}[\textbf{Propagators}] \label{def:prop}
+  A \emph{propagator}~$p$ is a function mapping stores to stores:
   \begin{equation*}
     p: store \to store
   \end{equation*}
@@ -735,8 +734,7 @@ The following defines three commonly used consistencies:
 \textbf{range consistency}, \textbf{bounds consistency},
 and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
 
-\begin{definition}
-  \textbf{Range consistency.}
+\begin{definition}[\textbf{Range consistency}]
   Given an integer variable~$v$, its \emph{range} is the closed
   interval~$[\text{min}(\Dom{v}),\text{max}(\Dom{v})]$.
   A constraint~$c$ is \emph{range consistent} on a store~$s$
@@ -745,8 +743,8 @@ and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
   in~$\Variables{c}$ such that the values form a solution to~$c$.
 \end{definition}
 
-\begin{definition}
-  \textbf{Bounds consistency.} A constraint~$c$ is \emph{bounds consistent} on a store~$s$
+\begin{definition}[\textbf{Bounds consistency}]
+   A constraint~$c$ is \emph{bounds consistent} on a store~$s$
   if and only if there exists at least one support for the lower bound
   and for the upper bound of each variable associated
   with~$c$: $\forall v \in \Variables{c}$,~$(v,\text{min}(\Dom{v}))$
@@ -756,8 +754,8 @@ and \textbf{domain consistency}, based on~\cite{Bessiere06,\CTpaper}.
   % consistent on $p(s)$ for all stores~$s$ such that~$p(s)$ is not a failed store.
 \end{definition}
 
-\begin{definition}
-  \textbf{Domain consistency.} A constraint~$c$ is \emph{domain consistent}
+\begin{definition}[\textbf{Domain consistency}]
+ A constraint~$c$ is \emph{domain consistent}
   on a store~$s$  if and only if there exists at least one support for all
   values of each variable associated with~$c$:
   $\forall v \in \Variables{c}, \forall a \in \Dom{v}$:~$(v,a)$
@@ -833,10 +831,9 @@ The \Table~constraint, also called \Extensional,
 explicitly expresses the possible combinations of values for the variables as a
 set of tuples:
 
-\begin{definition}
-  \textbf{Table constraints.} A
-  (positive\footnote{There are also negative table constraints that list the
-    forbidden tuples instead of the allowed tuples.})
+\begin{definition}[\textbf{Table constraints}]
+ A (positive\footnote{There are also negative table constraints that list the
+   forbidden tuples instead of the allowed tuples.})
   \emph{table constraint c} is a
   constraint such that~$\Relation{c}$ is defined explicitly by listing all the
   tuples that are solutions to~$c$.
@@ -871,7 +868,7 @@ and one that is more incremental and more efficient in terms of execution time.
 % O(r*d*t) per table constraint along a branch in the search tree (artikeln om bakgrund)
 The compact-table (CT) algorithm is a domain-consistent propagation algorithm
 that implements the \Table~constraint. It was first implemented in the CP solver
-OR-tools (Google Optimization Tools),
+OR-tools (Google Optimization Tools)~\cite{ORtools},
 where it outperforms all previously
 known algorithms, and was first described in~\cite{\CTpaper}.
 Before this project, no attempts to implement CT in Gecode were made
@@ -1478,7 +1475,7 @@ we will prove by a number of lemmas.
 \end{theorem}
 
 To prove~\Thmref{thm:prop}, we formulate and prove the following lemmas.
-In what follows, we denote by~$CT(s)$ the resulting store of executing
+In what follows, we denote by CT($s$) the resulting store of executing
 \CompactTable($s$) on an input store~$s$.
 
 \begin{lemma}\label{lemma:domain-consistent}
@@ -1486,7 +1483,7 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:domain-consistent}]
-  There are two cases; either it is the first time~$CT$ is called, or it
+  There are two cases; either it is the first time CT is called, or it
   is not.
   In the first case, \InitialiseCT() is called, which removes all values
   from the domains of the variables that have no support.
@@ -1505,9 +1502,9 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:decreasing}]
-  Since $CT$ only removes values from
-  the domains of the variables, we have $CT(s) \preceq s$ for any store $s$.
-  Thus, $CT$ is a decreasing function.
+  Since CT only removes values from
+  the domains of the variables, we have CT($s$) $\preceq s$ for any store $s$.
+  Thus, CT is a decreasing function.
 \end{proof}
 
 \begin{lemma}\label{lemma:monotonic}
@@ -1516,9 +1513,9 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 
 \begin{proof}[Proof of \Lemmaref{lemma:monotonic}]
   Consider two stores~$s_1$ and~$s_2$ such that~$s_1 \preceq s_2$.
-  Since~$CT$ is domain consistent, each variable-value pair $(x,a)$
-  that is part of~$CT(s_1)$ must also be part of~$CT(s_2)$,
-  so~$CT(s_1) \preceq CT(s_2)$.
+  Since CT is domain consistent, each variable-value pair $(x,a)$
+  that is part of CT($s_1$) must also be part of CT($s_2$),
+  so CT($s_1$) $\preceq$ CT($s_2$).
 \end{proof}
 
 
@@ -1527,24 +1524,24 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:idempotent}]
-  To prove that $CT$ is idempotent, we shall show that $CT$ always reaches
-  fixpoint for any input store~$s$, that is, $CT(CT(s)) = CT(s)$ for any
+  To prove that CT is idempotent, we shall show that CT always reaches
+  fixpoint for any input store~$s$, that is, CT(CT($s$)) = CT($s$) for any
   store~$s$.
 
-  Suppose $CT(CT(s)) \neq CT(s)$ for a store~$s$.
+  Suppose CT(CT($s$)) $\neq$ CT($s$) for a store~$s$.
   Since CT is monotonic
-  and decreasing, we must have $CT(CT(s)) \prec CT(s)$, that is $CT$
+  and decreasing, we must have CT(CT($s$)) $\prec$ CT($s$), that is CT
   must prune at least one value~$a$ from the domain of a variable~$x$
-  from the store~$CT(s)$.
+  from the store~CT($s$).
   Now, by \Eqref{eq:validcond}, there must exist at least one
   tuple~$\tau_i$
-  that is a support for~$(x,a)$ under the store $CT(s)$:
+  that is a support for~$(x,a)$ under the store CT($s$):
   $\exists i: i \in \CurrTable \ \land \ \tau_i[x] = a$.
-  After \UpdateTable() is performed on~$CT(s)$, we still have
-  ~$i \in \CurrTable$, because~$\tau_i$ is still valid in~$CT(s)$.
+  After \UpdateTable() is performed on~CT($s$), we still have
+  ~$i \in \CurrTable$, because~$\tau_i$ is still valid in~CT($s$).
   Since~\FilterDomains() only removes values that have no supports,
   it is impossible that~$a$ is pruned from~$x$, since~$\tau_i$ is a
-  support for~$(x,a)$. Hence, we must have~$CT(CT(s)) = CT(s)$.
+  support for~$(x,a)$. Hence, we must have~CT(CT($s$)) = CT($s$).
 \end{proof}
 
 % \begin{proof}
@@ -1557,10 +1554,10 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:correct}]
-  $CT$ does not remove values that participate in tuples that are supports
+  CT does not remove values that participate in tuples that are supports
   on a \Table~constraint~$c$,
   since \FilterDomains() and \InitialiseCT() only remove values that
-  have no supports on~$c$. Thus,~$CT$ is correct for \Table.
+  have no supports on~$c$. Thus, CT is correct for \Table.
 \end{proof}
 
 \begin{lemma}\label{lemma:checking}
@@ -1570,7 +1567,7 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \begin{sloppypar}
 \begin{proof}[Proof of \Lemmaref{lemma:checking}]
   For an input store~$s$ that is an assignment store for~$c$,
-  we shall show that $CT$
+  we shall show that CT
   signals failure if $s$ is not a solution store, and signals subsumption if
   $s$ is a solution store.
 
@@ -1578,19 +1575,19 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
   $\tau = \Tuple{s(x_1),\ldots,s(x_n)}~\notin~\Relation{c}$.
 
   There are two cases: either
-  it is the first time $CT$ is applied or it has been applied before.
+  it is the first time CT is applied or it has been applied before.
   If it is the first time, then \InitialiseCT() is called.
   Since $\tau$ is not a solution to~$c$, there is at least one variable-value
   pair~$(x_i,s(x_i))$ that is not supported, so~$s(x_i)$ will be pruned
   from~$x$ in \InitialiseCT(), which will return a failed store, which results
   in failure in line~$4$ in \Algoref{algo:CT}.
 
-  If it is not the first time that $CT$ is called, then~\CurrTable~will be empty
+  If it is not the first time that CT is called, then~\CurrTable~will be empty
   after all calls to~\UpdateTable() have finished, because there are no
   valid tuples left, which results in failure in line~$9$ in \Algoref{algo:CT}.
 
   Now assume that~$s$ is a solution store.
-  $CT$ signals subsumption in line~$13$ in \Algoref{algo:CT} because all
+  CT signals subsumption in line~$13$ in \Algoref{algo:CT} because all
   variables are assigned and \CurrTable~is not empty.
 \end{proof}
 \end{sloppypar}
@@ -1600,17 +1597,17 @@ In what follows, we denote by~$CT(s)$ the resulting store of executing
 \end{lemma}
 
 \begin{proof}[Proof of \Lemmaref{lemma:honest}]
-  Since $CT$ is idempotent, that is, always returns a fixpoint,
+  Since CT is idempotent, that is, always returns a fixpoint,
   trivially it will never be the case that
-  $CT$ signals fixpoint without having computed a fixpoint, thus~$CT$ is
+  CT signals fixpoint without having computed a fixpoint, thus CT is
   fixpoint honest.
 
-  It remains to show that $CT$ is subsumption honest.
-  $CT$ signals subsumption on input store~$s$ if there is at most one
+  It remains to show that CT is subsumption honest.
+  CT signals subsumption on input store~$s$ if there is at most one
   unassigned variable~$x$ in~\FilterDomains(). After this point, no values will
-  ever be pruned from~$x$ by~$CT$, because there will always be a support for
-  $(x,a)$ for each value~$a \in \Dom{x}$. Hence,~$CT$ is indeed subsumed by~$s$
-  when it signals subsumption, so~$CT$ is subsumption honest.~\end{proof}
+  ever be pruned from~$x$ by~CT, because there will always be a support for
+  $(x,a)$ for each value~$a \in \Dom{x}$. Hence,~CT is indeed subsumed by~$s$
+  when it signals subsumption, so~CT is subsumption honest.~\end{proof}
 
 After proving Lemmas~\ref{lemma:domain-consistent}--\ref{lemma:honest},
 proving~\Thmref{thm:prop} is trivial.
@@ -2041,7 +2038,7 @@ support data needs restoring.
       \ENDFOREACH
     \ENDFOREACH
   \ENDIF
-  \WHILE[executed in the propagator proper]{$W_\text{R}\neq\emptyset \lor W_\text{S}\neq\emptyset$}
+  \WHILE[executed during propagation]{$W_\text{R}\neq\emptyset \lor W_\text{S}\neq\emptyset$}
     \FOREACH{$\langle x,n \rangle \in W_\text{R}$}
       \STATE $s \leftarrow s[x \mapsto \Dom{x} \setminus \Set{n}]$
       \IF{$\Dom{x} = \emptyset$}
@@ -2388,7 +2385,8 @@ to be too low for runtimes below~$10$ s).
 For the groups of benchmarks where all instances were solved within~$10$ s for at least one algorithm,
 only the memory usage is reported.
 
-\input{graphs-tuples.tex}
+%\input{graphs-tuples.tex}
+%\input{graphs-tuples-sol.tex}
 
 
 % \section{Profiling}

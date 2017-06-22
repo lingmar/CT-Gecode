@@ -1,0 +1,83 @@
+\begin{tikzpicture}[scale=0.9]
+  
+  \begin{axis}[
+    ybar stacked,
+    every axis plot/.append style={fill},
+    axis y line*=left,
+    ymin=0,
+    enlargelimits=0.15,
+    ylabel=maximum memory usage (MB),
+    legend style={at={(0.1,-0.40)},
+      anchor=north,legend columns=-1},
+    symbolic x coords={DFA,B,I,CT},
+    cycle list name=RdYlGn-9
+    ]
+    \addplot+[ybar,bar width=10pt,mark=none,xshift=-10pt]
+    plot coordinates {
+      (DFA, 11234.08203125)
+      (B, 10849.7265625)
+      (I, 10849.6875)
+      (CT, 10849.921875)
+      
+    };
+    \addlegendentry{Memory usage}
+  \end{axis}
+
+  \begin{axis}[
+    ybar stacked,
+    every axis plot/.append style={fill},
+    axis x line=none,
+    axis y line*=right,
+    ymin=0,
+    ymax=100,
+    enlargelimits=0.15,
+    legend style={at={(0.8,-0.40)},
+      anchor=north,legend columns=-1},
+    ylabel={\% time spent},
+    symbolic x coords={DFA,B,I,CT},
+    xtick=data,
+    cycle list name=Reds-4,
+    x tick label style={rotate=45,anchor=east},
+    ]
+
+    \addplot+[ybar,xshift=10pt]
+      plot coordinates {
+        (gecode-regular(11262600), 33)
+          (gecode-regular(11262436), 33)
+          (gecode-regular(11262388), 33)
+          (gecode-regular(11262688), 33)
+          (gecode-regular(11262360), 33)
+          
+          }; \label{ gecode-tupleset-mem }
+    \addplot+[ybar,xshift=10pt]
+      plot coordinates {
+        (gecode-regular(11262600), 33)
+          (gecode-regular(11262436), 33)
+          (gecode-regular(11262388), 33)
+          (gecode-regular(11262688), 33)
+          (gecode-regular(11262360), 33)
+          
+          }; \label{ gecode-tupleset-speed }
+    \addplot+[ybar,xshift=10pt]
+      plot coordinates {
+        (gecode-regular(11262600), 33)
+          (gecode-regular(11262436), 33)
+          (gecode-regular(11262388), 33)
+          (gecode-regular(11262688), 33)
+          (gecode-regular(11262360), 33)
+          
+          }; \label{ compact-table }
+    
+      \legend{  }
+      
+      \addlegendimage{/pgfplots/refstyle=gecode-tupleset-mem}\addlegendentry{ gecode-tupleset-mem }
+        
+        \addlegendimage{/pgfplots/refstyle=gecode-tupleset-speed}\addlegendentry{ gecode-tupleset-speed }
+        
+        \addlegendimage{/pgfplots/refstyle=compact-table}\addlegendentry{ compact-table }
+        
+        
+
+   \end{axis}
+
+\end{tikzpicture}

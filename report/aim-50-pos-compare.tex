@@ -1,131 +1,66 @@
+3
+3
+3
+3
+Number of memory-outs: Counter()
 \begin{axis}[
     xmode=log,
     every axis plot/.style={thin},
-    legend pos=south east
-    % table/create on use/cumulative distribution/.style={
-    %   create col/expr={\pgfmathaccuma + \thisrow{f(x)}}   
-    % }
+    xlabel={timeout limit (ms)},
+    ylabel={\% solved},
+    legend style={at={(0.5,-0.30)},
+      anchor=north,legend columns=-1},
+    cycle list/Set1-6,
+            % define fill color for the marker
+            mark list fill={.!75!white},
+            mark options={solid,scale=0.9},
+            cycle multiindex* list={
+                Set1-6
+                    \nextlist
+                [3 of]linestyles
+                    \nextlist
+                very thick
+                \nextlist
+                mark=o,
+                mark=*,
+                mark=square,
+                mark=triangle,
+                mark=+
+            },
     ]
-    \addplot 
-    [mark=triangle*,
-    mark size=1.5,
-    mark options={solid},
-    green] 
+
+    \addplot
     coordinates {
-    (0.408, 1)
-(0.522, 2)
-(0.709, 3)
-(0.760, 4)
-(1.056, 5)
-(2.080, 6)
-(2.498, 7)
-(2.545, 8)
-(3.130, 9)
-(3.455, 10)
-(5.443, 11)
-(12.540, 12)
-(21.400, 13)
-(63.357, 14)
-(72.327, 15)
-(78.959, 16)
-(171.759, 17)
-(206.671, 18)
-(277.940, 19)
-(368.226, 20)
-(2055.906, 21)
-(3069.686, 22)
-(5042.018, 23)
+      (1940, 34)
+      (2820, 67)
+      (4640, 100)
+      
     };
 
-    \addplot 
-    [blue,
-    mark=*,
-    mark size=1.5,
-    mark options={solid}]
+    \addplot
     coordinates {
-    (0.435, 1)
-(0.527, 2)
-(0.682, 3)
-(0.757, 4)
-(1.064, 5)
-(2.119, 6)
-(2.471, 7)
-(2.506, 8)
-(3.033, 9)
-(3.313, 10)
-(6.107, 11)
-(13.333, 12)
-(21.562, 13)
-(61.519, 14)
-(69.514, 15)
-(78.605, 16)
-(173.735, 17)
-(212.749, 18)
-(279.236, 19)
-(376.528, 20)
-(2079.356, 21)
-(3025.003, 22)
-(5055.306, 23)
+      (1950, 34)
+      (2800, 67)
+      (4630, 100)
+      
     };
 
-    \addplot [brown!60!black,
-    mark options={fill=brown!40},
-    mark=otimes*,
-    mark size=1.5]
+    \addplot
     coordinates {
-    (0.441, 1)
-(0.524, 2)
-(0.703, 3)
-(1.082, 4)
-(1.358, 5)
-(2.130, 6)
-(3.051, 7)
-(3.265, 8)
-(3.349, 9)
-(3.843, 10)
-(5.818, 11)
-(13.296, 12)
-(21.610, 13)
-(63.892, 14)
-(71.335, 15)
-(81.227, 16)
-(181.520, 17)
-(204.798, 18)
-(281.310, 19)
-(374.836, 20)
-(2064.777, 21)
-(3039.022, 22)
-(5009.530, 23)
+      (2030, 34)
+      (2950, 67)
+      (4890, 100)
+      
     };
 
-    \addplot 
-    [red,
-    mark size=1.5,
-    mark=square*]
+    \addplot
     coordinates {
-    (0.428, 1)
-(0.539, 2)
-(0.658, 3)
-(0.848, 4)
-(1.050, 5)
-(2.068, 6)
-(2.501, 7)
-(2.568, 8)
-(3.061, 9)
-(3.359, 10)
-(10.237, 11)
-(13.760, 12)
-(21.391, 13)
-(64.274, 14)
-(72.091, 15)
-(84.141, 16)
-(211.811, 17)
-(223.544, 18)
-(281.354, 19)
-(373.329, 20)
-(2057.236, 21)
-(3040.006, 22)
-(5040.147, 23)
+      (1950, 34)
+      (2820, 67)
+      (4660, 100)
+      
     };
-    \legend{CT,CT($\Delta$),CT($T$),CT($B$)}
+
+
+    \legend{CT,CT($\Delta$),CT(T),CT(B)}
   \end{axis}

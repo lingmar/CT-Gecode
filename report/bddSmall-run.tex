@@ -3,11 +3,13 @@
     every axis plot/.style={thin},
     xlabel={timeout limit (ms)},
     ylabel={\% solved},
-    legend pos=south east,
+    legend style={at={(0.5,-0.30)},
+      anchor=north,legend columns=-1},
+    % legend pos=south east,
     cycle list/Set1-6,
             % define fill color for the marker
             mark list fill={.!75!white},
-            mark options={solid},
+            mark options={solid,scale=0.9},
             cycle multiindex* list={
                 Set1-6
                     \nextlist
@@ -23,41 +25,7 @@
             },
     ]
 
-    \addplot
-    coordinates {
-      
-    };
-    \addplot
-    coordinates {
-      (29420, 17)
-      (29430, 34)
-      (30130, 50)
-      (358130, 67)
-      (474370, 84)
-      (502640, 100)
-      
-    };
-    \addplot
-    coordinates {
-      (29250, 17)
-      (29420, 34)
-      (30980, 50)
-      (770340, 67)
-      (862310, 84)
-      (945850, 100)
-      
-    };
-    \addplot
-    coordinates {
-      (30860, 17)
-      (31810, 34)
-      (32180, 50)
-      (37060, 67)
-      (37490, 84)
-      (37850, 100)
-      
-    };
     
 
-    \legend{ B, I, \textbf{CT} }
+    \legend{ DFA, B, I, \textbf{CT} }
   \end{axis}

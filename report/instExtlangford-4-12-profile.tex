@@ -1,0 +1,80 @@
+\begin{tikzpicture}[scale=0.9]
+  
+  \begin{axis}[
+    ybar stacked,
+    every axis plot/.append style={fill},
+    axis y line*=left,
+    ymin=0,
+    enlargelimits=0.15,
+    ylabel=maximum memory usage (MB),
+    legend style={at={(0.1,-0.40)},
+      anchor=north,legend columns=-1},
+    symbolic x coords={DFA,B,I,CT},
+    cycle list name=RdYlGn-9
+    ]
+    \addplot+[ybar,bar width=10pt,mark=none,xshift=-10pt]
+    plot coordinates {
+      (DFA, 207.79296875)
+      (B, 206.875)
+      (I, 206.826171875)
+      (CT, 206.689453125)
+      
+    };
+    \addlegendentry{Memory usage}
+  \end{axis}
+
+  \begin{axis}[
+    ybar stacked,
+    every axis plot/.append style={fill},
+    axis x line=none,
+    axis y line*=right,
+    ymin=0,
+    ymax=100,
+    enlargelimits=0.15,
+    legend style={at={(0.8,-0.40)},
+      anchor=north,legend columns=-1},
+    ylabel={\% time spent},
+    symbolic x coords={DFA,B,I,CT},
+    xtick=data,
+    cycle list name=Reds-4,
+    x tick label style={rotate=45,anchor=east},
+    ]
+
+    \addplot+[ybar,xshift=10pt]
+      plot coordinates {
+        (DFA, 42)
+          (B, 97)
+          (I, 18)
+          (CT, 34)
+          
+          }; \label{ propagate }
+    \addplot+[ybar,xshift=10pt]
+      plot coordinates {
+        (DFA, 40)
+          (B, 0)
+          (I, 47)
+          (CT, 52)
+          
+          }; \label{ advise }
+    \addplot+[ybar,xshift=10pt]
+      plot coordinates {
+        (DFA, 18)
+          (B, 3)
+          (I, 36)
+          (CT, 14)
+          
+          }; \label{ copy }
+    
+      \legend{  }
+      
+      \addlegendimage{/pgfplots/refstyle=propagate}\addlegendentry{ propagate }
+        
+        \addlegendimage{/pgfplots/refstyle=advise}\addlegendentry{ advise }
+        
+        \addlegendimage{/pgfplots/refstyle=copy}\addlegendentry{ copy }
+        
+        
+
+   \end{axis}
+
+\end{tikzpicture}

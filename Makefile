@@ -49,7 +49,10 @@ clean:
 	$(RM) -r out/ bin/
 
 test:
-	touch gecode/test/int/extensional.cpp && cd gecode && make test && test/test -test Extensional::TupleSet
+	touch gecode/test/int/extensional.cpp && cd gecode && make test && lldb -- test/test -test Extensional::TupleSet
+
+check:
+	export TABLE_PROPAGATOR=compact-table && ${GECODE_PATH}/bin/fzn-gecode -s benchmarks/or-tools/instances/TSP_Quat_20/instExtTSP-20-75-Quat.fzn
 
 flatzinc:
 	touch gecode/gecode/flatzinc/registry.cpp && cd gecode && make && make install

@@ -1,0 +1,26 @@
+\begin{tikzpicture}[scale=0.9]
+  
+  \begin{axis}[
+    ybar stacked,
+    every axis plot/.append style={fill},
+    %axis y line*=left,
+    ymin=0,
+    enlargelimits=0.15,
+    ylabel=maximum memory usage (MB),
+    legend style={at={(0.5,-0.40)},
+      anchor=north,legend columns=-1},
+    symbolic x coords={DFA,B,I,CT},
+    cycle list name=RdYlGn-9
+    ]
+    \addplot+[ybar,bar width=10pt,mark=none]
+    plot coordinates {
+      (DFA, 23221.9921875)
+      (B, 1856.50390625)
+      (I, 1855.4296875)
+      (CT, 1857.2265625)
+      
+    };
+    \addlegendentry{Memory usage}
+  \end{axis}
+
+\end{tikzpicture}

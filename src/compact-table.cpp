@@ -104,6 +104,7 @@ public:
     Supports(BitSet* s, int nsupports, int offset,
              IndexType type, View x)
       : SharedHandle(new SupportsI()) {
+      static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,type,x);
     }
 
@@ -122,7 +123,6 @@ public:
     void init(BitSet* s,
               int nsupports, int offset,
               IndexType type, View x) {
-      
       static_cast<SupportsI*>(object())->
         init(s,nsupports,offset,type,x);
     }

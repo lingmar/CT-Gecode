@@ -11,7 +11,7 @@ using namespace Gecode;
 #else
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
-  
+
 /**
  * Abstract base class for classes providing supports
  * information for a variable
@@ -34,7 +34,7 @@ public:
     assert(row >= 0);
     return supports[row];
   }
-  
+
   template<class View> void
   init(const BitSet* supports, int nsupports, int offset, View x);
 
@@ -46,7 +46,7 @@ public:
     }
     heap.rfree(supports);
   }
-    
+
  };
 
 class InfoArray : public InfoBase {
@@ -83,7 +83,7 @@ public:
   forceinline virtual int
   row(int val) {
     return val >= min && val <= max ? val - min : -1;
-  }  
+  }
 };
 
 class InfoHash : public InfoBase {
@@ -92,7 +92,7 @@ private:
   private:
     typedef struct HashNode {
       int key;
-      int value; 
+      int value;
     } HashNode;
     /// Table with entries
     HashNode* table;
@@ -113,7 +113,7 @@ private:
       table = heap.alloc<HashNode>(size);
       mask = size-1;
       factor = 0.618 * size;
-      for (int i = 0; i < size; i++) 
+      for (int i = 0; i < size; i++)
         (&table[i])->value = -1; 	/* mark as free */
     }
     /// Insert element into hash table
@@ -139,7 +139,7 @@ private:
       DEBUG_PRINT(("Looking for key %d\n", key));
       long t0 = key*factor;
       int inc=0;
-  
+
       while (1) {
         HashNode* hnode = &table[t0 & mask];
         if (hnode->key == key || hnode->value == -1) {
@@ -163,7 +163,7 @@ private:
   };
   /// Hash table for indexing supports
   HashTable index_table;
-  
+
 public:
   forceinline virtual void
   allocate(int n) {
@@ -191,7 +191,7 @@ public:
       supports[count].init(heap,nsupports);
       supports[count].copy(nsupports,s[it.val() + offset - diff]);
       index_table.insert(it.val(),count);
-      
+
       ++count;
       ++it;
     }
@@ -202,5 +202,5 @@ public:
   row(int val) {
     return index_table.get(val);
   }
-  
+
 };
