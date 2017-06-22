@@ -52,8 +52,7 @@
 #endif
 #include <gecode/flatzinc.hh>
 
-//#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact-table.cpp"
-#include "/Users/linneaingmar/Documents/Kurser/exjobb/src/compact.hh"
+#include "../../../src/compact.hh"
 
 #define GECODE_REGULAR "gecode-regular"
 #define GECODE_TUPLESET_MEM "gecode-tupleset-mem"
@@ -1066,6 +1065,7 @@ namespace Gecode { namespace FlatZinc {
 
       DFA dfa(q0,t,f);
       free(f);
+
       unshare(s, iv);
       extensional(s, iv, dfa, s.ann2ipl(ann));
     }
