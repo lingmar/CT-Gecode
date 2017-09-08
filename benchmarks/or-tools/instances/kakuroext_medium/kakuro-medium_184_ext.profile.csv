@@ -1,0 +1,4 @@
+gecode-regular;propagate();advise();copy()
+gecode-tupleset-mem;propagate(3.11);advise();copy()
+gecode-tupleset-speed;propagate(4.33);advise(0.00);copy()
+compact-table;propagate();advise();copy()

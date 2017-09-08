@@ -1,0 +1,2 @@
+gecode-regular();gecode-tupleset-mem();gecode-tupleset-speed();compact-table()
+gecode-regular(1000008.110);gecode-tupleset-mem(1000020.499);gecode-tupleset-speed(1000016.756);compact-table(1000000.149)

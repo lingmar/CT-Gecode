@@ -1,0 +1,4 @@
+gecode-regular;propagate(1.59 1.48 0.85);advise(3.80 3.17 0.00);copy(2.43 2.23 0.00)
+gecode-tupleset-mem;propagate(60.11);advise();copy(22.57)
+gecode-tupleset-speed;propagate(31.03);advise(15.35);copy(34.43)
+compact-table;propagate(0.07);advise(0.04);copy(0.01)
